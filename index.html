@@ -1240,7 +1240,7 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Modal de Login (CORREGIDO) -->
+<!-- Modal de Login -->
 <div class="modal" id="loginModal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeLoginModal()">&times;</button>
@@ -1310,7 +1310,7 @@
     </div>
 </div>
 
-<!-- Modal de Edición de Terapeuta (CON CARGA DE FOTO) -->
+<!-- Modal de Edición de Terapeuta -->
 <div class="modal" id="editTherapistModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeEditTherapistModal()">&times;</button>
@@ -1392,7 +1392,7 @@
     </div>
 </div>
 
-<!-- Modal de Paciente con RUT e Historial MEJORADO -->
+<!-- Modal de Paciente -->
 <div class="modal" id="patientModal">
     <div class="modal-content" style="max-width: 700px;">
         <button class="modal-close" onclick="closePatientModal()">&times;</button>
@@ -1429,10 +1429,8 @@
             <textarea id="patientNotes" rows="4" placeholder="Antecedentes, diagnósticos, observaciones importantes..."></textarea>
         </div>
         
-        <!-- Estadísticas del Paciente -->
         <div id="patientStatsContainer" style="display:none;" class="patient-stats"></div>
         
-        <!-- Historial de Atenciones MEJORADO -->
         <div id="patientHistoryContainer" style="margin: 20px 0; display: none;">
             <h3 style="margin-bottom: 15px;">📋 Historial de Atenciones</h3>
             <div id="patientHistoryList" class="patient-history"></div>
@@ -1588,7 +1586,7 @@
     </div>
 </div>
 
-<!-- Modal para Añadir Profesional (CON CARGA DE FOTO) -->
+<!-- Modal para Añadir Profesional -->
 <div class="modal" id="addStaffModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeAddStaffModal()">&times;</button>
@@ -1679,7 +1677,6 @@
         </nav>
     </header>
 
-    <!-- Testimonios Flotantes -->
     <div class="testimonials-marquee" id="testimonialsMarquee">
         <div class="marquee-content" id="marqueeContent"></div>
     </div>
@@ -1690,7 +1687,6 @@
             <p>Encuentra al profesional ideal y agenda tu sesión</p>
         </section>
 
-        <!-- Filtros Avanzados -->
         <div class="filters">
             <input type="text" class="filter-input" id="searchFilter" placeholder="🔍 Buscar profesional..." oninput="filterProfessionals()">
             <input type="text" class="filter-input" id="specialtyFilter" placeholder="🏷️ Especialidad..." oninput="filterProfessionals()">
@@ -1702,10 +1698,8 @@
             </select>
         </div>
 
-        <!-- Grid de Profesionales -->
         <div class="grid" id="publicGrid"></div>
 
-        <!-- Sección de Mensajes -->
         <div class="messages-section">
             <div class="messages-header">
                 <h2>💬 Experiencias de pacientes</h2>
@@ -1717,7 +1711,7 @@
         </div>
     </main>
 
-    <!-- Panel de Reserva (CON BOXES) -->
+    <!-- Panel de Reserva -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
             <h2>Agendar Cita con <span id="psychName"></span></h2>
@@ -1756,7 +1750,6 @@
                     </select>
                 </div>
                 
-                <!-- Selección de Box (solo para presencial) -->
                 <div id="boxField" style="display:none;" class="address-input">
                     <label>Seleccionar Box *</label>
                     <div id="boxSelector" class="box-selector"></div>
@@ -1831,7 +1824,6 @@
             </div>
         </div>
         
-        <!-- Simulación de correo electrónico -->
         <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;">
             <strong>📧 CORREO ENVIADO AL PACIENTE</strong><br>
             <span id="emailContent"></span>
@@ -1863,7 +1855,6 @@
             </div>
         </div>
 
-        <!-- Tabs -->
         <div class="tabs" id="dashboardTabs">
             <div class="tab active" onclick="switchTab('citas')">Citas</div>
             <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
@@ -1874,7 +1865,6 @@
             <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
         </div>
 
-        <!-- Tab: Citas -->
         <div id="tabCitas" class="tab-content active">
             <h3>Próximas Sesiones</h3>
             <div class="table-container">
@@ -1896,7 +1886,6 @@
             </div>
         </div>
 
-        <!-- Tab: Pacientes con Historial MEJORADO -->
         <div id="tabPacientes" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Pacientes</h3>
@@ -1912,7 +1901,6 @@
             <div id="patientsList"></div>
         </div>
 
-        <!-- Tab: Profesionales (Admin) -->
         <div id="tabProfesionales" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Profesionales</h3>
@@ -1940,7 +1928,6 @@
             </div>
         </div>
 
-        <!-- Tab: Disponibilidad -->
         <div id="tabDisponibilidad" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestionar Disponibilidad</h3>
@@ -1976,7 +1963,6 @@
             </div>
         </div>
 
-        <!-- Tab: Mi Configuración -->
         <div id="tabConfiguracion" class="tab-content">
             <h3>Mi Configuración Profesional</h3>
             <div style="background:#f8fafc; padding:25px; border-radius:20px;">
@@ -2020,7 +2006,6 @@
             </div>
         </div>
 
-        <!-- Tab: Mensajes (Admin) -->
         <div id="tabMensajes" class="tab-content">
             <h3>Gestión de Mensajes</h3>
             <div class="table-container">
@@ -2041,7 +2026,6 @@
             </div>
         </div>
 
-        <!-- Tab: Boxes (Admin) -->
         <div id="tabBoxes" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Boxes</h3>
@@ -2071,27 +2055,25 @@
 
 <script>
     // ============================================
-    // CONFIGURACIÓN DE FIREBASE (CORREGIDA - USANDO COMPAT)
+    // CONFIGURACIÓN DE FIREBASE
     // ============================================
     
     const firebaseConfig = {
-    apiKey: "AIzaSyCj5jdc_FQ1H0l78VJj3qBmGYsGrSete3U",  // ← TU API KEY REAL
-    authDomain: "vinculosaludapp.firebaseapp.com",
-    databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
-    projectId: "vinculosaludapp",
-    storageBucket: "vinculosaludapp.firebasestorage.app",  // ← el que funciona
-    appId: "1:405876668483:web:8f19aef4dd63a70ecdbcf6"     // ← TU APP ID REAL
-};
+        apiKey: "AIzaSyCj5jdc_FQ1H0l78VJj3qBmGYsGrSete3U",
+        authDomain: "vinculosaludapp.firebaseapp.com",
+        databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
+        projectId: "vinculosaludapp",
+        storageBucket: "vinculosaludapp.firebasestorage.app",
+        appId: "1:405876668483:web:8f19aef4dd63a70ecdbcf6"
+    };
 
-    // Inicializar Firebase (usando compat)
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     // ============================================
-    // SISTEMA COMPLETO - VERSIÓN FINAL
+    // VARIABLES GLOBALES
     // ============================================
 
-    // Toast System
     function showToast(message, type = 'success', duration = 3000) {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
@@ -2107,7 +2089,6 @@
         }, duration);
     }
 
-    // Variables globales
     let staff = [];
     let patients = [];
     let appointments = [];
@@ -2122,79 +2103,147 @@
     let tempImageData = null;
     const EDIT_HOURS = 24;
 
-    // Funciones de utilidad
     function getPublicStaff() {
         return staff.filter(s => s.spec !== 'ADMIN_HIDDEN' && s.spec && s.spec.trim() !== '');
     }
 
     // ============================================
-    // CARGAR DATOS DESDE FIREBASE (CORREGIDO)
+    // CARGAR DATOS DESDE FIREBASE
     // ============================================
+    
     function cargarDatosIniciales() {
-        // Staff (profesionales)
-
-db.ref('Staff').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-        // Convertir objeto a array, ADAPTANDO los datos existentes
-        staff = Object.keys(data).map(key => {
-            const item = data[key];
-            
-            // Si SOLO tiene name y pass (datos del primer código)
-            if (item.name && item.pass && !item.usuario && !item.user) {
-                console.log("Adaptando usuario existente:", item.name);
-                return {
-                    id: key,
-                    name: item.name,
-                    // Usar el nombre como usuario (sin espacios)
-                    usuario: item.name.split(' ')[0] || item.name,
-                    pass: item.pass,
-                    spec: 'Profesional', // Valor por defecto
-                    priceOnline: 0,
-                    pricePresencial: 0,
-                    img: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-                    whatsapp: '',
-                    instagram: '',
-                    stars: 5,
-                    address: '',
-                    phone: '',
-                    paymentMethods: { transfer: false, card: false, cash: true, bankDetails: {} },
-                    sessionDuration: 50,
-                    breakBetween: 10,
-                    availability: {}
-                };
-            } 
-            // Si ya tiene la estructura completa
-            else {
-                return { 
-                    id: key, 
-                    ...item,
-                    usuario: item.usuario || item.user || '', // Compatibilidad
-                    priceOnline: item.priceOnline || 0,
-                    pricePresencial: item.pricePresencial || 0,
-                    spec: item.spec || 'Profesional',
-                    img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-                    whatsapp: item.whatsapp || '',
-                    instagram: item.instagram || '',
-                    stars: item.stars || 5,
-                    address: item.address || '',
-                    phone: item.phone || '',
-                    paymentMethods: item.paymentMethods || { transfer: false, card: false, cash: true, bankDetails: {} },
-                    sessionDuration: item.sessionDuration || 50,
-                    breakBetween: item.breakBetween || 10,
-                    availability: item.availability || {}
-                };
+        db.ref('Staff').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                staff = Object.keys(data).map(key => {
+                    const item = data[key];
+                    
+                    if (item.name && item.pass && !item.usuario && !item.user) {
+                        return {
+                            id: key,
+                            name: item.name,
+                            usuario: item.name.split(' ')[0] || item.name,
+                            pass: item.pass,
+                            spec: 'Profesional',
+                            priceOnline: 0,
+                            pricePresencial: 0,
+                            img: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+                            whatsapp: '',
+                            instagram: '',
+                            stars: 5,
+                            address: '',
+                            phone: '',
+                            paymentMethods: { transfer: false, card: false, cash: true, bankDetails: {} },
+                            sessionDuration: 50,
+                            breakBetween: 10,
+                            availability: {}
+                        };
+                    } else {
+                        return { 
+                            id: key, 
+                            ...item,
+                            usuario: item.usuario || item.user || '',
+                            priceOnline: item.priceOnline || 0,
+                            pricePresencial: item.pricePresencial || 0,
+                            spec: item.spec || 'Profesional',
+                            img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+                            whatsapp: item.whatsapp || '',
+                            instagram: item.instagram || '',
+                            stars: item.stars || 5,
+                            address: item.address || '',
+                            phone: item.phone || '',
+                            paymentMethods: item.paymentMethods || { transfer: false, card: false, cash: true, bankDetails: {} },
+                            sessionDuration: item.sessionDuration || 50,
+                            breakBetween: item.breakBetween || 10,
+                            availability: item.availability || {}
+                        };
+                    }
+                });
+            } else {
+                staff = [
+                    { 
+                        id: 1, 
+                        name: 'Psic. Alison Gutiérrez', 
+                        spec: 'Terapia Cognitiva, Ansiedad, Depresión, Estrés', 
+                        priceOnline: 45000,
+                        pricePresencial: 50000,
+                        usuario: 'isabel',
+                        pass: 'isabel2026', 
+                        img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500',
+                        whatsapp: '+56987654321',
+                        instagram: 'alison.psicologa',
+                        stars: 5,
+                        address: 'Av. Providencia 1234, Santiago',
+                        phone: '+56 9 8765 4321',
+                        paymentMethods: { transfer: true, card: true, cash: true, bankDetails: {} },
+                        sessionDuration: 50,
+                        breakBetween: 10,
+                        availability: {}
+                    },
+                    { 
+                        id: 2, 
+                        name: 'Dr. Julián Sossa', 
+                        spec: 'Psiquiatría, Trastornos del ánimo, Ansiedad', 
+                        priceOnline: 65000,
+                        pricePresencial: 70000,
+                        usuario: 'julian',
+                        pass: 'julian2026', 
+                        img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500',
+                        whatsapp: '+56976543210',
+                        instagram: 'dr.julianpsiquiatra',
+                        stars: 5,
+                        address: 'Av. Las Condes 7890, Las Condes',
+                        phone: '+56 9 7654 3210',
+                        paymentMethods: { transfer: true, card: false, cash: true, bankDetails: {} },
+                        sessionDuration: 50,
+                        breakBetween: 15,
+                        availability: {}
+                    },
+                    { 
+                        id: 3, 
+                        name: 'Dra. Martina Luz', 
+                        spec: 'Mindfulness, Estrés, Yoga Terapéutico, Meditación', 
+                        priceOnline: 40000,
+                        pricePresencial: 45000,
+                        usuario: 'martina',
+                        pass: 'martina2026', 
+                        img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500',
+                        whatsapp: '+56965432109',
+                        instagram: 'martina.bienestar',
+                        stars: 4,
+                        address: 'Av. Vitacura 4567, Vitacura',
+                        phone: '+56 9 6543 2109',
+                        paymentMethods: { transfer: false, card: true, cash: true, bankDetails: {} },
+                        sessionDuration: 45,
+                        breakBetween: 15,
+                        availability: {}
+                    }
+                ];
             }
+            staff.push({
+                id: 9999,
+                name: 'Administrador',
+                spec: 'ADMIN_HIDDEN',
+                priceOnline: 0,
+                pricePresencial: 0,
+                usuario: 'Admin',
+                pass: 'Nina2026',
+                img: '',
+                whatsapp: '',
+                instagram: '',
+                stars: 0,
+                address: '',
+                phone: '',
+                isHiddenAdmin: true,
+                paymentMethods: {},
+                sessionDuration: 0,
+                breakBetween: 0,
+                availability: {}
+            });
+            filterProfessionals();
+            if (currentUser?.role === 'admin') renderStaffTable();
         });
-    } else {
-        // Solo si NO HAY NINGÚN DATO, crear ejemplos
-        staff = [ /* ... datos de ejemplo ... */ ];
-    }
-    filterProfessionals();
-    if (currentUser?.role === 'admin') renderStaffTable();
-});
         
-        // Boxes
         db.ref('Boxes').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -2209,7 +2258,6 @@ db.ref('Staff').on('value', (snapshot) => {
             if (currentUser?.role === 'admin') renderBoxesTable();
         });
         
-        // Pacientes
         db.ref('Patients').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -2220,7 +2268,6 @@ db.ref('Staff').on('value', (snapshot) => {
             if (currentUser) renderPatients();
         });
         
-        // Citas
         db.ref('Appointments').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -2231,7 +2278,6 @@ db.ref('Staff').on('value', (snapshot) => {
             if (currentUser) updateStats();
         });
         
-        // Mensajes
         db.ref('Messages').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -2250,10 +2296,10 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     // ============================================
-    // FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA)
+    // FUNCIÓN PARA GUARDAR EN FIREBASE
     // ============================================
+    
     function save() {
-        // Guardar cada colección por separado
         const staffObj = {};
         staff.forEach(item => {
             staffObj[item.id] = item;
@@ -2420,7 +2466,7 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     function editBox(id) {
-        const box = boxes.find(b => b.id === id);
+        const box = boxes.find(b => b.id == id);
         if (!box) return;
 
         document.getElementById('boxName').value = box.name;
@@ -2440,7 +2486,7 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     function updateBox(id) {
-        const box = boxes.find(b => b.id === id);
+        const box = boxes.find(b => b.id == id);
         if (!box) return;
 
         box.name = document.getElementById('boxName').value;
@@ -2457,7 +2503,7 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     function toggleBoxStatus(id) {
-        const box = boxes.find(b => b.id === id);
+        const box = boxes.find(b => b.id == id);
         if (box) {
             box.active = !box.active;
             save();
@@ -2468,9 +2514,9 @@ db.ref('Staff').on('value', (snapshot) => {
 
     function deleteBox(id) {
         if (confirm('¿Eliminar este box? Las citas asociadas quedarán sin box asignado.')) {
-            boxes = boxes.filter(b => b.id !== id);
+            boxes = boxes.filter(b => b.id != id);
             appointments.forEach(a => {
-                if (a.boxId === id) a.boxId = null;
+                if (a.boxId == id) a.boxId = null;
             });
             save();
             renderBoxesTable();
@@ -2499,7 +2545,7 @@ db.ref('Staff').on('value', (snapshot) => {
             if (appMinutes < boxStartMinutes || appMinutes >= boxEndMinutes) return false;
             
             const boxOccupied = appointments.some(a => 
-                a.boxId === box.id && 
+                a.boxId == box.id && 
                 a.date === date && 
                 a.time === time &&
                 a.status === 'confirmada'
@@ -2570,7 +2616,7 @@ db.ref('Staff').on('value', (snapshot) => {
             name: name,
             email: email,
             whatsapp: whatsapp,
-            therapistId: therapistId ? parseInt(therapistId) : null,
+            therapistId: therapistId ? therapistId : null,
             therapistName: therapistName,
             rating: parseInt(rating),
             text: text,
@@ -2630,7 +2676,7 @@ db.ref('Staff').on('value', (snapshot) => {
 
     function deleteMessage(id) {
         if (confirm('¿Eliminar este mensaje?')) {
-            messages = messages.filter(m => m.id !== id);
+            messages = messages.filter(m => m.id != id);
             save();
             showToast('Mensaje eliminado', 'success');
         }
@@ -2687,7 +2733,7 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     function getAverageRating(psychId) {
-        const psychMessages = messages.filter(m => m.therapistId === psychId);
+        const psychMessages = messages.filter(m => m.therapistId == psychId);
         if (psychMessages.length === 0) return 0;
         return psychMessages.reduce((sum, m) => sum + m.rating, 0) / psychMessages.length;
     }
@@ -2736,7 +2782,7 @@ db.ref('Staff').on('value', (snapshot) => {
                         <h3>${p.name}</h3>
                         <div class="stars">
                             ${'★'.repeat(Math.floor(ratingDisplay))}${'☆'.repeat(5-Math.floor(ratingDisplay))}
-                            <span style="color:var(--text-light); margin-left:5px;">(${messages.filter(m => m.therapistId === p.id).length})</span>
+                            <span style="color:var(--text-light); margin-left:5px;">(${messages.filter(m => m.therapistId == p.id).length})</span>
                         </div>
                         <div class="price-box">
                             <div class="price-details">
@@ -2758,7 +2804,7 @@ db.ref('Staff').on('value', (snapshot) => {
     // ============================================
 
     function openBooking(id) {
-        selectedPsych = staff.find(p => p.id === id);
+        selectedPsych = staff.find(p => p.id == id);
         selectedBoxId = null;
         
         const today = new Date().toISOString().split('T')[0];
@@ -2850,7 +2896,7 @@ db.ref('Staff').on('value', (snapshot) => {
         if (!date || !selectedPsych) return;
 
         const bookedTimes = appointments
-            .filter(a => a.psychId === selectedPsych.id && a.date === date)
+            .filter(a => a.psychId == selectedPsych.id && a.date === date)
             .map(a => a.time);
 
         const availableSlots = selectedPsych.availability?.[date] || [];
@@ -2881,7 +2927,7 @@ db.ref('Staff').on('value', (snapshot) => {
         if (!date || !selectedPsych) return;
 
         const bookedTimes = appointments
-            .filter(a => a.psychId === selectedPsych.id && a.date === date)
+            .filter(a => a.psychId == selectedPsych.id && a.date === date)
             .map(a => a.time);
 
         const availableSlots = selectedPsych.availability?.[date] || [];
@@ -2941,7 +2987,7 @@ db.ref('Staff').on('value', (snapshot) => {
         }
 
         boxSelector.innerHTML = availableBoxes.map(box => `
-            <div class="box-option ${selectedBoxId === box.id ? 'selected' : ''}" 
+            <div class="box-option ${selectedBoxId == box.id ? 'selected' : ''}" 
                  onclick="selectBox(${box.id})"
                  title="${box.description || ''}">
                 📦 ${box.name} ${box.location ? `- ${box.location}` : ''}
@@ -2950,7 +2996,7 @@ db.ref('Staff').on('value', (snapshot) => {
 
         boxAvailabilityMsg.innerHTML = `${availableBoxes.length} box(es) disponible(s)`;
         
-        if (selectedBoxId && !availableBoxes.some(b => b.id === selectedBoxId)) {
+        if (selectedBoxId && !availableBoxes.some(b => b.id == selectedBoxId)) {
             selectedBoxId = null;
             selectedBoxInfo.style.display = 'none';
         }
@@ -2958,7 +3004,7 @@ db.ref('Staff').on('value', (snapshot) => {
 
     function selectBox(boxId) {
         selectedBoxId = boxId;
-        const box = boxes.find(b => b.id === boxId);
+        const box = boxes.find(b => b.id == boxId);
         const selectedBoxInfo = document.getElementById('selectedBoxInfo');
         const selectedBoxName = document.getElementById('selectedBoxName');
         
@@ -3055,7 +3101,7 @@ db.ref('Staff').on('value', (snapshot) => {
             }
 
             const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
-            const box = type === 'presencial' ? boxes.find(b => b.id === selectedBoxId) : null;
+            const box = type === 'presencial' ? boxes.find(b => b.id == selectedBoxId) : null;
             
             const appointment = {
                 id: Date.now(),
@@ -3117,67 +3163,59 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     function processLogin() {
-    const user = document.getElementById('loginUser').value;
-    const pass = document.getElementById('loginPass').value;
-    const btn = document.getElementById('loginBtn');
-    
-    if (!user || !pass) {
-        showToast('Ingresa usuario y contraseña', 'error');
-        return;
-    }
-
-    btn.innerHTML = '<span class="spinner"></span> Verificando...';
-    btn.disabled = true;
-
-    // ✅ PRIMERO: Verificar ADMIN (hardcodeado)
-    if (user === "Admin" && pass === "Nina2026") {
-        console.log("✅ Acceso Admin concedido");
+        const user = document.getElementById('loginUser').value;
+        const pass = document.getElementById('loginPass').value;
+        const btn = document.getElementById('loginBtn');
         
-        // Crear objeto de admin
-        const adminUser = {
-            id: 9999,
-            name: 'Administrador',
-            spec: 'ADMIN_HIDDEN',
-            usuario: 'Admin',
-            pass: 'Nina2026',
-            isHiddenAdmin: true
-        };
+        if (!user || !pass) {
+            showToast('Ingresa usuario y contraseña', 'error');
+            return;
+        }
+
+        btn.innerHTML = '<span class="spinner"></span> Verificando...';
+        btn.disabled = true;
+
+        if (user === "Admin" && pass === "Nina2026") {
+            const adminUser = {
+                id: 9999,
+                name: 'Administrador',
+                spec: 'ADMIN_HIDDEN',
+                usuario: 'Admin',
+                pass: 'Nina2026',
+                isHiddenAdmin: true
+            };
+            
+            currentUser = { role: 'admin', data: adminUser };
+            showDashboard();
+            showToast('Acceso administrador concedido', 'success');
+            closeLoginModal();
+            
+            btn.innerHTML = 'Ingresar al Panel';
+            btn.disabled = false;
+            return;
+        }
+
+        const foundUser = staff.find(s => 
+            (s.usuario === user || s.name === user) && s.pass === pass
+        );
         
-        currentUser = { role: 'admin', data: adminUser };
-        showDashboard();
-        showToast('Acceso administrador concedido', 'success');
-        closeLoginModal();
+        if (foundUser) {
+            if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
+                currentUser = { role: 'admin', data: foundUser };
+            } else {
+                currentUser = { role: 'psych', data: foundUser };
+            }
+            
+            showDashboard();
+            showToast(`Bienvenido ${foundUser.name}`, 'success');
+            closeLoginModal();
+        } else { 
+            showToast('Usuario o contraseña incorrectos', 'error');
+        }
         
         btn.innerHTML = 'Ingresar al Panel';
         btn.disabled = false;
-        return;
     }
-
-    // ✅ SEGUNDO: Buscar en staff (profesionales)
-    const foundUser = staff.find(s => 
-        (s.usuario === user || s.name === user) && s.pass === pass
-    );
-    
-    if (foundUser) {
-        console.log("✅ Acceso profesional concedido:", foundUser.name);
-        
-        if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
-            currentUser = { role: 'admin', data: foundUser };
-        } else {
-            currentUser = { role: 'psych', data: foundUser };
-        }
-        
-        showDashboard();
-        showToast(`Bienvenido ${foundUser.name}`, 'success');
-        closeLoginModal();
-    } else { 
-        console.log("❌ Login fallido para:", user);
-        showToast('Usuario o contraseña incorrectos', 'error');
-    }
-    
-    btn.innerHTML = 'Ingresar al Panel';
-    btn.disabled = false;
-}
 
     function logout() {
         currentUser = null;
@@ -3226,8 +3264,8 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     function updateStats() {
-        const myApps = currentUser.role === 'admin' ? appointments : appointments.filter(a => a.psychId === currentUser.data.id);
-        const myPatients = currentUser.role === 'admin' ? patients : patients.filter(p => p.psychId === currentUser.data.id);
+        const myApps = currentUser.role === 'admin' ? appointments : appointments.filter(a => a.psychId == currentUser.data.id);
+        const myPatients = currentUser.role === 'admin' ? patients : patients.filter(p => p.psychId == currentUser.data.id);
         const totalIncome = myApps.reduce((s, a) => s + a.price, 0);
         
         document.getElementById('statIncome').innerText = `$${totalIncome.toLocaleString()}`;
@@ -3286,7 +3324,7 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     // ============================================
-    // FUNCIONES DE PACIENTES CON HISTORIAL MEJORADO
+    // FUNCIONES DE PACIENTES
     // ============================================
 
     function renderPatients() {
@@ -3295,7 +3333,7 @@ db.ref('Staff').on('value', (snapshot) => {
 
         const searchTerm = document.getElementById('patientSearch')?.value.toLowerCase() || '';
         
-        let filteredPatients = currentUser.role === 'admin' ? patients : patients.filter(p => p.psychId === currentUser.data.id);
+        let filteredPatients = currentUser.role === 'admin' ? patients : patients.filter(p => p.psychId == currentUser.data.id);
         filteredPatients = filteredPatients.filter(p => 
             p.name.toLowerCase().includes(searchTerm) || 
             p.email.toLowerCase().includes(searchTerm) ||
@@ -3308,7 +3346,7 @@ db.ref('Staff').on('value', (snapshot) => {
         }
 
         container.innerHTML = filteredPatients.map(p => {
-            const patientApps = appointments.filter(a => a.patientId === p.id).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const patientApps = appointments.filter(a => a.patientId == p.id).sort((a, b) => new Date(b.date) - new Date(a.date));
             const nextAppt = patientApps.find(a => new Date(a.date + 'T' + a.time) > new Date());
             const totalSessions = patientApps.length;
             const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
@@ -3371,7 +3409,7 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     function viewPatientDetails(id) {
-        const patient = patients.find(p => p.id === id);
+        const patient = patients.find(p => p.id == id);
         if (!patient) return;
         
         document.getElementById('editPatientId').value = patient.id;
@@ -3383,7 +3421,7 @@ db.ref('Staff').on('value', (snapshot) => {
         document.getElementById('patientNotes').value = patient.notes || '';
         document.getElementById('patientModalTitle').innerText = 'Editar Paciente';
         
-        const patientApps = appointments.filter(a => a.patientId === patient.id).sort((a, b) => new Date(b.date) - new Date(a.date));
+        const patientApps = appointments.filter(a => a.patientId == patient.id).sort((a, b) => new Date(b.date) - new Date(a.date));
         const historyContainer = document.getElementById('patientHistoryContainer');
         const historyList = document.getElementById('patientHistoryList');
         const statsContainer = document.getElementById('patientStatsContainer');
@@ -3466,7 +3504,7 @@ db.ref('Staff').on('value', (snapshot) => {
         }
 
         if (id) {
-            const patient = patients.find(p => p.id === parseInt(id));
+            const patient = patients.find(p => p.id == id);
             if (patient) {
                 patient.rut = rut;
                 patient.name = name;
@@ -3633,7 +3671,7 @@ db.ref('Staff').on('value', (snapshot) => {
             }
         }
         
-        const staffIndex = staff.findIndex(s => s.id === currentUser.data.id);
+        const staffIndex = staff.findIndex(s => s.id == currentUser.data.id);
         if (staffIndex !== -1) staff[staffIndex].availability = currentUser.data.availability;
         
         save();
@@ -3645,7 +3683,7 @@ db.ref('Staff').on('value', (snapshot) => {
     function clearAllSlots() {
         if (confirm('¿Eliminar toda la disponibilidad?')) {
             currentUser.data.availability = {};
-            const staffIndex = staff.findIndex(s => s.id === currentUser.data.id);
+            const staffIndex = staff.findIndex(s => s.id == currentUser.data.id);
             if (staffIndex !== -1) staff[staffIndex].availability = {};
             save();
             closeAvailabilityModal();
@@ -3667,7 +3705,7 @@ db.ref('Staff').on('value', (snapshot) => {
         selectedSlots.forEach(slot => {
             if (!slot.isOvercupo || showOvercupo) {
                 const isBooked = appointments.some(a => 
-                    a.psychId === currentUser.data.id && 
+                    a.psychId == currentUser.data.id && 
                     a.date === date && 
                     a.time === slot.time
                 );
@@ -3704,7 +3742,7 @@ db.ref('Staff').on('value', (snapshot) => {
             currentUser.data.availability[date].splice(index, 1);
         }
 
-        const staffIndex = staff.findIndex(s => s.id === currentUser.data.id);
+        const staffIndex = staff.findIndex(s => s.id == currentUser.data.id);
         if (staffIndex !== -1) staff[staffIndex].availability = currentUser.data.availability;
 
         loadTimeSlots();
@@ -3758,7 +3796,7 @@ db.ref('Staff').on('value', (snapshot) => {
         psych.whatsapp = document.getElementById('myWhatsapp').value;
         psych.instagram = document.getElementById('myInstagram').value;
         
-        const staffIndex = staff.findIndex(s => s.id === psych.id);
+        const staffIndex = staff.findIndex(s => s.id == psych.id);
         if (staffIndex !== -1) staff[staffIndex] = psych;
         
         save();
@@ -3766,7 +3804,7 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     // ============================================
-    // FUNCIONES DE ADMIN (CON CARGA DE IMÁGENES)
+    // FUNCIONES DE ADMIN
     // ============================================
 
     function showAddStaffModal() {
@@ -3790,156 +3828,147 @@ db.ref('Staff').on('value', (snapshot) => {
     }
 
     function renderStaffTable() {
-    const tb = document.getElementById('staffTableBody');
-    if (!tb) return;
+        const tb = document.getElementById('staffTableBody');
+        if (!tb) return;
 
-    const visibleStaff = staff.filter(s => !s.isHiddenAdmin);
-    tb.innerHTML = visibleStaff.map(p => `
-        <tr>
-            <td>${p.name}</td>
-            <td>${p.spec.substring(0, 30)}...</td>
-            <td>${p.usuario || p.name || '—'}</td>  <!-- Mostrar usuario o nombre -->
-            <td>$${p.priceOnline}/$${p.pricePresencial}</td>
-            <td>${p.whatsapp || '—'}</td>
-            <td>${p.instagram || '—'}</td>
-            <td>
-                <button onclick="editTherapist(${p.id})" class="btn-icon" style="background:var(--primary); color:white;">
-                    <i class="fa fa-edit"></i>
-                </button>
-                <button onclick="deleteStaff(${p.id})" class="btn-icon" style="background:var(--danger); color:white;">
-                    <i class="fa fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
+        const visibleStaff = staff.filter(s => !s.isHiddenAdmin);
+        tb.innerHTML = visibleStaff.map(p => `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.spec.substring(0, 30)}...</td>
+                <td>${p.usuario || p.name || '—'}</td>
+                <td>$${p.priceOnline}/$${p.pricePresencial}</td>
+                <td>${p.whatsapp || '—'}</td>
+                <td>${p.instagram || '—'}</td>
+                <td>
+                    <button onclick="editTherapist('${p.id}')" class="btn-icon" style="background:var(--primary); color:white;">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button onclick="deleteStaff('${p.id}')" class="btn-icon" style="background:var(--danger); color:white;">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
 
     function addStaff() {
-    const name = document.getElementById('addName').value;
-    const spec = document.getElementById('addSpec').value;
-    const priceOnline = document.getElementById('addPriceOnline').value;
-    const pricePresencial = document.getElementById('addPricePresencial').value;
-    const usuario = document.getElementById('addUser').value; // Cambiar nombre de variable
-    const pass = document.getElementById('addPass').value;
-    const whatsapp = document.getElementById('addWhatsapp')?.value || '';
-    const instagram = document.getElementById('addInstagram')?.value || '';
-    const address = document.getElementById('addAddress')?.value || '';
-    const phone = document.getElementById('addPhone')?.value || '';
-    
-    if (!name || !spec || !priceOnline || !pricePresencial || !usuario || !pass) {
-        showToast('Completa todos los campos', 'error');
-        return;
+        const name = document.getElementById('addName').value;
+        const spec = document.getElementById('addSpec').value;
+        const priceOnline = document.getElementById('addPriceOnline').value;
+        const pricePresencial = document.getElementById('addPricePresencial').value;
+        const usuario = document.getElementById('addUser').value;
+        const pass = document.getElementById('addPass').value;
+        const whatsapp = document.getElementById('addWhatsapp')?.value || '';
+        const instagram = document.getElementById('addInstagram')?.value || '';
+        const address = document.getElementById('addAddress')?.value || '';
+        const phone = document.getElementById('addPhone')?.value || '';
+        
+        if (!name || !spec || !priceOnline || !pricePresencial || !usuario || !pass) {
+            showToast('Completa todos los campos', 'error');
+            return;
+        }
+
+        if (staff.some(s => s.usuario === usuario)) {
+            showToast('El usuario ya existe', 'error');
+            return;
+        }
+
+        staff.push({
+            id: Date.now(),
+            name: name,
+            spec: spec,
+            priceOnline: parseInt(priceOnline),
+            pricePresencial: parseInt(pricePresencial),
+            usuario: usuario,
+            pass: pass,
+            whatsapp: whatsapp,
+            instagram: instagram,
+            img: tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+            address: address,
+            phone: phone,
+            stars: 5,
+            paymentMethods: { transfer: false, card: false, cash: true, bankDetails: {} },
+            sessionDuration: 50,
+            breakBetween: 10,
+            availability: {}
+        });
+
+        save();
+        closeAddStaffModal();
+        showToast('Profesional añadido', 'success');
     }
-
-    if (staff.some(s => s.usuario === usuario)) { // Cambiar a usuario
-        showToast('El usuario ya existe', 'error');
-        return;
-    }
-
-    staff.push({
-        id: Date.now(),
-        name: name,
-        spec: spec,
-        priceOnline: parseInt(priceOnline),
-        pricePresencial: parseInt(pricePresencial),
-        usuario: usuario, // Cambiar a usuario
-        pass: pass,
-        whatsapp: whatsapp,
-        instagram: instagram,
-        img: tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-        address: address,
-        phone: phone,
-        stars: 5,
-        paymentMethods: { transfer: false, card: false, cash: true, bankDetails: {} },
-        sessionDuration: 50,
-        breakBetween: 10,
-        availability: {}
-    });
-
-    save();
-    closeAddStaffModal();
-    showToast('Profesional añadido', 'success');
-}
 
     function editTherapist(id) {
-    const therapist = staff.find(s => s.id == id); // Usar == para comparar string con número
-    if (!therapist) return;
-    
-    document.getElementById('editTherapistId').value = therapist.id;
-    document.getElementById('editName').value = therapist.name || '';
-    document.getElementById('editSpec').value = therapist.spec || '';
-    document.getElementById('editUser').value = therapist.usuario || therapist.user || '';
-    document.getElementById('editPass').value = '';
-    document.getElementById('editWhatsapp').value = therapist.whatsapp || '';
-    document.getElementById('editInstagram').value = therapist.instagram || '';
-    document.getElementById('editAddress').value = therapist.address || '';
-    document.getElementById('editPhone').value = therapist.phone || '';
-    document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
-    document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
-    
-    if (therapist.img) {
-        document.getElementById('editPhotoPreview').src = therapist.img;
-        document.getElementById('editPhotoPreview').style.display = 'block';
-    } else {
-        document.getElementById('editPhotoPreview').style.display = 'none';
+        const therapist = staff.find(s => s.id == id);
+        if (!therapist) return;
+        
+        document.getElementById('editTherapistId').value = therapist.id;
+        document.getElementById('editName').value = therapist.name || '';
+        document.getElementById('editSpec').value = therapist.spec || '';
+        document.getElementById('editUser').value = therapist.usuario || '';
+        document.getElementById('editPass').value = '';
+        document.getElementById('editWhatsapp').value = therapist.whatsapp || '';
+        document.getElementById('editInstagram').value = therapist.instagram || '';
+        document.getElementById('editAddress').value = therapist.address || '';
+        document.getElementById('editPhone').value = therapist.phone || '';
+        document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
+        document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
+        
+        if (therapist.img) {
+            document.getElementById('editPhotoPreview').src = therapist.img;
+            document.getElementById('editPhotoPreview').style.display = 'block';
+        } else {
+            document.getElementById('editPhotoPreview').style.display = 'none';
+        }
+        
+        tempImageData = null;
+        document.getElementById('editTherapistModal').style.display = 'flex';
     }
-    
-    tempImageData = null;
-    document.getElementById('editTherapistModal').style.display = 'flex';
-}
 
     function closeEditTherapistModal() {
         document.getElementById('editTherapistModal').style.display = 'none';
     }
 
     function updateTherapist() {
-    const id = document.getElementById('editTherapistId').value; // No convertir a número
-    const therapist = staff.find(s => s.id == id); // Usar ==
-    if (!therapist) return;
+        const id = document.getElementById('editTherapistId').value;
+        const therapist = staff.find(s => s.id == id);
+        if (!therapist) return;
 
-    therapist.name = document.getElementById('editName').value;
-    therapist.spec = document.getElementById('editSpec').value;
-    therapist.usuario = document.getElementById('editUser').value; // Cambiar a usuario
-    therapist.whatsapp = document.getElementById('editWhatsapp').value;
-    therapist.instagram = document.getElementById('editInstagram').value;
-    therapist.address = document.getElementById('editAddress').value;
-    therapist.phone = document.getElementById('editPhone').value;
-    therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
-    therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
+        therapist.name = document.getElementById('editName').value;
+        therapist.spec = document.getElementById('editSpec').value;
+        therapist.usuario = document.getElementById('editUser').value;
+        therapist.whatsapp = document.getElementById('editWhatsapp').value;
+        therapist.instagram = document.getElementById('editInstagram').value;
+        therapist.address = document.getElementById('editAddress').value;
+        therapist.phone = document.getElementById('editPhone').value;
+        therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
+        therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
 
-    if (tempImageData) {
-        therapist.img = tempImageData;
+        if (tempImageData) {
+            therapist.img = tempImageData;
+        }
+
+        const newPass = document.getElementById('editPass').value;
+        if (newPass) therapist.pass = newPass;
+
+        save();
+        closeEditTherapistModal();
+        renderStaffTable();
+        showToast('Profesional actualizado', 'success');
     }
-
-    const newPass = document.getElementById('editPass').value;
-    if (newPass) therapist.pass = newPass;
-
-    save();
-    closeEditTherapistModal();
-    renderStaffTable();
-    showToast('Profesional actualizado', 'success');
-}
 
     function deleteStaff(id) {
-    const therapist = staff.find(s => s.id == id); // Usar == para comparar string con número
-    if (therapist?.isHiddenAdmin) {
-        showToast('No se puede eliminar al admin', 'error');
-        return;
-    }
-    
-    if (confirm('¿Eliminar profesional y todos sus datos?')) {
-        appointments = appointments.filter(a => a.psychId != id); // Usar !=
-        patients = patients.filter(p => p.psychId != id); // Usar !=
-        staff = staff.filter(s => s.id != id); // Usar !=
-        save();
-        showToast('Profesional eliminado', 'success');
-    }
-}
+        const therapist = staff.find(s => s.id == id);
+        if (therapist?.isHiddenAdmin) {
+            showToast('No se puede eliminar al admin', 'error');
+            return;
+        }
         
         if (confirm('¿Eliminar profesional y todos sus datos?')) {
-            appointments = appointments.filter(a => a.psychId !== id);
-            patients = patients.filter(p => p.psychId !== id);
-            staff = staff.filter(s => s.id !== id);
+            appointments = appointments.filter(a => a.psychId != id);
+            patients = patients.filter(p => p.psychId != id);
+            staff = staff.filter(s => s.id != id);
             save();
             showToast('Profesional eliminado', 'success');
         }
@@ -3950,21 +3979,21 @@ db.ref('Staff').on('value', (snapshot) => {
     // ============================================
 
     function editAppointment(id) {
-        const appointment = appointments.find(a => a.id === id);
+        const appointment = appointments.find(a => a.id == id);
         if (!appointment) return;
         showToast('Función de edición en desarrollo', 'info');
     }
 
     function cancelAppointment(id) {
         if (confirm('¿Cancelar esta cita?')) {
-            appointments = appointments.filter(a => a.id !== id);
+            appointments = appointments.filter(a => a.id != id);
             save();
             showToast('Cita cancelada', 'success');
         }
     }
 
     function markAsPaid(id) {
-        const appointment = appointments.find(a => a.id === id);
+        const appointment = appointments.find(a => a.id == id);
         if (appointment) {
             appointment.paymentStatus = 'pagado';
             save();
@@ -3980,10 +4009,8 @@ db.ref('Staff').on('value', (snapshot) => {
     // INICIALIZACIÓN
     // ============================================
 
-    // 🔴 LLAMAR A LA FUNCIÓN PARA CARGAR DATOS DE FIREBASE
     cargarDatosIniciales();
 
-    // Event listeners
     document.getElementById('custTime').addEventListener('change', function() {
         const date = document.getElementById('custDate').value;
         const time = this.value;

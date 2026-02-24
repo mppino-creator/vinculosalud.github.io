@@ -1,129 +1,158 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Vínculo Salud - Gestión Profesionales</title>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vínculo Salud - Gestión de Box</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f0f4f8; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); color: var(--primary); }
+        .app-container { max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
+        button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #2980b9; }
+        .slot-card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .admin-box { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px dashed #ccc; margin-top: 20px; }
+        h2 { color: var(--accent); text-align: center; }
+    </style>
 </head>
 <body>
-    <h2>Gestión de Profesionales</h2>
-    
-    <!-- Formulario para agregar profesional -->
-    <div style="border:1px solid black; padding:10px; margin-bottom:20px;">
-        <h3>Agregar Profesional</h3>
-        <input type="text" id="nombre" placeholder="Nombre completo"><br><br>
-        <input type="text" id="especialidad" placeholder="Especialidad"><br><br>
-        <input type="text" id="usuario" placeholder="Usuario"><br><br>
-        <input type="text" id="password" placeholder="Contraseña"><br><br>
-        <input type="number" id="precioOnline" placeholder="Precio Online"><br><br>
-        <input type="number" id="precioPresencial" placeholder="Precio Presencial"><br><br>
-        <button onclick="guardarProfesional()">Guardar Profesional</button>
-    </div>
-    
-    <!-- Lista de profesionales -->
-    <div style="border:1px solid black; padding:10px;">
-        <h3>Lista de Profesionales</h3>
-        <div id="listaProfesionales"></div>
+
+<div class="app-container">
+    <h2>Vínculo Salud</h2>
+
+    <div id="login-section">
+        <p style="text-align: center; color: #666;">Ingresa tus credenciales</p>
+        <input type="text" id="user" placeholder="Nombre (Ej: Psic. Alison Gutiérrez)">
+        <input type="password" id="pass" placeholder="Contraseña">
+        <button onclick="intentarLogin()">Entrar al Sistema</button>
     </div>
 
-    <script>
-        // Configuración Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyCj5jdc_FQ1H0l78VJj3qBmGYsGrSete3U",
-            authDomain: "vinculosaludapp.firebaseapp.com",
-            databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
-            projectId: "vinculosaludapp",
-            storageBucket: "vinculosaludapp.firebasestorage.app",
-            messagingSenderId: "405876668483",
-            appId: "1:405876668483:web:8f19aef4dd63a70ecdbcf6"
-        };
+    <div id="admin-section" class="hidden">
+        <h3>Panel Administrador</h3>
+        <div class="admin-box">
+            <p><strong>Registrar Nuevo Psicólogo:</strong></p>
+            <input type="text" id="p-name" placeholder="Nombre Completo">
+            <input type="text" id="p-pass" placeholder="Clave Asignada">
+            <button onclick="crearPsicologo()" style="background:#27ae60">Guardar en Staff</button>
+        </div>
+        
+        <div class="admin-box">
+            <p><strong>Habilitar Box:</strong></p>
+            <input type="datetime-local" id="box-time">
+            <button onclick="habilitarHora()">Publicar Horario</button>
+        </div>
+        <button onclick="logout()" style="background:#e74c3c; margin-top: 20px;">Cerrar Sesión</button>
+    </div>
 
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    <div id="psyc-section" class="hidden">
+        <h3 id="psyc-welcome">Panel de Reservas</h3>
+        <p>Selecciona una hora disponible para el box:</p>
+        <div id="lista-disponible"></div>
+        <button onclick="logout()" style="background:#e74c3c; margin-top: 20px;">Cerrar Sesión</button>
+    </div>
+</div>
 
-        // Función para guardar profesional
-        function guardarProfesional() {
-            // Obtener valores del formulario
-            const nombre = document.getElementById('nombre').value;
-            const especialidad = document.getElementById('especialidad').value;
-            const usuario = document.getElementById('usuario').value;
-            const password = document.getElementById('password').value;
-            const precioOnline = document.getElementById('precioOnline').value;
-            const precioPresencial = document.getElementById('precioPresencial').value;
-            
-            // Validar campos obligatorios
-            if (!nombre || !usuario || !password) {
-                alert('Nombre, usuario y contraseña son obligatorios');
-                return;
-            }
-            
-            // Crear objeto profesional
-            const profesional = {
-                id: Date.now(),
-                nombre: nombre,
-                especialidad: especialidad || '',
-                usuario: usuario,
-                password: password,
-                precioOnline: parseInt(precioOnline) || 0,
-                precioPresencial: parseInt(precioPresencial) || 0
-            };
-            
-            // Guardar en Firebase
-            database.ref('profesionales/' + profesional.id).set(profesional);
-            
-            // Limpiar formulario
-            document.getElementById('nombre').value = '';
-            document.getElementById('especialidad').value = '';
-            document.getElementById('usuario').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('precioOnline').value = '';
-            document.getElementById('precioPresencial').value = '';
-            
-            alert('Profesional guardado');
+<script>
+    // CONFIGURACIÓN DE TU FIREBASE (Saca esto de tu Console)
+    const firebaseConfig = {
+        apiKey: "TU_API_KEY",
+        authDomain: "vinculosaludapp.firebaseapp.com",
+        databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
+        projectId: "vinculosaludapp",
+        storageBucket: "vinculosaludapp.appspot.com",
+        appId: "TU_APP_ID"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function intentarLogin() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+
+        // Login Admin
+        if(u === "Admin" && p === "Nina2026") {
+            abrirSeccion('admin-section');
+            return;
         }
 
-        // Función para eliminar profesional
-        function eliminarProfesional(id) {
-            if (confirm('¿Eliminar profesional?')) {
-                database.ref('profesionales/' + id).remove();
-            }
-        }
-
-        // Escuchar cambios en Firebase
-        database.ref('profesionales').on('value', function(snapshot) {
-            const data = snapshot.val();
-            const lista = document.getElementById('listaProfesionales');
-            
-            if (!data) {
-                lista.innerHTML = '<p>No hay profesionales</p>';
-                return;
-            }
-            
-            // Convertir objeto a array
-            const profesionales = Object.values(data);
-            
-            // Crear tabla HTML
-            let html = '<table border="1" cellpadding="8" style="border-collapse:collapse; width:100%;">';
-            html += '<tr><th>Nombre</th><th>Especialidad</th><th>Usuario</th><th>Precio Online</th><th>Precio Presencial</th><th>Acción</th></tr>';
-            
-            profesionales.forEach(p => {
-                html += '<tr>';
-                html += '<td>' + (p.nombre || '') + '</td>';
-                html += '<td>' + (p.especialidad || '') + '</td>';
-                html += '<td>' + (p.usuario || '') + '</td>';
-                html += '<td>$' + (p.precioOnline || 0) + '</td>';
-                html += '<td>$' + (p.precioPresencial || 0) + '</td>';
-                html += '<td><button onclick="eliminarProfesional(' + p.id + ')">Eliminar</button></td>';
-                html += '</tr>';
+        // Login buscando en el nodo Staff que ya tienes
+        db.ref('Staff').once('value', snapshot => {
+            let usuarioEncontrado = null;
+            snapshot.forEach(child => {
+                const datos = child.val();
+                if(datos.name === u && datos.pass === p) {
+                    usuarioEncontrado = datos.name;
+                }
             });
-            
-            html += '</table>';
-            lista.innerHTML = html;
+
+            if(usuarioEncontrado) {
+                document.getElementById('psyc-welcome').innerText = "Bienvenido/a " + usuarioEncontrado;
+                abrirSeccion('psyc-section');
+                escucharHoras();
+            } else {
+                alert("Error: Nombre o contraseña incorrectos.");
+            }
         });
-    </script>
+    }
+
+    function crearPsicologo() {
+        const name = document.getElementById('p-name').value;
+        const pass = document.getElementById('p-pass').value;
+        if(name && pass) {
+            // Empujamos al nodo Staff que ya usas
+            db.ref('Staff').push({ name, pass }); 
+            alert("Profesional agregado a Staff correctamente.");
+            document.getElementById('p-name').value = ""; document.getElementById('p-pass').value = "";
+        }
+    }
+
+    function habilitarHora() {
+        const fecha = document.getElementById('box-time').value;
+        if(fecha) {
+            db.ref('disponibilidad').push({ fecha, estado: 'libre' });
+            alert("Hora de Box publicada.");
+        }
+    }
+
+    function escucharHoras() {
+        db.ref('disponibilidad').on('value', snapshot => {
+            const div = document.getElementById('lista-disponible');
+            div.innerHTML = "";
+            if(!snapshot.exists()) div.innerHTML = "<p>No hay horas disponibles.</p>";
+            
+            snapshot.forEach(child => {
+                const item = child.val();
+                if(item.estado === 'libre') {
+                    div.innerHTML += `
+                        <div class="slot-card">
+                            <span>${new Date(item.fecha).toLocaleString()}</span>
+                            <button onclick="reservar('${child.key}')" style="width:100px; padding:8px;">Reservar</button>
+                        </div>`;
+                }
+            });
+        });
+    }
+
+    function reservar(id) {
+        const psicologoLogueado = document.getElementById('user').value;
+        db.ref('disponibilidad/' + id).update({ 
+            estado: 'ocupado', 
+            reservadoPor: psicologoLogueado 
+        });
+        alert("¡Box reservado!");
+    }
+
+    function abrirSeccion(id) {
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function logout() { location.reload(); }
+</script>
 </body>
 </html>

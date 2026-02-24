@@ -7,8 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    
     <style>
-        /* [Mantén todos los estilos que ya tienes aquí] */
         * {
             margin: 0;
             padding: 0;
@@ -39,7 +42,6 @@
             min-height: 100vh;
         }
 
-        /* Toast System */
         .toast-container {
             position: fixed;
             top: 10px;
@@ -88,7 +90,6 @@
             to { transform: translateX(100%); opacity: 0; }
         }
 
-        /* Modal System */
         .modal {
             display: none;
             position: fixed;
@@ -143,7 +144,6 @@
             background: #f1f5f9;
         }
 
-        /* Glass Effect */
         .glass { 
             background: var(--glass); 
             backdrop-filter: blur(12px); 
@@ -159,7 +159,6 @@
             padding: 0 15px;
         }
 
-        /* Navigation */
         header.nav-container {
             padding: 15px 0;
             position: sticky;
@@ -215,7 +214,6 @@
             transform: none; 
         }
 
-        /* Hero Section */
         .hero-section {
             padding: 40px 15px 30px;
             text-align: center;
@@ -237,7 +235,6 @@
             padding: 0 15px;
         }
 
-        /* Testimonials Marquee */
         .testimonials-marquee {
             background: linear-gradient(90deg, var(--primary), var(--secondary));
             padding: 15px 0;
@@ -280,7 +277,6 @@
             100% { transform: translateX(-50%); }
         }
 
-        /* Filters */
         .filters {
             display: flex;
             flex-direction: column;
@@ -321,7 +317,6 @@
             box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
 
-        /* Professional Grid */
         .grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -344,7 +339,6 @@
             }
         }
 
-        /* Professional Cards */
         .therapist-card {
             background: white;
             border-radius: 28px;
@@ -544,7 +538,6 @@
         .btn-book:hover { background: var(--primary-dark); }
         .btn-book:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* Messages Section */
         .messages-section {
             background: white;
             border-radius: 30px;
@@ -644,7 +637,6 @@
             margin-right: 5px;
         }
 
-        /* Booking Panel */
         .panel { 
             display: none; 
             margin-top: 20px; 
@@ -683,7 +675,6 @@
             }
         }
 
-        /* Stats Grid */
         .stat-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -723,7 +714,6 @@
             font-weight: 700; 
         }
 
-        /* Tabs */
         .tabs {
             display: flex;
             gap: 8px;
@@ -761,7 +751,6 @@
             display: block;
         }
 
-        /* Forms */
         .admin-form, .availability-form {
             background: #f1f5f9;
             padding: 20px;
@@ -809,7 +798,6 @@
             box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
 
-        /* File Upload */
         .file-upload {
             border: 2px dashed var(--primary);
             border-radius: 12px;
@@ -850,7 +838,6 @@
             display: block;
         }
 
-        /* Table */
         .table-container { 
             border-radius: 20px; 
             overflow-x: auto; 
@@ -877,7 +864,6 @@
             border-top: 1px solid #f5f5f5; 
         }
 
-        /* Patient Cards */
         .patient-card {
             background: white;
             border-radius: 16px;
@@ -916,7 +902,6 @@
             flex-wrap: wrap;
         }
 
-        /* Patient History */
         .patient-history {
             margin-top: 15px;
             padding-top: 15px;
@@ -967,13 +952,6 @@
             color: var(--success);
         }
 
-        .edit-timeout {
-            font-size: 0.75rem;
-            color: var(--warning);
-            margin-left: 10px;
-        }
-
-        /* Time Slots */
         .time-slots {
             display: flex;
             flex-wrap: wrap;
@@ -1017,21 +995,6 @@
             position: relative;
         }
 
-        .time-slot.box-busy {
-            background: #ede9fe;
-            color: var(--box-color);
-            border-color: var(--box-color);
-            position: relative;
-            cursor: not-allowed;
-        }
-
-        .time-slot.box-busy::after {
-            content: "📦";
-            margin-left: 5px;
-            font-size: 0.8rem;
-        }
-
-        /* Weekday Selector */
         .weekday-selector {
             display: flex;
             gap: 8px;
@@ -1054,7 +1017,6 @@
             border-color: var(--primary);
         }
 
-        /* Badges */
         .badge {
             padding: 4px 8px;
             border-radius: 6px;
@@ -1065,7 +1027,6 @@
         .badge.online { background: #e6f7e6; color: var(--success); }
         .badge.presencial { background: #e6f0ff; color: var(--primary); }
 
-        /* Buttons */
         .btn-icon {
             padding: 6px 10px;
             border-radius: 8px;
@@ -1098,7 +1059,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Address Field */
         .address-input {
             margin-top: 15px;
             padding: 15px;
@@ -1106,7 +1066,6 @@
             border-radius: 12px;
         }
 
-        /* Box Selector */
         .box-selector {
             display: flex;
             flex-wrap: wrap;
@@ -1136,7 +1095,6 @@
             background: #f1f5f9;
         }
 
-        /* Email Simulation */
         .email-simulation {
             background: #e8f0fe;
             border-left: 4px solid var(--primary);
@@ -1150,7 +1108,6 @@
             color: var(--primary);
         }
 
-        /* Stats Cards */
         .patient-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -1181,7 +1138,6 @@
             text-transform: uppercase;
         }
 
-        /* Responsive adjustments */
         @media (max-width: 480px) {
             .container {
                 width: 100%;
@@ -1233,10 +1189,8 @@
 </head>
 <body>
 
-<!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Modal de Login (CORREGIDO) -->
 <div class="modal" id="loginModal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeLoginModal()">&times;</button>
@@ -1255,7 +1209,6 @@
     </div>
 </div>
 
-<!-- Modal de Mensaje/Testimonio -->
 <div class="modal" id="messageModal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeMessageModal()">&times;</button>
@@ -1306,7 +1259,6 @@
     </div>
 </div>
 
-<!-- Modal de Edición de Terapeuta (CON CARGA DE FOTO) -->
 <div class="modal" id="editTherapistModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeEditTherapistModal()">&times;</button>
@@ -1388,7 +1340,6 @@
     </div>
 </div>
 
-<!-- Modal de Paciente con RUT e Historial MEJORADO -->
 <div class="modal" id="patientModal">
     <div class="modal-content" style="max-width: 700px;">
         <button class="modal-close" onclick="closePatientModal()">&times;</button>
@@ -1425,10 +1376,8 @@
             <textarea id="patientNotes" rows="4" placeholder="Antecedentes, diagnósticos, observaciones importantes..."></textarea>
         </div>
         
-        <!-- Estadísticas del Paciente -->
         <div id="patientStatsContainer" style="display:none;" class="patient-stats"></div>
         
-        <!-- Historial de Atenciones MEJORADO -->
         <div id="patientHistoryContainer" style="margin: 20px 0; display: none;">
             <h3 style="margin-bottom: 15px;">📋 Historial de Atenciones</h3>
             <div id="patientHistoryList" class="patient-history"></div>
@@ -1440,7 +1389,6 @@
     </div>
 </div>
 
-<!-- Modal de Configuración de Disponibilidad -->
 <div class="modal" id="availabilityModal">
     <div class="modal-content" style="max-width: 900px;">
         <button class="modal-close" onclick="closeAvailabilityModal()">&times;</button>
@@ -1515,7 +1463,6 @@
     </div>
 </div>
 
-<!-- Modal de Gestión de Boxes -->
 <div class="modal" id="boxModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeBoxModal()">&times;</button>
@@ -1584,7 +1531,6 @@
     </div>
 </div>
 
-<!-- Modal para Añadir Profesional (CON CARGA DE FOTO) -->
 <div class="modal" id="addStaffModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeAddStaffModal()">&times;</button>
@@ -1664,7 +1610,6 @@
     </div>
 </div>
 
-<!-- Contenedor Principal -->
 <div class="container">
     <header class="nav-container">
         <nav class="glass">
@@ -1675,7 +1620,6 @@
         </nav>
     </header>
 
-    <!-- Testimonios Flotantes -->
     <div class="testimonials-marquee" id="testimonialsMarquee">
         <div class="marquee-content" id="marqueeContent"></div>
     </div>
@@ -1686,7 +1630,6 @@
             <p>Encuentra al profesional ideal y agenda tu sesión</p>
         </section>
 
-        <!-- Filtros Avanzados -->
         <div class="filters">
             <input type="text" class="filter-input" id="searchFilter" placeholder="🔍 Buscar profesional..." oninput="filterProfessionals()">
             <input type="text" class="filter-input" id="specialtyFilter" placeholder="🏷️ Especialidad..." oninput="filterProfessionals()">
@@ -1698,10 +1641,8 @@
             </select>
         </div>
 
-        <!-- Grid de Profesionales -->
         <div class="grid" id="publicGrid"></div>
 
-        <!-- Sección de Mensajes -->
         <div class="messages-section">
             <div class="messages-header">
                 <h2>💬 Experiencias de pacientes</h2>
@@ -1713,7 +1654,6 @@
         </div>
     </main>
 
-    <!-- Panel de Reserva (CON BOXES) -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
             <h2>Agendar Cita con <span id="psychName"></span></h2>
@@ -1752,7 +1692,6 @@
                     </select>
                 </div>
                 
-                <!-- Selección de Box (solo para presencial) -->
                 <div id="boxField" style="display:none;" class="address-input">
                     <label>Seleccionar Box *</label>
                     <div id="boxSelector" class="box-selector"></div>
@@ -1827,14 +1766,12 @@
             </div>
         </div>
         
-        <!-- Simulación de correo electrónico -->
         <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;">
             <strong>📧 CORREO ENVIADO AL PACIENTE</strong><br>
             <span id="emailContent"></span>
         </div>
     </div>
 
-    <!-- Panel de Dashboard -->
     <div id="dashboard" class="panel">
         <div class="dashboard-header">
             <div>
@@ -1859,7 +1796,6 @@
             </div>
         </div>
 
-        <!-- Tabs -->
         <div class="tabs" id="dashboardTabs">
             <div class="tab active" onclick="switchTab('citas')">Citas</div>
             <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
@@ -1870,7 +1806,6 @@
             <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
         </div>
 
-        <!-- Tab: Citas -->
         <div id="tabCitas" class="tab-content active">
             <h3>Próximas Sesiones</h3>
             <div class="table-container">
@@ -1892,7 +1827,6 @@
             </div>
         </div>
 
-        <!-- Tab: Pacientes con Historial MEJORADO -->
         <div id="tabPacientes" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Pacientes</h3>
@@ -1908,7 +1842,6 @@
             <div id="patientsList"></div>
         </div>
 
-        <!-- Tab: Profesionales (Admin) -->
         <div id="tabProfesionales" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Profesionales</h3>
@@ -1936,7 +1869,6 @@
             </div>
         </div>
 
-        <!-- Tab: Disponibilidad -->
         <div id="tabDisponibilidad" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestionar Disponibilidad</h3>
@@ -1972,7 +1904,6 @@
             </div>
         </div>
 
-        <!-- Tab: Mi Configuración -->
         <div id="tabConfiguracion" class="tab-content">
             <h3>Mi Configuración Profesional</h3>
             <div style="background:#f8fafc; padding:25px; border-radius:20px;">
@@ -2016,7 +1947,6 @@
             </div>
         </div>
 
-        <!-- Tab: Mensajes (Admin) -->
         <div id="tabMensajes" class="tab-content">
             <h3>Gestión de Mensajes</h3>
             <div class="table-container">
@@ -2037,7 +1967,6 @@
             </div>
         </div>
 
-        <!-- Tab: Boxes (Admin) -->
         <div id="tabBoxes" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Boxes</h3>
@@ -2067,10 +1996,26 @@
 
 <script>
     // ============================================
-    // SISTEMA COMPLETO - VERSIÓN CORREGIDA
+    // CONFIGURACIÓN DE FIREBASE
+    // ============================================
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyCj5jdc_FQ1H0l78VJj3qBmGYsGrSete3U",
+        authDomain: "vinculosaludapp.firebaseapp.com",
+        databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
+        projectId: "vinculosaludapp",
+        storageBucket: "vinculosaludapp.firebasestorage.app",
+        messagingSenderId: "405876668483",
+        appId: "1:405876668483:web:8f19aef4dd63a70ecdbcf6"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // ============================================
+    // SISTEMA COMPLETO
     // ============================================
 
-    // Toast System
     function showToast(message, type = 'success', duration = 3000) {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
@@ -2086,170 +2031,12 @@
         }, duration);
     }
 
-    // Base de datos inicial (solo se usa si no hay datos guardados)
-    let staff = JSON.parse(localStorage.getItem('mc_staff_v14')) || (function() {
-        const initialStaff = [
-            { 
-                id: 1, 
-                name: 'Psic. Alison Gutiérrez', 
-                spec: 'Terapia Cognitiva, Ansiedad, Depresión, Estrés', 
-                priceOnline: 45000,
-                pricePresencial: 50000,
-                user: 'isabel',
-                pass: 'isabel2026', 
-                img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500',
-                whatsapp: '+56987654321',
-                instagram: 'alison.psicologa',
-                stars: 5,
-                address: 'Av. Providencia 1234, Santiago',
-                phone: '+56 9 8765 4321',
-                paymentMethods: { transfer: true, card: true, cash: true, bankDetails: {} },
-                sessionDuration: 50,
-                breakBetween: 10,
-                availability: {}
-            },
-            { 
-                id: 2, 
-                name: 'Dr. Julián Sossa', 
-                spec: 'Psiquiatría, Trastornos del ánimo, Ansiedad', 
-                priceOnline: 65000,
-                pricePresencial: 70000,
-                user: 'julian',
-                pass: 'julian2026', 
-                img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500',
-                whatsapp: '+56976543210',
-                instagram: 'dr.julianpsiquiatra',
-                stars: 5,
-                address: 'Av. Las Condes 7890, Las Condes',
-                phone: '+56 9 7654 3210',
-                paymentMethods: { transfer: true, card: false, cash: true, bankDetails: {} },
-                sessionDuration: 50,
-                breakBetween: 15,
-                availability: {}
-            },
-            { 
-                id: 3, 
-                name: 'Dra. Martina Luz', 
-                spec: 'Mindfulness, Estrés, Yoga Terapéutico, Meditación', 
-                priceOnline: 40000,
-                pricePresencial: 45000,
-                user: 'martina',
-                pass: 'martina2026', 
-                img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500',
-                whatsapp: '+56965432109',
-                instagram: 'martina.bienestar',
-                stars: 4,
-                address: 'Av. Vitacura 4567, Vitacura',
-                phone: '+56 9 6543 2109',
-                paymentMethods: { transfer: false, card: true, cash: true, bankDetails: {} },
-                sessionDuration: 45,
-                breakBetween: 15,
-                availability: {}
-            }
-        ];
-        
-        // Admin oculto
-        if (!initialStaff.some(s => s.user === 'Admin')) {
-            initialStaff.push({
-                id: 9999,
-                name: 'Administrador',
-                spec: 'ADMIN_HIDDEN',
-                priceOnline: 0,
-                pricePresencial: 0,
-                user: 'Admin',
-                pass: 'Nina2026',
-                img: '',
-                whatsapp: '',
-                instagram: '',
-                stars: 0,
-                address: '',
-                phone: '',
-                isHiddenAdmin: true,
-                paymentMethods: {},
-                sessionDuration: 0,
-                breakBetween: 0,
-                availability: {}
-            });
-        }
-        
-        return initialStaff;
-    })();
-
-    // Boxes
-    let boxes = JSON.parse(localStorage.getItem('mc_boxes_v4')) || [
-        {
-            id: 1,
-            name: 'Box 1',
-            location: 'Piso 1 - Sector A',
-            startTime: '09:00',
-            endTime: '20:00',
-            days: [1,2,3,4,5],
-            description: 'Box equipado con camilla y escritorio',
-            active: true
-        },
-        {
-            id: 2,
-            name: 'Box 2',
-            location: 'Piso 1 - Sector B',
-            startTime: '09:00',
-            endTime: '20:00',
-            days: [1,2,3,4,5],
-            description: 'Box con vista al exterior',
-            active: true
-        },
-        {
-            id: 3,
-            name: 'Box 3',
-            location: 'Piso 2',
-            startTime: '14:00',
-            endTime: '22:00',
-            days: [1,2,3,4,5,6],
-            description: 'Box para atenciones vespertinas',
-            active: true
-        }
-    ];
-
-    // Mensajes
-    let messages = JSON.parse(localStorage.getItem('mc_messages_v7')) || [
-        {
-            id: 1,
-            name: 'Carolina Méndez',
-            email: '',
-            whatsapp: '',
-            therapistId: 1,
-            therapistName: 'Psic. Alison Gutiérrez',
-            rating: 5,
-            text: 'Excelente profesional, me ayudó mucho con mi ansiedad. Muy recomendada.',
-            date: '2024-02-15'
-        },
-        {
-            id: 2,
-            name: 'Roberto Campos',
-            email: 'roberto@email.com',
-            whatsapp: '+56912345678',
-            therapistId: null,
-            therapistName: null,
-            rating: 5,
-            text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.',
-            date: '2024-02-16'
-        },
-        {
-            id: 3,
-            name: 'María José',
-            email: '',
-            whatsapp: '',
-            therapistId: 2,
-            therapistName: 'Dr. Julián Sossa',
-            rating: 4,
-            text: 'Muy profesional, aunque los tiempos de espera a veces son largos.',
-            date: '2024-02-17'
-        }
-    ];
-
-    let patients = JSON.parse(localStorage.getItem('mc_patients_v10')) || [];
-    let appointments = JSON.parse(localStorage.getItem('mc_apps_v14')) || [];
+    let staff = [];
+    let patients = [];
+    let appointments = [];
+    let boxes = [];
+    let messages = [];
     
-    // Variables globales
     let selectedPsych = null;
     let currentUser = null;
     let currentRating = 5;
@@ -2259,17 +2046,149 @@
     let tempImageData = null;
     const EDIT_HOURS = 24;
 
-    // Funciones de utilidad
     function getPublicStaff() {
         return staff.filter(s => s.spec !== 'ADMIN_HIDDEN' && s.spec && s.spec.trim() !== '');
     }
 
+    function cargarDatosIniciales() {
+        database.ref('staff').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                staff = data;
+            } else {
+                staff = [
+                    { 
+                        id: 1, 
+                        name: 'Psic. Alison Gutiérrez', 
+                        spec: 'Terapia Cognitiva, Ansiedad, Depresión, Estrés', 
+                        priceOnline: 45000,
+                        pricePresencial: 50000,
+                        user: 'isabel',
+                        pass: 'isabel2026', 
+                        img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500',
+                        whatsapp: '+56987654321',
+                        instagram: 'alison.psicologa',
+                        stars: 5,
+                        address: 'Av. Providencia 1234, Santiago',
+                        phone: '+56 9 8765 4321',
+                        paymentMethods: { transfer: true, card: true, cash: true, bankDetails: {} },
+                        sessionDuration: 50,
+                        breakBetween: 10,
+                        availability: {}
+                    },
+                    { 
+                        id: 2, 
+                        name: 'Dr. Julián Sossa', 
+                        spec: 'Psiquiatría, Trastornos del ánimo, Ansiedad', 
+                        priceOnline: 65000,
+                        pricePresencial: 70000,
+                        user: 'julian',
+                        pass: 'julian2026', 
+                        img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500',
+                        whatsapp: '+56976543210',
+                        instagram: 'dr.julianpsiquiatra',
+                        stars: 5,
+                        address: 'Av. Las Condes 7890, Las Condes',
+                        phone: '+56 9 7654 3210',
+                        paymentMethods: { transfer: true, card: false, cash: true, bankDetails: {} },
+                        sessionDuration: 50,
+                        breakBetween: 15,
+                        availability: {}
+                    },
+                    { 
+                        id: 3, 
+                        name: 'Dra. Martina Luz', 
+                        spec: 'Mindfulness, Estrés, Yoga Terapéutico, Meditación', 
+                        priceOnline: 40000,
+                        pricePresencial: 45000,
+                        user: 'martina',
+                        pass: 'martina2026', 
+                        img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500',
+                        whatsapp: '+56965432109',
+                        instagram: 'martina.bienestar',
+                        stars: 4,
+                        address: 'Av. Vitacura 4567, Vitacura',
+                        phone: '+56 9 6543 2109',
+                        paymentMethods: { transfer: false, card: true, cash: true, bankDetails: {} },
+                        sessionDuration: 45,
+                        breakBetween: 15,
+                        availability: {}
+                    }
+                ];
+                staff.push({
+                    id: 9999,
+                    name: 'Administrador',
+                    spec: 'ADMIN_HIDDEN',
+                    priceOnline: 0,
+                    pricePresencial: 0,
+                    user: 'Admin',
+                    pass: 'Nina2026',
+                    img: '',
+                    whatsapp: '',
+                    instagram: '',
+                    stars: 0,
+                    address: '',
+                    phone: '',
+                    isHiddenAdmin: true,
+                    paymentMethods: {},
+                    sessionDuration: 0,
+                    breakBetween: 0,
+                    availability: {}
+                });
+            }
+            filterProfessionals();
+            if (currentUser?.role === 'admin') renderStaffTable();
+        });
+        
+        database.ref('boxes').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                boxes = data;
+            } else {
+                boxes = [
+                    { id: 1, name: 'Box 1', location: 'Piso 1 - Sector A', startTime: '09:00', endTime: '20:00', days: [1,2,3,4,5], description: 'Box equipado con camilla y escritorio', active: true },
+                    { id: 2, name: 'Box 2', location: 'Piso 1 - Sector B', startTime: '09:00', endTime: '20:00', days: [1,2,3,4,5], description: 'Box con vista al exterior', active: true },
+                    { id: 3, name: 'Box 3', location: 'Piso 2', startTime: '14:00', endTime: '22:00', days: [1,2,3,4,5,6], description: 'Box para atenciones vespertinas', active: true }
+                ];
+            }
+            if (currentUser?.role === 'admin') renderBoxesTable();
+        });
+        
+        database.ref('patients').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) patients = data;
+            if (currentUser) renderPatients();
+        });
+        
+        database.ref('appointments').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) appointments = data;
+            if (currentUser) updateStats();
+        });
+        
+        database.ref('messages').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                messages = data;
+            } else {
+                messages = [
+                    { id: 1, name: 'Carolina Méndez', email: '', whatsapp: '', therapistId: 1, therapistName: 'Psic. Alison Gutiérrez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad. Muy recomendada.', date: '2024-02-15' },
+                    { id: 2, name: 'Roberto Campos', email: 'roberto@email.com', whatsapp: '+56912345678', therapistId: null, therapistName: null, rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: '2024-02-16' },
+                    { id: 3, name: 'María José', email: '', whatsapp: '', therapistId: 2, therapistName: 'Dr. Julián Sossa', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: '2024-02-17' }
+                ];
+            }
+            renderMessages();
+            updateMarquee();
+            if (currentUser?.role === 'admin') renderMessagesTable();
+        });
+    }
+
     function save() {
-        localStorage.setItem('mc_staff_v14', JSON.stringify(staff));
-        localStorage.setItem('mc_apps_v14', JSON.stringify(appointments));
-        localStorage.setItem('mc_patients_v10', JSON.stringify(patients));
-        localStorage.setItem('mc_messages_v7', JSON.stringify(messages));
-        localStorage.setItem('mc_boxes_v4', JSON.stringify(boxes));
+        database.ref('staff').set(staff);
+        database.ref('boxes').set(boxes);
+        database.ref('patients').set(patients);
+        database.ref('appointments').set(appointments);
+        database.ref('messages').set(messages);
         
         if (currentUser) {
             updateStats();
@@ -2280,7 +2199,7 @@
             }
             if (currentUser.role === 'psych') {
                 renderPatients();
-                if (document.getElementById('tabDisponibilidad').classList.contains('active')) {
+                if (document.getElementById('tabDisponibilidad')?.classList.contains('active')) {
                     loadTimeSlots();
                 }
             }
@@ -2289,10 +2208,6 @@
         renderMessages();
         updateMarquee();
     }
-
-    // ============================================
-    // FUNCIONES DE CARGA DE IMÁGENES
-    // ============================================
 
     function previewAddImage(input) {
         if (input.files && input.files[0]) {
@@ -2317,10 +2232,6 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
-
-    // ============================================
-    // FUNCIONES DE BOXES
-    // ============================================
 
     function showBoxModal() {
         document.getElementById('boxModal').style.display = 'flex';
@@ -2496,10 +2407,6 @@
         });
     }
 
-    // ============================================
-    // FUNCIONES DE MENSAJES/TESTIMONIOS
-    // ============================================
-
     function showMessageModal() {
         document.getElementById('messageModal').style.display = 'flex';
         loadTherapistsForMessage();
@@ -2638,10 +2545,6 @@
         `).join('');
     }
 
-    // ============================================
-    // FUNCIONES DE FILTRADO Y BÚSQUEDA
-    // ============================================
-
     function filterProfessionals() {
         const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
         const specialtyTerm = document.getElementById('specialtyFilter')?.value.toLowerCase() || '';
@@ -2739,10 +2642,6 @@
             `;
         }).join('');
     }
-
-    // ============================================
-    // FUNCIONES DE RESERVA
-    // ============================================
 
     function openBooking(id) {
         selectedPsych = staff.find(p => p.id === id);
@@ -3087,10 +2986,6 @@
         }, 1500);
     }
 
-    // ============================================
-    // FUNCIONES DE LOGIN Y DASHBOARD (CORREGIDAS)
-    // ============================================
-
     function showLoginModal() {
         document.getElementById('loginModal').style.display = 'flex';
         document.getElementById('loginUser').value = '';
@@ -3116,7 +3011,6 @@
         btn.innerHTML = '<span class="spinner"></span> Verificando...';
         btn.disabled = true;
 
-        // Verificación directa sin setTimeout para evitar problemas
         const foundUser = staff.find(s => s.user === user && s.pass === pass);
         
         if (foundUser) {
@@ -3242,10 +3136,6 @@
             `;
         });
     }
-
-    // ============================================
-    // FUNCIONES DE PACIENTES CON HISTORIAL MEJORADO
-    // ============================================
 
     function renderPatients() {
         const container = document.getElementById('patientsList');
@@ -3466,10 +3356,6 @@
         showToast('Paciente guardado', 'success');
     }
 
-    // ============================================
-    // FUNCIONES DE DISPONIBILIDAD
-    // ============================================
-
     function showAvailabilityModal() {
         document.getElementById('availabilityModal').style.display = 'flex';
         
@@ -3528,11 +3414,7 @@
             const minute = currentMinutes % 60;
             const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
             
-            generatedSlots.push({
-                time: timeStr,
-                isOvercupo: false
-            });
-            
+            generatedSlots.push({ time: timeStr, isOvercupo: false });
             currentMinutes += slotDuration;
         }
         
@@ -3689,10 +3571,6 @@
         showToast('Disponibilidad guardada', 'success');
     }
 
-    // ============================================
-    // FUNCIONES DE CONFIGURACIÓN
-    // ============================================
-
     function loadMyConfig() {
         if (!currentUser?.data) return;
         
@@ -3723,10 +3601,6 @@
         showToast('Configuración guardada', 'success');
     }
 
-    // ============================================
-    // FUNCIONES DE ADMIN (CON CARGA DE IMÁGENES)
-    // ============================================
-
     function showAddStaffModal() {
         document.getElementById('addStaffModal').style.display = 'flex';
         document.getElementById('addName').value = '';
@@ -3751,7 +3625,7 @@
         const tb = document.getElementById('staffTableBody');
         if (!tb) return;
 
-        const visibleStaff = staff.filter(s => !s.isHiddenAdmin);
+        const visibleStaff = staff.filter(s => !s.isHiddenAdmin && s.spec !== 'ADMIN_HIDDEN');
         tb.innerHTML = visibleStaff.map(p => `
             <tr>
                 <td>${p.name}</td>
@@ -3894,10 +3768,6 @@
         }
     }
 
-    // ============================================
-    // FUNCIONES DE CITAS
-    // ============================================
-
     function editAppointment(id) {
         const appointment = appointments.find(a => a.id === id);
         if (!appointment) return;
@@ -3925,17 +3795,9 @@
         location.reload();
     }
 
-    // ============================================
-    // INICIALIZACIÓN
-    // ============================================
+    cargarDatosIniciales();
 
-    filterProfessionals();
-    renderMessages();
-    updateMarquee();
-    renderBoxesTable();
-
-    // Event listeners
-    document.getElementById('custTime').addEventListener('change', function() {
+    document.getElementById('custTime')?.addEventListener('change', function() {
         const date = document.getElementById('custDate').value;
         const time = this.value;
         if (date && time) {
@@ -3943,7 +3805,7 @@
         }
     });
 
-    document.getElementById('custDate').addEventListener('change', function() {
+    document.getElementById('custDate')?.addEventListener('change', function() {
         const time = document.getElementById('custTime').value;
         if (this.value && time) {
             updateBoxSelector(this.value, time);

@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- 🔥 FIREBASE SDK CORREGIDO (USANDO COMPAT) -->
+    <!-- 🔥 FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
@@ -1711,7 +1711,7 @@
         </div>
     </main>
 
-    <!-- Panel de Reserva -->
+    <!-- Panel de Reserva (para pacientes) -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
             <h2>Agendar Cita con <span id="psychName"></span></h2>
@@ -1750,6 +1750,7 @@
                     </select>
                 </div>
                 
+                <!-- Selección de Box (solo para presencial) -->
                 <div id="boxField" style="display:none;" class="address-input">
                     <label>Seleccionar Box *</label>
                     <div id="boxSelector" class="box-selector"></div>
@@ -1825,12 +1826,12 @@
         </div>
         
         <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;">
-            <strong>📧 CORREO ENVIADO AL PACIENTE</strong><br>
+            <strong>📧 CORREO ENVIADO</strong><br>
             <span id="emailContent"></span>
         </div>
     </div>
 
-    <!-- Panel de Dashboard -->
+    <!-- Panel de Dashboard (para staff) -->
     <div id="dashboard" class="panel">
         <div class="dashboard-header">
             <div>
@@ -1863,10 +1864,12 @@
             <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
             <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
             <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
+            <div class="tab" id="agendarTab" style="display:none;" onclick="switchTab('agendar')">Agendar Cita</div>
         </div>
 
+        <!-- Tab: Citas -->
         <div id="tabCitas" class="tab-content active">
-            <h3>Próximas Sesiones</h3>
+            <h3>Gestión de Citas</h3>
             <div class="table-container">
                 <table>
                     <thead>
@@ -1886,6 +1889,7 @@
             </div>
         </div>
 
+        <!-- Tab: Pacientes -->
         <div id="tabPacientes" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Pacientes</h3>
@@ -1901,6 +1905,7 @@
             <div id="patientsList"></div>
         </div>
 
+        <!-- Tab: Profesionales (Admin) -->
         <div id="tabProfesionales" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Profesionales</h3>
@@ -1928,6 +1933,7 @@
             </div>
         </div>
 
+        <!-- Tab: Disponibilidad -->
         <div id="tabDisponibilidad" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestionar Disponibilidad</h3>
@@ -1963,6 +1969,7 @@
             </div>
         </div>
 
+        <!-- Tab: Mi Configuración -->
         <div id="tabConfiguracion" class="tab-content">
             <h3>Mi Configuración Profesional</h3>
             <div style="background:#f8fafc; padding:25px; border-radius:20px;">
@@ -2006,6 +2013,7 @@
             </div>
         </div>
 
+        <!-- Tab: Mensajes (Admin) -->
         <div id="tabMensajes" class="tab-content">
             <h3>Gestión de Mensajes</h3>
             <div class="table-container">
@@ -2026,6 +2034,7 @@
             </div>
         </div>
 
+        <!-- Tab: Boxes (Admin) -->
         <div id="tabBoxes" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Boxes</h3>
@@ -2048,6 +2057,114 @@
                     </thead>
                     <tbody id="boxTableBodyDashboard"></tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Tab: Agendar Cita (para terapeutas) -->
+        <div id="tabAgendar" class="tab-content">
+            <div class="dashboard-header">
+                <h2>Agendar Cita para Paciente</h2>
+                <button class="btn-staff" style="background:var(--primary)" onclick="showTherapistBookingModal()">
+                    <i class="fa fa-calendar-plus"></i> Nueva Cita
+                </button>
+            </div>
+            
+            <div class="booking-grid">
+                <div>
+                    <h3>Buscar Paciente</h3><br>
+                    
+                    <div class="form-group">
+                        <label>RUT del Paciente</label>
+                        <input type="text" id="therapistRut" placeholder="12.345.678-9" onchange="searchPatientByRutTherapist()">
+                    </div>
+                    
+                    <div id="patientInfo" style="display:none; background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:20px;">
+                        <h4>Datos del Paciente</h4>
+                        <p><strong>Nombre:</strong> <span id="patientInfoName"></span></p>
+                        <p><strong>Email:</strong> <span id="patientInfoEmail"></span></p>
+                        <p><strong>Teléfono:</strong> <span id="patientInfoPhone"></span></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tipo de Atención *</label>
+                        <select id="therapistAppointmentType" onchange="updateTherapistBookingDetails()">
+                            <option value="online">Online (Video llamada)</option>
+                            <option value="presencial">Presencial en consultorio</option>
+                        </select>
+                    </div>
+                    
+                    <div id="therapistBoxField" style="display:none;" class="address-input">
+                        <label>Seleccionar Box *</label>
+                        <div id="therapistBoxSelector" class="box-selector"></div>
+                        <p id="therapistBoxAvailabilityMsg" style="margin-top:10px; font-size:0.85rem; color:var(--text-light);"></p>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <div class="form-group">
+                            <label>Fecha *</label>
+                            <input type="date" id="therapistDate" onchange="updateTherapistAvailableSlots()">
+                        </div>
+                        <div class="form-group">
+                            <label>Horario *</label>
+                            <select id="therapistTime" onchange="updateTherapistBookingDetails()">
+                                <option value="">Selecciona una fecha</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notas / Motivo de consulta</label>
+                        <textarea id="therapistMsg" rows="3" placeholder="Observaciones..."></textarea>
+                    </div>
+                    
+                    <button class="btn-staff" style="width:100%; background:var(--primary); margin-top:15px;" onclick="executeTherapistBooking()">
+                        Confirmar Cita
+                    </button>
+                </div>
+                
+                <div class="glass" style="padding:30px; background: #1e293b; color:white;">
+                    <h3 style="color:white; margin-bottom:20px;">Resumen de Cita</h3>
+                    <p id="therapistPsychName" style="font-size:1.2rem; margin-bottom:5px;"></p>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px; margin-top:20px;">
+                        <span>Paciente</span>
+                        <span id="therapistPatientName">—</span>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span>Fecha</span>
+                        <span id="therapistDateDisplay">—</span>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span>Hora</span>
+                        <span id="therapistTimeDisplay">—</span>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span>Tipo</span>
+                        <span id="therapistTypeDisplay">Online</span>
+                    </div>
+                    
+                    <div id="therapistBoxDisplay" style="display:none; justify-content:space-between; margin-bottom:15px;">
+                        <span>Box asignado</span>
+                        <span id="therapistBoxName"></span>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span>Valor</span>
+                        <span id="therapistPrice">$0</span>
+                    </div>
+                    
+                    <div style="margin:20px 0;">
+                        <label style="color:white; margin-bottom:10px; display:block;">Método de Pago</label>
+                        <select id="therapistPaymentMethod" style="width:100%; padding:12px; border-radius:10px;">
+                            <option value="transfer">Transferencia</option>
+                            <option value="cash">Efectivo</option>
+                            <option value="card">Tarjeta</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2100,12 +2217,107 @@
     let generatedSlots = [];
     let selectedWeekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'];
     let selectedBoxId = null;
+    let selectedTherapistBoxId = null;
     let tempImageData = null;
+    let selectedPatientForTherapist = null;
     const EDIT_HOURS = 24;
 
     function getPublicStaff() {
         return staff.filter(s => s.spec !== 'ADMIN_HIDDEN' && s.spec && s.spec.trim() !== '');
     }
+
+    // ============================================
+    // FUNCIONES DE CORREO
+    // ============================================
+
+    function sendEmailNotification(to, subject, message) {
+        // Simulación de envío de correo
+        console.log(`📧 Enviando correo a: ${to}`);
+        console.log(`📧 Asunto: ${subject}`);
+        console.log(`📧 Mensaje: ${message}`);
+        
+        // Aquí se integraría con un servicio real de correo
+        showToast(`Correo enviado a ${to}`, 'success');
+    }
+
+    function sendAppointmentEmails(appointment, isReminder = false) {
+        const patientEmail = appointment.patientEmail;
+        const psychEmail = staff.find(s => s.id == appointment.psychId)?.email || '';
+        
+        let subject, message;
+        
+        if (isReminder) {
+            subject = `Recordatorio: Cita con ${appointment.psych} - Mañana`;
+            message = `
+                Hola ${appointment.patient},\n\n
+                Te recordamos que tienes una cita MAÑANA con ${appointment.psych}.\n\n
+                📅 Fecha: ${appointment.date}\n
+                ⏰ Hora: ${appointment.time}\n
+                💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}\n
+                ${appointment.boxName ? `📍 Box: ${appointment.boxName}\n` : ''}
+                📍 Dirección: ${appointment.type === 'presencial' ? 'Av. Providencia 1234, Santiago' : 'Enlace de videollamada se enviará 1 hora antes'}\n\n
+                Por favor, confirma tu asistencia.\n\n
+                Vínculo Salud
+            `;
+        } else {
+            subject = `Confirmación de cita - Vínculo Salud`;
+            message = `
+                Hola ${appointment.patient},\n\n
+                Tu cita ha sido confirmada con ${appointment.psych}.\n\n
+                📅 Fecha: ${appointment.date}\n
+                ⏰ Hora: ${appointment.time}\n
+                💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}\n
+                ${appointment.boxName ? `📍 Box: ${appointment.boxName}\n` : ''}
+                📍 Dirección: ${appointment.type === 'presencial' ? 'Av. Providencia 1234, Santiago' : 'El enlace de videollamada se enviará 1 hora antes'}\n\n
+                💳 Método de pago: ${appointment.paymentMethod === 'transfer' ? 'Transferencia bancaria' : appointment.paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}\n\n
+                Si necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de anticipación.\n\n
+                Vínculo Salud
+            `;
+        }
+        
+        // Enviar al paciente
+        if (patientEmail) {
+            sendEmailNotification(patientEmail, subject, message);
+        }
+        
+        // Enviar al terapeuta (solo si no es recordatorio)
+        if (!isReminder && psychEmail) {
+            const psychSubject = `Nueva cita agendada - ${appointment.patient}`;
+            const psychMessage = `
+                Hola ${appointment.psych},\n\n
+                Se ha agendado una nueva cita.\n\n
+                Paciente: ${appointment.patient}\n
+                📅 Fecha: ${appointment.date}\n
+                ⏰ Hora: ${appointment.time}\n
+                💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}\n
+                ${appointment.boxName ? `📍 Box: ${appointment.boxName}\n` : ''}
+                📝 Notas: ${appointment.msg || 'Sin observaciones'}\n\n
+                Vínculo Salud
+            `;
+            sendEmailNotification(psychEmail, psychSubject, psychMessage);
+        }
+    }
+
+    function scheduleReminderEmails() {
+        // Revisar citas para mañana y enviar recordatorios
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        
+        appointments.forEach(app => {
+            if (app.date === tomorrowStr && app.status === 'confirmada') {
+                sendAppointmentEmails(app, true);
+            }
+        });
+    }
+
+    // Ejecutar cada día a las 9 AM
+    setInterval(() => {
+        const now = new Date();
+        if (now.getHours() === 9 && now.getMinutes() === 0) {
+            scheduleReminderEmails();
+        }
+    }, 60000); // Revisar cada minuto
 
     // ============================================
     // CARGAR DATOS DESDE FIREBASE
@@ -2124,25 +2336,27 @@
                             name: item.name,
                             usuario: item.name.split(' ')[0] || item.name,
                             pass: item.pass,
-                            spec: 'Profesional',
-                            priceOnline: 0,
-                            pricePresencial: 0,
-                            img: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-                            whatsapp: '',
-                            instagram: '',
-                            stars: 5,
-                            address: '',
-                            phone: '',
-                            paymentMethods: { transfer: false, card: false, cash: true, bankDetails: {} },
-                            sessionDuration: 50,
-                            breakBetween: 10,
-                            availability: {}
+                            email: item.email || '',
+                            spec: item.spec || 'Profesional',
+                            priceOnline: item.priceOnline || 0,
+                            pricePresencial: item.pricePresencial || 0,
+                            img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+                            whatsapp: item.whatsapp || '',
+                            instagram: item.instagram || '',
+                            stars: item.stars || 5,
+                            address: item.address || '',
+                            phone: item.phone || '',
+                            paymentMethods: item.paymentMethods || { transfer: false, card: false, cash: true, bankDetails: {} },
+                            sessionDuration: item.sessionDuration || 50,
+                            breakBetween: item.breakBetween || 10,
+                            availability: item.availability || {}
                         };
                     } else {
                         return { 
                             id: key, 
                             ...item,
                             usuario: item.usuario || item.user || '',
+                            email: item.email || '',
                             priceOnline: item.priceOnline || 0,
                             pricePresencial: item.pricePresencial || 0,
                             spec: item.spec || 'Profesional',
@@ -2168,7 +2382,8 @@
                         priceOnline: 45000,
                         pricePresencial: 50000,
                         usuario: 'isabel',
-                        pass: 'isabel2026', 
+                        pass: 'isabel2026',
+                        email: 'alison@vinculosalud.cl',
                         img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500',
                         whatsapp: '+56987654321',
                         instagram: 'alison.psicologa',
@@ -2187,7 +2402,8 @@
                         priceOnline: 65000,
                         pricePresencial: 70000,
                         usuario: 'julian',
-                        pass: 'julian2026', 
+                        pass: 'julian2026',
+                        email: 'julian@vinculosalud.cl',
                         img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500',
                         whatsapp: '+56976543210',
                         instagram: 'dr.julianpsiquiatra',
@@ -2206,7 +2422,8 @@
                         priceOnline: 40000,
                         pricePresencial: 45000,
                         usuario: 'martina',
-                        pass: 'martina2026', 
+                        pass: 'martina2026',
+                        email: 'martina@vinculosalud.cl',
                         img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500',
                         whatsapp: '+56965432109',
                         instagram: 'martina.bienestar',
@@ -2228,6 +2445,7 @@
                 pricePresencial: 0,
                 usuario: 'Admin',
                 pass: 'Nina2026',
+                email: 'admin@vinculosalud.cl',
                 img: '',
                 whatsapp: '',
                 instagram: '',
@@ -2800,7 +3018,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE RESERVA
+    // FUNCIONES DE RESERVA (PACIENTES)
     // ============================================
 
     function openBooking(id) {
@@ -3030,33 +3248,6 @@
         }
     }
 
-    function sendEmailConfirmation(patientEmail, patientName, psychName, date, time, type, boxName = null) {
-        const emailContent = document.getElementById('emailContent');
-        const emailSimulation = document.getElementById('emailSimulation');
-        
-        const boxText = boxName ? `<br>📍 Box asignado: ${boxName}` : '';
-        
-        const emailHtml = `
-            <strong>Para:</strong> ${patientEmail}<br>
-            <strong>Asunto:</strong> Confirmación de reserva - Vínculo Salud<br><br>
-            Hola ${patientName},<br><br>
-            Tu reserva ha sido confirmada:<br>
-            ✅ Profesional: ${psychName}<br>
-            📅 Fecha: ${date}<br>
-            ⏰ Hora: ${time}<br>
-            💻 Tipo: ${type === 'online' ? 'Online' : 'Presencial'}${boxText}<br><br>
-            Gracias por confiar en nosotros.<br>
-            Vínculo Salud
-        `;
-        
-        emailContent.innerHTML = emailHtml;
-        emailSimulation.style.display = 'block';
-        
-        setTimeout(() => {
-            emailSimulation.style.display = 'none';
-        }, 10000);
-    }
-
     function executeBooking() {
         const rut = document.getElementById('custRut').value;
         const name = document.getElementById('custName').value;
@@ -3133,7 +3324,8 @@
             
             save();
             
-            sendEmailConfirmation(email, name, selectedPsych.name, date, time, type, box ? box.name : null);
+            // Enviar correos
+            sendAppointmentEmails(appointment);
             
             showToast(`¡Reserva confirmada! Se ha enviado un email a ${email}`, 'success');
             
@@ -3143,6 +3335,255 @@
             setTimeout(() => {
                 location.reload();
             }, 3000);
+        }, 1500);
+    }
+
+    // ============================================
+    // FUNCIONES DE RESERVA (TERAPEUTAS)
+    // ============================================
+
+    function showTherapistBookingModal() {
+        selectedTherapistBoxId = null;
+        selectedPatientForTherapist = null;
+        
+        document.getElementById('therapistRut').value = '';
+        document.getElementById('patientInfo').style.display = 'none';
+        document.getElementById('therapistAppointmentType').value = 'online';
+        document.getElementById('therapistDate').value = '';
+        document.getElementById('therapistTime').innerHTML = '<option value="">Selecciona una fecha</option>';
+        document.getElementById('therapistMsg').value = '';
+        document.getElementById('therapistPaymentMethod').value = 'transfer';
+        document.getElementById('therapistPsychName').innerText = currentUser.data.name;
+        document.getElementById('therapistPatientName').innerText = '—';
+        document.getElementById('therapistDateDisplay').innerText = '—';
+        document.getElementById('therapistTimeDisplay').innerText = '—';
+        document.getElementById('therapistTypeDisplay').innerText = 'Online';
+        document.getElementById('therapistPrice').innerText = '$0';
+        document.getElementById('therapistBoxDisplay').style.display = 'none';
+        document.getElementById('therapistBoxField').style.display = 'none';
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('therapistDate').min = today;
+        
+        switchTab('agendar');
+    }
+
+    function searchPatientByRutTherapist() {
+        const rut = document.getElementById('therapistRut').value;
+        if (!rut) return;
+
+        const patient = patients.find(p => p.rut === rut);
+        if (patient) {
+            selectedPatientForTherapist = patient;
+            document.getElementById('patientInfoName').innerText = patient.name || '';
+            document.getElementById('patientInfoEmail').innerText = patient.email || '';
+            document.getElementById('patientInfoPhone').innerText = patient.phone || '';
+            document.getElementById('patientInfo').style.display = 'block';
+            document.getElementById('therapistPatientName').innerText = patient.name;
+            showToast('Paciente encontrado', 'success');
+        } else {
+            if (confirm('Paciente no encontrado. ¿Desea crearlo?')) {
+                document.getElementById('patientRut').value = rut;
+                document.getElementById('patientName').value = '';
+                document.getElementById('patientEmail').value = '';
+                document.getElementById('patientPhone').value = '';
+                document.getElementById('patientModalTitle').innerText = 'Nuevo Paciente';
+                document.getElementById('patientHistoryContainer').style.display = 'none';
+                document.getElementById('patientStatsContainer').style.display = 'none';
+                document.getElementById('patientModal').style.display = 'flex';
+            }
+        }
+    }
+
+    function updateTherapistBookingDetails() {
+        const type = document.getElementById('therapistAppointmentType').value;
+        const price = type === 'online' ? currentUser.data.priceOnline : currentUser.data.pricePresencial;
+        document.getElementById('therapistPrice').innerText = `$${price.toLocaleString()}`;
+        document.getElementById('therapistTypeDisplay').innerText = type === 'online' ? 'Online' : 'Presencial';
+        
+        if (type === 'presencial') {
+            document.getElementById('therapistBoxField').style.display = 'block';
+            updateTherapistAvailableSlots();
+        } else {
+            document.getElementById('therapistBoxField').style.display = 'none';
+            document.getElementById('therapistBoxDisplay').style.display = 'none';
+            updateTherapistAvailableSlots();
+        }
+    }
+
+    function updateTherapistAvailableSlots() {
+        const date = document.getElementById('therapistDate').value;
+        const timeSelect = document.getElementById('therapistTime');
+        const type = document.getElementById('therapistAppointmentType').value;
+        
+        if (!date || !currentUser) return;
+
+        const bookedTimes = appointments
+            .filter(a => a.psychId == currentUser.data.id && a.date === date)
+            .map(a => a.time);
+
+        const availableSlots = currentUser.data.availability?.[date] || [];
+
+        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+        
+        availableSlots.forEach(slot => {
+            if (!bookedTimes.includes(slot.time)) {
+                const option = document.createElement('option');
+                option.value = slot.time;
+                option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
+                if (slot.isOvercupo) option.style.color = '#f59e0b';
+                
+                if (type === 'presencial') {
+                    const availableBoxes = getAvailableBoxes(date, slot.time);
+                    if (availableBoxes.length === 0) {
+                        option.disabled = true;
+                        option.textContent += ' (sin boxes disponibles)';
+                        option.style.color = 'var(--text-light)';
+                    }
+                }
+                
+                timeSelect.appendChild(option);
+            }
+        });
+
+        if (timeSelect.children.length === 1) {
+            timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+        }
+
+        const time = document.getElementById('therapistTime').value;
+        if (time) {
+            document.getElementById('therapistTimeDisplay').innerText = time;
+            updateTherapistBoxSelector(date, time);
+        }
+    }
+
+    function updateTherapistBoxSelector(date, time) {
+        const boxSelector = document.getElementById('therapistBoxSelector');
+        const boxAvailabilityMsg = document.getElementById('therapistBoxAvailabilityMsg');
+        
+        if (!date || !time) {
+            boxSelector.innerHTML = '';
+            boxAvailabilityMsg.innerHTML = 'Selecciona fecha y horario primero';
+            return;
+        }
+
+        const availableBoxes = getAvailableBoxes(date, time);
+        
+        if (availableBoxes.length === 0) {
+            boxSelector.innerHTML = '';
+            boxAvailabilityMsg.innerHTML = 'No hay boxes disponibles para este horario';
+            document.getElementById('therapistBoxDisplay').style.display = 'none';
+            selectedTherapistBoxId = null;
+            return;
+        }
+
+        boxSelector.innerHTML = availableBoxes.map(box => `
+            <div class="box-option ${selectedTherapistBoxId == box.id ? 'selected' : ''}" 
+                 onclick="selectTherapistBox(${box.id})"
+                 title="${box.description || ''}">
+                📦 ${box.name} ${box.location ? `- ${box.location}` : ''}
+            </div>
+        `).join('');
+
+        boxAvailabilityMsg.innerHTML = `${availableBoxes.length} box(es) disponible(s)`;
+    }
+
+    function selectTherapistBox(boxId) {
+        selectedTherapistBoxId = boxId;
+        const box = boxes.find(b => b.id == boxId);
+        
+        document.querySelectorAll('#therapistBoxSelector .box-option').forEach(opt => opt.classList.remove('selected'));
+        event.target.classList.add('selected');
+        
+        if (box) {
+            document.getElementById('therapistBoxName').innerText = `${box.name} ${box.location ? `(${box.location})` : ''}`;
+            document.getElementById('therapistBoxDisplay').style.display = 'flex';
+        }
+    }
+
+    function executeTherapistBooking() {
+        if (!selectedPatientForTherapist) {
+            showToast('Debes buscar y seleccionar un paciente', 'error');
+            return;
+        }
+
+        const date = document.getElementById('therapistDate').value;
+        const time = document.getElementById('therapistTime').value;
+        const type = document.getElementById('therapistAppointmentType').value;
+        const paymentMethod = document.getElementById('therapistPaymentMethod').value;
+        const msg = document.getElementById('therapistMsg').value;
+        
+        if (!date || !time) {
+            showToast('Selecciona fecha y horario', 'error');
+            return;
+        }
+
+        if (type === 'presencial' && !selectedTherapistBoxId) {
+            showToast('Debes seleccionar un box para atención presencial', 'error');
+            return;
+        }
+
+        const bookBtn = document.querySelector('#tabAgendar .btn-staff');
+        bookBtn.innerHTML = '<span class="spinner"></span> Procesando...';
+        bookBtn.disabled = true;
+
+        setTimeout(() => {
+            const price = type === 'online' ? currentUser.data.priceOnline : currentUser.data.pricePresencial;
+            const box = type === 'presencial' ? boxes.find(b => b.id == selectedTherapistBoxId) : null;
+            
+            const appointment = {
+                id: Date.now(),
+                patientId: selectedPatientForTherapist.id,
+                patient: selectedPatientForTherapist.name,
+                patientRut: selectedPatientForTherapist.rut,
+                patientEmail: selectedPatientForTherapist.email,
+                patientPhone: selectedPatientForTherapist.phone,
+                psych: currentUser.data.name,
+                psychId: currentUser.data.id,
+                date: date,
+                time: time,
+                type: type,
+                boxId: type === 'presencial' ? selectedTherapistBoxId : null,
+                boxName: box ? box.name : null,
+                price: price,
+                paymentMethod: paymentMethod,
+                paymentStatus: paymentMethod === 'transfer' ? 'pendiente' : 'pagado',
+                msg: msg,
+                status: 'confirmada',
+                createdAt: new Date().toISOString(),
+                editableUntil: new Date(Date.now() + EDIT_HOURS * 60 * 60 * 1000).toISOString(),
+                createdBy: currentUser.data.name
+            };
+            
+            appointments.push(appointment);
+            
+            selectedPatientForTherapist.appointments = selectedPatientForTherapist.appointments || [];
+            selectedPatientForTherapist.appointments.push(appointment.id);
+            
+            save();
+            
+            // Enviar correos
+            sendAppointmentEmails(appointment);
+            
+            showToast(`Cita agendada con ${selectedPatientForTherapist.name}`, 'success');
+            
+            bookBtn.innerHTML = 'Confirmar Cita';
+            bookBtn.disabled = false;
+            
+            // Limpiar formulario
+            document.getElementById('therapistRut').value = '';
+            document.getElementById('patientInfo').style.display = 'none';
+            document.getElementById('therapistDate').value = '';
+            document.getElementById('therapistTime').innerHTML = '<option value="">Selecciona una fecha</option>';
+            document.getElementById('therapistMsg').value = '';
+            document.getElementById('therapistPatientName').innerText = '—';
+            document.getElementById('therapistDateDisplay').innerText = '—';
+            document.getElementById('therapistTimeDisplay').innerText = '—';
+            document.getElementById('therapistBoxDisplay').style.display = 'none';
+            selectedPatientForTherapist = null;
+            selectedTherapistBoxId = null;
+            
+            switchTab('citas');
         }, 1500);
     }
 
@@ -3232,6 +3673,7 @@
         document.getElementById('configTab').style.display = currentUser.role === 'psych' ? 'block' : 'none';
         document.getElementById('messagesTab').style.display = currentUser.role === 'admin' ? 'block' : 'none';
         document.getElementById('boxesTab').style.display = currentUser.role === 'admin' ? 'block' : 'none';
+        document.getElementById('agendarTab').style.display = currentUser.role === 'psych' ? 'block' : 'none';
         
         if (currentUser.role === 'admin') {
             document.getElementById('dashTitle').innerText = "Panel Administrador";
@@ -3543,6 +3985,13 @@
 
         save();
         closePatientModal();
+        
+        // Si estábamos en el modal de agendar, actualizar
+        if (document.getElementById('tabAgendar').classList.contains('active')) {
+            document.getElementById('therapistRut').value = rut;
+            searchPatientByRutTherapist();
+        }
+        
         showToast('Paciente guardado', 'success');
     }
 
@@ -3884,6 +4333,7 @@
             pass: pass,
             whatsapp: whatsapp,
             instagram: instagram,
+            email: '',
             img: tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
             address: address,
             phone: phone,
@@ -4026,6 +4476,20 @@
         } else if (this.value) {
             updateAvailableSlotsWithBoxes();
         }
+    });
+
+    document.getElementById('therapistTime').addEventListener('change', function() {
+        const date = document.getElementById('therapistDate').value;
+        const time = this.value;
+        document.getElementById('therapistTimeDisplay').innerText = time || '—';
+        if (date && time) {
+            updateTherapistBoxSelector(date, time);
+        }
+    });
+
+    document.getElementById('therapistDate').addEventListener('change', function() {
+        document.getElementById('therapistDateDisplay').innerText = this.value || '—';
+        updateTherapistAvailableSlots();
     });
 </script>
 </body>

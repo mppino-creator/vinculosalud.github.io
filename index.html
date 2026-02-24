@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vínculo Salud - Gestión</title>
+    <title>Vínculo Salud - Gestión Integral</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f0f4f8; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--primary); }
-        .app-container { max-width: 600px; margin: 20px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .app-container { max-width: 600px; margin: 20px auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .hidden { display: none; }
         input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; font-size: 15px; box-sizing: border-box; }
         button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #2980b9; }
         .admin-box { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-top: 15px; }
         .user-card { background: white; border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 5px solid var(--accent); }
-        .user-info { margin-bottom: 10px; font-size: 14px; }
+        .user-info { margin-bottom: 10px; font-size: 14px; line-height: 1.6; }
         .slot-card { background: #e8f4fd; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         h2, h3 { color: var(--accent); text-align: center; margin-top: 0; }
         .btn-danger { background: #e74c3c !important; }
         .btn-success { background: #27ae60 !important; }
+        .flex-row { display: flex; gap: 5px; align-items: center; }
+        .label-small { font-size: 12px; color: #7f8c8d; margin-top: 5px; display: block; }
     </style>
 </head>
 <body>
@@ -38,16 +40,16 @@
     <div id="admin-section" class="hidden">
         <h3>Panel Administrador</h3>
         <div class="admin-box">
-            <p><strong>Registrar Nuevo Psicólogo:</strong></p>
-            <input type="text" id="reg-user" placeholder="Usuario (Ej: alison.g)">
-            <input type="text" id="reg-name" placeholder="Nombre Real (Ej: Alison G.)">
-            <input type="text" id="reg-pass" placeholder="Clave">
+            <p><strong>Registrar Nuevo Profesional:</strong></p>
+            <input type="text" id="reg-user" placeholder="Nombre de Usuario (ej: alison.g)">
+            <input type="text" id="reg-name" placeholder="Nombre Real (ej: Alison Gutiérrez)">
+            <input type="text" id="reg-pass" placeholder="Clave Inicial">
             <button onclick="crearUsuario()" class="btn-success">Crear en Base de Datos</button>
         </div>
 
         <div class="admin-box">
-            <p><strong>Gestión de Usuarios Existentes:</strong></p>
-            <div id="lista-admin-usuarios">Cargando...</div>
+            <p><strong>Gestión de Credenciales (Staff):</strong></p>
+            <div id="lista-admin-usuarios">Cargando profesionales...</div>
         </div>
         
         <button onclick="logout()" class="btn-danger" style="margin-top: 20px;">Cerrar Sesión</button>
@@ -57,15 +59,17 @@
         <h3 id="psyc-welcome">Bienvenido</h3>
         
         <div class="admin-box">
-            <p><strong>Mis Datos Personales:</strong></p>
-            <div id="mis-datos"></div>
-            <input type="text" id="new-own-pass" placeholder="Nueva Clave">
-            <button onclick="actualizarMiClave()">Cambiar mi Contraseña</button>
+            <p><strong>Editar Mis Datos Personales:</strong></p>
+            <span class="label-small">Nombre Público:</span>
+            <input type="text" id="edit-my-name" placeholder="Tu nombre real">
+            <span class="label-small">Nueva Contraseña:</span>
+            <input type="text" id="edit-my-pass" placeholder="Cambiar mi clave">
+            <button onclick="actualizarMisDatos()" class="btn-success">Guardar mis cambios</button>
         </div>
 
         <div class="admin-box">
-            <p><strong>Horas Disponibles para Box:</strong></p>
-            <div id="lista-horas"></div>
+            <p><strong>Horas de Box:</strong></p>
+            <div id="lista-horas">Próximamente gestión de box...</div>
         </div>
 
         <button onclick="logout()" class="btn-danger" style="margin-top: 20px;">Cerrar Sesión</button>
@@ -73,7 +77,7 @@
 </div>
 
 <script>
-    // IMPORTANTE: Pon tus datos de Firebase aquí
+    // CONFIGURACIÓN FIREBASE
     const firebaseConfig = {
         apiKey: "TU_API_KEY",
         authDomain: "vinculosaludapp.firebaseapp.com",
@@ -86,7 +90,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let usuarioLogueadoId = null;
+    let idSesionActiva = null;
 
     function intentarLogin() {
         const u = document.getElementById('user-login').value.trim();
@@ -104,29 +108,27 @@
                 const d = child.val();
                 if(d.usuario === u && d.pass === p) {
                     encontrado = true;
-                    usuarioLogueadoId = child.key;
-                    document.getElementById('psyc-welcome').innerText = "Hola, " + d.name;
-                    document.getElementById('mis-datos').innerHTML = `
-                        <p><strong>Usuario:</strong> ${d.usuario}</p>
-                        <p><strong>Nombre:</strong> ${d.name}</p>`;
+                    idSesionActiva = child.key;
+                    document.getElementById('psyc-welcome').innerText = "Panel de " + d.name;
+                    document.getElementById('edit-my-name').value = d.name;
+                    document.getElementById('edit-my-pass').value = d.pass;
                     abrirSeccion('psyc-section');
-                    // Aquí cargarías las horas...
                 }
             });
-            if(!encontrado) alert("Usuario o clave incorrecta");
+            if(!encontrado) alert("Error: Usuario o clave no coinciden.");
         });
     }
 
-    // --- FUNCIONES PARA TI (ADMIN) ---
+    // --- ACCIONES DEL ADMINISTRADOR ---
 
     function crearUsuario() {
-        const usuario = document.getElementById('reg-user').value;
-        const name = document.getElementById('reg-name').value;
-        const pass = document.getElementById('reg-pass').value;
+        const usuario = document.getElementById('reg-user').value.trim();
+        const name = document.getElementById('reg-name').value.trim();
+        const pass = document.getElementById('reg-pass').value.trim();
 
         if(usuario && name && pass) {
             db.ref('Staff').push({ usuario, name, pass });
-            alert("Usuario creado exitosamente");
+            alert("Profesional registrado.");
             document.getElementById('reg-user').value = "";
             document.getElementById('reg-name').value = "";
             document.getElementById('reg-pass').value = "";
@@ -143,39 +145,49 @@
                 div.innerHTML += `
                     <div class="user-card">
                         <div class="user-info">
-                            <strong>${u.name}</strong> (@${u.usuario})<br>
-                            Clave: ${u.pass}
+                            <strong>Nombre:</strong> ${u.name}<br>
+                            <strong>Acceso:</strong> ${u.usuario} / ${u.pass}
                         </div>
-                        <input type="text" id="mod-pass-${id}" placeholder="Nueva clave" style="width:70%; display:inline;">
-                        <button onclick="modificarClaveAdmin('${id}')" style="width:25%; display:inline;">OK</button>
-                        <button onclick="eliminarUsuario('${id}')" class="btn-danger" style="margin-top:5px;">Eliminar Usuario</button>
+                        <span class="label-small">Modificar Usuario:</span>
+                        <input type="text" id="admin-mod-user-${id}" value="${u.usuario}">
+                        <span class="label-small">Modificar Clave:</span>
+                        <input type="text" id="admin-mod-pass-${id}" value="${u.pass}">
+                        <div class="flex-row">
+                            <button onclick="adminActualizarStaff('${id}')" class="btn-success">Actualizar</button>
+                            <button onclick="eliminarUsuario('${id}')" class="btn-danger">Eliminar</button>
+                        </div>
                     </div>`;
             });
         });
     }
 
-    function modificarClaveAdmin(id) {
-        const nueva = document.getElementById('mod-pass-' + id).value;
-        if(nueva) {
-            db.ref('Staff/' + id).update({ pass: nueva });
-            alert("Clave actualizada");
+    function adminActualizarStaff(id) {
+        const nuevoUser = document.getElementById('admin-mod-user-' + id).value;
+        const nuevaPass = document.getElementById('admin-mod-pass-' + id).value;
+        if(nuevoUser && nuevaPass) {
+            db.ref('Staff/' + id).update({ usuario: nuevoUser, pass: nuevaPass });
+            alert("Credenciales actualizadas por Administrador");
         }
     }
 
     function eliminarUsuario(id) {
-        if(confirm("¿Seguro que quieres borrar a este profesional?")) {
+        if(confirm("¿Eliminar definitivamente a este profesional?")) {
             db.ref('Staff/' + id).remove();
         }
     }
 
-    // --- FUNCIONES PARA ELLOS (PSICÓLOGOS) ---
+    // --- ACCIONES DEL PROFESIONAL ---
 
-    function actualizarMiClave() {
-        const nueva = document.getElementById('new-own-pass').value;
-        if(nueva && usuarioLogueadoId) {
-            db.ref('Staff/' + usuarioLogueadoId).update({ pass: nueva });
-            alert("Tu clave ha sido cambiada.");
-            document.getElementById('new-own-pass').value = "";
+    function actualizarMisDatos() {
+        const nuevoNombre = document.getElementById('edit-my-name').value.trim();
+        const nuevaClave = document.getElementById('edit-my-pass').value.trim();
+        
+        if(nuevoNombre && nuevaClave && idSesionActiva) {
+            db.ref('Staff/' + idSesionActiva).update({ 
+                name: nuevoNombre, 
+                pass: nuevaClave 
+            });
+            alert("Tus datos han sido actualizados con éxito.");
         }
     }
 

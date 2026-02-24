@@ -27,6 +27,7 @@
             --bg-body: #f8fafc;
             --glass: rgba(255, 255, 255, 0.95);
             --gold: #fbbf24;
+            --box-color: #8b5cf6;
         }
 
         body {
@@ -145,7 +146,7 @@
         .glass { 
             background: var(--glass); 
             backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
+            -webkit-backpack-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.5); 
             border-radius: 100px; 
         }
@@ -416,11 +417,37 @@
             cursor: pointer;
             transition: 0.3s;
             border: none;
+            text-decoration: none;
         }
 
         .whatsapp-badge:hover {
             transform: scale(1.1);
             background: #20bd5a;
+        }
+
+        .instagram-badge {
+            position: absolute;
+            top: 65px;
+            right: 15px;
+            background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 2;
+            cursor: pointer;
+            transition: 0.3s;
+            border: none;
+            text-decoration: none;
+        }
+
+        .instagram-badge:hover {
+            transform: scale(1.1);
         }
 
         .pulse {
@@ -846,6 +873,58 @@
             flex-wrap: wrap;
         }
 
+        /* Patient History */
+        .patient-history {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #e2e8f0;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-date {
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        .history-psych {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .history-type {
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .history-box {
+            background: var(--box-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .edit-timeout {
+            font-size: 0.75rem;
+            color: var(--warning);
+            margin-left: 10px;
+        }
+
         /* Time Slots */
         .time-slots {
             display: flex;
@@ -888,6 +967,20 @@
             color: #856404;
             border-color: #ffeeba;
             position: relative;
+        }
+
+        .time-slot.box-busy {
+            background: #ede9fe;
+            color: var(--box-color);
+            border-color: var(--box-color);
+            position: relative;
+            cursor: not-allowed;
+        }
+
+        .time-slot.box-busy::after {
+            content: "📦";
+            margin-left: 5px;
+            font-size: 0.8rem;
         }
 
         /* Weekday Selector */
@@ -937,6 +1030,12 @@
 
         .btn-icon:hover { transform: translateY(-2px); }
 
+        .btn-icon:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .spinner {
             width: 18px;
             height: 18px;
@@ -957,6 +1056,50 @@
             padding: 15px;
             background: #f8fafc;
             border-radius: 12px;
+        }
+
+        /* Box Selector */
+        .box-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .box-option {
+            padding: 10px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+            background: white;
+        }
+
+        .box-option.selected {
+            background: var(--box-color);
+            color: white;
+            border-color: var(--box-color);
+        }
+
+        .box-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f1f5f9;
+        }
+
+        /* Email Simulation */
+        .email-simulation {
+            background: #e8f0fe;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .email-simulation strong {
+            color: var(--primary);
         }
 
         /* Responsive adjustments */
@@ -992,6 +1135,16 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+
+            .whatsapp-badge, .instagram-badge {
+                width: 35px;
+                height: 35px;
+                font-size: 1.1rem;
+            }
+
+            .instagram-badge {
+                top: 60px;
+            }
         }
     </style>
 </head>
@@ -1007,15 +1160,18 @@
         <h2 style="margin-bottom: 25px;">Acceso Privado</h2>
         <div class="form-group">
             <label>Usuario</label>
-            <input type="text" id="loginUser" placeholder="Ingresa tu usuario" onkeypress="if(event.key==='Enter') processLogin()">
+            <input type="text" id="loginUser" placeholder="Ingresa tu usuario">
         </div>
         <div class="form-group">
             <label>Contraseña</label>
-            <input type="password" id="loginPass" placeholder="Ingresa tu contraseña" onkeypress="if(event.key==='Enter') processLogin()">
+            <input type="password" id="loginPass" placeholder="Ingresa tu contraseña">
         </div>
         <button class="btn-staff" style="width:100%; justify-content:center;" onclick="processLogin()" id="loginBtn">
             Ingresar al Panel
         </button>
+        <p style="text-align:center; margin-top:15px; font-size:0.8rem; color:var(--text-light)">
+            Admin: Admin / Nina2026
+        </p>
     </div>
 </div>
 
@@ -1099,13 +1255,19 @@
             </div>
             
             <div class="form-group">
-                <label>Foto URL</label>
+                <label>Foto URL *</label>
                 <input type="text" id="editImg" placeholder="https://ejemplo.com/foto.jpg">
+                <small style="color:var(--text-light);">Pega la URL de la imagen aquí</small>
             </div>
             
             <div class="form-group">
                 <label>WhatsApp</label>
                 <input type="text" id="editWhatsapp" placeholder="+56912345678">
+            </div>
+            
+            <div class="form-group">
+                <label>Instagram (opcional)</label>
+                <input type="text" id="editInstagram" placeholder="usuario sin @">
             </div>
             
             <div class="form-group">
@@ -1140,9 +1302,9 @@
     </div>
 </div>
 
-<!-- Modal de Paciente con RUT -->
+<!-- Modal de Paciente con RUT e Historial -->
 <div class="modal" id="patientModal">
-    <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-content" style="max-width: 700px;">
         <button class="modal-close" onclick="closePatientModal()">&times;</button>
         <h2 id="patientModalTitle" style="margin-bottom: 25px;">Datos del Paciente</h2>
         <input type="hidden" id="editPatientId">
@@ -1173,11 +1335,17 @@
         </div>
         
         <div class="form-group">
-            <label>Notas / Historial</label>
-            <textarea id="patientNotes" rows="3" placeholder="Antecedentes, diagnósticos..."></textarea>
+            <label>Notas / Historial Clínico</label>
+            <textarea id="patientNotes" rows="4" placeholder="Antecedentes, diagnósticos, observaciones importantes..."></textarea>
         </div>
         
-        <button class="btn-staff" style="width:100%; justify-content:center;" onclick="savePatient()">
+        <!-- Historial de Atenciones -->
+        <div id="patientHistoryContainer" style="margin: 20px 0; display: none;">
+            <h3 style="margin-bottom: 15px;">📋 Historial de Atenciones</h3>
+            <div id="patientHistoryList" class="patient-history"></div>
+        </div>
+        
+        <button class="btn-staff" style="width:100%; justify-content:center; background:var(--primary);" onclick="savePatient()">
             Guardar Paciente
         </button>
     </div>
@@ -1258,6 +1426,75 @@
     </div>
 </div>
 
+<!-- Modal de Gestión de Boxes (NUEVO) -->
+<div class="modal" id="boxModal">
+    <div class="modal-content" style="max-width: 800px;">
+        <button class="modal-close" onclick="closeBoxModal()">&times;</button>
+        <h2 style="margin-bottom: 25px;">📦 Gestión de Boxes</h2>
+        
+        <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
+            <div class="form-group">
+                <label>Nombre del Box *</label>
+                <input type="text" id="boxName" placeholder="Ej: Box 1">
+            </div>
+            
+            <div class="form-group">
+                <label>Ubicación</label>
+                <input type="text" id="boxLocation" placeholder="Ej: Piso 2, Sector A">
+            </div>
+            
+            <div class="form-group">
+                <label>Hora inicio</label>
+                <input type="time" id="boxStartTime" value="09:00">
+            </div>
+            
+            <div class="form-group">
+                <label>Hora fin</label>
+                <input type="time" id="boxEndTime" value="20:00">
+            </div>
+            
+            <div class="form-group" style="grid-column:1/-1;">
+                <label>Días de operación</label>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <label><input type="checkbox" class="box-day" value="1" checked> Lunes</label>
+                    <label><input type="checkbox" class="box-day" value="2" checked> Martes</label>
+                    <label><input type="checkbox" class="box-day" value="3" checked> Miércoles</label>
+                    <label><input type="checkbox" class="box-day" value="4" checked> Jueves</label>
+                    <label><input type="checkbox" class="box-day" value="5" checked> Viernes</label>
+                    <label><input type="checkbox" class="box-day" value="6"> Sábado</label>
+                    <label><input type="checkbox" class="box-day" value="0"> Domingo</label>
+                </div>
+            </div>
+            
+            <div class="form-group" style="grid-column:1/-1;">
+                <label>Descripción (opcional)</label>
+                <textarea id="boxDescription" rows="2" placeholder="Equipamiento, capacidad, etc."></textarea>
+            </div>
+            
+            <button class="btn-staff" style="background:var(--primary); grid-column:1/-1;" onclick="saveBox()" id="saveBoxBtn">
+                Guardar Box
+            </button>
+        </div>
+        
+        <h3 style="margin:30px 0 15px;">Lista de Boxes</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Ubicación</th>
+                        <th>Horario</th>
+                        <th>Días</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="boxTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <!-- Contenedor Principal -->
 <div class="container">
     <header class="nav-container">
@@ -1290,12 +1527,6 @@
                 <option value="today">Disponibles hoy</option>
                 <option value="tomorrow">Disponibles mañana</option>
             </select>
-            <select class="filter-select" id="sortFilter" onchange="filterProfessionals()">
-                <option value="name">Ordenar por nombre</option>
-                <option value="priceAsc">Menor precio</option>
-                <option value="priceDesc">Mayor precio</option>
-                <option value="rating">Mejor calificados</option>
-            </select>
         </div>
 
         <!-- Grid de Profesionales -->
@@ -1313,7 +1544,7 @@
         </div>
     </main>
 
-    <!-- Panel de Reserva -->
+    <!-- Panel de Reserva (MODIFICADO para incluir boxes) -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
             <h2>Agendar Cita con <span id="psychName"></span></h2>
@@ -1352,6 +1583,13 @@
                     </select>
                 </div>
                 
+                <!-- Selección de Box (solo para presencial) -->
+                <div id="boxField" style="display:none;" class="address-input">
+                    <label>Seleccionar Box *</label>
+                    <div id="boxSelector" class="box-selector"></div>
+                    <p id="boxAvailabilityMsg" style="margin-top:10px; font-size:0.85rem; color:var(--text-light);"></p>
+                </div>
+                
                 <div id="addressField" style="display:none;" class="address-input">
                     <label>Dirección del Consultorio</label>
                     <p id="psychAddress" style="margin-top:5px; padding:10px; background:white; border-radius:8px;"></p>
@@ -1360,7 +1598,7 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
                     <div class="form-group">
                         <label>Fecha *</label>
-                        <input type="date" id="custDate" onchange="updateAvailableSlots()">
+                        <input type="date" id="custDate" onchange="updateAvailableSlotsWithBoxes()">
                     </div>
                     <div class="form-group">
                         <label>Horario *</label>
@@ -1391,9 +1629,14 @@
                     <span id="bookingDuration">50 minutos</span>
                 </div>
                 
-                <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
                     <span>Tipo</span>
                     <span id="bookingType">Online</span>
+                </div>
+                
+                <div id="selectedBoxInfo" style="display:none; justify-content:space-between; margin-bottom:15px;">
+                    <span>Box asignado</span>
+                    <span id="selectedBoxName"></span>
                 </div>
                 
                 <div style="margin:20px 0;">
@@ -1414,9 +1657,15 @@
                 </p>
             </div>
         </div>
+        
+        <!-- Simulación de correo electrónico -->
+        <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;">
+            <strong>📧 CORREO ENVIADO AL PACIENTE</strong><br>
+            <span id="emailContent"></span>
+        </div>
     </div>
 
-    <!-- Panel de Dashboard -->
+    <!-- Panel de Dashboard (MODIFICADO para incluir pestaña de boxes) -->
     <div id="dashboard" class="panel">
         <div class="dashboard-header">
             <div>
@@ -1449,6 +1698,7 @@
             <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
             <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
             <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
+            <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
         </div>
 
         <!-- Tab: Citas -->
@@ -1462,6 +1712,7 @@
                             <th>Especialista</th>
                             <th>Fecha / Hora</th>
                             <th>Tipo</th>
+                            <th>Box</th>
                             <th>Pago</th>
                             <th>Estado</th>
                             <th>Acciones</th>
@@ -1472,7 +1723,7 @@
             </div>
         </div>
 
-        <!-- Tab: Pacientes -->
+        <!-- Tab: Pacientes con Historial -->
         <div id="tabPacientes" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Pacientes</h3>
@@ -1500,6 +1751,7 @@
                 <input type="text" id="addPass" placeholder="Contraseña">
                 <input type="text" id="addImg" placeholder="URL Foto">
                 <input type="text" id="addWhatsapp" placeholder="WhatsApp">
+                <input type="text" id="addInstagram" placeholder="Instagram (sin @)">
                 <input type="text" id="addAddress" placeholder="Dirección">
                 <input type="text" id="addPhone" placeholder="Teléfono">
                 <button class="btn-staff" style="background:var(--primary); grid-column:1/-1;" onclick="addStaff()">Añadir Profesional</button>
@@ -1515,6 +1767,7 @@
                             <th>Usuario</th>
                             <th>Precios</th>
                             <th>WhatsApp</th>
+                            <th>Instagram</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -1585,11 +1838,16 @@
                     <input type="number" id="myPricePresencial">
                 </div>
                 
-                <h4 style="margin:25px 0 15px;">WhatsApp</h4>
+                <h4 style="margin:25px 0 15px;">Redes Sociales</h4>
                 
                 <div class="form-group">
-                    <label>Número de WhatsApp</label>
+                    <label>WhatsApp</label>
                     <input type="text" id="myWhatsapp" placeholder="+56912345678">
+                </div>
+                
+                <div class="form-group">
+                    <label>Instagram</label>
+                    <input type="text" id="myInstagram" placeholder="usuario sin @">
                 </div>
                 
                 <button class="btn-staff" style="background:var(--primary); margin-top:20px;" onclick="saveMyConfig()">
@@ -1618,12 +1876,38 @@
                 </table>
             </div>
         </div>
+
+        <!-- Tab: Boxes (Admin) - NUEVO -->
+        <div id="tabBoxes" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
+                <h3>Gestión de Boxes</h3>
+                <button class="btn-staff" style="background:var(--primary)" onclick="showBoxModal()">
+                    <i class="fa fa-plus"></i> Nuevo Box
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Ubicación</th>
+                            <th>Horario</th>
+                            <th>Días</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boxTableBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
     // ============================================
-    // SISTEMA COMPLETO CON TODAS LAS FUNCIONALIDADES
+    // SISTEMA COMPLETO - VERSIÓN FINAL CON BOXES
     // ============================================
 
     // Toast System
@@ -1643,7 +1927,7 @@
     }
 
     // Base de datos inicial
-    let staff = JSON.parse(localStorage.getItem('mc_staff_v9')) || (function() {
+    let staff = JSON.parse(localStorage.getItem('mc_staff_v11')) || (function() {
         const initialStaff = [
             { 
                 id: 1, 
@@ -1655,6 +1939,7 @@
                 pass: 'isabel2026', 
                 img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500',
                 whatsapp: '+56987654321',
+                instagram: 'alison.psicologa',
                 stars: 5,
                 address: 'Av. Providencia 1234, Santiago',
                 phone: '+56 9 8765 4321',
@@ -1673,6 +1958,7 @@
                 pass: 'julian2026', 
                 img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500',
                 whatsapp: '+56976543210',
+                instagram: 'dr.julianpsiquiatra',
                 stars: 5,
                 address: 'Av. Las Condes 7890, Las Condes',
                 phone: '+56 9 7654 3210',
@@ -1691,6 +1977,7 @@
                 pass: 'martina2026', 
                 img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500',
                 whatsapp: '+56965432109',
+                instagram: 'martina.bienestar',
                 stars: 4,
                 address: 'Av. Vitacura 4567, Vitacura',
                 phone: '+56 9 6543 2109',
@@ -1701,17 +1988,19 @@
             }
         ];
         
-        if (!initialStaff.some(s => s.user === 'rootadmin')) {
+        // Admin con usuario Admin y clave Nina2026
+        if (!initialStaff.some(s => s.user === 'Admin')) {
             initialStaff.push({
                 id: 9999,
                 name: 'Administrador',
                 spec: 'ADMIN_HIDDEN',
                 priceOnline: 0,
                 pricePresencial: 0,
-                user: 'rootadmin',
-                pass: 'Admin2024$',
+                user: 'Admin',
+                pass: 'Nina2026',
                 img: '',
                 whatsapp: '',
+                instagram: '',
                 stars: 0,
                 address: '',
                 phone: '',
@@ -1726,8 +2015,42 @@
         return initialStaff;
     })();
 
+    // Boxes (NUEVO)
+    let boxes = JSON.parse(localStorage.getItem('mc_boxes_v1')) || [
+        {
+            id: 1,
+            name: 'Box 1',
+            location: 'Piso 1, Sector A',
+            startTime: '09:00',
+            endTime: '20:00',
+            days: [1,2,3,4,5], // Lunes a Viernes
+            description: 'Box equipado con camilla y escritorio',
+            active: true
+        },
+        {
+            id: 2,
+            name: 'Box 2',
+            location: 'Piso 1, Sector B',
+            startTime: '09:00',
+            endTime: '20:00',
+            days: [1,2,3,4,5],
+            description: 'Box con vista al exterior',
+            active: true
+        },
+        {
+            id: 3,
+            name: 'Box 3',
+            location: 'Piso 2',
+            startTime: '14:00',
+            endTime: '22:00',
+            days: [1,2,3,4,5,6],
+            description: 'Box para atenciones vespertinas',
+            active: true
+        }
+    ];
+
     // Mensajes/Testimonios
-    let messages = JSON.parse(localStorage.getItem('mc_messages_v2')) || [
+    let messages = JSON.parse(localStorage.getItem('mc_messages_v4')) || [
         {
             id: 1,
             name: 'Carolina Méndez',
@@ -1763,8 +2086,8 @@
         }
     ];
 
-    let patients = JSON.parse(localStorage.getItem('mc_patients_v5')) || [];
-    let appointments = JSON.parse(localStorage.getItem('mc_apps_v9')) || [];
+    let patients = JSON.parse(localStorage.getItem('mc_patients_v7')) || [];
+    let appointments = JSON.parse(localStorage.getItem('mc_apps_v11')) || [];
     
     // Variables globales
     let selectedPsych = null;
@@ -1772,6 +2095,8 @@
     let currentRating = 5;
     let generatedSlots = [];
     let selectedWeekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'];
+    let selectedBoxId = null;
+    const EDIT_HOURS = 24; // Horas para editar citas como profesional
 
     // Funciones de utilidad
     function getPublicStaff() {
@@ -1779,16 +2104,18 @@
     }
 
     function save() {
-        localStorage.setItem('mc_staff_v9', JSON.stringify(staff));
-        localStorage.setItem('mc_apps_v9', JSON.stringify(appointments));
-        localStorage.setItem('mc_patients_v5', JSON.stringify(patients));
-        localStorage.setItem('mc_messages_v2', JSON.stringify(messages));
+        localStorage.setItem('mc_staff_v11', JSON.stringify(staff));
+        localStorage.setItem('mc_apps_v11', JSON.stringify(appointments));
+        localStorage.setItem('mc_patients_v7', JSON.stringify(patients));
+        localStorage.setItem('mc_messages_v4', JSON.stringify(messages));
+        localStorage.setItem('mc_boxes_v1', JSON.stringify(boxes));
         
         if (currentUser) {
             updateStats();
             if (currentUser.role === 'admin') {
                 renderStaffTable();
                 renderMessagesTable();
+                renderBoxesTable();
             }
             if (currentUser.role === 'psych') {
                 renderPatients();
@@ -1800,6 +2127,184 @@
         filterProfessionals();
         renderMessages();
         updateMarquee();
+    }
+
+    // ============================================
+    // FUNCIONES DE BOXES (NUEVO)
+    // ============================================
+
+    function showBoxModal() {
+        document.getElementById('boxModal').style.display = 'flex';
+        document.getElementById('boxName').value = '';
+        document.getElementById('boxLocation').value = '';
+        document.getElementById('boxStartTime').value = '09:00';
+        document.getElementById('boxEndTime').value = '20:00';
+        document.getElementById('boxDescription').value = '';
+        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
+        [1,2,3,4,5].forEach(d => {
+            const cb = document.querySelector(`.box-day[value="${d}"]`);
+            if (cb) cb.checked = true;
+        });
+        document.getElementById('saveBoxBtn').onclick = saveBox;
+    }
+
+    function closeBoxModal() {
+        document.getElementById('boxModal').style.display = 'none';
+    }
+
+    function saveBox() {
+        const name = document.getElementById('boxName').value;
+        const location = document.getElementById('boxLocation').value;
+        const startTime = document.getElementById('boxStartTime').value;
+        const endTime = document.getElementById('boxEndTime').value;
+        const description = document.getElementById('boxDescription').value;
+        const days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
+
+        if (!name || !startTime || !endTime || days.length === 0) {
+            showToast('Nombre, horario y días son obligatorios', 'error');
+            return;
+        }
+
+        const newBox = {
+            id: Date.now(),
+            name: name,
+            location: location,
+            startTime: startTime,
+            endTime: endTime,
+            days: days,
+            description: description,
+            active: true
+        };
+
+        boxes.push(newBox);
+        save();
+        closeBoxModal();
+        renderBoxesTable();
+        showToast('Box guardado correctamente', 'success');
+    }
+
+    function renderBoxesTable() {
+        const tb = document.getElementById('boxTableBody');
+        if (!tb) return;
+
+        const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+        
+        tb.innerHTML = boxes.map(b => {
+            const daysStr = b.days.map(d => dayNames[d]).join(', ');
+            return `
+                <tr>
+                    <td><strong>${b.name}</strong></td>
+                    <td>${b.location || '—'}</td>
+                    <td>${b.startTime} - ${b.endTime}</td>
+                    <td>${daysStr}</td>
+                    <td><span class="badge" style="background:${b.active ? 'var(--success)' : 'var(--text-light)'}; color:white;">${b.active ? 'Activo' : 'Inactivo'}</span></td>
+                    <td>
+                        <button onclick="editBox(${b.id})" class="btn-icon" style="background:var(--primary); color:white;">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button onclick="toggleBoxStatus(${b.id})" class="btn-icon" style="background:var(--warning); color:white;">
+                            <i class="fa ${b.active ? 'fa-ban' : 'fa-check'}"></i>
+                        </button>
+                        <button onclick="deleteBox(${b.id})" class="btn-icon" style="background:var(--danger); color:white;">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function editBox(id) {
+        const box = boxes.find(b => b.id === id);
+        if (!box) return;
+
+        document.getElementById('boxName').value = box.name;
+        document.getElementById('boxLocation').value = box.location || '';
+        document.getElementById('boxStartTime').value = box.startTime;
+        document.getElementById('boxEndTime').value = box.endTime;
+        document.getElementById('boxDescription').value = box.description || '';
+        
+        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
+        box.days.forEach(d => {
+            const cb = document.querySelector(`.box-day[value="${d}"]`);
+            if (cb) cb.checked = true;
+        });
+
+        document.getElementById('saveBoxBtn').onclick = () => updateBox(id);
+        document.getElementById('boxModal').style.display = 'flex';
+    }
+
+    function updateBox(id) {
+        const box = boxes.find(b => b.id === id);
+        if (!box) return;
+
+        box.name = document.getElementById('boxName').value;
+        box.location = document.getElementById('boxLocation').value;
+        box.startTime = document.getElementById('boxStartTime').value;
+        box.endTime = document.getElementById('boxEndTime').value;
+        box.description = document.getElementById('boxDescription').value;
+        box.days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
+
+        save();
+        closeBoxModal();
+        renderBoxesTable();
+        showToast('Box actualizado', 'success');
+    }
+
+    function toggleBoxStatus(id) {
+        const box = boxes.find(b => b.id === id);
+        if (box) {
+            box.active = !box.active;
+            save();
+            renderBoxesTable();
+            showToast(`Box ${box.active ? 'activado' : 'desactivado'}`, 'success');
+        }
+    }
+
+    function deleteBox(id) {
+        if (confirm('¿Eliminar este box? Las citas asociadas quedarán sin box asignado.')) {
+            boxes = boxes.filter(b => b.id !== id);
+            // Actualizar citas que usaban este box
+            appointments.forEach(a => {
+                if (a.boxId === id) a.boxId = null;
+            });
+            save();
+            renderBoxesTable();
+            showToast('Box eliminado', 'success');
+        }
+    }
+
+    function getAvailableBoxes(date, time) {
+        if (!date || !time) return [];
+        
+        const selectedDate = new Date(date);
+        const dayOfWeek = selectedDate.getDay();
+        
+        return boxes.filter(box => {
+            if (!box.active) return false;
+            if (!box.days.includes(dayOfWeek)) return false;
+            
+            // Verificar si el horario está dentro del rango del box
+            const [boxStartHour, boxStartMin] = box.startTime.split(':').map(Number);
+            const [boxEndHour, boxEndMin] = box.endTime.split(':').map(Number);
+            const [appHour, appMin] = time.split(':').map(Number);
+            
+            const boxStartMinutes = boxStartHour * 60 + boxStartMin;
+            const boxEndMinutes = boxEndHour * 60 + boxEndMin;
+            const appMinutes = appHour * 60 + appMin;
+            
+            if (appMinutes < boxStartMinutes || appMinutes >= boxEndMinutes) return false;
+            
+            // Verificar si el box ya está ocupado en ese horario
+            const boxOccupied = appointments.some(a => 
+                a.boxId === box.id && 
+                a.date === date && 
+                a.time === time &&
+                a.status === 'confirmada'
+            );
+            
+            return !boxOccupied;
+        });
     }
 
     // ============================================
@@ -1952,7 +2457,6 @@
         const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
         const specialtyTerm = document.getElementById('specialtyFilter')?.value.toLowerCase() || '';
         const availabilityFilter = document.getElementById('availabilityFilter')?.value || '';
-        const sortFilter = document.getElementById('sortFilter')?.value || 'name';
 
         let filtered = getPublicStaff().filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
@@ -1976,21 +2480,7 @@
             return matchesSearch && matchesSpecialty && matchesAvailability;
         });
 
-        // Ordenamiento
-        if (sortFilter === 'name') {
-            filtered.sort((a, b) => a.name.localeCompare(b.name));
-        } else if (sortFilter === 'priceAsc') {
-            filtered.sort((a, b) => a.priceOnline - b.priceOnline);
-        } else if (sortFilter === 'priceDesc') {
-            filtered.sort((a, b) => b.priceOnline - a.priceOnline);
-        } else if (sortFilter === 'rating') {
-            filtered.sort((a, b) => {
-                const ratingA = getAverageRating(a.id);
-                const ratingB = getAverageRating(b.id);
-                return ratingB - ratingA;
-            });
-        }
-
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
         renderProfessionals(filtered);
     }
 
@@ -2016,6 +2506,10 @@
             const ratingDisplay = avgRating > 0 ? avgRating.toFixed(1) : p.stars;
             const specialties = p.spec.split(',').map(s => s.trim()).join(' · ');
             
+            const whatsappMessage = encodeURIComponent('Hola buenas tardes, necesito una hora para atención psicológica. ¿Podría ayudarme?');
+            const whatsappUrl = p.whatsapp ? `https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${whatsappMessage}` : '#';
+            const instagramUrl = p.instagram ? `https://instagram.com/${p.instagram.replace('@', '')}` : '#';
+            
             return `
                 <div class="therapist-card">
                     <div class="img-container">
@@ -2024,8 +2518,13 @@
                             ${hasAvailability ? 'DISPONIBLE HOY' : 'VER HORARIOS'}
                         </div>
                         ${p.whatsapp ? `
-                            <a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank" class="whatsapp-badge" onclick="event.stopPropagation()">
+                            <a href="${whatsappUrl}" target="_blank" class="whatsapp-badge" onclick="event.stopPropagation()" title="Contactar por WhatsApp">
                                 <i class="fab fa-whatsapp"></i>
+                            </a>
+                        ` : ''}
+                        ${p.instagram ? `
+                            <a href="${instagramUrl}" target="_blank" class="instagram-badge" onclick="event.stopPropagation()" title="Ver Instagram">
+                                <i class="fab fa-instagram"></i>
                             </a>
                         ` : ''}
                         <img src="${p.img}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'">
@@ -2039,8 +2538,8 @@
                         </div>
                         <div class="price-box">
                             <div class="price-details">
-                                <small><i class="fa fa-video"></i> $${p.priceOnline.toLocaleString()}</small>
-                                <small><i class="fa fa-building"></i> $${p.pricePresencial.toLocaleString()}</small>
+                                <small><i class="fa fa-video"></i> Consulta Online</small>
+                                <small><i class="fa fa-building"></i> Consulta Presencial</small>
                             </div>
                             <button class="btn-book" onclick="event.stopPropagation(); openBooking(${p.id})">
                                 Agendar
@@ -2053,11 +2552,12 @@
     }
 
     // ============================================
-    // FUNCIONES DE RESERVA
+    // FUNCIONES DE RESERVA (MODIFICADAS PARA BOXES)
     // ============================================
 
     function openBooking(id) {
         selectedPsych = staff.find(p => p.id === id);
+        selectedBoxId = null;
         
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('clientView').style.display = 'none';
@@ -2072,8 +2572,9 @@
         document.getElementById('custDate').value = today;
         
         loadPaymentMethods();
-        updateAvailableSlots();
         updateBookingDetails();
+        document.getElementById('emailSimulation').style.display = 'none';
+        document.getElementById('selectedBoxInfo').style.display = 'none';
     }
 
     function loadPaymentMethods() {
@@ -2115,14 +2616,21 @@
     function toggleAddressField() {
         const type = document.getElementById('appointmentType').value;
         const addressField = document.getElementById('addressField');
+        const boxField = document.getElementById('boxField');
         const bookingType = document.getElementById('bookingType');
+        const selectedBoxInfo = document.getElementById('selectedBoxInfo');
         
         if (type === 'presencial') {
             addressField.style.display = 'block';
+            boxField.style.display = 'block';
             bookingType.innerText = 'Presencial';
+            updateAvailableSlotsWithBoxes();
         } else {
             addressField.style.display = 'none';
+            boxField.style.display = 'none';
             bookingType.innerText = 'Online';
+            selectedBoxInfo.style.display = 'none';
+            updateAvailableSlots();
         }
     }
 
@@ -2162,6 +2670,104 @@
         }
     }
 
+    function updateAvailableSlotsWithBoxes() {
+        const date = document.getElementById('custDate').value;
+        const timeSelect = document.getElementById('custTime');
+        const boxSelector = document.getElementById('boxSelector');
+        const boxAvailabilityMsg = document.getElementById('boxAvailabilityMsg');
+        
+        if (!date || !selectedPsych) return;
+
+        const bookedTimes = appointments
+            .filter(a => a.psychId === selectedPsych.id && a.date === date)
+            .map(a => a.time);
+
+        const availableSlots = selectedPsych.availability?.[date] || [];
+
+        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+        
+        availableSlots.forEach(slot => {
+            if (!bookedTimes.includes(slot.time)) {
+                const option = document.createElement('option');
+                option.value = slot.time;
+                option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
+                if (slot.isOvercupo) option.style.color = '#f59e0b';
+                
+                // Verificar disponibilidad de boxes para este horario
+                const availableBoxes = getAvailableBoxes(date, slot.time);
+                if (availableBoxes.length === 0) {
+                    option.disabled = true;
+                    option.textContent += ' (sin boxes disponibles)';
+                    option.style.color = 'var(--text-light)';
+                }
+                
+                timeSelect.appendChild(option);
+            }
+        });
+
+        if (timeSelect.children.length === 1) {
+            timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+        }
+
+        // Actualizar selector de boxes cuando cambia el horario
+        const time = document.getElementById('custTime').value;
+        if (time) {
+            updateBoxSelector(date, time);
+        }
+    }
+
+    function updateBoxSelector(date, time) {
+        const boxSelector = document.getElementById('boxSelector');
+        const boxAvailabilityMsg = document.getElementById('boxAvailabilityMsg');
+        const selectedBoxInfo = document.getElementById('selectedBoxInfo');
+        
+        if (!date || !time) {
+            boxSelector.innerHTML = '';
+            boxAvailabilityMsg.innerHTML = 'Selecciona fecha y horario primero';
+            return;
+        }
+
+        const availableBoxes = getAvailableBoxes(date, time);
+        
+        if (availableBoxes.length === 0) {
+            boxSelector.innerHTML = '';
+            boxAvailabilityMsg.innerHTML = 'No hay boxes disponibles para este horario';
+            selectedBoxInfo.style.display = 'none';
+            return;
+        }
+
+        boxSelector.innerHTML = availableBoxes.map(box => `
+            <div class="box-option ${selectedBoxId === box.id ? 'selected' : ''}" 
+                 onclick="selectBox(${box.id})"
+                 title="${box.description || ''}">
+                📦 ${box.name} ${box.location ? `- ${box.location}` : ''}
+            </div>
+        `).join('');
+
+        boxAvailabilityMsg.innerHTML = `${availableBoxes.length} box(es) disponible(s)`;
+        
+        if (selectedBoxId && !availableBoxes.some(b => b.id === selectedBoxId)) {
+            selectedBoxId = null;
+            selectedBoxInfo.style.display = 'none';
+        }
+    }
+
+    function selectBox(boxId) {
+        selectedBoxId = boxId;
+        const box = boxes.find(b => b.id === boxId);
+        const boxSelector = document.getElementById('boxSelector');
+        const selectedBoxInfo = document.getElementById('selectedBoxInfo');
+        const selectedBoxName = document.getElementById('selectedBoxName');
+        
+        document.querySelectorAll('.box-option').forEach(opt => opt.classList.remove('selected'));
+        event.target.classList.add('selected');
+        
+        if (box) {
+            selectedBoxName.innerText = `${box.name} ${box.location ? `(${box.location})` : ''}`;
+            selectedBoxInfo.style.display = 'flex';
+        }
+    }
+
     function searchPatientByRutBooking() {
         const rut = document.getElementById('custRut').value;
         if (!rut) return;
@@ -2173,6 +2779,33 @@
             document.getElementById('custPhone').value = patient.phone || '';
             showToast('Datos del paciente cargados', 'success');
         }
+    }
+
+    function sendEmailConfirmation(patientEmail, patientName, psychName, date, time, type, boxName = null) {
+        const emailContent = document.getElementById('emailContent');
+        const emailSimulation = document.getElementById('emailSimulation');
+        
+        const boxText = boxName ? `<br>📍 Box asignado: ${boxName}` : '';
+        
+        const emailHtml = `
+            <strong>Para:</strong> ${patientEmail}<br>
+            <strong>Asunto:</strong> Confirmación de reserva - Vínculo Salud<br><br>
+            Hola ${patientName},<br><br>
+            Tu reserva ha sido confirmada:<br>
+            ✅ Profesional: ${psychName}<br>
+            📅 Fecha: ${date}<br>
+            ⏰ Hora: ${time}<br>
+            💻 Tipo: ${type === 'online' ? 'Online' : 'Presencial'}${boxText}<br><br>
+            Gracias por confiar en nosotros.<br>
+            Vínculo Salud
+        `;
+        
+        emailContent.innerHTML = emailHtml;
+        emailSimulation.style.display = 'block';
+        
+        setTimeout(() => {
+            emailSimulation.style.display = 'none';
+        }, 10000);
     }
 
     function executeBooking() {
@@ -2188,6 +2821,11 @@
         
         if (!rut || !name || !email || !date || !time || !paymentMethod) {
             showToast('Completa todos los campos obligatorios', 'error');
+            return;
+        }
+
+        if (type === 'presencial' && !selectedBoxId) {
+            showToast('Debes seleccionar un box para atención presencial', 'error');
             return;
         }
 
@@ -2214,6 +2852,7 @@
             }
 
             const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
+            const box = type === 'presencial' ? boxes.find(b => b.id === selectedBoxId) : null;
             
             const appointment = {
                 id: Date.now(),
@@ -2227,12 +2866,15 @@
                 date: date,
                 time: time,
                 type: type,
+                boxId: type === 'presencial' ? selectedBoxId : null,
+                boxName: box ? box.name : null,
                 price: price,
                 paymentMethod: paymentMethod,
                 paymentStatus: paymentMethod === 'transfer' ? 'pendiente' : 'pagado',
                 msg: msg,
                 status: 'confirmada',
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                editableUntil: new Date(Date.now() + EDIT_HOURS * 60 * 60 * 1000).toISOString()
             };
             
             appointments.push(appointment);
@@ -2242,11 +2884,16 @@
             
             save();
             
-            showToast(`¡Reserva confirmada!`, 'success');
+            sendEmailConfirmation(email, name, selectedPsych.name, date, time, type, box ? box.name : null);
+            
+            showToast(`¡Reserva confirmada! Se ha enviado un email a ${email}`, 'success');
+            
+            bookBtn.innerHTML = 'RESERVAR AHORA';
+            bookBtn.disabled = false;
             
             setTimeout(() => {
                 location.reload();
-            }, 2000);
+            }, 3000);
         }, 1500);
     }
 
@@ -2256,13 +2903,14 @@
 
     function showLoginModal() {
         document.getElementById('loginModal').style.display = 'flex';
-        document.getElementById('loginUser').focus();
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+        document.getElementById('loginBtn').innerHTML = 'Ingresar al Panel';
+        document.getElementById('loginBtn').disabled = false;
     }
 
     function closeLoginModal() {
         document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('loginUser').value = '';
-        document.getElementById('loginPass').value = '';
     }
 
     function processLogin() {
@@ -2285,7 +2933,7 @@
                 if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
                     currentUser = { role: 'admin', data: foundUser };
                     showDashboard();
-                    showToast('Acceso administrador', 'success');
+                    showToast('Acceso administrador concedido', 'success');
                 } else {
                     currentUser = { role: 'psych', data: foundUser };
                     showDashboard();
@@ -2293,7 +2941,7 @@
                 }
                 closeLoginModal();
             } else { 
-                showToast('Credenciales incorrectas', 'error');
+                showToast('Usuario o contraseña incorrectos', 'error');
                 btn.innerHTML = 'Ingresar al Panel';
                 btn.disabled = false;
             }
@@ -2314,11 +2962,13 @@
         document.getElementById('psychTab').style.display = currentUser.role === 'psych' ? 'block' : 'none';
         document.getElementById('configTab').style.display = currentUser.role === 'psych' ? 'block' : 'none';
         document.getElementById('messagesTab').style.display = currentUser.role === 'admin' ? 'block' : 'none';
+        document.getElementById('boxesTab').style.display = currentUser.role === 'admin' ? 'block' : 'none';
         
         if (currentUser.role === 'admin') {
             document.getElementById('dashTitle').innerText = "Panel Administrador";
             renderStaffTable();
             renderMessagesTable();
+            renderBoxesTable();
         } else {
             document.getElementById('dashTitle').innerText = `Panel de ${currentUser.data.name}`;
             document.getElementById('availDate').min = new Date().toISOString().split('T')[0];
@@ -2341,6 +2991,7 @@
         if (tabName === 'disponibilidad' && currentUser.role === 'psych') loadTimeSlots();
         if (tabName === 'configuracion' && currentUser.role === 'psych') loadMyConfig();
         if (tabName === 'mensajes' && currentUser.role === 'admin') renderMessagesTable();
+        if (tabName === 'boxes' && currentUser.role === 'admin') renderBoxesTable();
     }
 
     function updateStats() {
@@ -2359,13 +3010,15 @@
         tb.innerHTML = "";
         
         if (apps.length === 0) {
-            tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">No hay citas</td></tr>';
+            tb.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">No hay citas</td></tr>';
             return;
         }
 
         [...apps].reverse().forEach(a => {
             const appDate = new Date(a.date + 'T' + a.time);
             const isPast = appDate < new Date();
+            const canEdit = currentUser.role === 'admin' || 
+                           (currentUser.role === 'psych' && new Date() < new Date(a.editableUntil));
             
             let paymentStatusText = a.paymentMethod === 'transfer' ? (a.paymentStatus === 'pendiente' ? 'Pendiente' : 'Pagado') : 'Pagado';
             let paymentStatusColor = a.paymentMethod === 'transfer' && a.paymentStatus === 'pendiente' ? 'var(--warning)' : 'var(--success)';
@@ -2376,12 +3029,20 @@
                     <td>${a.psych}</td>
                     <td>${a.date} <br><small>${a.time}</small></td>
                     <td><span class="badge ${a.type}">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+                    <td>${a.boxName ? `<span class="history-box">${a.boxName}</span>` : '—'}</td>
                     <td><span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${a.price.toLocaleString()}</small></span></td>
                     <td><span style="color:${isPast ? 'var(--text-light)' : 'var(--success)'};">${isPast ? 'Completada' : 'Confirmada'}</span></td>
                     <td>
-                        <button onclick="cancelAppointment(${a.id})" class="btn-icon" style="background:var(--danger); color:white;">
-                            <i class="fa fa-times"></i>
-                        </button>
+                        ${canEdit ? `
+                            <button onclick="editAppointment(${a.id})" class="btn-icon" style="background:var(--primary); color:white;">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                        ` : ''}
+                        ${(currentUser.role === 'admin' || canEdit) ? `
+                            <button onclick="cancelAppointment(${a.id})" class="btn-icon" style="background:var(--danger); color:white;">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        ` : ''}
                         ${a.paymentMethod === 'transfer' && a.paymentStatus === 'pendiente' && currentUser.role === 'admin' ? `
                             <button onclick="markAsPaid(${a.id})" class="btn-icon" style="background:var(--success); color:white;">
                                 <i class="fa fa-check"></i>
@@ -2394,7 +3055,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE PACIENTES
+    // FUNCIONES DE PACIENTES CON HISTORIAL
     // ============================================
 
     function renderPatients() {
@@ -2416,14 +3077,18 @@
         }
 
         container.innerHTML = filteredPatients.map(p => {
-            const patientApps = appointments.filter(a => a.patientId === p.id);
+            const patientApps = appointments.filter(a => a.patientId === p.id).sort((a, b) => new Date(b.date) - new Date(a.date));
             const nextAppt = patientApps.find(a => new Date(a.date + 'T' + a.time) > new Date());
+            const totalSessions = patientApps.length;
+            const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
+            
+            const recentApps = patientApps.slice(0, 3);
             
             return `
                 <div class="patient-card" onclick="viewPatientDetails(${p.id})">
                     <div class="patient-header">
                         <span class="patient-name">${p.name}</span>
-                        <span class="badge" style="background:var(--primary); color:white;">${patientApps.length} sesiones</span>
+                        <span class="badge" style="background:var(--primary); color:white;">${totalSessions} sesiones</span>
                     </div>
                     <div class="patient-contact">
                         <span><i class="fa fa-id-card"></i> ${p.rut || 'Sin RUT'}</span>
@@ -2432,7 +3097,21 @@
                     </div>
                     ${nextAppt ? `
                         <div style="background:#e6f7e6; padding:8px; border-radius:8px; margin-top:10px;">
-                            <i class="fa fa-calendar-check"></i> Próxima: ${nextAppt.date} ${nextAppt.time}
+                            <i class="fa fa-calendar-check"></i> Próxima: ${nextAppt.date} ${nextAppt.time} con ${nextAppt.psych}
+                            ${nextAppt.boxName ? `<span class="history-box">${nextAppt.boxName}</span>` : ''}
+                        </div>
+                    ` : ''}
+                    ${recentApps.length > 0 ? `
+                        <div class="patient-history">
+                            <strong>Últimas atenciones:</strong>
+                            ${recentApps.map(a => `
+                                <div class="history-item">
+                                    <span class="history-date">${a.date}</span>
+                                    <span class="history-psych">${a.psych}</span>
+                                    <span class="history-type">${a.type === 'online' ? '🌐' : '🏢'}</span>
+                                    ${a.boxName ? `<span class="history-box">${a.boxName}</span>` : ''}
+                                </div>
+                            `).join('')}
                         </div>
                     ` : ''}
                 </div>
@@ -2449,6 +3128,7 @@
         document.getElementById('patientBirthdate').value = '';
         document.getElementById('patientNotes').value = '';
         document.getElementById('patientModalTitle').innerText = 'Nuevo Paciente';
+        document.getElementById('patientHistoryContainer').style.display = 'none';
         document.getElementById('patientModal').style.display = 'flex';
     }
 
@@ -2464,6 +3144,26 @@
         document.getElementById('patientBirthdate').value = patient.birthdate || '';
         document.getElementById('patientNotes').value = patient.notes || '';
         document.getElementById('patientModalTitle').innerText = 'Editar Paciente';
+        
+        const patientApps = appointments.filter(a => a.patientId === patient.id).sort((a, b) => new Date(b.date) - new Date(a.date));
+        const historyContainer = document.getElementById('patientHistoryContainer');
+        const historyList = document.getElementById('patientHistoryList');
+        
+        if (patientApps.length > 0) {
+            historyList.innerHTML = patientApps.map(a => `
+                <div class="history-item">
+                    <span class="history-date">${a.date} ${a.time}</span>
+                    <span class="history-psych">${a.psych}</span>
+                    <span class="history-type">${a.type === 'online' ? 'Online' : 'Presencial'}</span>
+                    ${a.boxName ? `<span class="history-box">${a.boxName}</span>` : ''}
+                    <span>$${a.price.toLocaleString()}</span>
+                </div>
+            `).join('');
+            historyContainer.style.display = 'block';
+        } else {
+            historyContainer.style.display = 'none';
+        }
+        
         document.getElementById('patientModal').style.display = 'flex';
     }
 
@@ -2781,6 +3481,7 @@
         document.getElementById('myPriceOnline').value = psych.priceOnline || '';
         document.getElementById('myPricePresencial').value = psych.pricePresencial || '';
         document.getElementById('myWhatsapp').value = psych.whatsapp || '';
+        document.getElementById('myInstagram').value = psych.instagram || '';
     }
 
     function saveMyConfig() {
@@ -2791,6 +3492,7 @@
         psych.priceOnline = parseInt(document.getElementById('myPriceOnline').value);
         psych.pricePresencial = parseInt(document.getElementById('myPricePresencial').value);
         psych.whatsapp = document.getElementById('myWhatsapp').value;
+        psych.instagram = document.getElementById('myInstagram').value;
         
         const staffIndex = staff.findIndex(s => s.id === psych.id);
         if (staffIndex !== -1) staff[staffIndex] = psych;
@@ -2815,6 +3517,7 @@
                 <td>${p.user}</td>
                 <td>$${p.priceOnline}/$${p.pricePresencial}</td>
                 <td>${p.whatsapp || '—'}</td>
+                <td>${p.instagram || '—'}</td>
                 <td>
                     <button onclick="editTherapist(${p.id})" class="btn-icon" style="background:var(--primary); color:white;">
                         <i class="fa fa-edit"></i>
@@ -2835,6 +3538,7 @@
         const user = document.getElementById('addUser').value;
         const pass = document.getElementById('addPass').value;
         const whatsapp = document.getElementById('addWhatsapp')?.value || '';
+        const instagram = document.getElementById('addInstagram')?.value || '';
         const address = document.getElementById('addAddress')?.value || '';
         const phone = document.getElementById('addPhone')?.value || '';
         
@@ -2857,6 +3561,7 @@
             user: user,
             pass: pass,
             whatsapp: whatsapp,
+            instagram: instagram,
             img: document.getElementById('addImg').value || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
             address: address,
             phone: phone,
@@ -2869,7 +3574,7 @@
 
         save();
         
-        ['addName','addSpec','addPriceOnline','addPricePresencial','addUser','addPass','addWhatsapp','addImg','addAddress','addPhone']
+        ['addName','addSpec','addPriceOnline','addPricePresencial','addUser','addPass','addWhatsapp','addInstagram','addImg','addAddress','addPhone']
             .forEach(id => document.getElementById(id).value = '');
         
         showToast('Profesional añadido', 'success');
@@ -2886,6 +3591,7 @@
         document.getElementById('editPass').value = '';
         document.getElementById('editImg').value = therapist.img || '';
         document.getElementById('editWhatsapp').value = therapist.whatsapp || '';
+        document.getElementById('editInstagram').value = therapist.instagram || '';
         document.getElementById('editAddress').value = therapist.address || '';
         document.getElementById('editPhone').value = therapist.phone || '';
         document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
@@ -2908,6 +3614,7 @@
         therapist.user = document.getElementById('editUser').value;
         therapist.img = document.getElementById('editImg').value;
         therapist.whatsapp = document.getElementById('editWhatsapp').value;
+        therapist.instagram = document.getElementById('editInstagram').value;
         therapist.address = document.getElementById('editAddress').value;
         therapist.phone = document.getElementById('editPhone').value;
         therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
@@ -2942,6 +3649,12 @@
     // FUNCIONES DE CITAS
     // ============================================
 
+    function editAppointment(id) {
+        const appointment = appointments.find(a => a.id === id);
+        if (!appointment) return;
+        showToast('Función de edición en desarrollo', 'info');
+    }
+
     function cancelAppointment(id) {
         if (confirm('¿Cancelar esta cita?')) {
             appointments = appointments.filter(a => a.id !== id);
@@ -2970,6 +3683,22 @@
     filterProfessionals();
     renderMessages();
     updateMarquee();
+
+    // Configurar evento para actualizar boxes cuando cambia el horario
+    document.getElementById('custTime').addEventListener('change', function() {
+        const date = document.getElementById('custDate').value;
+        const time = this.value;
+        if (date && time) {
+            updateBoxSelector(date, time);
+        }
+    });
+
+    document.getElementById('custDate').addEventListener('change', function() {
+        const time = document.getElementById('custTime').value;
+        if (this.value && time) {
+            updateBoxSelector(this.value, time);
+        }
+    });
 </script>
 </body>
 </html>

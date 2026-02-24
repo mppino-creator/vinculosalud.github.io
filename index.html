@@ -7,6 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    // Al principio del script, después de las variables globales
+<console.log("Firebase inicializado:", firebase.apps.length ? "SÍ" : "NO");>
+    
+</console.log>
     <!-- 🔴 AGREGAR FIREBASE SDK AQUÍ -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
@@ -3115,19 +3119,24 @@
         document.getElementById('loginModal').style.display = 'none';
     }
 
-    function processLogin() {
-        const user = document.getElementById('loginUser').value;
-        const pass = document.getElementById('loginPass').value;
-        const btn = document.getElementById('loginBtn');
-        
-        if (!user || !pass) {
-            showToast('Ingresa usuario y contraseña', 'error');
-            return;
-        }
+    // ============================================
+// FUNCIÓN DE LOGIN CORREGIDA
+// ============================================
+function processLogin() {
+    const user = document.getElementById('loginUser').value;
+    const pass = document.getElementById('loginPass').value;
+    const btn = document.getElementById('loginBtn');
+    
+    if (!user || !pass) {
+        showToast('Ingresa usuario y contraseña', 'error');
+        return;
+    }
 
-        btn.innerHTML = '<span class="spinner"></span> Verificando...';
-        btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Verificando...';
+    btn.disabled = true;
 
+    // Verificar en el array staff (que ya debería estar cargado desde Firebase)
+    setTimeout(() => {
         const foundUser = staff.find(s => s.user === user && s.pass === pass);
         
         if (foundUser) {
@@ -3146,7 +3155,8 @@
             btn.innerHTML = 'Ingresar al Panel';
             btn.disabled = false;
         }
-    }
+    }, 500); // Pequeño retraso para asegurar que los datos están cargados
+}
 
     function logout() {
         currentUser = null;

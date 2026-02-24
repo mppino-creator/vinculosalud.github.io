@@ -1,384 +1,36 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vínculo Salud - Sistema de Reservas</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Vínculo Salud - Gestión Profesionales</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-    
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #f5f7fb; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        
-        /* Header */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .logo { font-size: 24px; font-weight: 700; color: #6366f1; }
-        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: all 0.3s; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .btn-primary { background: #6366f1; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn-success { background: #10b981; color: white; }
-        
-        /* Login Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; animation: modalSlide 0.3s ease; }
-        @keyframes modalSlide { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; transition: all 0.3s; font-size: 14px; }
-        .modal input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-        .modal input.valid { border-color: #10b981; background-color: #f0fdf4; }
-        .modal input.invalid { border-color: #ef4444; background-color: #fef2f2; }
-        
-        /* Paneles */
-        .panel { display: none; }
-        .panel.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        /* Grids */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: all 0.3s; }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
-        
-        /* Forms */
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #374151; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; transition: all 0.3s; font-size: 14px; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-        
-        /* Tabs */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
-        .tab { padding: 8px 16px; cursor: pointer; border-radius: 6px; transition: all 0.3s; }
-        .tab:hover { background: #f3f4f6; }
-        .tab.active { background: #6366f1; color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
-        
-        /* Horarios */
-        .time-slots { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; max-height: 300px; overflow-y: auto; padding: 10px; background: #f9fafb; border-radius: 8px; }
-        .time-slot { padding: 8px 16px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; background: white; transition: all 0.2s; font-weight: 500; }
-        .time-slot:hover { transform: scale(1.05); border-color: #6366f1; }
-        .time-slot.selected { background: #6366f1; color: white; border-color: #6366f1; }
-        .time-slot.booked { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; text-decoration: line-through; border-color: #e5e7eb; }
-        .time-slot.booked:hover { transform: none; }
-        
-        /* Boxes */
-        .box-selector { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
-        .box-option { padding: 12px 24px; border: 2px solid #e5e7eb; border-radius: 10px; cursor: pointer; transition: all 0.3s; font-weight: 600; background: white; }
-        .box-option:hover { transform: translateY(-2px); border-color: #8b5cf6; }
-        .box-option.selected { background: #8b5cf6; color: white; border-color: #8b5cf6; }
-        
-        /* Tablas */
-        .table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .table th { background: #f9fafb; padding: 16px; text-align: left; font-weight: 600; color: #374151; }
-        .table td { padding: 16px; border-top: 1px solid #f0f0f0; }
-        .table tr:hover { background: #f9fafb; }
-        
-        /* Toast */
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
-        .toast { padding: 16px 24px; border-radius: 8px; color: white; margin-bottom: 10px; animation: toastSlide 0.3s ease; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .toast.success { background: #10b981; }
-        .toast.error { background: #ef4444; }
-        .toast.info { background: #6366f1; }
-        @keyframes toastSlide { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        
-        /* Loading */
-        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
 </head>
 <body>
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">Vínculo Salud</div>
-            <button class="btn btn-primary" onclick="showLogin()">
-                <i class="fas fa-lock"></i> Acceso Staff
-            </button>
-        </div>
-
-        <!-- Login Modal -->
-        <div class="modal" id="loginModal">
-            <div class="modal-content">
-                <h3 style="margin-bottom: 20px; color: #1f2937;">
-                    <i class="fas fa-user-md"></i> Iniciar Sesión
-                </h3>
-                <input type="text" id="loginUser" placeholder="Usuario" autocomplete="off">
-                <input type="password" id="loginPass" placeholder="Contraseña">
-                <button class="btn btn-primary" style="width:100%;" onclick="login()" id="loginBtn">
-                    Ingresar
-                </button>
-                <p style="text-align: center; margin-top: 15px; color: #6b7280; font-size: 12px;">
-                    <i class="fas fa-info-circle"></i> Admin: Admin / Nina2026
-                </p>
-            </div>
-        </div>
-
-        <!-- Panel Público -->
-        <div id="publicPanel" class="panel active">
-            <h2 style="color: #1f2937; margin-bottom: 20px;">
-                <i class="fas fa-users"></i> Profesionales Disponibles
-            </h2>
-            <div class="grid" id="professionalsGrid"></div>
-        </div>
-
-        <!-- Panel de Reserva -->
-        <div id="bookingPanel" class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 id="bookingPsychName" style="color: #1f2937;"></h2>
-                <button class="btn btn-danger" onclick="backToPublic()">
-                    <i class="fas fa-times"></i> Volver
-                </button>
-            </div>
-            
-            <div class="grid" style="grid-template-columns: 2fr 1fr;">
-                <!-- Formulario de Reserva -->
-                <div class="card">
-                    <h3 style="margin-bottom: 20px; color: #1f2937;">
-                        <i class="fas fa-user"></i> Datos del Paciente
-                    </h3>
-                    <div class="form-group">
-                        <label>RUT</label>
-                        <input type="text" id="rut" placeholder="12.345.678-9">
-                    </div>
-                    <div class="form-group">
-                        <label>Nombre Completo</label>
-                        <input type="text" id="name">
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="email">
-                    </div>
-                    <div class="form-group">
-                        <label>Teléfono</label>
-                        <input type="text" id="phone">
-                    </div>
-                    
-                    <h3 style="margin: 20px 0; color: #1f2937;">
-                        <i class="fas fa-calendar"></i> Seleccionar Horario
-                    </h3>
-                    <div class="form-group">
-                        <label>Fecha</label>
-                        <input type="date" id="bookingDate" onchange="loadAvailableSlots()">
-                    </div>
-                    
-                    <div id="timeSlotsContainer" class="time-slots"></div>
-                    
-                    <div id="boxSelectorContainer" style="display: none;">
-                        <h4 style="margin-bottom: 10px; color: #374151;">
-                            <i class="fas fa-box"></i> Box Disponible
-                        </h4>
-                        <div id="boxSelector" class="box-selector"></div>
-                    </div>
-                    
-                    <button class="btn btn-success" style="width:100%; margin-top:20px;" onclick="confirmBooking()" id="confirmBtn" disabled>
-                        Confirmar Reserva
-                    </button>
-                </div>
-                
-                <!-- Resumen -->
-                <div class="card" style="background: #1e293b; color: white;">
-                    <h3 style="color:white; margin-bottom: 20px;">
-                        <i class="fas fa-file-invoice"></i> Detalle
-                    </h3>
-                    <p id="selectedPsychInfo" style="margin: 10px 0;"></p>
-                    <p id="selectedDateTime" style="margin: 10px 0;"></p>
-                    <p id="selectedBox" style="margin: 10px 0;"></p>
-                    <p id="selectedPrice" style="margin: 10px 0; font-size: 18px; font-weight: 700;"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Panel Dashboard -->
-        <div id="dashboardPanel" class="panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 id="dashboardTitle" style="color: #1f2937;"></h2>
-                <button class="btn btn-danger" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                </button>
-            </div>
-
-            <!-- Tabs -->
-            <div class="tabs" id="tabs">
-                <div class="tab active" onclick="switchTab('citas')">
-                    <i class="fas fa-calendar-check"></i> Citas
-                </div>
-                <div class="tab" id="tabProfesionales" onclick="switchTab('profesionales')">
-                    <i class="fas fa-user-md"></i> Profesionales
-                </div>
-                <div class="tab" id="tabBoxes" onclick="switchTab('boxes')">
-                    <i class="fas fa-box"></i> Boxes
-                </div>
-                <div class="tab" id="tabDisponibilidad" onclick="switchTab('disponibilidad')">
-                    <i class="fas fa-clock"></i> Mi Disponibilidad
-                </div>
-            </div>
-
-            <!-- Tab Citas -->
-            <div id="tabCitas" class="tab-content active">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Hora</th>
-                            <th>Paciente</th>
-                            <th>Profesional</th>
-                            <th>Box</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="citasTable"></tbody>
-                </table>
-            </div>
-
-            <!-- Tab Profesionales (solo admin) -->
-            <div id="tabProfesionales" class="tab-content">
-                <button class="btn btn-primary" style="margin-bottom: 20px;" onclick="showAddProfessional()">
-                    <i class="fas fa-plus"></i> Nuevo Profesional
-                </button>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Especialidad</th>
-                            <th>Usuario</th>
-                            <th>Precio Online</th>
-                            <th>Precio Presencial</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="professionalsTable"></tbody>
-                </table>
-            </div>
-
-            <!-- Tab Boxes (solo admin) -->
-            <div id="tabBoxes" class="tab-content">
-                <button class="btn btn-primary" style="margin-bottom: 20px;" onclick="showAddBox()">
-                    <i class="fas fa-plus"></i> Nuevo Box
-                </button>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Ubicación</th>
-                            <th>Horario</th>
-                            <th>Días</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="boxesTable"></tbody>
-                </table>
-            </div>
-
-            <!-- Tab Disponibilidad (solo profesionales) -->
-            <div id="tabDisponibilidad" class="tab-content">
-                <div class="card">
-                    <h3 style="margin-bottom: 20px;">
-                        <i class="fas fa-calendar-alt"></i> Configurar Disponibilidad
-                    </h3>
-                    <div class="form-group">
-                        <label>Fecha</label>
-                        <input type="date" id="availDate" onchange="loadProfessionalSlots()">
-                    </div>
-                    
-                    <h4 style="margin: 20px 0 10px;">Horarios Disponibles</h4>
-                    <div class="time-slots" id="professionalSlots"></div>
-                    
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button class="btn btn-primary" onclick="addTimeSlot()">
-                            <i class="fas fa-plus"></i> Agregar Horario
-                        </button>
-                        <button class="btn btn-success" onclick="saveAvailability()">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <h2>Gestión de Profesionales</h2>
+    
+    <!-- Formulario para agregar profesional -->
+    <div style="border:1px solid black; padding:10px; margin-bottom:20px;">
+        <h3>Agregar Profesional</h3>
+        <input type="text" id="nombre" placeholder="Nombre completo"><br><br>
+        <input type="text" id="especialidad" placeholder="Especialidad"><br><br>
+        <input type="text" id="usuario" placeholder="Usuario"><br><br>
+        <input type="text" id="password" placeholder="Contraseña"><br><br>
+        <input type="number" id="precioOnline" placeholder="Precio Online"><br><br>
+        <input type="number" id="precioPresencial" placeholder="Precio Presencial"><br><br>
+        <button onclick="guardarProfesional()">Guardar Profesional</button>
     </div>
-
-    <!-- Modal para agregar/editar profesional -->
-    <div class="modal" id="professionalModal">
-        <div class="modal-content">
-            <h3 id="professionalModalTitle" style="margin-bottom: 20px;">Nuevo Profesional</h3>
-            <input type="hidden" id="editProfessionalId">
-            <div class="form-group">
-                <label>Nombre</label>
-                <input type="text" id="profName">
-            </div>
-            <div class="form-group">
-                <label>Especialidad</label>
-                <input type="text" id="profSpec">
-            </div>
-            <div class="form-group">
-                <label>Usuario</label>
-                <input type="text" id="profUser">
-            </div>
-            <div class="form-group">
-                <label>Contraseña</label>
-                <input type="text" id="profPass">
-            </div>
-            <div class="form-group">
-                <label>Precio Online</label>
-                <input type="number" id="profPriceOnline">
-            </div>
-            <div class="form-group">
-                <label>Precio Presencial</label>
-                <input type="number" id="profPricePresencial">
-            </div>
-            <button class="btn btn-success" style="width:100%;" onclick="saveProfessional()">Guardar</button>
-        </div>
-    </div>
-
-    <!-- Modal para agregar/editar box -->
-    <div class="modal" id="boxModal">
-        <div class="modal-content">
-            <h3 style="margin-bottom: 20px;">Nuevo Box</h3>
-            <input type="hidden" id="editBoxId">
-            <div class="form-group">
-                <label>Nombre</label>
-                <input type="text" id="boxName">
-            </div>
-            <div class="form-group">
-                <label>Ubicación</label>
-                <input type="text" id="boxLocation">
-            </div>
-            <div class="form-group">
-                <label>Hora Inicio</label>
-                <input type="time" id="boxStart" value="09:00">
-            </div>
-            <div class="form-group">
-                <label>Hora Fin</label>
-                <input type="time" id="boxEnd" value="20:00">
-            </div>
-            <div class="form-group">
-                <label>Días</label>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <label><input type="checkbox" class="boxDay" value="1" checked> Lun</label>
-                    <label><input type="checkbox" class="boxDay" value="2" checked> Mar</label>
-                    <label><input type="checkbox" class="boxDay" value="3" checked> Mié</label>
-                    <label><input type="checkbox" class="boxDay" value="4" checked> Jue</label>
-                    <label><input type="checkbox" class="boxDay" value="5" checked> Vie</label>
-                    <label><input type="checkbox" class="boxDay" value="6"> Sáb</label>
-                    <label><input type="checkbox" class="boxDay" value="0"> Dom</label>
-                </div>
-            </div>
-            <button class="btn btn-success" style="width:100%;" onclick="saveBox()">Guardar</button>
-        </div>
+    
+    <!-- Lista de profesionales -->
+    <div style="border:1px solid black; padding:10px;">
+        <h3>Lista de Profesionales</h3>
+        <div id="listaProfesionales"></div>
     </div>
 
     <script>
-        // ============================================
-        // CONFIGURACIÓN FIREBASE
-        // ============================================
+        // Configuración Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCj5jdc_FQ1H0l78VJj3qBmGYsGrSete3U",
             authDomain: "vinculosaludapp.firebaseapp.com",
@@ -389,721 +41,89 @@
             appId: "1:405876668483:web:8f19aef4dd63a70ecdbcf6"
         };
 
+        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // ============================================
-        // DATOS INICIALES
-        // ============================================
-        const adminUser = {
-            id: 9999,
-            name: 'Administrador',
-            user: 'Admin',
-            pass: 'Nina2026',
-            role: 'admin'
-        };
-
-        let professionals = [];
-        let boxes = [];
-        let availabilities = {};
-        let appointments = [];
-        let currentUser = null;
-        let selectedProfessional = null;
-        let selectedSlot = null;
-        let selectedBox = null;
-
-        // Sistema de login
-        let loginAttempts = 0;
-        let autoLoginTimeout = null;
-
-        // ============================================
-        // SISTEMA DE NOTIFICACIONES
-        // ============================================
-        function showToast(message, type = 'success', duration = 3000) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-                <span>${message}</span>
-            `;
-            container.appendChild(toast);
+        // Función para guardar profesional
+        function guardarProfesional() {
+            // Obtener valores del formulario
+            const nombre = document.getElementById('nombre').value;
+            const especialidad = document.getElementById('especialidad').value;
+            const usuario = document.getElementById('usuario').value;
+            const password = document.getElementById('password').value;
+            const precioOnline = document.getElementById('precioOnline').value;
+            const precioPresencial = document.getElementById('precioPresencial').value;
             
-            setTimeout(() => {
-                toast.style.animation = 'toastSlide 0.3s ease reverse';
-                setTimeout(() => toast.remove(), 300);
-            }, duration);
-        }
-
-        // ============================================
-        // CARGAR DATOS
-        // ============================================
-        function loadData() {
-            console.log("🚀 Iniciando carga de datos...");
-            
-            // Profesionales
-            database.ref('professionals').once('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    professionals = Array.isArray(data) ? data : Object.values(data);
-                    if (!professionals.find(p => p.role === 'admin')) {
-                        professionals.push(adminUser);
-                        database.ref('professionals').set(professionals);
-                    }
-                } else {
-                    professionals = [adminUser];
-                    database.ref('professionals').set(professionals);
-                }
-                renderProfessionals();
-            });
-
-            database.ref('professionals').on('value', (snapshot) => {
-                const data = snapshot.val();
-                professionals = data ? (Array.isArray(data) ? data : Object.values(data)) : [adminUser];
-                if (!professionals.find(p => p.role === 'admin')) professionals.push(adminUser);
-                renderProfessionals();
-                if (currentUser?.role === 'admin') renderProfessionalsTable();
-            });
-
-            database.ref('boxes').on('value', (snapshot) => {
-                const data = snapshot.val();
-                boxes = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-                if (currentUser?.role === 'admin') renderBoxesTable();
-            });
-
-            database.ref('availabilities').on('value', (snapshot) => {
-                availabilities = snapshot.val() || {};
-            });
-
-            database.ref('appointments').on('value', (snapshot) => {
-                const data = snapshot.val();
-                appointments = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-                renderCitas();
-            });
-        }
-
-        // ============================================
-        // LOGIN MEJORADO
-        // ============================================
-        function showLogin() {
-            document.getElementById('loginModal').style.display = 'flex';
-            document.getElementById('loginUser').value = '';
-            document.getElementById('loginPass').value = '';
-            document.getElementById('loginUser').focus();
-            loginAttempts = 0;
-            
-            // Agregar listeners
-            document.getElementById('loginUser').addEventListener('input', validateUser);
-            document.getElementById('loginPass').addEventListener('input', validatePassword);
-        }
-
-        function validateUser() {
-            const user = document.getElementById('loginUser').value;
-            const pass = document.getElementById('loginPass').value;
-            const userInput = document.getElementById('loginUser');
-            
-            if (user.length > 0) {
-                const userExists = professionals.some(p => p.user === user);
-                userInput.classList.toggle('valid', userExists);
-                userInput.classList.toggle('invalid', !userExists);
-                
-                if (userExists && pass.length > 0) {
-                    if (autoLoginTimeout) clearTimeout(autoLoginTimeout);
-                    autoLoginTimeout = setTimeout(() => autoLogin(), 2000);
-                }
-            } else {
-                userInput.classList.remove('valid', 'invalid');
-            }
-        }
-
-        function validatePassword() {
-            const user = document.getElementById('loginUser').value;
-            const pass = document.getElementById('loginPass').value;
-            const passInput = document.getElementById('loginPass');
-            
-            if (user.length > 0 && pass.length > 0) {
-                const found = professionals.find(p => p.user === user && p.pass === pass);
-                passInput.classList.toggle('valid', !!found);
-                passInput.classList.toggle('invalid', !found);
-                
-                if (found) {
-                    if (autoLoginTimeout) clearTimeout(autoLoginTimeout);
-                    autoLoginTimeout = setTimeout(() => autoLogin(), 1000);
-                }
-            } else {
-                passInput.classList.remove('valid', 'invalid');
-            }
-        }
-
-        function autoLogin() {
-            const user = document.getElementById('loginUser').value;
-            const pass = document.getElementById('loginPass').value;
-            performLogin(user, pass);
-        }
-
-        function login() {
-            const user = document.getElementById('loginUser').value;
-            const pass = document.getElementById('loginPass').value;
-            performLogin(user, pass);
-        }
-
-        function performLogin(user, pass) {
-            if (!user || !pass) {
-                showToast('Ingresa usuario y contraseña', 'error');
-                return;
-            }
-
-            const found = professionals.find(p => p.user === user && p.pass === pass);
-
-            if (found) {
-                loginAttempts = 0;
-                currentUser = found;
-                document.getElementById('loginModal').style.display = 'none';
-                
-                // Resetear estilos
-                document.getElementById('loginUser').classList.remove('valid', 'invalid');
-                document.getElementById('loginPass').classList.remove('valid', 'invalid');
-                
-                document.getElementById('publicPanel').classList.remove('active');
-                document.getElementById('dashboardPanel').classList.add('active');
-                
-                document.getElementById('dashboardTitle').innerHTML = found.role === 'admin' ? 
-                    '<i class="fas fa-crown"></i> Panel Administrador' : 
-                    `<i class="fas fa-user-md"></i> Panel de ${found.name}`;
-                
-                document.getElementById('tabProfesionales').style.display = found.role === 'admin' ? 'block' : 'none';
-                document.getElementById('tabBoxes').style.display = found.role === 'admin' ? 'block' : 'none';
-                document.getElementById('tabDisponibilidad').style.display = found.role === 'admin' ? 'none' : 'block';
-                
-                if (found.role === 'admin') {
-                    renderProfessionalsTable();
-                    renderBoxesTable();
-                }
-                
-                renderCitas();
-                showToast(`¡Bienvenido ${found.name}!`, 'success');
-            } else {
-                loginAttempts++;
-                if (loginAttempts >= 3) {
-                    showToast('Demasiados intentos. Espera 30 segundos.', 'error');
-                    document.getElementById('loginUser').disabled = true;
-                    document.getElementById('loginPass').disabled = true;
-                    document.getElementById('loginBtn').disabled = true;
-                    
-                    setTimeout(() => {
-                        document.getElementById('loginUser').disabled = false;
-                        document.getElementById('loginPass').disabled = false;
-                        document.getElementById('loginBtn').disabled = false;
-                        loginAttempts = 0;
-                    }, 30000);
-                } else {
-                    showToast(`Usuario o contraseña incorrectos. Intento ${loginAttempts} de 3`, 'error');
-                }
-            }
-        }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('dashboardPanel').classList.remove('active');
-            document.getElementById('publicPanel').classList.add('active');
-            showToast('Sesión cerrada', 'info');
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-        }
-
-        // ============================================
-        // GESTIÓN DE PROFESIONALES
-        // ============================================
-        function renderProfessionals() {
-            const grid = document.getElementById('professionalsGrid');
-            if (!grid) return;
-            
-            const publicPros = professionals.filter(p => p.role !== 'admin');
-            
-            if (publicPros.length === 0) {
-                grid.innerHTML = '<div class="card" style="grid-column:1/-1; text-align:center;">No hay profesionales disponibles</div>';
+            // Validar campos obligatorios
+            if (!nombre || !usuario || !password) {
+                alert('Nombre, usuario y contraseña son obligatorios');
                 return;
             }
             
-            grid.innerHTML = publicPros.map(p => `
-                <div class="card" onclick="selectProfessional(${p.id})" style="cursor: pointer;">
-                    <h3 style="color: #1f2937; margin-bottom: 8px;">${p.name}</h3>
-                    <p style="color: #6b7280; margin-bottom: 12px;">${p.spec || 'Especialista'}</p>
-                    <div style="display: flex; gap: 10px;">
-                        <span style="background: #e0e7ff; color: #4f46e5; padding: 4px 8px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                            Online: $${p.priceOnline || 0}
-                        </span>
-                        <span style="background: #e0e7ff; color: #4f46e5; padding: 4px 8px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                            Presencial: $${p.pricePresencial || 0}
-                        </span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function showAddProfessional() {
-            document.getElementById('professionalModalTitle').textContent = 'Nuevo Profesional';
-            document.getElementById('editProfessionalId').value = '';
-            document.getElementById('profName').value = '';
-            document.getElementById('profSpec').value = '';
-            document.getElementById('profUser').value = '';
-            document.getElementById('profPass').value = '';
-            document.getElementById('profPriceOnline').value = '';
-            document.getElementById('profPricePresencial').value = '';
-            document.getElementById('professionalModal').style.display = 'flex';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function saveProfessional() {
-            const id = document.getElementById('editProfessionalId').value || Date.now();
-            const professional = {
-                id: parseInt(id),
-                name: document.getElementById('profName').value,
-                spec: document.getElementById('profSpec').value,
-                user: document.getElementById('profUser').value,
-                pass: document.getElementById('profPass').value,
-                priceOnline: parseInt(document.getElementById('profPriceOnline').value) || 0,
-                pricePresencial: parseInt(document.getElementById('profPricePresencial').value) || 0,
-                role: 'professional'
-            };
-
-            if (!professional.name || !professional.user || !professional.pass) {
-                showToast('Completa los campos obligatorios', 'error');
-                return;
-            }
-
-            professionals = professionals.filter(p => p.id !== professional.id || p.role === 'admin');
-            professionals.push(professional);
-            
-            database.ref('professionals').set(professionals);
-            document.getElementById('professionalModal').style.display = 'none';
-            showToast('Profesional guardado exitosamente');
-        }
-
-        function renderProfessionalsTable() {
-            const table = document.getElementById('professionalsTable');
-            if (!table) return;
-            
-            const pros = professionals.filter(p => p.role !== 'admin');
-            
-            table.innerHTML = pros.map(p => `
-                <tr>
-                    <td><strong>${p.name}</strong></td>
-                    <td>${p.spec || '-'}</td>
-                    <td>${p.user}</td>
-                    <td>$${p.priceOnline || 0}</td>
-                    <td>$${p.pricePresencial || 0}</td>
-                    <td>
-                        <button class="btn btn-primary" style="padding: 6px 12px; margin-right: 5px;" onclick="editProfessional(${p.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger" style="padding: 6px 12px;" onclick="deleteProfessional(${p.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function editProfessional(id) {
-            const p = professionals.find(p => p.id === id);
-            document.getElementById('professionalModalTitle').textContent = 'Editar Profesional';
-            document.getElementById('editProfessionalId').value = p.id;
-            document.getElementById('profName').value = p.name;
-            document.getElementById('profSpec').value = p.spec || '';
-            document.getElementById('profUser').value = p.user;
-            document.getElementById('profPass').value = p.pass;
-            document.getElementById('profPriceOnline').value = p.priceOnline || 0;
-            document.getElementById('profPricePresencial').value = p.pricePresencial || 0;
-            document.getElementById('professionalModal').style.display = 'flex';
-        }
-
-        function deleteProfessional(id) {
-            if (confirm('¿Estás seguro de eliminar este profesional?')) {
-                professionals = professionals.filter(p => p.id !== id);
-                database.ref('professionals').set(professionals);
-                showToast('Profesional eliminado');
-            }
-        }
-
-        // ============================================
-        // GESTIÓN DE BOXES
-        // ============================================
-        function showAddBox() {
-            document.getElementById('editBoxId').value = '';
-            document.getElementById('boxName').value = '';
-            document.getElementById('boxLocation').value = '';
-            document.getElementById('boxStart').value = '09:00';
-            document.getElementById('boxEnd').value = '20:00';
-            document.querySelectorAll('.boxDay').forEach(cb => cb.checked = cb.value <= 5);
-            document.getElementById('boxModal').style.display = 'flex';
-        }
-
-        function saveBox() {
-            const id = document.getElementById('editBoxId').value || Date.now();
-            const days = Array.from(document.querySelectorAll('.boxDay:checked')).map(cb => parseInt(cb.value));
-            
-            const box = {
-                id: parseInt(id),
-                name: document.getElementById('boxName').value,
-                location: document.getElementById('boxLocation').value,
-                startTime: document.getElementById('boxStart').value,
-                endTime: document.getElementById('boxEnd').value,
-                days: days,
-                active: true
-            };
-
-            if (!box.name || !box.startTime || !box.endTime || days.length === 0) {
-                showToast('Completa todos los campos', 'error');
-                return;
-            }
-
-            boxes = boxes.filter(b => b.id !== box.id);
-            boxes.push(box);
-            
-            database.ref('boxes').set(boxes);
-            document.getElementById('boxModal').style.display = 'none';
-            showToast('Box guardado exitosamente');
-        }
-
-        function renderBoxesTable() {
-            const table = document.getElementById('boxesTable');
-            if (!table) return;
-            
-            const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-            
-            table.innerHTML = boxes.map(b => `
-                <tr>
-                    <td><strong>${b.name}</strong></td>
-                    <td>${b.location || '-'}</td>
-                    <td>${b.startTime} - ${b.endTime}</td>
-                    <td>${b.days.map(d => dayNames[d]).join(', ')}</td>
-                    <td><span style="color: ${b.active ? '#10b981' : '#ef4444'};">${b.active ? 'Activo' : 'Inactivo'}</span></td>
-                    <td>
-                        <button class="btn btn-primary" style="padding: 6px 12px; margin-right: 5px;" onclick="editBox(${b.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger" style="padding: 6px 12px;" onclick="deleteBox(${b.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function editBox(id) {
-            const b = boxes.find(b => b.id === id);
-            document.getElementById('editBoxId').value = b.id;
-            document.getElementById('boxName').value = b.name;
-            document.getElementById('boxLocation').value = b.location || '';
-            document.getElementById('boxStart').value = b.startTime;
-            document.getElementById('boxEnd').value = b.endTime;
-            
-            document.querySelectorAll('.boxDay').forEach(cb => cb.checked = b.days.includes(parseInt(cb.value)));
-            document.getElementById('boxModal').style.display = 'flex';
-        }
-
-        function deleteBox(id) {
-            if (confirm('¿Estás seguro de eliminar este box?')) {
-                boxes = boxes.filter(b => b.id !== id);
-                database.ref('boxes').set(boxes);
-                showToast('Box eliminado');
-            }
-        }
-
-        // ============================================
-        // DISPONIBILIDAD
-        // ============================================
-        function loadProfessionalSlots() {
-            if (!currentUser || currentUser.role === 'admin') return;
-            
-            const date = document.getElementById('availDate').value;
-            if (!date) return;
-            
-            const key = `${currentUser.id}_${date}`;
-            const slots = availabilities[key] || [];
-            
-            const container = document.getElementById('professionalSlots');
-            container.innerHTML = '';
-            
-            for (let hour = 8; hour <= 18; hour++) {
-                for (let min = 0; min < 60; min += 30) {
-                    const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
-                    const isSelected = slots.includes(time);
-                    
-                    const slot = document.createElement('div');
-                    slot.className = `time-slot ${isSelected ? 'selected' : ''}`;
-                    slot.textContent = time;
-                    slot.onclick = () => toggleSlot(time);
-                    container.appendChild(slot);
-                }
-            }
-        }
-
-        function toggleSlot(time) {
-            const date = document.getElementById('availDate').value;
-            if (!date) {
-                showToast('Selecciona una fecha', 'error');
-                return;
-            }
-            
-            const key = `${currentUser.id}_${date}`;
-            const slots = availabilities[key] || [];
-            
-            if (slots.includes(time)) {
-                availabilities[key] = slots.filter(s => s !== time);
-            } else {
-                availabilities[key] = [...slots, time].sort();
-            }
-            
-            loadProfessionalSlots();
-        }
-
-        function saveAvailability() {
-            database.ref('availabilities').set(availabilities);
-            showToast('Disponibilidad guardada exitosamente');
-        }
-
-        function addTimeSlot() {
-            const time = prompt('Ingresa horario (HH:MM)');
-            if (time && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
-                toggleSlot(time);
-            } else if (time) {
-                showToast('Formato de hora inválido', 'error');
-            }
-        }
-
-        // ============================================
-        // RESERVAS
-        // ============================================
-        function selectProfessional(id) {
-            selectedProfessional = professionals.find(p => p.id === id);
-            selectedSlot = null;
-            selectedBox = null;
-            
-            document.getElementById('publicPanel').classList.remove('active');
-            document.getElementById('bookingPanel').classList.add('active');
-            
-            document.getElementById('bookingPsychName').innerHTML = `<i class="fas fa-user-md"></i> Agendar con ${selectedProfessional.name}`;
-            document.getElementById('selectedPsychInfo').innerHTML = `<i class="fas fa-user"></i> Profesional: ${selectedProfessional.name}`;
-            
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('bookingDate').min = today;
-            document.getElementById('bookingDate').value = today;
-            
-            loadAvailableSlots();
-        }
-
-        function backToPublic() {
-            document.getElementById('bookingPanel').classList.remove('active');
-            document.getElementById('publicPanel').classList.add('active');
-        }
-
-        function loadAvailableSlots() {
-            const date = document.getElementById('bookingDate').value;
-            if (!date || !selectedProfessional) return;
-            
-            const key = `${selectedProfessional.id}_${date}`;
-            const professionalSlots = availabilities[key] || [];
-            
-            const bookedSlots = appointments
-                .filter(a => a.professionalId === selectedProfessional.id && a.date === date)
-                .map(a => a.time);
-            
-            const availableSlots = professionalSlots.filter(s => !bookedSlots.includes(s));
-            
-            const container = document.getElementById('timeSlotsContainer');
-            container.innerHTML = '';
-            
-            if (availableSlots.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#6b7280;">No hay horarios disponibles</p>';
-                document.getElementById('boxSelectorContainer').style.display = 'none';
-                return;
-            }
-            
-            availableSlots.forEach(time => {
-                const slot = document.createElement('div');
-                slot.className = 'time-slot';
-                slot.textContent = time;
-                slot.onclick = () => selectTimeSlot(time);
-                container.appendChild(slot);
-            });
-        }
-
-        function selectTimeSlot(time) {
-            selectedSlot = time;
-            
-            document.querySelectorAll('#timeSlotsContainer .time-slot').forEach(s => {
-                s.classList.remove('selected');
-            });
-            event.target.classList.add('selected');
-            
-            document.getElementById('selectedDateTime').innerHTML = `<i class="fas fa-calendar"></i> Fecha: ${document.getElementById('bookingDate').value} ${time}`;
-            checkBoxAvailability();
-        }
-
-        function checkBoxAvailability() {
-            const date = document.getElementById('bookingDate').value;
-            const time = selectedSlot;
-            
-            if (!date || !time) return;
-            
-            const dayOfWeek = new Date(date).getDay();
-            
-            const availableBoxes = boxes.filter(box => {
-                if (!box.active) return false;
-                if (!box.days.includes(dayOfWeek)) return false;
-                
-                const [boxStartHour, boxStartMin] = box.startTime.split(':').map(Number);
-                const [boxEndHour, boxEndMin] = box.endTime.split(':').map(Number);
-                const [slotHour, slotMin] = time.split(':').map(Number);
-                
-                const boxStart = boxStartHour * 60 + boxStartMin;
-                const boxEnd = boxEndHour * 60 + boxEndMin;
-                const slotTime = slotHour * 60 + slotMin;
-                
-                if (slotTime < boxStart || slotTime >= boxEnd) return false;
-                
-                const isBooked = appointments.some(a => 
-                    a.boxId === box.id && a.date === date && a.time === time
-                );
-                
-                return !isBooked;
-            });
-            
-            const container = document.getElementById('boxSelectorContainer');
-            const selector = document.getElementById('boxSelector');
-            const confirmBtn = document.getElementById('confirmBtn');
-            
-            if (availableBoxes.length === 0) {
-                container.style.display = 'none';
-                selectedBox = null;
-                document.getElementById('selectedBox').innerHTML = '';
-                confirmBtn.disabled = true;
-                return;
-            }
-            
-            container.style.display = 'block';
-            selector.innerHTML = availableBoxes.map(box => `
-                <div class="box-option" onclick="selectBox(${box.id})">
-                    <i class="fas fa-box"></i> ${box.name} ${box.location ? `(${box.location})` : ''}
-                </div>
-            `).join('');
-            
-            confirmBtn.disabled = false;
-        }
-
-        function selectBox(boxId) {
-            selectedBox = boxes.find(b => b.id === boxId);
-            
-            document.querySelectorAll('.box-option').forEach(opt => opt.classList.remove('selected'));
-            event.target.classList.add('selected');
-            
-            document.getElementById('selectedBox').innerHTML = `<i class="fas fa-box"></i> Box: ${selectedBox.name}`;
-            document.getElementById('selectedPrice').innerHTML = `<i class="fas fa-tag"></i> Valor: $${selectedProfessional.pricePresencial || selectedProfessional.priceOnline || 0}`;
-        }
-
-        function confirmBooking() {
-            const rut = document.getElementById('rut').value;
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const phone = document.getElementById('phone').value;
-            const date = document.getElementById('bookingDate').value;
-            
-            if (!rut || !name || !email || !date || !selectedSlot) {
-                showToast('Completa todos los datos', 'error');
-                return;
-            }
-            
-            if (!selectedBox) {
-                showToast('Selecciona un box disponible', 'error');
-                return;
-            }
-            
-            const appointment = {
+            // Crear objeto profesional
+            const profesional = {
                 id: Date.now(),
-                patientRut: rut,
-                patientName: name,
-                patientEmail: email,
-                patientPhone: phone,
-                professionalId: selectedProfessional.id,
-                professionalName: selectedProfessional.name,
-                boxId: selectedBox.id,
-                boxName: selectedBox.name,
-                date: date,
-                time: selectedSlot,
-                type: 'presencial',
-                price: selectedProfessional.pricePresencial || 0,
-                status: 'confirmada',
-                createdAt: new Date().toISOString()
+                nombre: nombre,
+                especialidad: especialidad || '',
+                usuario: usuario,
+                password: password,
+                precioOnline: parseInt(precioOnline) || 0,
+                precioPresencial: parseInt(precioPresencial) || 0
             };
             
-            appointments.push(appointment);
-            database.ref('appointments').set(appointments);
+            // Guardar en Firebase
+            database.ref('profesionales/' + profesional.id).set(profesional);
             
-            showToast('¡Reserva confirmada! Se ha enviado un email de confirmación');
+            // Limpiar formulario
+            document.getElementById('nombre').value = '';
+            document.getElementById('especialidad').value = '';
+            document.getElementById('usuario').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('precioOnline').value = '';
+            document.getElementById('precioPresencial').value = '';
             
-            document.getElementById('rut').value = '';
-            document.getElementById('name').value = '';
-            document.getElementById('email').value = '';
-            document.getElementById('phone').value = '';
-            
-            backToPublic();
+            alert('Profesional guardado');
         }
 
-        function renderCitas() {
-            const table = document.getElementById('citasTable');
-            if (!table) return;
-            
-            let filtered = appointments;
-            if (currentUser && currentUser.role !== 'admin') {
-                filtered = appointments.filter(a => a.professionalId === currentUser?.id);
+        // Función para eliminar profesional
+        function eliminarProfesional(id) {
+            if (confirm('¿Eliminar profesional?')) {
+                database.ref('profesionales/' + id).remove();
             }
+        }
+
+        // Escuchar cambios en Firebase
+        database.ref('profesionales').on('value', function(snapshot) {
+            const data = snapshot.val();
+            const lista = document.getElementById('listaProfesionales');
             
-            if (filtered.length === 0) {
-                table.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px;">No hay citas programadas</td></tr>';
+            if (!data) {
+                lista.innerHTML = '<p>No hay profesionales</p>';
                 return;
             }
             
-            table.innerHTML = filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).map(a => `
-                <tr>
-                    <td>${a.date}</td>
-                    <td><strong>${a.time}</strong></td>
-                    <td>${a.patientName}</td>
-                    <td>${a.professionalName}</td>
-                    <td><span style="background: #8b5cf6; color: white; padding: 4px 8px; border-radius: 20px; font-size: 12px;">${a.boxName}</span></td>
-                    <td><span style="color: #10b981;">✓ Confirmada</span></td>
-                </tr>
-            `).join('');
-        }
-
-        // ============================================
-        // INICIALIZACIÓN
-        // ============================================
-        window.onload = function() {
-            console.log("📄 Página cargada, iniciando Firebase...");
-            loadData();
+            // Convertir objeto a array
+            const profesionales = Object.values(data);
             
-            setTimeout(() => {
-                showToast('Sistema listo. Admin: Admin / Nina2026', 'info', 5000);
-            }, 2000);
-        };
-
-        // Cerrar modales al hacer clic fuera
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
-            }
-        };
+            // Crear tabla HTML
+            let html = '<table border="1" cellpadding="8" style="border-collapse:collapse; width:100%;">';
+            html += '<tr><th>Nombre</th><th>Especialidad</th><th>Usuario</th><th>Precio Online</th><th>Precio Presencial</th><th>Acción</th></tr>';
+            
+            profesionales.forEach(p => {
+                html += '<tr>';
+                html += '<td>' + (p.nombre || '') + '</td>';
+                html += '<td>' + (p.especialidad || '') + '</td>';
+                html += '<td>' + (p.usuario || '') + '</td>';
+                html += '<td>$' + (p.precioOnline || 0) + '</td>';
+                html += '<td>$' + (p.precioPresencial || 0) + '</td>';
+                html += '<td><button onclick="eliminarProfesional(' + p.id + ')">Eliminar</button></td>';
+                html += '</tr>';
+            });
+            
+            html += '</table>';
+            lista.innerHTML = html;
+        });
     </script>
 </body>
 </html>

@@ -146,7 +146,7 @@
         .glass { 
             background: var(--glass); 
             backdrop-filter: blur(12px); 
-            -webkit-backpack-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.5); 
             border-radius: 100px; 
         }
@@ -1153,7 +1153,7 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Modal de Login -->
+<!-- Modal de Login (SEGURO - sin mostrar credenciales) -->
 <div class="modal" id="loginModal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeLoginModal()">&times;</button>
@@ -1169,9 +1169,6 @@
         <button class="btn-staff" style="width:100%; justify-content:center;" onclick="processLogin()" id="loginBtn">
             Ingresar al Panel
         </button>
-        <p style="text-align:center; margin-top:15px; font-size:0.8rem; color:var(--text-light)">
-            Admin: Admin / Nina2026
-        </p>
     </div>
 </div>
 
@@ -1426,7 +1423,7 @@
     </div>
 </div>
 
-<!-- Modal de Gestión de Boxes (NUEVO) -->
+<!-- Modal de Gestión de Boxes (SOLO ADMIN) -->
 <div class="modal" id="boxModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeBoxModal()">&times;</button>
@@ -1444,18 +1441,18 @@
             </div>
             
             <div class="form-group">
-                <label>Hora inicio</label>
+                <label>Hora inicio *</label>
                 <input type="time" id="boxStartTime" value="09:00">
             </div>
             
             <div class="form-group">
-                <label>Hora fin</label>
+                <label>Hora fin *</label>
                 <input type="time" id="boxEndTime" value="20:00">
             </div>
             
             <div class="form-group" style="grid-column:1/-1;">
-                <label>Días de operación</label>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <label>Días de operación *</label>
+                <div style="display:flex; gap:15px; flex-wrap:wrap;">
                     <label><input type="checkbox" class="box-day" value="1" checked> Lunes</label>
                     <label><input type="checkbox" class="box-day" value="2" checked> Martes</label>
                     <label><input type="checkbox" class="box-day" value="3" checked> Miércoles</label>
@@ -1544,7 +1541,7 @@
         </div>
     </main>
 
-    <!-- Panel de Reserva (MODIFICADO para incluir boxes) -->
+    <!-- Panel de Reserva (CON BOXES) -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
             <h2>Agendar Cita con <span id="psychName"></span></h2>
@@ -1602,7 +1599,7 @@
                     </div>
                     <div class="form-group">
                         <label>Horario *</label>
-                        <select id="custTime" onchange="updateBookingDetails()">
+                        <select id="custTime" onchange="updateAvailableSlotsWithBoxes()">
                             <option value="">Selecciona una fecha</option>
                         </select>
                     </div>
@@ -1665,7 +1662,7 @@
         </div>
     </div>
 
-    <!-- Panel de Dashboard (MODIFICADO para incluir pestaña de boxes) -->
+    <!-- Panel de Dashboard (CON BOXES) -->
     <div id="dashboard" class="panel">
         <div class="dashboard-header">
             <div>
@@ -1877,7 +1874,7 @@
             </div>
         </div>
 
-        <!-- Tab: Boxes (Admin) - NUEVO -->
+        <!-- Tab: Boxes (Admin) -->
         <div id="tabBoxes" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Boxes</h3>
@@ -1898,7 +1895,7 @@
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="boxTableBody"></tbody>
+                    <tbody id="boxTableBodyDashboard"></tbody>
                 </table>
             </div>
         </div>
@@ -1926,8 +1923,8 @@
         }, duration);
     }
 
-    // Base de datos inicial
-    let staff = JSON.parse(localStorage.getItem('mc_staff_v11')) || (function() {
+    // Base de datos inicial (SEGURA - sin credenciales visibles)
+    let staff = JSON.parse(localStorage.getItem('mc_staff_v12')) || (function() {
         const initialStaff = [
             { 
                 id: 1, 
@@ -1988,7 +1985,7 @@
             }
         ];
         
-        // Admin con usuario Admin y clave Nina2026
+        // Admin oculto (solo se crea si no existe)
         if (!initialStaff.some(s => s.user === 'Admin')) {
             initialStaff.push({
                 id: 9999,
@@ -2015,12 +2012,12 @@
         return initialStaff;
     })();
 
-    // Boxes (NUEVO)
-    let boxes = JSON.parse(localStorage.getItem('mc_boxes_v1')) || [
+    // Boxes (gestión de espacios físicos)
+    let boxes = JSON.parse(localStorage.getItem('mc_boxes_v2')) || [
         {
             id: 1,
             name: 'Box 1',
-            location: 'Piso 1, Sector A',
+            location: 'Piso 1 - Sector A',
             startTime: '09:00',
             endTime: '20:00',
             days: [1,2,3,4,5], // Lunes a Viernes
@@ -2030,7 +2027,7 @@
         {
             id: 2,
             name: 'Box 2',
-            location: 'Piso 1, Sector B',
+            location: 'Piso 1 - Sector B',
             startTime: '09:00',
             endTime: '20:00',
             days: [1,2,3,4,5],
@@ -2043,14 +2040,14 @@
             location: 'Piso 2',
             startTime: '14:00',
             endTime: '22:00',
-            days: [1,2,3,4,5,6],
+            days: [1,2,3,4,5,6], // Lunes a Sábado
             description: 'Box para atenciones vespertinas',
             active: true
         }
     ];
 
     // Mensajes/Testimonios
-    let messages = JSON.parse(localStorage.getItem('mc_messages_v4')) || [
+    let messages = JSON.parse(localStorage.getItem('mc_messages_v5')) || [
         {
             id: 1,
             name: 'Carolina Méndez',
@@ -2086,8 +2083,8 @@
         }
     ];
 
-    let patients = JSON.parse(localStorage.getItem('mc_patients_v7')) || [];
-    let appointments = JSON.parse(localStorage.getItem('mc_apps_v11')) || [];
+    let patients = JSON.parse(localStorage.getItem('mc_patients_v8')) || [];
+    let appointments = JSON.parse(localStorage.getItem('mc_apps_v12')) || [];
     
     // Variables globales
     let selectedPsych = null;
@@ -2104,11 +2101,11 @@
     }
 
     function save() {
-        localStorage.setItem('mc_staff_v11', JSON.stringify(staff));
-        localStorage.setItem('mc_apps_v11', JSON.stringify(appointments));
-        localStorage.setItem('mc_patients_v7', JSON.stringify(patients));
-        localStorage.setItem('mc_messages_v4', JSON.stringify(messages));
-        localStorage.setItem('mc_boxes_v1', JSON.stringify(boxes));
+        localStorage.setItem('mc_staff_v12', JSON.stringify(staff));
+        localStorage.setItem('mc_apps_v12', JSON.stringify(appointments));
+        localStorage.setItem('mc_patients_v8', JSON.stringify(patients));
+        localStorage.setItem('mc_messages_v5', JSON.stringify(messages));
+        localStorage.setItem('mc_boxes_v2', JSON.stringify(boxes));
         
         if (currentUser) {
             updateStats();
@@ -2184,12 +2181,14 @@
     }
 
     function renderBoxesTable() {
-        const tb = document.getElementById('boxTableBody');
-        if (!tb) return;
-
+        // Para el modal
+        const tbModal = document.getElementById('boxTableBody');
+        // Para el dashboard
+        const tbDashboard = document.getElementById('boxTableBodyDashboard');
+        
         const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
         
-        tb.innerHTML = boxes.map(b => {
+        const rows = boxes.map(b => {
             const daysStr = b.days.map(d => dayNames[d]).join(', ');
             return `
                 <tr>
@@ -2212,6 +2211,9 @@
                 </tr>
             `;
         }).join('');
+
+        if (tbModal) tbModal.innerHTML = rows;
+        if (tbDashboard) tbDashboard.innerHTML = rows;
     }
 
     function editBox(id) {
@@ -2274,6 +2276,7 @@
         }
     }
 
+    // Función para obtener boxes disponibles en una fecha y hora específicas
     function getAvailableBoxes(date, time) {
         if (!date || !time) return [];
         
@@ -2552,7 +2555,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE RESERVA (MODIFICADAS PARA BOXES)
+    // FUNCIONES DE RESERVA (CON BOXES)
     // ============================================
 
     function openBooking(id) {
@@ -2688,28 +2691,32 @@
         
         availableSlots.forEach(slot => {
             if (!bookedTimes.includes(slot.time)) {
-                const option = document.createElement('option');
-                option.value = slot.time;
-                option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
-                if (slot.isOvercupo) option.style.color = '#f59e0b';
-                
                 // Verificar disponibilidad de boxes para este horario
                 const availableBoxes = getAvailableBoxes(date, slot.time);
-                if (availableBoxes.length === 0) {
+                const option = document.createElement('option');
+                option.value = slot.time;
+                
+                if (availableBoxes.length > 0) {
+                    option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '') + ` (${availableBoxes.length} boxes)`;
+                } else {
+                    option.textContent = slot.time + ' (sin boxes disponibles)';
                     option.disabled = true;
-                    option.textContent += ' (sin boxes disponibles)';
                     option.style.color = 'var(--text-light)';
                 }
                 
+                if (slot.isOvercupo) option.style.color = '#f59e0b';
                 timeSelect.appendChild(option);
             }
         });
 
         if (timeSelect.children.length === 1) {
             timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+            boxSelector.innerHTML = '';
+            boxAvailabilityMsg.innerHTML = 'Selecciona un horario válido';
+            return;
         }
 
-        // Actualizar selector de boxes cuando cambia el horario
+        // Si hay un horario seleccionado, actualizar boxes
         const time = document.getElementById('custTime').value;
         if (time) {
             updateBoxSelector(date, time);
@@ -2733,6 +2740,7 @@
             boxSelector.innerHTML = '';
             boxAvailabilityMsg.innerHTML = 'No hay boxes disponibles para este horario';
             selectedBoxInfo.style.display = 'none';
+            selectedBoxId = null;
             return;
         }
 
@@ -2755,7 +2763,6 @@
     function selectBox(boxId) {
         selectedBoxId = boxId;
         const box = boxes.find(b => b.id === boxId);
-        const boxSelector = document.getElementById('boxSelector');
         const selectedBoxInfo = document.getElementById('selectedBoxInfo');
         const selectedBoxName = document.getElementById('selectedBoxName');
         
@@ -2898,7 +2905,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE LOGIN Y DASHBOARD
+    // FUNCIONES DE LOGIN Y DASHBOARD (SEGURAS)
     // ============================================
 
     function showLoginModal() {
@@ -3683,8 +3690,9 @@
     filterProfessionals();
     renderMessages();
     updateMarquee();
+    renderBoxesTable();
 
-    // Configurar evento para actualizar boxes cuando cambia el horario
+    // Event listeners para boxes
     document.getElementById('custTime').addEventListener('change', function() {
         const date = document.getElementById('custDate').value;
         const time = this.value;
@@ -3697,6 +3705,8 @@
         const time = document.getElementById('custTime').value;
         if (this.value && time) {
             updateBoxSelector(this.value, time);
+        } else if (this.value) {
+            updateAvailableSlotsWithBoxes();
         }
     });
 </script>

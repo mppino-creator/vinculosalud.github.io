@@ -1,0 +1,2560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunidad Psicologos| Clinical Suite Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #0ea5e9;
+            --accent: #f43f5e;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+            --bg-body: #f1f5f9;
+            --glass: rgba(255, 255, 255, 0.7);
+            --gold: #fbbf24;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background-color: var(--bg-body);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.15) 0px, transparent 50%);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Toast Notification System */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: white;
+            color: var(--text-main);
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid var(--success);
+            min-width: 300px;
+            transform: translateX(0);
+            transition: transform 0.3s;
+        }
+
+        .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+        .toast.info { border-left-color: var(--secondary); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* Modal de Login */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .glass { 
+            background: var(--glass); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            border-radius: 24px; 
+        }
+
+        .container { width: 90%; max-width: 1200px; margin: auto; }
+
+        header.nav-container {
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+        }
+
+        .logo { 
+            font-weight: 900; 
+            font-size: 1.6rem; 
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .btn-staff {
+            background: var(--text-main);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-staff:hover { transform: translateY(-2px); background: #000; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .btn-staff:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .hero-section {
+            padding: 100px 0 60px;
+            text-align: center;
+        }
+
+        .hero-section h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            line-height: 1;
+        }
+
+        .hero-section p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .filter-input {
+            padding: 12px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 1rem;
+            min-width: 250px;
+            background: white;
+        }
+
+        .filter-select {
+            padding: 12px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+
+        .therapist-card {
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .therapist-card:hover {
+            transform: translateY(-15px);
+            border-color: var(--primary);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+        }
+
+        .img-container {
+            height: 280px;
+            width: 100%;
+            position: relative;
+        }
+
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .availability-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .availability-badge.online { color: var(--success); }
+        .availability-badge.busy { color: var(--warning); }
+        .availability-badge.offline { color: var(--text-light); }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0px currentColor; opacity: 1; }
+            100% { box-shadow: 0 0 0 10px transparent; }
+        }
+
+        .card-body { padding: 25px; }
+        .tag { font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .card-body h3 { font-size: 1.5rem; margin-bottom: 15px; }
+        
+        .price-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .btn-book {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-book:hover { background: var(--primary-dark); }
+        .btn-book:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .panel { 
+            display: none; 
+            margin-top: 20px; 
+            padding: 40px; 
+            border-radius: 30px;
+            background: white;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.08);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-item {
+            padding: 30px;
+            border-radius: 20px;
+            background: #f8fafc;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .stat-item h4 { font-size: 2.5rem; color: var(--text-main); }
+        .stat-item p { color: var(--text-light); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 700; }
+
+        .admin-form, .availability-form, .edit-form {
+            background: #f1f5f9;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .availability-section {
+            margin: 30px 0;
+            padding: 30px;
+            background: #f8fafc;
+            border-radius: 20px;
+        }
+
+        .range-generator {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .range-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .time-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .time-slot {
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 50px;
+            background: white;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .time-slot.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .time-slot.booked {
+            background: #f1f5f9;
+            color: var(--text-light);
+            text-decoration: line-through;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .time-slot.overcupo {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffeeba;
+            position: relative;
+        }
+
+        .time-slot.overcupo::after {
+            content: "⚠️";
+            margin-left: 5px;
+            font-size: 0.8rem;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .payment-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .payment-card.selected {
+            border-color: var(--primary);
+            background: #f0f5ff;
+            box-shadow: 0 5px 15px rgba(99,102,241,0.2);
+        }
+
+        .payment-card h4 {
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .bank-details {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: monospace;
+            border-left: 4px solid var(--primary);
+        }
+
+        .patient-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #f1f5f9;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .patient-card:hover {
+            transform: translateX(5px);
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .patient-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .patient-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .patient-contact {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .patient-notes {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 10px 0;
+            font-size: 0.95rem;
+            border-left: 3px solid var(--primary);
+        }
+
+        .table-container { 
+            border-radius: 20px; 
+            overflow: hidden; 
+            border: 1px solid #eee;
+            background: white;
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #fafafa; padding: 20px; text-align: left; font-size: 0.85rem; text-transform: uppercase; }
+        td { padding: 20px; border-top: 1px solid #f5f5f5; }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-icon {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            margin: 0 3px;
+        }
+
+        .btn-icon:hover { transform: translateY(-2px); }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .address-input {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .recurring-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .recurring-option {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .recurring-option.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.online { background: #e6f7e6; color: var(--success); }
+        .badge.presencial { background: #e6f0ff; color: var(--primary); }
+
+        .weekday-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .weekday {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .weekday.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        @media (max-width: 600px) {
+            nav { padding: 10px 20px; }
+            .hero-section { padding: 50px 0 30px; }
+            .hero-section h1 { font-size: 2.2rem; }
+            .grid { grid-template-columns: 1fr; }
+            .booking-grid { grid-template-columns: 1fr !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Modal de Login -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+        <h2 style="margin-bottom: 30px;">Acceso al Panel</h2>
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="loginPass" placeholder="Ingresa tu contraseña" onkeypress="if(event.key==='Enter') processLogin()">
+        </div>
+        <button class="btn-staff" style="width:100%; background:var(--primary)" onclick="processLogin()" id="loginBtn">
+            Ingresar
+        </button>
+        <p style="text-align:center; margin-top:20px; font-size:0.8rem; color:var(--text-light)">
+            Admin: admin | Terapeutas: isabel2026, julian2026, martina2026
+        </p>
+    </div>
+</div>
+
+<!-- Modal de Edición de Terapeuta (Admin/Terapeuta) -->
+<div class="modal" id="editTherapistModal">
+    <div class="modal-content" style="max-width: 800px;">
+        <button class="modal-close" onclick="closeEditTherapistModal()">&times;</button>
+        <h2 style="margin-bottom: 30px;">Configuración Profesional</h2>
+        <input type="hidden" id="editTherapistId">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <!-- Columna 1: Datos básicos -->
+            <div>
+                <h3 style="margin-bottom: 20px;">Información Personal</h3>
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="editName" placeholder="Nombre completo">
+                </div>
+                
+                <div class="form-group">
+                    <label>Especialidad</label>
+                    <input type="text" id="editSpec" placeholder="Especialidad">
+                </div>
+                
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="text" id="editPass" placeholder="Nueva contraseña (dejar vacío para no cambiar)">
+                </div>
+                
+                <div class="form-group">
+                    <label>Foto URL</label>
+                    <input type="text" id="editImg" placeholder="Link de imagen">
+                </div>
+                
+                <div class="form-group">
+                    <label>Dirección (para atención presencial)</label>
+                    <input type="text" id="editAddress" placeholder="Dirección del consultorio">
+                </div>
+                
+                <div class="form-group">
+                    <label>Teléfono de Contacto</label>
+                    <input type="text" id="editPhone" placeholder="Teléfono">
+                </div>
+            </div>
+            
+            <!-- Columna 2: Precios y pagos -->
+            <div>
+                <h3 style="margin-bottom: 20px;">Precios y Pagos</h3>
+                
+                <div class="form-group">
+                    <label>Precio Atención Online ($)</label>
+                    <input type="number" id="editPriceOnline" placeholder="Ej: 45000">
+                </div>
+                
+                <div class="form-group">
+                    <label>Precio Atención Presencial ($)</label>
+                    <input type="number" id="editPricePresencial" placeholder="Ej: 50000">
+                </div>
+                
+                <h4 style="margin: 20px 0 10px;">Métodos de Pago</h4>
+                
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="editPaymentTransfer" value="transferencia">
+                        Transferencia Bancaria
+                    </label>
+                </div>
+                
+                <div id="transferDetails" style="display:none; margin-bottom:20px;">
+                    <div class="form-group">
+                        <label>Banco</label>
+                        <input type="text" id="editBankName" placeholder="Ej: Banco Estado">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Cuenta</label>
+                        <input type="text" id="editAccountType" placeholder="Ej: Cuenta Corriente">
+                    </div>
+                    <div class="form-group">
+                        <label>Número de Cuenta</label>
+                        <input type="text" id="editAccountNumber" placeholder="Ej: 12345678">
+                    </div>
+                    <div class="form-group">
+                        <label>RUT</label>
+                        <input type="text" id="editRut" placeholder="Ej: 12.345.678-9">
+                    </div>
+                    <div class="form-group">
+                        <label>Email para transferencias</label>
+                        <input type="email" id="editBankEmail" placeholder="ejemplo@banco.cl">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="editPaymentCard" value="tarjeta">
+                        Pago con Tarjeta (en consulta)
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="editPaymentCash" value="efectivo">
+                        Efectivo (en consulta)
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:15px; margin-top:30px;">
+            <button class="btn-staff" style="background:var(--primary); flex:1;" onclick="updateTherapist()">
+                Guardar Cambios
+            </button>
+            <button class="btn-staff" style="background:var(--text-light); flex:0.5;" onclick="closeEditTherapistModal()">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Paciente (Terapeuta) -->
+<div class="modal" id="patientModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <button class="modal-close" onclick="closePatientModal()">&times;</button>
+        <h2 id="patientModalTitle" style="margin-bottom: 30px;">Nuevo Paciente</h2>
+        <input type="hidden" id="editPatientId">
+        
+        <div class="form-group">
+            <label>Nombre Completo *</label>
+            <input type="text" id="patientName" placeholder="Nombre del paciente">
+        </div>
+        
+        <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="patientEmail" placeholder="email@ejemplo.com">
+        </div>
+        
+        <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" id="patientPhone" placeholder="+56 9 1234 5678">
+        </div>
+        
+        <div class="form-group">
+            <label>Fecha de nacimiento</label>
+            <input type="date" id="patientBirthdate">
+        </div>
+        
+        <div class="form-group">
+            <label>Notas / Historial</label>
+            <textarea id="patientNotes" rows="4" placeholder="Antecedentes, diagnósticos, observaciones..."></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Próxima cita programada</label>
+            <input type="datetime-local" id="patientNextAppointment">
+        </div>
+        
+        <div class="form-group">
+            <label>Frecuencia de sesiones</label>
+            <select id="patientFrequency">
+                <option value="">Sin frecuencia definida</option>
+                <option value="semanal">Semanal</option>
+                <option value="quincenal">Quincenal</option>
+                <option value="mensual">Mensual</option>
+            </select>
+        </div>
+        
+        <button class="btn-staff" style="width:100%; background:var(--primary)" onclick="savePatient()">
+            Guardar Paciente
+        </button>
+    </div>
+</div>
+
+<!-- Modal de Configuración de Disponibilidad -->
+<div class="modal" id="availabilityModal">
+    <div class="modal-content" style="max-width: 900px;">
+        <button class="modal-close" onclick="closeAvailabilityModal()">&times;</button>
+        <h2 style="margin-bottom: 30px;">Configurar Disponibilidad Avanzada</h2>
+        
+        <!-- Configuración de duración de sesión -->
+        <div class="range-generator">
+            <h3 style="margin-bottom: 20px;">⏱️ Configuración de Sesiones</h3>
+            
+            <div class="range-row">
+                <div class="form-group">
+                    <label>Duración de la sesión (minutos)</label>
+                    <input type="number" id="sessionDuration" value="50" min="15" step="5" onchange="calculateTimeSlots()">
+                </div>
+                
+                <div class="form-group">
+                    <label>Tiempo entre sesiones (minutos)</label>
+                    <input type="number" id="breakBetween" value="10" min="0" step="5" onchange="calculateTimeSlots()">
+                </div>
+            </div>
+            
+            <div class="range-row">
+                <div class="form-group">
+                    <label>Hora inicio (ej: 09:00)</label>
+                    <input type="time" id="startTime" value="09:00" onchange="calculateTimeSlots()">
+                </div>
+                
+                <div class="form-group">
+                    <label>Hora fin (ej: 18:00)</label>
+                    <input type="time" id="endTime" value="18:00" onchange="calculateTimeSlots()">
+                </div>
+            </div>
+            
+            <div style="display:flex; gap:20px; align-items:center; margin-top:20px;">
+                <button class="btn-staff" style="background:var(--primary)" onclick="generateTimeSlots()">
+                    <i class="fa fa-calculator"></i> Generar Horarios
+                </button>
+                
+                <label style="display:flex; align-items:center; gap:10px;">
+                    <input type="checkbox" id="allowOvercupo">
+                    Permitir sobrecupo (agendar fuera de horario regular)
+                </label>
+            </div>
+        </div>
+        
+        <!-- Selector de fechas -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+            <div class="form-group">
+                <label>Fecha inicio</label>
+                <input type="date" id="rangeStartDate" onchange="updateDateRange()">
+            </div>
+            
+            <div class="form-group">
+                <label>Fecha fin</label>
+                <input type="date" id="rangeEndDate" onchange="updateDateRange()">
+            </div>
+        </div>
+        
+        <!-- Días de la semana -->
+        <div style="margin-bottom:30px;">
+            <label style="display:block; margin-bottom:10px;">Días de la semana</label>
+            <div class="weekday-selector" id="weekdaySelector">
+                <div class="weekday selected" onclick="toggleWeekday('Lun')">Lunes</div>
+                <div class="weekday selected" onclick="toggleWeekday('Mar')">Martes</div>
+                <div class="weekday selected" onclick="toggleWeekday('Mie')">Miércoles</div>
+                <div class="weekday selected" onclick="toggleWeekday('Jue')">Jueves</div>
+                <div class="weekday selected" onclick="toggleWeekday('Vie')">Viernes</div>
+                <div class="weekday" onclick="toggleWeekday('Sab')">Sábado</div>
+                <div class="weekday" onclick="toggleWeekday('Dom')">Domingo</div>
+            </div>
+        </div>
+        
+        <!-- Horarios generados -->
+        <h3 style="margin-bottom: 15px;">Horarios Generados</h3>
+        <div class="time-slots" id="generatedTimeSlots" style="max-height: 400px;">
+            <!-- Se llenará con JS -->
+        </div>
+        
+        <div style="display:flex; gap:15px; margin-top:30px;">
+            <button class="btn-staff" style="background:var(--primary); flex:1;" onclick="applyGeneratedSlots()">
+                Aplicar a todas las fechas seleccionadas
+            </button>
+            <button class="btn-staff" style="background:var(--warning); flex:0.5;" onclick="clearAllSlots()">
+                Limpiar todo
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <header class="nav-container">
+        <nav class="glass">
+            <div class="logo" onclick="location.reload()">Comunidad</span></div>
+            <button class="btn-staff" onclick="showLoginModal()">
+                <i class="fa fa-lock-open"></i> Acceso Staff
+            </button>
+        </nav>
+    </header>
+
+    <main id="clientView">
+        <section class="hero-section">
+            <h1>Sanar comienza <br> con una conversación.</h1>
+            <p>Selecciona un especialista y agenda tu sesión online o presencial.</p>
+        </section>
+
+        <!-- Filtros -->
+        <div class="filters">
+            <input type="text" class="filter-input" id="searchFilter" placeholder="Buscar por nombre o especialidad..." oninput="renderPublic()">
+            <select class="filter-select" id="specFilter" onchange="renderPublic()">
+                <option value="">Todas las especialidades</option>
+                <option value="Terapia Cognitiva">Terapia Cognitiva</option>
+                <option value="Psiquiatría Clínica">Psiquiatría Clínica</option>
+                <option value="Mindfulness & Estrés">Mindfulness & Estrés</option>
+            </select>
+        </div>
+
+        <div class="grid" id="publicGrid"></div>
+    </main>
+
+    <div id="bookingPanel" class="panel">
+        <div class="dashboard-header">
+            <h2 id="bookingTitle">Agendar Cita con <span id="psychName"></span></h2>
+            <button class="btn-staff" style="background:var(--danger)" onclick="closePanels()">Cerrar</button>
+        </div>
+        
+        <div class="booking-grid" style="display:grid; grid-template-columns: 1fr 400px; gap:40px;">
+            <div>
+                <h3>Información del Paciente</h3><br>
+                <div class="form-group">
+                    <label>Nombre Completo *</label>
+                    <input type="text" id="custName" placeholder="Juan Pérez">
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="custEmail" placeholder="juan@email.com">
+                </div>
+                
+                <!-- Tipo de atención -->
+                <div class="form-group">
+                    <label>Tipo de Atención *</label>
+                    <select id="appointmentType" onchange="updateBookingDetails()">
+                        <option value="online">Online (Video llamada)</option>
+                        <option value="presencial">Presencial en consultorio</option>
+                    </select>
+                </div>
+                
+                <!-- Dirección (solo visible para presencial) -->
+                <div id="addressField" style="display:none;" class="address-input">
+                    <label>Dirección del Consultorio</label>
+                    <p id="psychAddress" style="margin-top:5px; padding:10px; background:white; border-radius:8px;"></p>
+                </div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                    <div class="form-group">
+                        <label>Fecha *</label>
+                        <input type="date" id="custDate" onchange="updateAvailableSlots()">
+                    </div>
+                    <div class="form-group">
+                        <label>Horario *</label>
+                        <select id="custTime" onchange="updateBookingDetails()">
+                            <option value="">Selecciona una fecha primero</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notas para el terapeuta</label>
+                    <textarea id="custMsg" rows="4" placeholder="¿Cuál es el motivo de tu consulta?"></textarea>
+                </div>
+            </div>
+            
+            <div class="glass" style="padding:40px; background: #1e293b; color:white;">
+                <h3 style="color:white; margin-bottom:20px;">Detalle de Reserva</h3>
+                <p id="psychSelectedName" style="font-size:1.2rem; margin-bottom:5px;"></p>
+                <p id="psychSelectedSpec" style="opacity:0.7; margin-bottom:30px;"></p>
+                
+                <!-- Precios según tipo -->
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <span>Valor Sesión</span>
+                    <span id="bookingPrice">$0</span>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <span>Duración</span>
+                    <span id="bookingDuration">50 minutos</span>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
+                    <span>Tipo</span>
+                    <span id="bookingType">Online</span>
+                </div>
+                
+                <!-- Métodos de pago -->
+                <div style="margin:20px 0;">
+                    <label style="color:white; margin-bottom:10px; display:block;">Método de Pago *</label>
+                    <select id="paymentMethod" style="width:100%; padding:12px; border-radius:10px; border:none;" onchange="showPaymentDetails()">
+                        <option value="">Selecciona método</option>
+                    </select>
+                </div>
+                
+                <!-- Detalles de pago -->
+                <div id="paymentDetails" style="display:none; margin:20px 0; padding:15px; background:rgba(255,255,255,0.1); border-radius:12px;"></div>
+                
+                <button class="btn-staff" style="width:100%; height:60px; background:var(--primary); font-size:1.1rem;" onclick="executeBooking()" id="bookBtn">
+                    RESERVAR AHORA
+                </button>
+                <p style="text-align:center; font-size:0.75rem; margin-top:15px; opacity:0.6;">Pago seguro procesado por MindCare Pro SSL</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard" class="panel">
+        <div class="dashboard-header">
+            <div>
+                <h2 id="dashTitle">Panel de Gestión</h2>
+                <p id="dashSubtitle">Bienvenido al sistema de control clínico</p>
+            </div>
+            <button class="btn-staff" style="background:var(--danger)" onclick="logout()">Cerrar Sesión</button>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-item">
+                <p>Ingresos del Mes</p>
+                <h4 id="statIncome">$0</h4>
+            </div>
+            <div class="stat-item">
+                <p>Total Citas</p>
+                <h4 id="statCitas">0</h4>
+            </div>
+            <div class="stat-item">
+                <p>Pacientes Activos</p>
+                <h4 id="statPatients">0</h4>
+            </div>
+        </div>
+
+        <!-- Tabs para Admin y Terapeuta -->
+        <div class="tabs" id="dashboardTabs">
+            <div class="tab active" onclick="switchTab('citas')">Citas</div>
+            <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
+            <div class="tab" id="adminTab" style="display:none;" onclick="switchTab('profesionales')">Profesionales</div>
+            <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
+            <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Configuración</div>
+        </div>
+
+        <!-- Tab: Citas -->
+        <div id="tabCitas" class="tab-content active">
+            <h3>Próximas Sesiones</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Paciente</th>
+                            <th>Especialista</th>
+                            <th>Fecha / Hora</th>
+                            <th>Tipo</th>
+                            <th>Pago</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Pacientes -->
+        <div id="tabPacientes" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3>Gestión de Pacientes</h3>
+                <button class="btn-staff" style="background:var(--primary)" onclick="showNewPatientModal()">
+                    <i class="fa fa-plus"></i> Nuevo Paciente
+                </button>
+            </div>
+            
+            <div class="filters" style="justify-content:flex-start;">
+                <input type="text" class="filter-input" id="patientSearch" placeholder="Buscar paciente..." oninput="renderPatients()" style="min-width:300px;">
+            </div>
+            
+            <div id="patientsList"></div>
+        </div>
+
+        <!-- Tab: Profesionales (Admin) -->
+        <div id="tabProfesionales" class="tab-content">
+            <h3>Gestión de Profesionales</h3>
+            <div class="admin-form">
+                <input type="text" id="addName" placeholder="Nombre completo">
+                <input type="text" id="addSpec" placeholder="Especialidad">
+                <input type="number" id="addPriceOnline" placeholder="Precio Online ($)">
+                <input type="number" id="addPricePresencial" placeholder="Precio Presencial ($)">
+                <input type="text" id="addPass" placeholder="Contraseña">
+                <input type="text" id="addImg" placeholder="Link Foto (Unsplash)">
+                <input type="text" id="addAddress" placeholder="Dirección consultorio">
+                <input type="text" id="addPhone" placeholder="Teléfono">
+                <button class="btn-staff" style="background:var(--primary); grid-column:1/-1;" onclick="addStaff()">Añadir Profesional</button>
+            </div>
+            
+            <h3>Lista de Profesionales</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Especialidad</th>
+                            <th>Precios</th>
+                            <th>Contacto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Disponibilidad (Terapeuta) -->
+        <div id="tabDisponibilidad" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3>Gestionar Disponibilidad</h3>
+                <button class="btn-staff" style="background:var(--primary)" onclick="showAvailabilityModal()">
+                    <i class="fa fa-gear"></i> Configuración Avanzada
+                </button>
+            </div>
+            
+            <div class="availability-section">
+                <div class="form-group">
+                    <label>Seleccionar Fecha</label>
+                    <input type="date" id="availDate" min="" onchange="loadTimeSlots()">
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:20px 0;">
+                    <h4>Horarios Disponibles</h4>
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="showOvercupo" onchange="loadTimeSlots()">
+                        Mostrar sobrecupo
+                    </label>
+                </div>
+                
+                <div class="time-slots" id="timeSlotsContainer">
+                    <!-- Se llenará con JS -->
+                </div>
+                
+                <div style="display:flex; gap:15px; margin-top:20px;">
+                    <button class="btn-staff" style="background:var(--primary);" onclick="saveAvailability()">
+                        Guardar Disponibilidad
+                    </button>
+                    <button class="btn-staff" style="background:var(--warning);" onclick="addOvercupo()" id="overcupoBtn">
+                        + Agregar Sobrecupo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Mi Configuración (Terapeuta) -->
+        <div id="tabConfiguracion" class="tab-content">
+            <h3>Mi Configuración Profesional</h3>
+            <div style="background:#f8fafc; padding:30px; border-radius:20px;">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="myName" value="" disabled style="background:#f1f5f9;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Especialidad</label>
+                    <input type="text" id="mySpec" value="" disabled style="background:#f1f5f9;">
+                </div>
+                
+                <h4 style="margin:30px 0 20px;">Precios</h4>
+                
+                <div class="form-group">
+                    <label>Precio Atención Online ($)</label>
+                    <input type="number" id="myPriceOnline" onchange="updateMyPrices()">
+                </div>
+                
+                <div class="form-group">
+                    <label>Precio Atención Presencial ($)</label>
+                    <input type="number" id="myPricePresencial" onchange="updateMyPrices()">
+                </div>
+                
+                <h4 style="margin:30px 0 20px;">Datos Bancarios para Transferencias</h4>
+                
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="myPaymentTransfer" onchange="toggleMyTransferDetails()">
+                        Acepto transferencias bancarias
+                    </label>
+                </div>
+                
+                <div id="myTransferDetails" style="display:none;">
+                    <div class="form-group">
+                        <label>Banco</label>
+                        <input type="text" id="myBankName" onchange="updateMyBankDetails()">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Cuenta</label>
+                        <input type="text" id="myAccountType" onchange="updateMyBankDetails()">
+                    </div>
+                    <div class="form-group">
+                        <label>Número de Cuenta</label>
+                        <input type="text" id="myAccountNumber" onchange="updateMyBankDetails()">
+                    </div>
+                    <div class="form-group">
+                        <label>RUT</label>
+                        <input type="text" id="myRut" onchange="updateMyBankDetails()">
+                    </div>
+                    <div class="form-group">
+                        <label>Email para transferencias</label>
+                        <input type="email" id="myBankEmail" onchange="updateMyBankDetails()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="myPaymentCard" onchange="updateMyPaymentMethods()">
+                        Acepto pago con tarjeta (en consulta)
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="myPaymentCash" onchange="updateMyPaymentMethods()">
+                        Acepto pago en efectivo (en consulta)
+                    </label>
+                </div>
+                
+                <button class="btn-staff" style="background:var(--primary); margin-top:30px;" onclick="saveMyConfig()">
+                    Guardar Configuración
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toast System
+    function showToast(message, type = 'success', duration = 3000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <i class="fa ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    // Base de datos mejorada
+    let staff = JSON.parse(localStorage.getItem('mc_staff_v6')) || [
+        { 
+            id: 1, 
+            name: 'Psicologa Alison Gutierrez', 
+            spec: 'Terapia Cognitiva', 
+            priceOnline: 45000,
+            pricePresencial: 50000,
+            pass: 'isabel2026', 
+            img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500', 
+            stars: 5,
+            address: 'Av. Providencia 1234, Oficina 505, Santiago',
+            phone: '+56 9 8765 4321',
+            paymentMethods: {
+                transfer: true,
+                card: true,
+                cash: true,
+                bankDetails: {
+                    bank: 'Banco Estado',
+                    accountType: 'Cuenta Corriente',
+                    accountNumber: '12345678',
+                    rut: '12.345.678-9',
+                    email: 'isabel.ferrer@bancocl'
+                }
+            },
+            sessionDuration: 50,
+            breakBetween: 10,
+            availability: {} 
+        },
+        { 
+            id: 2, 
+            name: 'Dr. Julián Sossa', 
+            spec: 'Psiquiatría Clínica', 
+            priceOnline: 65000,
+            pricePresencial: 70000,
+            pass: 'julian2026', 
+            img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500', 
+            stars: 5,
+            address: 'Av. Las Condes 7890, Torre B, Las Condes',
+            phone: '+56 9 7654 3210',
+            paymentMethods: {
+                transfer: true,
+                card: false,
+                cash: true,
+                bankDetails: {
+                    bank: 'Banco de Chile',
+                    accountType: 'Cuenta Corriente',
+                    accountNumber: '87654321',
+                    rut: '23.456.789-0',
+                    email: 'julian.sossa@bancocl'
+                }
+            },
+            sessionDuration: 50,
+            breakBetween: 15,
+            availability: {}
+        },
+        { 
+            id: 3, 
+            name: 'Dra. Martina Luz', 
+            spec: 'Mindfulness & Estrés', 
+            priceOnline: 40000,
+            pricePresencial: 45000,
+            pass: 'martina2026', 
+            img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500', 
+            stars: 4,
+            address: 'Av. Vitacura 4567, Vitacura',
+            phone: '+56 9 6543 2109',
+            paymentMethods: {
+                transfer: false,
+                card: true,
+                cash: true,
+                bankDetails: {}
+            },
+            sessionDuration: 45,
+            breakBetween: 15,
+            availability: {}
+        }
+    ];
+
+    let patients = JSON.parse(localStorage.getItem('mc_patients_v2')) || [];
+    let appointments = JSON.parse(localStorage.getItem('mc_apps_v6')) || [];
+    
+    // Variables globales
+    let selectedPsych = null;
+    let currentUser = null;
+    let currentPatientId = null;
+    let generatedSlots = [];
+    let selectedWeekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'];
+
+    function save() {
+        localStorage.setItem('mc_staff_v6', JSON.stringify(staff));
+        localStorage.setItem('mc_apps_v6', JSON.stringify(appointments));
+        localStorage.setItem('mc_patients_v2', JSON.stringify(patients));
+        
+        if (currentUser) {
+            updateStats();
+            if (currentUser.role === 'admin') renderStaffTable();
+            if (currentUser.role === 'psych') {
+                renderPatients();
+                if (document.getElementById('tabDisponibilidad').classList.contains('active')) {
+                    loadTimeSlots();
+                }
+            }
+        }
+        renderPublic();
+    }
+
+    // Login
+    function showLoginModal() {
+        document.getElementById('loginModal').style.display = 'flex';
+        document.getElementById('loginPass').focus();
+    }
+
+    function closeLoginModal() {
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('loginPass').value = '';
+    }
+
+    function processLogin() {
+        const pass = document.getElementById('loginPass').value;
+        const btn = document.getElementById('loginBtn');
+        
+        if (!pass) {
+            showToast('Ingresa una contraseña', 'error');
+            return;
+        }
+
+        btn.innerHTML = '<span class="spinner"></span> Ingresando...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+            if (pass === 'admin') {
+                currentUser = { role: 'admin' };
+                closeLoginModal();
+                showDashboard();
+                showToast('Bienvenido Administrador', 'success');
+            } else {
+                const p = staff.find(ps => ps.pass === pass);
+                if (p) {
+                    currentUser = { role: 'psych', data: p };
+                    closeLoginModal();
+                    showDashboard();
+                    showToast(`Bienvenido ${p.name}`, 'success');
+                } else { 
+                    showToast('Credenciales incorrectas', 'error');
+                    btn.innerHTML = 'Ingresar';
+                    btn.disabled = false;
+                }
+            }
+        }, 800);
+    }
+
+    function logout() {
+        currentUser = null;
+        location.reload();
+    }
+
+    // Vista pública
+    function renderPublic() {
+        const grid = document.getElementById('publicGrid');
+        const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
+        const specFilter = document.getElementById('specFilter')?.value || '';
+
+        let filteredStaff = staff.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
+                                 p.spec.toLowerCase().includes(searchTerm);
+            const matchesSpec = !specFilter || p.spec === specFilter;
+            return matchesSearch && matchesSpec;
+        });
+
+        grid.innerHTML = "";
+        
+        if (filteredStaff.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px;">No se encontraron terapeutas</div>';
+            return;
+        }
+
+        filteredStaff.forEach(p => {
+            const today = new Date().toISOString().split('T')[0];
+            const hasAvailability = p.availability && p.availability[today] && p.availability[today].length > 0;
+            
+            grid.innerHTML += `
+                <div class="therapist-card" onclick="openBooking(${p.id})">
+                    <div class="img-container">
+                        <div class="availability-badge ${hasAvailability ? 'online' : 'offline'}">
+                            <div class="pulse"></div> 
+                            ${hasAvailability ? 'DISPONIBLE HOY' : 'PRÓXIMAMENTE'}
+                        </div>
+                        <img src="${p.img}" alt="${p.name}">
+                    </div>
+                    <div class="card-body">
+                        <span class="tag">${p.spec}</span>
+                        <h3>${p.name}</h3>
+                        <div style="color:var(--gold); margin-bottom:10px;">${"★".repeat(p.stars)}${"☆".repeat(5-p.stars)}</div>
+                        <div class="price-box">
+                            <div>
+                                <small style="color:var(--text-light)">
+                                    <i class="fa fa-video"></i> Online | <i class="fa fa-building"></i> Presencial
+                                </small>
+                            </div>
+                            <button class="btn-book" ${!hasAvailability ? 'disabled' : ''}>Agendar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Booking mejorado
+    function openBooking(id) {
+        selectedPsych = staff.find(p => p.id === id);
+        
+        const today = new Date().toISOString().split('T')[0];
+        if (!selectedPsych.availability || !selectedPsych.availability[today] || selectedPsych.availability[today].length === 0) {
+            showToast('Este terapeuta no tiene disponibilidad hoy', 'warning');
+            return;
+        }
+
+        document.getElementById('clientView').style.display = 'none';
+        document.getElementById('bookingPanel').style.display = 'block';
+        document.getElementById('psychName').innerText = selectedPsych.name;
+        document.getElementById('psychSelectedName').innerText = selectedPsych.name;
+        document.getElementById('psychSelectedSpec').innerText = selectedPsych.spec;
+        document.getElementById('psychAddress').innerText = selectedPsych.address || 'Dirección no especificada';
+        document.getElementById('bookingDuration').innerText = selectedPsych.sessionDuration + ' minutos';
+        
+        const todayDate = new Date().toISOString().split('T')[0];
+        document.getElementById('custDate').min = todayDate;
+        document.getElementById('custDate').value = todayDate;
+        
+        // Cargar métodos de pago
+        loadPaymentMethods();
+        
+        updateAvailableSlots();
+        updateBookingDetails();
+    }
+
+    function loadPaymentMethods() {
+        const select = document.getElementById('paymentMethod');
+        select.innerHTML = '<option value="">Selecciona método</option>';
+        
+        if (selectedPsych.paymentMethods) {
+            if (selectedPsych.paymentMethods.transfer) {
+                select.innerHTML += '<option value="transfer">Transferencia Bancaria</option>';
+            }
+            if (selectedPsych.paymentMethods.card) {
+                select.innerHTML += '<option value="card">Tarjeta de Crédito/Débito (en consulta)</option>';
+            }
+            if (selectedPsych.paymentMethods.cash) {
+                select.innerHTML += '<option value="cash">Efectivo (en consulta)</option>';
+            }
+        }
+    }
+
+    function showPaymentDetails() {
+        const method = document.getElementById('paymentMethod').value;
+        const detailsDiv = document.getElementById('paymentDetails');
+        
+        if (method === 'transfer' && selectedPsych.paymentMethods?.bankDetails) {
+            const bank = selectedPsych.paymentMethods.bankDetails;
+            detailsDiv.style.display = 'block';
+            detailsDiv.innerHTML = `
+                <h4 style="margin-bottom:10px;">Datos para Transferencia</h4>
+                <p><strong>Banco:</strong> ${bank.bank || 'No especificado'}</p>
+                <p><strong>Cuenta:</strong> ${bank.accountType || ''} ${bank.accountNumber || ''}</p>
+                <p><strong>RUT:</strong> ${bank.rut || ''}</p>
+                <p><strong>Email:</strong> ${bank.email || ''}</p>
+                <p style="margin-top:10px; font-size:0.85rem; opacity:0.8;">* Enviar comprobante al email indicado</p>
+            `;
+        } else {
+            detailsDiv.style.display = 'none';
+        }
+    }
+
+    function toggleAddressField() {
+        const type = document.getElementById('appointmentType').value;
+        const addressField = document.getElementById('addressField');
+        const bookingType = document.getElementById('bookingType');
+        
+        if (type === 'presencial') {
+            addressField.style.display = 'block';
+            bookingType.innerText = 'Presencial';
+        } else {
+            addressField.style.display = 'none';
+            bookingType.innerText = 'Online';
+        }
+    }
+
+    function updateBookingDetails() {
+        const type = document.getElementById('appointmentType').value;
+        const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
+        document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
+        toggleAddressField();
+    }
+
+    function updateAvailableSlots() {
+        const date = document.getElementById('custDate').value;
+        const timeSelect = document.getElementById('custTime');
+        
+        if (!date || !selectedPsych) return;
+
+        // Obtener citas ya reservadas (incluyendo sobrecupo)
+        const bookedTimes = appointments
+            .filter(a => a.psychId === selectedPsych.id && a.date === date)
+            .map(a => a.time);
+
+        // Obtener disponibilidad del terapeuta
+        const availableSlots = selectedPsych.availability?.[date] || [];
+
+        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+        
+        availableSlots.forEach(slot => {
+            if (!bookedTimes.includes(slot.time)) {
+                const option = document.createElement('option');
+                option.value = slot.time;
+                option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
+                if (slot.isOvercupo) option.style.color = '#f59e0b';
+                timeSelect.appendChild(option);
+            }
+        });
+
+        if (timeSelect.children.length === 1) {
+            timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+        }
+    }
+
+    function executeBooking() {
+        const name = document.getElementById('custName').value;
+        const email = document.getElementById('custEmail').value;
+        const date = document.getElementById('custDate').value;
+        const time = document.getElementById('custTime').value;
+        const type = document.getElementById('appointmentType').value;
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const msg = document.getElementById('custMsg').value;
+        
+        if (!name || !email || !date || !time || !paymentMethod) {
+            showToast('Por favor completa todos los campos obligatorios', 'error');
+            return;
+        }
+
+        if (!email.includes('@')) {
+            showToast('Ingresa un email válido', 'error');
+            return;
+        }
+
+        const bookBtn = document.getElementById('bookBtn');
+        bookBtn.innerHTML = '<span class="spinner"></span> Procesando...';
+        bookBtn.disabled = true;
+
+        setTimeout(() => {
+            // Crear o actualizar paciente
+            let patient = patients.find(p => p.email === email && p.psychId === selectedPsych.id);
+            if (!patient) {
+                patient = {
+                    id: Date.now(),
+                    name: name,
+                    email: email,
+                    phone: '',
+                    birthdate: '',
+                    notes: '',
+                    psychId: selectedPsych.id,
+                    createdAt: new Date().toISOString(),
+                    appointments: []
+                };
+                patients.push(patient);
+            }
+            
+            // Precio según tipo
+            const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
+            
+            // Crear cita
+            const appointment = {
+                id: Date.now(),
+                patientId: patient.id,
+                patient: name,
+                patientEmail: email,
+                psych: selectedPsych.name,
+                psychId: selectedPsych.id,
+                date: date,
+                time: time,
+                type: type,
+                price: price,
+                paymentMethod: paymentMethod,
+                paymentStatus: paymentMethod === 'transfer' ? 'pendiente' : 'pagado',
+                msg: msg,
+                status: 'confirmada',
+                createdAt: new Date().toISOString()
+            };
+            
+            appointments.push(appointment);
+            
+            // Actualizar historial del paciente
+            patient.appointments = patient.appointments || [];
+            patient.appointments.push(appointment.id);
+            
+            save();
+            
+            showToast(`¡Reserva confirmada! Hemos enviado los detalles a ${email}`, 'success');
+            
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        }, 1500);
+    }
+
+    // Dashboard
+    function showDashboard() {
+        document.getElementById('clientView').style.display = 'none';
+        document.getElementById('bookingPanel').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        
+        // Configurar tabs según rol
+        document.getElementById('adminTab').style.display = currentUser.role === 'admin' ? 'block' : 'none';
+        document.getElementById('psychTab').style.display = currentUser.role === 'psych' ? 'block' : 'none';
+        document.getElementById('configTab').style.display = currentUser.role === 'psych' ? 'block' : 'none';
+        
+        if (currentUser.role === 'admin') {
+            document.getElementById('dashTitle').innerText = "Panel de Administración";
+            renderStaffTable();
+        } else {
+            document.getElementById('dashTitle').innerText = `Panel de ${currentUser.data.name}`;
+            document.getElementById('availDate').min = new Date().toISOString().split('T')[0];
+            loadMyConfig();
+        }
+        
+        updateStats();
+        renderPatients();
+        switchTab('citas');
+    }
+
+    function switchTab(tabName) {
+        // Actualizar tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Ocultar todos los contenidos
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Mostrar el seleccionado
+        document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+        
+        // Cargar datos según tab
+        if (tabName === 'pacientes') {
+            renderPatients();
+        } else if (tabName === 'disponibilidad' && currentUser.role === 'psych') {
+            loadTimeSlots();
+        } else if (tabName === 'configuracion' && currentUser.role === 'psych') {
+            loadMyConfig();
+        }
+    }
+
+    function updateStats() {
+        const myApps = currentUser.role === 'admin' ? 
+                       appointments : 
+                       appointments.filter(a => a.psychId === currentUser.data.id);
+        
+        const myPatients = currentUser.role === 'admin' ?
+                          patients :
+                          patients.filter(p => p.psychId === currentUser.data.id);
+
+        const totalIncome = myApps.reduce((s, a) => s + a.price, 0);
+        
+        document.getElementById('statIncome').innerText = `$${totalIncome.toLocaleString()}`;
+        document.getElementById('statCitas').innerText = myApps.length;
+        document.getElementById('statPatients').innerText = myPatients.length;
+
+        renderAppointmentsTable(myApps);
+    }
+
+    function renderAppointmentsTable(apps) {
+        const tb = document.getElementById('tableBody');
+        tb.innerHTML = "";
+        
+        if (apps.length === 0) {
+            tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">No hay citas programadas</td></tr>';
+            return;
+        }
+
+        [...apps].reverse().forEach(a => {
+            const appDate = new Date(a.date + 'T' + a.time);
+            const isPast = appDate < new Date();
+            
+            let paymentStatusText = '';
+            let paymentStatusColor = '';
+            
+            if (a.paymentMethod === 'transfer') {
+                paymentStatusText = a.paymentStatus === 'pendiente' ? 'Pendiente' : 'Pagado';
+                paymentStatusColor = a.paymentStatus === 'pendiente' ? 'var(--warning)' : 'var(--success)';
+            } else {
+                paymentStatusText = 'Pagado en consulta';
+                paymentStatusColor = 'var(--success)';
+            }
+            
+            tb.innerHTML += `
+                <tr>
+                    <td>
+                        <strong>${a.patient}</strong><br>
+                        <small>${a.patientEmail}</small>
+                    </td>
+                    <td>${a.psych}</td>
+                    <td>${a.date} <br><small>${a.time}</small></td>
+                    <td>
+                        <span class="badge ${a.type === 'online' ? 'online' : 'presencial'}">
+                            <i class="fa ${a.type === 'online' ? 'fa-video' : 'fa-building'}"></i>
+                            ${a.type === 'online' ? 'Online' : 'Presencial'}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="color:${paymentStatusColor};">
+                            ${paymentStatusText}<br>
+                            <small>$${a.price.toLocaleString()}</small>
+                        </span>
+                    </td>
+                    <td>
+                        <span style="color:${isPast ? 'var(--text-light)' : 'var(--success)'}; background:${isPast ? '#f1f5f9' : '#e6f7e6'}; padding:5px 10px; border-radius:50px; font-size:0.8rem;">
+                            ${isPast ? 'Completada' : 'Confirmada'}
+                        </span>
+                    </td>
+                    <td>
+                        <button onclick="viewNotes('${a.msg.replace(/'/g, "\\'")}')" class="btn-icon" style="background:var(--text-light); color:white;" title="Ver notas">
+                            <i class="fa fa-note-sticky"></i>
+                        </button>
+                        ${!isPast && (currentUser.role === 'admin' || currentUser.role === 'psych') ? `
+                            <button onclick="cancelAppointment(${a.id})" class="btn-icon" style="background:var(--danger); color:white;" title="Cancelar cita">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        ` : ''}
+                        ${a.paymentMethod === 'transfer' && a.paymentStatus === 'pendiente' && currentUser.role === 'admin' ? `
+                            <button onclick="markAsPaid(${a.id})" class="btn-icon" style="background:var(--success); color:white;" title="Marcar como pagado">
+                                <i class="fa fa-check"></i>
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // Gestión de Pacientes
+    function renderPatients() {
+        const container = document.getElementById('patientsList');
+        const searchTerm = document.getElementById('patientSearch')?.value.toLowerCase() || '';
+        
+        let filteredPatients = currentUser.role === 'admin' ? 
+                              patients : 
+                              patients.filter(p => p.psychId === currentUser.data.id);
+        
+        filteredPatients = filteredPatients.filter(p => 
+            p.name.toLowerCase().includes(searchTerm) || 
+            p.email.toLowerCase().includes(searchTerm)
+        );
+
+        if (filteredPatients.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:40px; background:#f8fafc; border-radius:20px;">No hay pacientes registrados</div>';
+            return;
+        }
+
+        container.innerHTML = filteredPatients.map(p => {
+            const patientAppointments = appointments.filter(a => a.patientId === p.id);
+            const nextAppointment = patientAppointments
+                .find(a => new Date(a.date + 'T' + a.time) > new Date());
+            const totalSessions = patientAppointments.length;
+            const totalPaid = patientAppointments.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
+            
+            return `
+                <div class="patient-card" onclick="viewPatientDetails(${p.id})">
+                    <div class="patient-header">
+                        <span class="patient-name">${p.name}</span>
+                        <span class="badge" style="background:var(--primary); color:white;">
+                            ${totalSessions} sesiones
+                        </span>
+                    </div>
+                    <div class="patient-contact">
+                        <span><i class="fa fa-envelope"></i> ${p.email}</span>
+                        ${p.phone ? `<span><i class="fa fa-phone"></i> ${p.phone}</span>` : ''}
+                    </div>
+                    ${nextAppointment ? `
+                        <div style="background:#e6f7e6; padding:8px 12px; border-radius:8px; font-size:0.9rem; margin:10px 0;">
+                            <i class="fa fa-calendar-check" style="color:var(--success)"></i>
+                            Próxima cita: ${nextAppointment.date} a las ${nextAppointment.time}
+                        </div>
+                    ` : ''}
+                    <div style="display:flex; gap:15px; margin-top:10px; font-size:0.85rem; color:var(--text-light);">
+                        <span><i class="fa fa-credit-card"></i> Total pagado: $${totalPaid.toLocaleString()}</span>
+                    </div>
+                    ${p.notes ? `
+                        <div class="patient-notes">
+                            <i class="fa fa-quote-left" style="color:var(--primary); opacity:0.5;"></i>
+                            ${p.notes.substring(0, 100)}${p.notes.length > 100 ? '...' : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function showNewPatientModal() {
+        currentPatientId = null;
+        document.getElementById('patientModalTitle').innerText = 'Nuevo Paciente';
+        document.getElementById('editPatientId').value = '';
+        document.getElementById('patientName').value = '';
+        document.getElementById('patientEmail').value = '';
+        document.getElementById('patientPhone').value = '';
+        document.getElementById('patientBirthdate').value = '';
+        document.getElementById('patientNotes').value = '';
+        document.getElementById('patientNextAppointment').value = '';
+        document.getElementById('patientFrequency').value = '';
+        
+        document.getElementById('patientModal').style.display = 'flex';
+    }
+
+    function viewPatientDetails(id) {
+        const patient = patients.find(p => p.id === id);
+        if (!patient) return;
+        
+        currentPatientId = id;
+        document.getElementById('patientModalTitle').innerText = 'Editar Paciente';
+        document.getElementById('editPatientId').value = id;
+        document.getElementById('patientName').value = patient.name || '';
+        document.getElementById('patientEmail').value = patient.email || '';
+        document.getElementById('patientPhone').value = patient.phone || '';
+        document.getElementById('patientBirthdate').value = patient.birthdate || '';
+        document.getElementById('patientNotes').value = patient.notes || '';
+        document.getElementById('patientFrequency').value = patient.frequency || '';
+        
+        // Buscar próxima cita
+        const nextAppt = appointments.find(a => a.patientId === id && new Date(a.date + 'T' + a.time) > new Date());
+        if (nextAppt) {
+            document.getElementById('patientNextAppointment').value = `${nextAppt.date}T${nextAppt.time}`;
+        } else {
+            document.getElementById('patientNextAppointment').value = '';
+        }
+        
+        document.getElementById('patientModal').style.display = 'flex';
+    }
+
+    function closePatientModal() {
+        document.getElementById('patientModal').style.display = 'none';
+    }
+
+    function savePatient() {
+        const id = document.getElementById('editPatientId').value;
+        const name = document.getElementById('patientName').value;
+        const email = document.getElementById('patientEmail').value;
+        const phone = document.getElementById('patientPhone').value;
+        const birthdate = document.getElementById('patientBirthdate').value;
+        const notes = document.getElementById('patientNotes').value;
+        const nextAppointment = document.getElementById('patientNextAppointment').value;
+        const frequency = document.getElementById('patientFrequency').value;
+        
+        if (!name || !email) {
+            showToast('Nombre y email son obligatorios', 'error');
+            return;
+        }
+
+        if (id) {
+            // Actualizar existente
+            const patient = patients.find(p => p.id === parseInt(id));
+            if (patient) {
+                patient.name = name;
+                patient.email = email;
+                patient.phone = phone;
+                patient.birthdate = birthdate;
+                patient.notes = notes;
+                patient.frequency = frequency;
+            }
+        } else {
+            // Nuevo paciente
+            const newPatient = {
+                id: Date.now(),
+                name: name,
+                email: email,
+                phone: phone,
+                birthdate: birthdate,
+                notes: notes,
+                frequency: frequency,
+                psychId: currentUser.role === 'psych' ? currentUser.data.id : null,
+                createdAt: new Date().toISOString(),
+                appointments: []
+            };
+            patients.push(newPatient);
+        }
+        
+        // Si hay próxima cita programada
+        if (nextAppointment) {
+            const [date, time] = nextAppointment.split('T');
+            const psychId = currentUser.role === 'psych' ? currentUser.data.id : 
+                           (id ? patients.find(p => p.id === parseInt(id))?.psychId : null);
+            
+            if (psychId) {
+                const psych = staff.find(s => s.id === psychId);
+                if (psych) {
+                    appointments.push({
+                        id: Date.now(),
+                        patientId: id ? parseInt(id) : patients[patients.length-1].id,
+                        patient: name,
+                        patientEmail: email,
+                        psych: psych.name,
+                        psychId: psychId,
+                        date: date,
+                        time: time,
+                        type: 'online',
+                        price: psych.priceOnline,
+                        paymentMethod: 'transfer',
+                        paymentStatus: 'pendiente',
+                        msg: 'Cita programada por terapeuta',
+                        status: 'confirmada',
+                        createdAt: new Date().toISOString()
+                    });
+                }
+            }
+        }
+        
+        save();
+        closePatientModal();
+        renderPatients();
+        showToast('Paciente guardado correctamente', 'success');
+    }
+
+    // Gestión de disponibilidad avanzada
+    function showAvailabilityModal() {
+        document.getElementById('availabilityModal').style.display = 'flex';
+        
+        // Configurar fechas por defecto
+        const today = new Date();
+        const nextWeek = new Date();
+        nextWeek.setDate(today.getDate() + 7);
+        
+        document.getElementById('rangeStartDate').value = today.toISOString().split('T')[0];
+        document.getElementById('rangeEndDate').value = nextWeek.toISOString().split('T')[0];
+        
+        // Cargar configuración actual
+        if (currentUser.data) {
+            document.getElementById('sessionDuration').value = currentUser.data.sessionDuration || 50;
+            document.getElementById('breakBetween').value = currentUser.data.breakBetween || 10;
+        }
+        
+        generateTimeSlots();
+    }
+
+    function closeAvailabilityModal() {
+        document.getElementById('availabilityModal').style.display = 'none';
+    }
+
+    function toggleWeekday(day) {
+        const element = event.target;
+        if (selectedWeekdays.includes(day)) {
+            selectedWeekdays = selectedWeekdays.filter(d => d !== day);
+            element.classList.remove('selected');
+        } else {
+            selectedWeekdays.push(day);
+            element.classList.add('selected');
+        }
+    }
+
+    function calculateTimeSlots() {
+        // Solo actualiza la visualización, no regenera automáticamente
+    }
+
+    function generateTimeSlots() {
+        const start = document.getElementById('startTime').value;
+        const end = document.getElementById('endTime').value;
+        const duration = parseInt(document.getElementById('sessionDuration').value);
+        const breakTime = parseInt(document.getElementById('breakBetween').value);
+        
+        if (!start || !end) {
+            showToast('Define horario de inicio y fin', 'error');
+            return;
+        }
+        
+        const [startHour, startMin] = start.split(':').map(Number);
+        const [endHour, endMin] = end.split(':').map(Number);
+        
+        let currentMinutes = startHour * 60 + startMin;
+        const endMinutes = endHour * 60 + endMin;
+        const slotDuration = duration + breakTime;
+        
+        generatedSlots = [];
+        
+        while (currentMinutes + duration <= endMinutes) {
+            const hour = Math.floor(currentMinutes / 60);
+            const minute = currentMinutes % 60;
+            const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            
+            generatedSlots.push({
+                time: timeStr,
+                isOvercupo: false
+            });
+            
+            currentMinutes += slotDuration;
+        }
+        
+        renderGeneratedSlots();
+    }
+
+    function renderGeneratedSlots() {
+        const container = document.getElementById('generatedTimeSlots');
+        container.innerHTML = '';
+        
+        generatedSlots.forEach(slot => {
+            const slotDiv = document.createElement('div');
+            slotDiv.className = `time-slot selected`;
+            slotDiv.textContent = slot.time;
+            slotDiv.onclick = () => toggleGeneratedSlot(slot.time);
+            container.appendChild(slotDiv);
+        });
+    }
+
+    function toggleGeneratedSlot(time) {
+        const slot = generatedSlots.find(s => s.time === time);
+        if (slot) {
+            const index = generatedSlots.indexOf(slot);
+            generatedSlots.splice(index, 1);
+        } else {
+            generatedSlots.push({ time: time, isOvercupo: false });
+        }
+        renderGeneratedSlots();
+    }
+
+    function applyGeneratedSlots() {
+        const startDate = new Date(document.getElementById('rangeStartDate').value);
+        const endDate = new Date(document.getElementById('rangeEndDate').value);
+        
+        if (!startDate || !endDate) {
+            showToast('Selecciona rango de fechas', 'error');
+            return;
+        }
+        
+        const weekdayMap = {
+            'Lun': 1, 'Mar': 2, 'Mie': 3, 'Jue': 4, 'Vie': 5, 'Sab': 6, 'Dom': 0
+        };
+        
+        const selectedDayNumbers = selectedWeekdays.map(d => weekdayMap[d]);
+        
+        // Inicializar availability si no existe
+        if (!currentUser.data.availability) {
+            currentUser.data.availability = {};
+        }
+        
+        // Iterar sobre cada fecha en el rango
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().split('T')[0];
+            const dayOfWeek = d.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+            
+            if (selectedDayNumbers.includes(dayOfWeek)) {
+                // Aplicar horarios generados a esta fecha
+                if (!currentUser.data.availability[dateStr]) {
+                    currentUser.data.availability[dateStr] = [];
+                }
+                
+                // Agregar nuevos horarios (sin duplicados)
+                generatedSlots.forEach(slot => {
+                    if (!currentUser.data.availability[dateStr].some(s => s.time === slot.time)) {
+                        currentUser.data.availability[dateStr].push(slot);
+                    }
+                });
+            }
+        }
+        
+        // Guardar en staff
+        const staffIndex = staff.findIndex(s => s.id === currentUser.data.id);
+        if (staffIndex !== -1) {
+            staff[staffIndex].availability = currentUser.data.availability;
+        }
+        
+        save();
+        closeAvailabilityModal();
+        loadTimeSlots();
+        showToast(`Horarios aplicados a ${selectedWeekdays.length} días de la semana`, 'success');
+    }
+
+    function clearAllSlots() {
+        if (confirm('¿Eliminar toda la disponibilidad configurada?')) {
+            currentUser.data.availability = {};
+            const staffIndex = staff.findIndex(s => s.id === currentUser.data.id);
+            if (staffIndex !== -1) {
+                staff[staffIndex].availability = {};
+            }
+            save();
+            closeAvailabilityModal();
+            showToast('Disponibilidad eliminada', 'success');
+        }
+    }
+
+    function loadTimeSlots() {
+        const date = document.getElementById('availDate').value;
+        if (!date || !currentUser?.data) return;
+
+        const container = document.getElementById('timeSlotsContainer');
+        const currentAvailability = currentUser.data.availability || {};
+        const selectedSlots = currentAvailability[date] || [];
+        const showOvercupo = document.getElementById('showOvercupo')?.checked || false;
+
+        container.innerHTML = '';
+        
+        // Mostrar slots regulares
+        selectedSlots.forEach(slot => {
+            if (!slot.isOvercupo || showOvercupo) {
+                const isBooked = appointments.some(a => 
+                    a.psychId === currentUser.data.id && 
+                    a.date === date && 
+                    a.time === slot.time
+                );
+
+                const slotDiv = document.createElement('div');
+                slotDiv.className = `time-slot ${slot.isOvercupo ? 'overcupo' : ''} ${selectedSlots.includes(slot) ? 'selected' : ''} ${isBooked ? 'booked' : ''}`;
+                slotDiv.textContent = slot.time + (slot.isOvercupo ? ' (Sobrecupo)' : '');
+                
+                if (!isBooked) {
+                    slotDiv.onclick = () => toggleTimeSlot(slot.time, slot.isOvercupo);
+                }
+                
+                container.appendChild(slotDiv);
+            }
+        });
+    }
+
+    function toggleTimeSlot(time, isOvercupo = false) {
+        if (!currentUser?.data) return;
+        
+        const date = document.getElementById('availDate').value;
+        if (!date) {
+            showToast('Selecciona una fecha primero', 'warning');
+            return;
+        }
+
+        if (!currentUser.data.availability) {
+            currentUser.data.availability = {};
+        }
+        if (!currentUser.data.availability[date]) {
+            currentUser.data.availability[date] = [];
+        }
+
+        const index = currentUser.data.availability[date].findIndex(s => s.time === time);
+        if (index === -1) {
+            currentUser.data.availability[date].push({ time: time, isOvercupo: isOvercupo });
+        } else {
+            currentUser.data.availability[date].splice(index, 1);
+        }
+
+        const staffIndex = staff.findIndex(s => s.id === currentUser.data.id);
+        if (staffIndex !== -1) {
+            staff[staffIndex].availability = currentUser.data.availability;
+        }
+
+        loadTimeSlots();
+    }
+
+    function addOvercupo() {
+        const date = document.getElementById('availDate').value;
+        if (!date) {
+            showToast('Selecciona una fecha primero', 'error');
+            return;
+        }
+        
+        const time = prompt('Ingresa horario para sobrecupo (formato HH:MM, ej: 20:00):');
+        if (time && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+            toggleTimeSlot(time, true);
+            showToast('Sobrecupo agregado', 'success');
+        } else if (time) {
+            showToast('Formato de hora inválido', 'error');
+        }
+    }
+
+    function saveAvailability() {
+        save();
+        showToast('Disponibilidad guardada correctamente', 'success');
+    }
+
+    // Configuración del terapeuta
+    function loadMyConfig() {
+        if (!currentUser?.data) return;
+        
+        const psych = currentUser.data;
+        
+        document.getElementById('myName').value = psych.name || '';
+        document.getElementById('mySpec').value = psych.spec || '';
+        document.getElementById('myPriceOnline').value = psych.priceOnline || '';
+        document.getElementById('myPricePresencial').value = psych.pricePresencial || '';
+        
+        if (psych.paymentMethods) {
+            document.getElementById('myPaymentTransfer').checked = psych.paymentMethods.transfer || false;
+            document.getElementById('myPaymentCard').checked = psych.paymentMethods.card || false;
+            document.getElementById('myPaymentCash').checked = psych.paymentMethods.cash || false;
+            
+            if (psych.paymentMethods.transfer && psych.paymentMethods.bankDetails) {
+                const bank = psych.paymentMethods.bankDetails;
+                document.getElementById('myBankName').value = bank.bank || '';
+                document.getElementById('myAccountType').value = bank.accountType || '';
+                document.getElementById('myAccountNumber').value = bank.accountNumber || '';
+                document.getElementById('myRut').value = bank.rut || '';
+                document.getElementById('myBankEmail').value = bank.email || '';
+                
+                document.getElementById('myTransferDetails').style.display = 'block';
+            }
+        }
+    }
+
+    function toggleMyTransferDetails() {
+        const checked = document.getElementById('myPaymentTransfer').checked;
+        document.getElementById('myTransferDetails').style.display = checked ? 'block' : 'none';
+    }
+
+    function updateMyPrices() {
+        // Solo actualiza en memoria, se guarda con el botón
+    }
+
+    function updateMyBankDetails() {
+        // Solo actualiza en memoria, se guarda con el botón
+    }
+
+    function updateMyPaymentMethods() {
+        // Solo actualiza en memoria, se guarda con el botón
+    }
+
+    function saveMyConfig() {
+        if (!currentUser?.data) return;
+        
+        const psych = currentUser.data;
+        
+        psych.priceOnline = parseInt(document.getElementById('myPriceOnline').value);
+        psych.pricePresencial = parseInt(document.getElementById('myPricePresencial').value);
+        
+        if (!psych.paymentMethods) psych.paymentMethods = {};
+        
+        psych.paymentMethods.transfer = document.getElementById('myPaymentTransfer').checked;
+        psych.paymentMethods.card = document.getElementById('myPaymentCard').checked;
+        psych.paymentMethods.cash = document.getElementById('myPaymentCash').checked;
+        
+        if (psych.paymentMethods.transfer) {
+            if (!psych.paymentMethods.bankDetails) psych.paymentMethods.bankDetails = {};
+            
+            psych.paymentMethods.bankDetails.bank = document.getElementById('myBankName').value;
+            psych.paymentMethods.bankDetails.accountType = document.getElementById('myAccountType').value;
+            psych.paymentMethods.bankDetails.accountNumber = document.getElementById('myAccountNumber').value;
+            psych.paymentMethods.bankDetails.rut = document.getElementById('myRut').value;
+            psych.paymentMethods.bankDetails.email = document.getElementById('myBankEmail').value;
+        }
+        
+        // Actualizar en staff
+        const staffIndex = staff.findIndex(s => s.id === psych.id);
+        if (staffIndex !== -1) {
+            staff[staffIndex] = psych;
+        }
+        
+        save();
+        showToast('Configuración guardada', 'success');
+    }
+
+    // Admin functions
+    function renderStaffTable() {
+        const tb = document.getElementById('staffTableBody');
+        if (!tb) return;
+        
+        tb.innerHTML = "";
+        staff.forEach(p => {
+            tb.innerHTML += `
+                <tr>
+                    <td>${p.name}</td>
+                    <td>${p.spec}</td>
+                    <td>
+                        Online: $${p.priceOnline?.toLocaleString()}<br>
+                        Presencial: $${p.pricePresencial?.toLocaleString()}
+                    </td>
+                    <td>
+                        ${p.phone || '—'}<br>
+                        <small>${p.address?.substring(0, 30) || 'Sin dirección'}</small>
+                    </td>
+                    <td>
+                        <button onclick="editTherapist(${p.id})" class="btn-icon" style="background:var(--primary); color:white;">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button onclick="deleteStaff(${p.id})" class="btn-icon" style="background:var(--danger); color:white;">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function addStaff() {
+        const name = document.getElementById('addName').value;
+        const spec = document.getElementById('addSpec').value;
+        const priceOnline = document.getElementById('addPriceOnline').value;
+        const pricePresencial = document.getElementById('addPricePresencial').value;
+        const pass = document.getElementById('addPass').value;
+        const address = document.getElementById('addAddress').value;
+        const phone = document.getElementById('addPhone').value;
+        
+        if (!name || !spec || !priceOnline || !pricePresencial || !pass) {
+            showToast('Completa los campos obligatorios', 'error');
+            return;
+        }
+
+        staff.push({
+            id: Date.now(),
+            name: name,
+            spec: spec,
+            priceOnline: parseInt(priceOnline),
+            pricePresencial: parseInt(pricePresencial),
+            pass: pass,
+            img: document.getElementById('addImg').value || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+            address: address,
+            phone: phone,
+            stars: 5,
+            paymentMethods: {
+                transfer: false,
+                card: false,
+                cash: true,
+                bankDetails: {}
+            },
+            sessionDuration: 50,
+            breakBetween: 10,
+            availability: {}
+        });
+
+        save();
+        
+        // Limpiar campos
+        document.getElementById('addName').value = '';
+        document.getElementById('addSpec').value = '';
+        document.getElementById('addPriceOnline').value = '';
+        document.getElementById('addPricePresencial').value = '';
+        document.getElementById('addPass').value = '';
+        document.getElementById('addImg').value = '';
+        document.getElementById('addAddress').value = '';
+        document.getElementById('addPhone').value = '';
+        
+        showToast('Profesional añadido correctamente', 'success');
+    }
+
+    function editTherapist(id) {
+        const therapist = staff.find(s => s.id === id);
+        if (!therapist) return;
+        
+        document.getElementById('editTherapistId').value = therapist.id;
+        document.getElementById('editName').value = therapist.name || '';
+        document.getElementById('editSpec').value = therapist.spec || '';
+        document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
+        document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
+        document.getElementById('editPass').value = ''; // Dejar vacío para no cambiar
+        document.getElementById('editImg').value = therapist.img || '';
+        document.getElementById('editAddress').value = therapist.address || '';
+        document.getElementById('editPhone').value = therapist.phone || '';
+        
+        if (therapist.paymentMethods) {
+            document.getElementById('editPaymentTransfer').checked = therapist.paymentMethods.transfer || false;
+            document.getElementById('editPaymentCard').checked = therapist.paymentMethods.card || false;
+            document.getElementById('editPaymentCash').checked = therapist.paymentMethods.cash || false;
+            
+            if (therapist.paymentMethods.transfer && therapist.paymentMethods.bankDetails) {
+                const bank = therapist.paymentMethods.bankDetails;
+                document.getElementById('editBankName').value = bank.bank || '';
+                document.getElementById('editAccountType').value = bank.accountType || '';
+                document.getElementById('editAccountNumber').value = bank.accountNumber || '';
+                document.getElementById('editRut').value = bank.rut || '';
+                document.getElementById('editBankEmail').value = bank.email || '';
+                
+                document.getElementById('transferDetails').style.display = 'block';
+            }
+        }
+        
+        document.getElementById('editTherapistModal').style.display = 'flex';
+    }
+
+    function closeEditTherapistModal() {
+        document.getElementById('editTherapistModal').style.display = 'none';
+    }
+
+    function updateTherapist() {
+        const id = parseInt(document.getElementById('editTherapistId').value);
+        const therapist = staff.find(s => s.id === id);
+        
+        if (!therapist) return;
+        
+        therapist.name = document.getElementById('editName').value;
+        therapist.spec = document.getElementById('editSpec').value;
+        therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
+        therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
+        therapist.img = document.getElementById('editImg').value;
+        therapist.address = document.getElementById('editAddress').value;
+        therapist.phone = document.getElementById('editPhone').value;
+        
+        // Actualizar contraseña solo si se proporcionó una nueva
+        const newPass = document.getElementById('editPass').value;
+        if (newPass) {
+            therapist.pass = newPass;
+        }
+        
+        // Actualizar métodos de pago
+        if (!therapist.paymentMethods) therapist.paymentMethods = {};
+        
+        therapist.paymentMethods.transfer = document.getElementById('editPaymentTransfer').checked;
+        therapist.paymentMethods.card = document.getElementById('editPaymentCard').checked;
+        therapist.paymentMethods.cash = document.getElementById('editPaymentCash').checked;
+        
+        if (therapist.paymentMethods.transfer) {
+            if (!therapist.paymentMethods.bankDetails) therapist.paymentMethods.bankDetails = {};
+            
+            therapist.paymentMethods.bankDetails.bank = document.getElementById('editBankName').value;
+            therapist.paymentMethods.bankDetails.accountType = document.getElementById('editAccountType').value;
+            therapist.paymentMethods.bankDetails.accountNumber = document.getElementById('editAccountNumber').value;
+            therapist.paymentMethods.bankDetails.rut = document.getElementById('editRut').value;
+            therapist.paymentMethods.bankDetails.email = document.getElementById('editBankEmail').value;
+        }
+        
+        save();
+        closeEditTherapistModal();
+        renderStaffTable();
+        showToast('Terapeuta actualizado correctamente', 'success');
+    }
+
+    function deleteStaff(id) {
+        if (confirm('¿Estás seguro de eliminar este profesional? Se eliminarán también sus citas y pacientes.')) {
+            // Eliminar citas relacionadas
+            appointments = appointments.filter(a => a.psychId !== id);
+            // Eliminar pacientes relacionados
+            patients = patients.filter(p => p.psychId !== id);
+            // Eliminar terapeuta
+            staff = staff.filter(s => s.id !== id);
+            
+            save();
+            renderStaffTable();
+            showToast('Profesional eliminado', 'success');
+        }
+    }
+
+    function cancelAppointment(id) {
+        if (confirm('¿Cancelar esta cita?')) {
+            appointments = appointments.filter(a => a.id !== id);
+            save();
+            showToast('Cita cancelada', 'success');
+        }
+    }
+
+    function markAsPaid(id) {
+        const appointment = appointments.find(a => a.id === id);
+        if (appointment) {
+            appointment.paymentStatus = 'pagado';
+            save();
+            showToast('Pago marcado como recibido', 'success');
+        }
+    }
+
+    function viewNotes(notes) {
+        showToast(notes || 'Sin notas adicionales', 'info', 5000);
+    }
+
+    function closePanels() {
+        location.reload();
+    }
+
+    // Inicializar
+    renderPublic();
+</script>
+</body>
+</html>

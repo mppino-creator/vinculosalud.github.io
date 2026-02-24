@@ -3,26 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vínculo Salud - Gestión de Box</title>
+    <title>Vínculo Salud - Gestión</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f0f4f8; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); color: var(--primary); }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--primary); }
         .app-container { max-width: 600px; margin: 20px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .hidden { display: none; }
         input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; font-size: 15px; box-sizing: border-box; }
         button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #2980b9; }
         .admin-box { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-top: 15px; }
-        .user-item { background: white; border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 8px; }
-        .user-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .edit-area { display: flex; gap: 5px; margin-top: 5px; }
-        .edit-area input { margin: 0; padding: 5px; font-size: 13px; flex-grow: 1; }
-        .edit-area button { width: auto; padding: 5px 10px; font-size: 12px; background: #f39c12; }
+        .user-card { background: white; border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 5px solid var(--accent); }
+        .user-info { margin-bottom: 10px; font-size: 14px; }
         .slot-card { background: #e8f4fd; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         h2, h3 { color: var(--accent); text-align: center; margin-top: 0; }
-        .delete-btn { background: #e74c3c !important; }
+        .btn-danger { background: #e74c3c !important; }
+        .btn-success { background: #27ae60 !important; }
     </style>
 </head>
 <body>
@@ -31,46 +29,51 @@
     <h2>Vínculo Salud</h2>
 
     <div id="login-section">
-        <p style="text-align: center; color: #666;">Ingresa con tu usuario y clave</p>
-        <input type="text" id="user" placeholder="Usuario (Ej: Admin o Nombre Staff)">
-        <input type="password" id="pass" placeholder="Contraseña">
-        <button onclick="intentarLogin()">Entrar al Sistema</button>
+        <p style="text-align: center; color: #666;">Ingreso al Sistema</p>
+        <input type="text" id="user-login" placeholder="Usuario">
+        <input type="password" id="pass-login" placeholder="Contraseña">
+        <button onclick="intentarLogin()">Entrar</button>
     </div>
 
     <div id="admin-section" class="hidden">
         <h3>Panel Administrador</h3>
-        
         <div class="admin-box">
-            <p><strong>1. Registrar Staff:</strong></p>
-            <input type="text" id="p-name" placeholder="Nombre Completo">
-            <input type="text" id="p-pass" placeholder="Clave Asignada">
-            <button onclick="crearPsicologo()" style="background:#27ae60">Guardar Profesional</button>
+            <p><strong>Registrar Nuevo Psicólogo:</strong></p>
+            <input type="text" id="reg-user" placeholder="Usuario (Ej: alison.g)">
+            <input type="text" id="reg-name" placeholder="Nombre Real (Ej: Alison G.)">
+            <input type="text" id="reg-pass" placeholder="Clave">
+            <button onclick="crearUsuario()" class="btn-success">Crear en Base de Datos</button>
         </div>
 
         <div class="admin-box">
-            <p><strong>2. Gestión de Claves (Staff):</strong></p>
-            <div id="lista-usuarios-admin">Cargando lista de profesionales...</div>
+            <p><strong>Gestión de Usuarios Existentes:</strong></p>
+            <div id="lista-admin-usuarios">Cargando...</div>
         </div>
         
-        <div class="admin-box">
-            <p><strong>3. Habilitar Hora en Box:</strong></p>
-            <input type="datetime-local" id="box-time">
-            <button onclick="habilitarHora()">Publicar Disponibilidad</button>
-        </div>
-
-        <button onclick="logout()" style="background:#e74c3c; margin-top: 20px;">Cerrar Sesión</button>
+        <button onclick="logout()" class="btn-danger" style="margin-top: 20px;">Cerrar Sesión</button>
     </div>
 
     <div id="psyc-section" class="hidden">
-        <h3 id="psyc-welcome">Panel Profesional</h3>
-        <p>Selecciona una hora disponible para reservar el box:</p>
-        <div id="lista-disponible"></div>
-        <button onclick="logout()" style="background:#e74c3c; margin-top: 20px;">Cerrar Sesión</button>
+        <h3 id="psyc-welcome">Bienvenido</h3>
+        
+        <div class="admin-box">
+            <p><strong>Mis Datos Personales:</strong></p>
+            <div id="mis-datos"></div>
+            <input type="text" id="new-own-pass" placeholder="Nueva Clave">
+            <button onclick="actualizarMiClave()">Cambiar mi Contraseña</button>
+        </div>
+
+        <div class="admin-box">
+            <p><strong>Horas Disponibles para Box:</strong></p>
+            <div id="lista-horas"></div>
+        </div>
+
+        <button onclick="logout()" class="btn-danger" style="margin-top: 20px;">Cerrar Sesión</button>
     </div>
 </div>
 
 <script>
-    // --- REEMPLAZA ESTOS DATOS CON TU CONSOLA FIREBASE ---
+    // IMPORTANTE: Pon tus datos de Firebase aquí
     const firebaseConfig = {
         apiKey: "TU_API_KEY",
         authDomain: "vinculosaludapp.firebaseapp.com",
@@ -80,132 +83,102 @@
         appId: "TU_APP_ID"
     };
     
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // FUNCIÓN DE LOGIN
-    function intentarLogin() {
-        const u = document.getElementById('user').value;
-        const p = document.getElementById('pass').value;
+    let usuarioLogueadoId = null;
 
-        // Login Admin
+    function intentarLogin() {
+        const u = document.getElementById('user-login').value.trim();
+        const p = document.getElementById('pass-login').value.trim();
+
         if(u === "Admin" && p === "Nina2026") {
             abrirSeccion('admin-section');
-            cargarUsuariosAdmin(); // Al entrar como admin, carga la lista
+            escucharUsuariosAdmin();
             return;
         }
 
-        // Login Staff (Alison, etc)
         db.ref('Staff').once('value', snapshot => {
-            let usuarioEncontrado = false;
+            let encontrado = false;
             snapshot.forEach(child => {
-                const datos = child.val();
-                if(datos.name === u && datos.pass === p) {
-                    usuarioEncontrado = true;
-                    document.getElementById('psyc-welcome').innerText = "Bienvenido/a " + u;
+                const d = child.val();
+                if(d.usuario === u && d.pass === p) {
+                    encontrado = true;
+                    usuarioLogueadoId = child.key;
+                    document.getElementById('psyc-welcome').innerText = "Hola, " + d.name;
+                    document.getElementById('mis-datos').innerHTML = `
+                        <p><strong>Usuario:</strong> ${d.usuario}</p>
+                        <p><strong>Nombre:</strong> ${d.name}</p>`;
                     abrirSeccion('psyc-section');
-                    escucharHoras();
+                    // Aquí cargarías las horas...
                 }
             });
-            if(!usuarioEncontrado) alert("Usuario o clave incorrecta");
+            if(!encontrado) alert("Usuario o clave incorrecta");
         });
     }
 
-    // --- FUNCIONES ADMIN ---
-    
-    function crearPsicologo() {
-        const name = document.getElementById('p-name').value;
-        const pass = document.getElementById('p-pass').value;
-        if(name && pass) {
-            db.ref('Staff').push({ name, pass });
-            alert("Profesional agregado.");
-            document.getElementById('p-name').value = "";
-            document.getElementById('p-pass').value = "";
+    // --- FUNCIONES PARA TI (ADMIN) ---
+
+    function crearUsuario() {
+        const usuario = document.getElementById('reg-user').value;
+        const name = document.getElementById('reg-name').value;
+        const pass = document.getElementById('reg-pass').value;
+
+        if(usuario && name && pass) {
+            db.ref('Staff').push({ usuario, name, pass });
+            alert("Usuario creado exitosamente");
+            document.getElementById('reg-user').value = "";
+            document.getElementById('reg-name').value = "";
+            document.getElementById('reg-pass').value = "";
         }
     }
 
-    function cargarUsuariosAdmin() {
+    function escucharUsuariosAdmin() {
         db.ref('Staff').on('value', snapshot => {
-            const div = document.getElementById('lista-usuarios-admin');
+            const div = document.getElementById('lista-admin-usuarios');
             div.innerHTML = "";
-            if(!snapshot.exists()) {
-                div.innerHTML = "<p>No hay staff registrado.</p>";
-                return;
-            }
             snapshot.forEach(child => {
-                const user = child.val();
-                const userId = child.key;
-                if(user.name) {
-                    div.innerHTML += `
-                        <div class="user-item">
-                            <div class="user-row">
-                                <strong>${user.name}</strong>
-                                <small>Clave: ${user.pass}</small>
-                            </div>
-                            <div class="edit-area">
-                                <input type="text" id="new-pass-${userId}" placeholder="Nueva clave">
-                                <button onclick="cambiarClave('${userId}')">Actualizar</button>
-                                <button onclick="eliminarStaff('${userId}')" class="delete-btn">Eliminar</button>
-                            </div>
-                        </div>`;
-                }
+                const u = child.val();
+                const id = child.key;
+                div.innerHTML += `
+                    <div class="user-card">
+                        <div class="user-info">
+                            <strong>${u.name}</strong> (@${u.usuario})<br>
+                            Clave: ${u.pass}
+                        </div>
+                        <input type="text" id="mod-pass-${id}" placeholder="Nueva clave" style="width:70%; display:inline;">
+                        <button onclick="modificarClaveAdmin('${id}')" style="width:25%; display:inline;">OK</button>
+                        <button onclick="eliminarUsuario('${id}')" class="btn-danger" style="margin-top:5px;">Eliminar Usuario</button>
+                    </div>`;
             });
         });
     }
 
-    function cambiarClave(id) {
-        const nuevaClave = document.getElementById('new-pass-' + id).value;
-        if(nuevaClave) {
-            db.ref('Staff/' + id).update({ pass: nuevaClave });
-            alert("Clave actualizada.");
+    function modificarClaveAdmin(id) {
+        const nueva = document.getElementById('mod-pass-' + id).value;
+        if(nueva) {
+            db.ref('Staff/' + id).update({ pass: nueva });
+            alert("Clave actualizada");
         }
     }
 
-    function eliminarStaff(id) {
-        if(confirm("¿Seguro que deseas eliminar este perfil?")) {
+    function eliminarUsuario(id) {
+        if(confirm("¿Seguro que quieres borrar a este profesional?")) {
             db.ref('Staff/' + id).remove();
         }
     }
 
-    function habilitarHora() {
-        const fecha = document.getElementById('box-time').value;
-        if(fecha) {
-            db.ref('disponibilidad').push({ fecha, estado: 'libre' });
-            alert("Hora publicada en el box.");
+    // --- FUNCIONES PARA ELLOS (PSICÓLOGOS) ---
+
+    function actualizarMiClave() {
+        const nueva = document.getElementById('new-own-pass').value;
+        if(nueva && usuarioLogueadoId) {
+            db.ref('Staff/' + usuarioLogueadoId).update({ pass: nueva });
+            alert("Tu clave ha sido cambiada.");
+            document.getElementById('new-own-pass').value = "";
         }
     }
 
-    // --- FUNCIONES PSICÓLOGO ---
-
-    function escucharHoras() {
-        db.ref('disponibilidad').on('value', snapshot => {
-            const div = document.getElementById('lista-disponible');
-            div.innerHTML = "";
-            snapshot.forEach(child => {
-                const item = child.val();
-                if(item.estado === 'libre') {
-                    div.innerHTML += `
-                        <div class="slot-card">
-                            <span>${new Date(item.fecha).toLocaleString()}</span>
-                            <button onclick="reservar('${child.key}')" style="width:100px; padding:8px;">Reservar</button>
-                        </div>`;
-                }
-            });
-            if(div.innerHTML === "") div.innerHTML = "<p>No hay horas disponibles publicadas.</p>";
-        });
-    }
-
-    function reservar(id) {
-        const usuarioActual = document.getElementById('user').value;
-        db.ref('disponibilidad/' + id).update({ 
-            estado: 'ocupado', 
-            reservadoPor: usuarioActual 
-        });
-        alert("¡Box reservado con éxito!");
-    }
-
-    // --- UTILIDADES ---
     function abrirSeccion(id) {
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById(id).classList.remove('hidden');
@@ -213,6 +186,5 @@
 
     function logout() { location.reload(); }
 </script>
-
 </body>
 </html>

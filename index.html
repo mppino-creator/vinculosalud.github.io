@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vínculo Salud</title>
+    <title>Vínculo Salud - Sistema Privado</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* [Mantén todos los estilos originales aquí] */
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
@@ -664,20 +665,24 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Modal de Login -->
+<!-- Modal de Login Mejorado -->
 <div class="modal" id="loginModal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeLoginModal()">&times;</button>
-        <h2 style="margin-bottom: 30px;">Acceso al Panel</h2>
+        <h2 style="margin-bottom: 30px;">Acceso Privado al Sistema</h2>
+        <div class="form-group">
+            <label>Usuario</label>
+            <input type="text" id="loginUser" placeholder="Ingresa tu usuario" onkeypress="if(event.key==='Enter') processLogin()">
+        </div>
         <div class="form-group">
             <label>Contraseña</label>
             <input type="password" id="loginPass" placeholder="Ingresa tu contraseña" onkeypress="if(event.key==='Enter') processLogin()">
         </div>
         <button class="btn-staff" style="width:100%; background:var(--primary)" onclick="processLogin()" id="loginBtn">
-            Ingresar
+            Ingresar al Panel Privado
         </button>
         <p style="text-align:center; margin-top:20px; font-size:0.8rem; color:var(--text-light)">
-            Admin: admin | Terapeutas: isabel2026, julian2026, martina2026
+            Sistema de gestión interna - Acceso restringido
         </p>
     </div>
 </div>
@@ -943,9 +948,9 @@
 <div class="container">
     <header class="nav-container">
         <nav class="glass">
-            <div class="logo" onclick="location.reload()">Comunidad</span></div>
+            <div class="logo" onclick="location.reload()">Vínculo Salud</div>
             <button class="btn-staff" onclick="showLoginModal()">
-                <i class="fa fa-lock-open"></i> Acceso Staff
+                <i class="fa fa-lock"></i> Acceso Privado
             </button>
         </nav>
     </header>
@@ -1056,7 +1061,7 @@
                 <button class="btn-staff" style="width:100%; height:60px; background:var(--primary); font-size:1.1rem;" onclick="executeBooking()" id="bookBtn">
                     RESERVAR AHORA
                 </button>
-                <p style="text-align:center; font-size:0.75rem; margin-top:15px; opacity:0.6;">Pago seguro procesado por MindCare Pro SSL</p>
+                <p style="text-align:center; font-size:0.75rem; margin-top:15px; opacity:0.6;">Sistema de gestión clínica privado</p>
             </div>
         </div>
     </div>
@@ -1139,6 +1144,7 @@
                 <input type="text" id="addSpec" placeholder="Especialidad">
                 <input type="number" id="addPriceOnline" placeholder="Precio Online ($)">
                 <input type="number" id="addPricePresencial" placeholder="Precio Presencial ($)">
+                <input type="text" id="addUser" placeholder="Usuario">
                 <input type="text" id="addPass" placeholder="Contraseña">
                 <input type="text" id="addImg" placeholder="Link Foto (Unsplash)">
                 <input type="text" id="addAddress" placeholder="Dirección consultorio">
@@ -1153,6 +1159,7 @@
                         <tr>
                             <th>Nombre</th>
                             <th>Especialidad</th>
+                            <th>Usuario</th>
                             <th>Precios</th>
                             <th>Contacto</th>
                             <th>Acciones</th>
@@ -1282,6 +1289,10 @@
 </div>
 
 <script>
+    // ============================================
+    // SISTEMA DE AUTENTICACIÓN SEGURA Y PERSISTENTE
+    // ============================================
+    
     // Toast System
     function showToast(message, type = 'success', duration = 3000) {
         const container = document.getElementById('toastContainer');
@@ -1300,87 +1311,128 @@
         }, duration);
     }
 
-    // Base de datos mejorada
-    let staff = JSON.parse(localStorage.getItem('mc_staff_v6')) || [
-        { 
-            id: 1, 
-            name: 'Psicologa Alison Gutierrez', 
-            spec: 'Terapia Cognitiva', 
-            priceOnline: 45000,
-            pricePresencial: 50000,
-            pass: 'isabel2026', 
-            img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500', 
-            stars: 5,
-            address: 'Av. Providencia 1234, Oficina 505, Santiago',
-            phone: '+56 9 8765 4321',
-            paymentMethods: {
-                transfer: true,
-                card: true,
-                cash: true,
-                bankDetails: {
-                    bank: 'Banco Estado',
-                    accountType: 'Cuenta Corriente',
-                    accountNumber: '12345678',
-                    rut: '12.345.678-9',
-                    email: 'isabel.ferrer@bancocl'
-                }
+    // Base de datos con USUARIO ADMIN OCULTO (solo se crea si no existe)
+    let staff = JSON.parse(localStorage.getItem('mc_staff_v7')) || (function() {
+        // Crear datos iniciales con admin oculto
+        const initialStaff = [
+            { 
+                id: 1, 
+                name: 'Psicologa Alison Gutierrez', 
+                spec: 'Terapia Cognitiva', 
+                priceOnline: 45000,
+                pricePresencial: 50000,
+                user: 'isabel',
+                pass: 'isabel2026', 
+                img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500', 
+                stars: 5,
+                address: 'Av. Providencia 1234, Oficina 505, Santiago',
+                phone: '+56 9 8765 4321',
+                paymentMethods: {
+                    transfer: true,
+                    card: true,
+                    cash: true,
+                    bankDetails: {
+                        bank: 'Banco Estado',
+                        accountType: 'Cuenta Corriente',
+                        accountNumber: '12345678',
+                        rut: '12.345.678-9',
+                        email: 'isabel.ferrer@bancocl'
+                    }
+                },
+                sessionDuration: 50,
+                breakBetween: 10,
+                availability: {} 
             },
-            sessionDuration: 50,
-            breakBetween: 10,
-            availability: {} 
-        },
-        { 
-            id: 2, 
-            name: 'Dr. Julián Sossa', 
-            spec: 'Psiquiatría Clínica', 
-            priceOnline: 65000,
-            pricePresencial: 70000,
-            pass: 'julian2026', 
-            img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500', 
-            stars: 5,
-            address: 'Av. Las Condes 7890, Torre B, Las Condes',
-            phone: '+56 9 7654 3210',
-            paymentMethods: {
-                transfer: true,
-                card: false,
-                cash: true,
-                bankDetails: {
-                    bank: 'Banco de Chile',
-                    accountType: 'Cuenta Corriente',
-                    accountNumber: '87654321',
-                    rut: '23.456.789-0',
-                    email: 'julian.sossa@bancocl'
-                }
+            { 
+                id: 2, 
+                name: 'Dr. Julián Sossa', 
+                spec: 'Psiquiatría Clínica', 
+                priceOnline: 65000,
+                pricePresencial: 70000,
+                user: 'julian',
+                pass: 'julian2026', 
+                img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500', 
+                stars: 5,
+                address: 'Av. Las Condes 7890, Torre B, Las Condes',
+                phone: '+56 9 7654 3210',
+                paymentMethods: {
+                    transfer: true,
+                    card: false,
+                    cash: true,
+                    bankDetails: {
+                        bank: 'Banco de Chile',
+                        accountType: 'Cuenta Corriente',
+                        accountNumber: '87654321',
+                        rut: '23.456.789-0',
+                        email: 'julian.sossa@bancocl'
+                    }
+                },
+                sessionDuration: 50,
+                breakBetween: 15,
+                availability: {}
             },
-            sessionDuration: 50,
-            breakBetween: 15,
-            availability: {}
-        },
-        { 
-            id: 3, 
-            name: 'Dra. Martina Luz', 
-            spec: 'Mindfulness & Estrés', 
-            priceOnline: 40000,
-            pricePresencial: 45000,
-            pass: 'martina2026', 
-            img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500', 
-            stars: 4,
-            address: 'Av. Vitacura 4567, Vitacura',
-            phone: '+56 9 6543 2109',
-            paymentMethods: {
-                transfer: false,
-                card: true,
-                cash: true,
-                bankDetails: {}
-            },
-            sessionDuration: 45,
-            breakBetween: 15,
-            availability: {}
+            { 
+                id: 3, 
+                name: 'Dra. Martina Luz', 
+                spec: 'Mindfulness & Estrés', 
+                priceOnline: 40000,
+                pricePresencial: 45000,
+                user: 'martina',
+                pass: 'martina2026', 
+                img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500', 
+                stars: 4,
+                address: 'Av. Vitacura 4567, Vitacura',
+                phone: '+56 9 6543 2109',
+                paymentMethods: {
+                    transfer: false,
+                    card: true,
+                    cash: true,
+                    bankDetails: {}
+                },
+                sessionDuration: 45,
+                breakBetween: 15,
+                availability: {}
+            }
+        ];
+        
+        // Verificar si ya existe admin, si no, agregarlo (OCULTO - no se muestra en lista pública)
+        const adminExists = initialStaff.some(s => s.user === 'rootadmin');
+        if (!adminExists) {
+            // Admin oculto - no aparecerá en la lista pública porque no tiene spec pública
+            initialStaff.push({
+                id: 9999,
+                name: 'Administrador del Sistema',
+                spec: 'ADMIN_HIDDEN', // Esto evita que aparezca en vista pública
+                priceOnline: 0,
+                pricePresencial: 0,
+                user: 'rootadmin',
+                pass: 'Admin2024$', // Cambia esto por tu contraseña segura
+                img: '',
+                stars: 0,
+                address: '',
+                phone: '',
+                isHiddenAdmin: true, // Flag para identificar admin oculto
+                paymentMethods: {
+                    transfer: false,
+                    card: false,
+                    cash: false
+                },
+                sessionDuration: 0,
+                breakBetween: 0,
+                availability: {}
+            });
         }
-    ];
+        
+        return initialStaff;
+    })();
 
-    let patients = JSON.parse(localStorage.getItem('mc_patients_v2')) || [];
-    let appointments = JSON.parse(localStorage.getItem('mc_apps_v6')) || [];
+    // Filtrar staff para vista pública (excluir admin oculto y cualquier otro sin especialidad válida)
+    function getPublicStaff() {
+        return staff.filter(s => s.spec !== 'ADMIN_HIDDEN' && s.spec && s.spec.trim() !== '');
+    }
+
+    let patients = JSON.parse(localStorage.getItem('mc_patients_v3')) || [];
+    let appointments = JSON.parse(localStorage.getItem('mc_apps_v7')) || [];
     
     // Variables globales
     let selectedPsych = null;
@@ -1390,9 +1442,9 @@
     let selectedWeekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'];
 
     function save() {
-        localStorage.setItem('mc_staff_v6', JSON.stringify(staff));
-        localStorage.setItem('mc_apps_v6', JSON.stringify(appointments));
-        localStorage.setItem('mc_patients_v2', JSON.stringify(patients));
+        localStorage.setItem('mc_staff_v7', JSON.stringify(staff));
+        localStorage.setItem('mc_apps_v7', JSON.stringify(appointments));
+        localStorage.setItem('mc_patients_v3', JSON.stringify(patients));
         
         if (currentUser) {
             updateStats();
@@ -1407,47 +1459,53 @@
         renderPublic();
     }
 
-    // Login
+    // Login mejorado con usuario y contraseña
     function showLoginModal() {
         document.getElementById('loginModal').style.display = 'flex';
-        document.getElementById('loginPass').focus();
+        document.getElementById('loginUser').focus();
     }
 
     function closeLoginModal() {
         document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('loginUser').value = '';
         document.getElementById('loginPass').value = '';
     }
 
     function processLogin() {
+        const user = document.getElementById('loginUser').value;
         const pass = document.getElementById('loginPass').value;
         const btn = document.getElementById('loginBtn');
         
-        if (!pass) {
-            showToast('Ingresa una contraseña', 'error');
+        if (!user || !pass) {
+            showToast('Ingresa usuario y contraseña', 'error');
             return;
         }
 
-        btn.innerHTML = '<span class="spinner"></span> Ingresando...';
+        btn.innerHTML = '<span class="spinner"></span> Verificando...';
         btn.disabled = true;
 
         setTimeout(() => {
-            if (pass === 'admin') {
-                currentUser = { role: 'admin' };
-                closeLoginModal();
-                showDashboard();
-                showToast('Bienvenido Administrador', 'success');
-            } else {
-                const p = staff.find(ps => ps.pass === pass);
-                if (p) {
-                    currentUser = { role: 'psych', data: p };
+            // Buscar usuario en staff
+            const foundUser = staff.find(s => s.user === user && s.pass === pass);
+            
+            if (foundUser) {
+                if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
+                    // Es el admin oculto
+                    currentUser = { role: 'admin', data: foundUser, isHiddenAdmin: true };
                     closeLoginModal();
                     showDashboard();
-                    showToast(`Bienvenido ${p.name}`, 'success');
-                } else { 
-                    showToast('Credenciales incorrectas', 'error');
-                    btn.innerHTML = 'Ingresar';
-                    btn.disabled = false;
+                    showToast('Acceso concedido: Administrador', 'success');
+                } else {
+                    // Es un terapeuta normal
+                    currentUser = { role: 'psych', data: foundUser };
+                    closeLoginModal();
+                    showDashboard();
+                    showToast(`Bienvenido ${foundUser.name}`, 'success');
                 }
+            } else { 
+                showToast('Credenciales incorrectas', 'error');
+                btn.innerHTML = 'Ingresar al Panel Privado';
+                btn.disabled = false;
             }
         }, 800);
     }
@@ -1457,13 +1515,15 @@
         location.reload();
     }
 
-    // Vista pública
+    // Vista pública (solo muestra terapeutas reales, no el admin oculto)
     function renderPublic() {
         const grid = document.getElementById('publicGrid');
         const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
         const specFilter = document.getElementById('specFilter')?.value || '';
 
-        let filteredStaff = staff.filter(p => {
+        const publicStaff = getPublicStaff();
+        
+        let filteredStaff = publicStaff.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
                                  p.spec.toLowerCase().includes(searchTerm);
             const matchesSpec = !specFilter || p.spec === specFilter;
@@ -2354,12 +2414,16 @@
         const tb = document.getElementById('staffTableBody');
         if (!tb) return;
         
+        // Filtrar para no mostrar el admin oculto en la lista
+        const visibleStaff = staff.filter(s => !s.isHiddenAdmin && s.spec !== 'ADMIN_HIDDEN');
+        
         tb.innerHTML = "";
-        staff.forEach(p => {
+        visibleStaff.forEach(p => {
             tb.innerHTML += `
                 <tr>
                     <td>${p.name}</td>
                     <td>${p.spec}</td>
+                    <td>${p.user || '—'}</td>
                     <td>
                         Online: $${p.priceOnline?.toLocaleString()}<br>
                         Presencial: $${p.pricePresencial?.toLocaleString()}
@@ -2386,12 +2450,19 @@
         const spec = document.getElementById('addSpec').value;
         const priceOnline = document.getElementById('addPriceOnline').value;
         const pricePresencial = document.getElementById('addPricePresencial').value;
+        const user = document.getElementById('addUser').value;
         const pass = document.getElementById('addPass').value;
         const address = document.getElementById('addAddress').value;
         const phone = document.getElementById('addPhone').value;
         
-        if (!name || !spec || !priceOnline || !pricePresencial || !pass) {
-            showToast('Completa los campos obligatorios', 'error');
+        if (!name || !spec || !priceOnline || !pricePresencial || !user || !pass) {
+            showToast('Completa todos los campos obligatorios', 'error');
+            return;
+        }
+
+        // Verificar si el usuario ya existe
+        if (staff.some(s => s.user === user)) {
+            showToast('El nombre de usuario ya existe', 'error');
             return;
         }
 
@@ -2401,6 +2472,7 @@
             spec: spec,
             priceOnline: parseInt(priceOnline),
             pricePresencial: parseInt(pricePresencial),
+            user: user,
             pass: pass,
             img: document.getElementById('addImg').value || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
             address: address,
@@ -2424,6 +2496,7 @@
         document.getElementById('addSpec').value = '';
         document.getElementById('addPriceOnline').value = '';
         document.getElementById('addPricePresencial').value = '';
+        document.getElementById('addUser').value = '';
         document.getElementById('addPass').value = '';
         document.getElementById('addImg').value = '';
         document.getElementById('addAddress').value = '';
@@ -2514,6 +2587,13 @@
     }
 
     function deleteStaff(id) {
+        // Evitar eliminar al admin oculto
+        const therapist = staff.find(s => s.id === id);
+        if (therapist && therapist.isHiddenAdmin) {
+            showToast('No se puede eliminar el administrador del sistema', 'error');
+            return;
+        }
+        
         if (confirm('¿Estás seguro de eliminar este profesional? Se eliminarán también sus citas y pacientes.')) {
             // Eliminar citas relacionadas
             appointments = appointments.filter(a => a.psychId !== id);
@@ -2555,6 +2635,9 @@
 
     // Inicializar
     renderPublic();
+
+    // Verificar si hay sesión activa al cargar (opcional)
+    // Puedes implementar "recordar sesión" si lo deseas
 </script>
 </body>
 </html>

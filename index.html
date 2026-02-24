@@ -305,575 +305,657 @@
         </div>
     </div>
 
-    <script>
-        // ============================================
-        // CONFIGURACIÓN FIREBASE
-        // ============================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCj5jdc_FQ1H0l78VJj3qBmGYsGrSete3U",
-            authDomain: "vinculosaludapp.firebaseapp.com",
-            databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
-            projectId: "vinculosaludapp",
-            storageBucket: "vinculosaludapp.firebasestorage.app",
-            messagingSenderId: "405876668483",
-            appId: "1:405876668483:web:8f19aef4dd63a70ecdbcf6"
-        };
+  <script>
+    // ============================================
+    // CONFIGURACIÓN FIREBASE - CORREGIDO
+    // ============================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCj5jdc_FQ1H0l78VJj3qBmGYsGrSete3U",
+        authDomain: "vinculosaludapp.firebaseapp.com",
+        databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
+        projectId: "vinculosaludapp",
+        storageBucket: "vinculosaludapp.firebasestorage.app",
+        messagingSenderId: "405876668483",
+        appId: "1:405876668483:web:8f19aef4dd63a70ecdbcf6"
+    };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database(); // ¡CORREGIDO: ahora se llama database, no db!
 
-        // ============================================
-        // DATOS INICIALES
-        // ============================================
-        const adminUser = {
-            id: 9999,
-            name: 'Administrador',
-            user: 'Admin',
-            pass: 'Nina2026',
-            role: 'admin'
-        };
+    // ============================================
+    // DATOS INICIALES
+    // ============================================
+    const adminUser = {
+        id: 9999,
+        name: 'Administrador',
+        user: 'Admin',
+        pass: 'Nina2026',
+        role: 'admin'
+    };
 
-        // Estado de la aplicación
-        let professionals = [adminUser];
-        let boxes = [];
-        let availabilities = {}; // { professionalId_fecha: [horarios] }
-        let appointments = [];
-        let currentUser = null;
-        let selectedProfessional = null;
-        let selectedSlot = null;
-        let selectedBox = null;
+    // Estado de la aplicación
+    let professionals = [];
+    let boxes = [];
+    let availabilities = {};
+    let appointments = [];
+    let currentUser = null;
+    let selectedProfessional = null;
+    let selectedSlot = null;
+    let selectedBox = null;
 
-        // ============================================
-        // FUNCIONES PRINCIPALES
-        // ============================================
+    // ============================================
+    // FUNCIONES PRINCIPALES
+    // ============================================
+    
+    // Cargar datos iniciales
+    function loadData() {
+        console.log("🚀 Iniciando carga de datos...");
         
-        // Cargar datos iniciales
-        function loadData() {
-            // Profesionales
-            db.ref('professionals').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    professionals = Object.values(data);
-                    if (!professionals.find(p => p.role === 'admin')) {
-                        professionals.push(adminUser);
-                    }
+        // FORZAR CREACIÓN DEL ADMIN INMEDIATAMENTE
+        database.ref('professionals').once('value', (snapshot) => {
+            const data = snapshot.val();
+            console.log("Datos recibidos:", data);
+            
+            if (data) {
+                // Convertir objeto a array si es necesario
+                if (Array.isArray(data)) {
+                    professionals = data;
                 } else {
-                    professionals = [adminUser];
-                    db.ref('professionals').set(professionals);
+                    professionals = Object.values(data);
                 }
-                renderProfessionals();
-                if (currentUser?.role === 'admin') renderProfessionalsTable();
-            });
-
-            // Boxes
-            db.ref('boxes').on('value', (snapshot) => {
-                const data = snapshot.val();
-                boxes = data ? Object.values(data) : [];
-                if (currentUser?.role === 'admin') renderBoxesTable();
-            });
-
-            // Disponibilidades
-            db.ref('availabilities').on('value', (snapshot) => {
-                availabilities = snapshot.val() || {};
-            });
-
-            // Citas
-            db.ref('appointments').on('value', (snapshot) => {
-                appointments = snapshot.val() ? Object.values(snapshot.val()) : [];
-                renderCitas();
-            });
-        }
-
-        // Renderizar profesionales en vista pública
-        function renderProfessionals() {
-            const grid = document.getElementById('professionalsGrid');
-            const publicPros = professionals.filter(p => p.role !== 'admin');
-            
-            grid.innerHTML = publicPros.map(p => `
-                <div class="card" onclick="selectProfessional(${p.id})" style="cursor: pointer;">
-                    <h3>${p.name}</h3>
-                    <p>${p.spec || 'Especialista'}</p>
-                    <p style="margin-top: 10px;">
-                        <span style="background: #e0e7ff; padding: 4px 8px; border-radius: 4px;">
-                            Online: $${p.priceOnline || 0}
-                        </span>
-                        <span style="background: #e0e7ff; padding: 4px 8px; border-radius: 4px; margin-left: 5px;">
-                            Presencial: $${p.pricePresencial || 0}
-                        </span>
-                    </p>
-                </div>
-            `).join('');
-        }
-
-        // ============================================
-        // LOGIN Y NAVEGACIÓN
-        // ============================================
-        function showLogin() {
-            document.getElementById('loginModal').style.display = 'flex';
-        }
-
-        function login() {
-            const user = document.getElementById('loginUser').value;
-            const pass = document.getElementById('loginPass').value;
-            
-            const found = professionals.find(p => p.user === user && p.pass === pass);
-            
-            if (found) {
-                currentUser = found;
-                document.getElementById('loginModal').style.display = 'none';
+                console.log("Profesionales cargados:", professionals.length);
                 
-                document.getElementById('publicPanel').classList.remove('active');
-                document.getElementById('dashboardPanel').classList.add('active');
-                
-                document.getElementById('dashboardTitle').textContent = 
-                    found.role === 'admin' ? 'Panel Administrador' : `Panel de ${found.name}`;
-                
-                // Mostrar tabs según rol
-                document.getElementById('tabProfesionales').style.display = found.role === 'admin' ? 'block' : 'none';
-                document.getElementById('tabBoxes').style.display = found.role === 'admin' ? 'block' : 'none';
-                document.getElementById('tabDisponibilidad').style.display = found.role === 'admin' ? 'none' : 'block';
-                
-                if (found.role === 'admin') {
-                    renderProfessionalsTable();
-                    renderBoxesTable();
+                // Verificar si admin existe
+                const adminExists = professionals.some(p => p.role === 'admin');
+                if (!adminExists) {
+                    console.log("⚠️ Admin no encontrado, agregando...");
+                    professionals.push(adminUser);
+                    database.ref('professionals').set(professionals);
                 }
-                
-                renderCitas();
             } else {
-                alert('Usuario o contraseña incorrectos');
+                console.log("📦 No hay datos, creando admin...");
+                professionals = [adminUser];
+                database.ref('professionals').set(professionals);
             }
-        }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('dashboardPanel').classList.remove('active');
-            document.getElementById('publicPanel').classList.add('active');
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
             
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-        }
+            // Renderizar después de cargar
+            renderProfessionals();
+        }).catch(error => {
+            console.error("❌ Error al cargar:", error);
+            // Si hay error, usar datos locales
+            professionals = [adminUser];
+            renderProfessionals();
+        });
 
-        // ============================================
-        // GESTIÓN DE PROFESIONALES (solo admin)
-        // ============================================
-        function showAddProfessional() {
-            document.getElementById('professionalModalTitle').textContent = 'Nuevo Profesional';
-            document.getElementById('editProfessionalId').value = '';
-            document.getElementById('profName').value = '';
-            document.getElementById('profSpec').value = '';
-            document.getElementById('profUser').value = '';
-            document.getElementById('profPass').value = '';
-            document.getElementById('profPriceOnline').value = '';
-            document.getElementById('profPricePresencial').value = '';
-            document.getElementById('professionalModal').style.display = 'flex';
-        }
-
-        function saveProfessional() {
-            const id = document.getElementById('editProfessionalId').value || Date.now();
-            const professional = {
-                id: id,
-                name: document.getElementById('profName').value,
-                spec: document.getElementById('profSpec').value,
-                user: document.getElementById('profUser').value,
-                pass: document.getElementById('profPass').value,
-                priceOnline: parseInt(document.getElementById('profPriceOnline').value) || 0,
-                pricePresencial: parseInt(document.getElementById('profPricePresencial').value) || 0,
-                role: 'professional'
-            };
-
-            if (!professional.name || !professional.user || !professional.pass) {
-                alert('Completa los campos obligatorios');
-                return;
-            }
-
-            professionals = professionals.filter(p => p.id !== id || p.role === 'admin');
-            professionals.push(professional);
-            
-            db.ref('professionals').set(professionals);
-            document.getElementById('professionalModal').style.display = 'none';
-        }
-
-        function renderProfessionalsTable() {
-            const table = document.getElementById('professionalsTable');
-            const pros = professionals.filter(p => p.role !== 'admin');
-            
-            table.innerHTML = pros.map(p => `
-                <tr>
-                    <td>${p.name}</td>
-                    <td>${p.spec || ''}</td>
-                    <td>${p.user}</td>
-                    <td>$${p.priceOnline || 0}</td>
-                    <td>$${p.pricePresencial || 0}</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="editProfessional(${p.id})">Editar</button>
-                        <button class="btn btn-danger" onclick="deleteProfessional(${p.id})">Eliminar</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function editProfessional(id) {
-            const p = professionals.find(p => p.id === id);
-            document.getElementById('professionalModalTitle').textContent = 'Editar Profesional';
-            document.getElementById('editProfessionalId').value = p.id;
-            document.getElementById('profName').value = p.name;
-            document.getElementById('profSpec').value = p.spec || '';
-            document.getElementById('profUser').value = p.user;
-            document.getElementById('profPass').value = p.pass;
-            document.getElementById('profPriceOnline').value = p.priceOnline || 0;
-            document.getElementById('profPricePresencial').value = p.pricePresencial || 0;
-            document.getElementById('professionalModal').style.display = 'flex';
-        }
-
-        function deleteProfessional(id) {
-            if (confirm('¿Eliminar profesional?')) {
-                professionals = professionals.filter(p => p.id !== id);
-                db.ref('professionals').set(professionals);
-            }
-        }
-
-        // ============================================
-        // GESTIÓN DE BOXES (solo admin)
-        // ============================================
-        function showAddBox() {
-            document.getElementById('editBoxId').value = '';
-            document.getElementById('boxName').value = '';
-            document.getElementById('boxLocation').value = '';
-            document.getElementById('boxStart').value = '09:00';
-            document.getElementById('boxEnd').value = '20:00';
-            document.querySelectorAll('.boxDay').forEach(cb => cb.checked = cb.value <= 5);
-            document.getElementById('boxModal').style.display = 'flex';
-        }
-
-        function saveBox() {
-            const id = document.getElementById('editBoxId').value || Date.now();
-            const days = Array.from(document.querySelectorAll('.boxDay:checked')).map(cb => parseInt(cb.value));
-            
-            const box = {
-                id: id,
-                name: document.getElementById('boxName').value,
-                location: document.getElementById('boxLocation').value,
-                startTime: document.getElementById('boxStart').value,
-                endTime: document.getElementById('boxEnd').value,
-                days: days,
-                active: true
-            };
-
-            if (!box.name || !box.startTime || !box.endTime || days.length === 0) {
-                alert('Completa todos los campos');
-                return;
-            }
-
-            boxes = boxes.filter(b => b.id !== id);
-            boxes.push(box);
-            
-            db.ref('boxes').set(boxes);
-            document.getElementById('boxModal').style.display = 'none';
-        }
-
-        function renderBoxesTable() {
-            const table = document.getElementById('boxesTable');
-            const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-            
-            table.innerHTML = boxes.map(b => `
-                <tr>
-                    <td>${b.name}</td>
-                    <td>${b.location || ''}</td>
-                    <td>${b.startTime} - ${b.endTime}</td>
-                    <td>${b.days.map(d => dayNames[d]).join(', ')}</td>
-                    <td>${b.active ? 'Activo' : 'Inactivo'}</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="editBox(${b.id})">Editar</button>
-                        <button class="btn btn-danger" onclick="deleteBox(${b.id})">Eliminar</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function editBox(id) {
-            const b = boxes.find(b => b.id === id);
-            document.getElementById('editBoxId').value = b.id;
-            document.getElementById('boxName').value = b.name;
-            document.getElementById('boxLocation').value = b.location || '';
-            document.getElementById('boxStart').value = b.startTime;
-            document.getElementById('boxEnd').value = b.endTime;
-            
-            document.querySelectorAll('.boxDay').forEach(cb => cb.checked = b.days.includes(parseInt(cb.value)));
-            document.getElementById('boxModal').style.display = 'flex';
-        }
-
-        function deleteBox(id) {
-            if (confirm('¿Eliminar box?')) {
-                boxes = boxes.filter(b => b.id !== id);
-                db.ref('boxes').set(boxes);
-            }
-        }
-
-        // ============================================
-        // DISPONIBILIDAD DE PROFESIONALES
-        // ============================================
-        function loadProfessionalSlots() {
-            if (!currentUser || currentUser.role === 'admin') return;
-            
-            const date = document.getElementById('availDate').value;
-            if (!date) return;
-            
-            const key = `${currentUser.id}_${date}`;
-            const slots = availabilities[key] || [];
-            
-            const container = document.getElementById('professionalSlots');
-            container.innerHTML = '';
-            
-            // Generar slots de ejemplo (cada 30 minutos)
-            for (let hour = 8; hour <= 18; hour++) {
-                for (let min = 0; min < 60; min += 30) {
-                    const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
-                    const isSelected = slots.includes(time);
-                    
-                    const slot = document.createElement('div');
-                    slot.className = `time-slot ${isSelected ? 'selected' : ''}`;
-                    slot.textContent = time;
-                    slot.onclick = () => toggleSlot(time);
-                    container.appendChild(slot);
+        // Escuchar cambios en tiempo real
+        database.ref('professionals').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                professionals = Array.isArray(data) ? data : Object.values(data);
+                // Asegurar que admin siempre esté
+                if (!professionals.find(p => p.role === 'admin')) {
+                    professionals.push(adminUser);
                 }
-            }
-        }
-
-        function toggleSlot(time) {
-            const date = document.getElementById('availDate').value;
-            if (!date) return alert('Selecciona una fecha');
-            
-            const key = `${currentUser.id}_${date}`;
-            const slots = availabilities[key] || [];
-            
-            if (slots.includes(time)) {
-                availabilities[key] = slots.filter(s => s !== time);
             } else {
-                availabilities[key] = [...slots, time].sort();
+                professionals = [adminUser];
             }
-            
-            loadProfessionalSlots();
-        }
+            renderProfessionals();
+            if (currentUser?.role === 'admin') renderProfessionalsTable();
+        });
 
-        function saveAvailability() {
-            db.ref('availabilities').set(availabilities);
-            alert('Disponibilidad guardada');
-        }
+        database.ref('boxes').on('value', (snapshot) => {
+            const data = snapshot.val();
+            boxes = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+            if (currentUser?.role === 'admin') renderBoxesTable();
+        });
 
-        function addTimeSlot() {
-            const time = prompt('Ingresa horario (HH:MM)');
-            if (time && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
-                toggleSlot(time);
-            }
-        }
+        database.ref('availabilities').on('value', (snapshot) => {
+            availabilities = snapshot.val() || {};
+        });
 
-        // ============================================
-        // RESERVAS DE CITAS
-        // ============================================
-        function selectProfessional(id) {
-            selectedProfessional = professionals.find(p => p.id === id);
-            selectedSlot = null;
-            selectedBox = null;
+        database.ref('appointments').on('value', (snapshot) => {
+            const data = snapshot.val();
+            appointments = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+            renderCitas();
+        });
+    }
+
+    // Renderizar profesionales en vista pública
+    function renderProfessionals() {
+        const grid = document.getElementById('professionalsGrid');
+        if (!grid) return;
+        
+        const publicPros = professionals.filter(p => p.role !== 'admin');
+        
+        if (publicPros.length === 0) {
+            grid.innerHTML = '<div class="card" style="grid-column:1/-1; text-align:center;">No hay profesionales disponibles</div>';
+            return;
+        }
+        
+        grid.innerHTML = publicPros.map(p => `
+            <div class="card" onclick="selectProfessional(${p.id})" style="cursor: pointer;">
+                <h3>${p.name}</h3>
+                <p>${p.spec || 'Especialista'}</p>
+                <p style="margin-top: 10px;">
+                    <span style="background: #e0e7ff; padding: 4px 8px; border-radius: 4px;">
+                        Online: $${p.priceOnline || 0}
+                    </span>
+                    <span style="background: #e0e7ff; padding: 4px 8px; border-radius: 4px; margin-left: 5px;">
+                        Presencial: $${p.pricePresencial || 0}
+                    </span>
+                </p>
+            </div>
+        `).join('');
+    }
+
+    // ============================================
+    // LOGIN Y NAVEGACIÓN
+    // ============================================
+    function showLogin() {
+        document.getElementById('loginModal').style.display = 'flex';
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+    }
+
+    function login() {
+        const user = document.getElementById('loginUser').value;
+        const pass = document.getElementById('loginPass').value;
+        
+        console.log("🔐 Intentando login con:", user, pass);
+        console.log("👥 Profesionales disponibles:", professionals);
+        
+        const found = professionals.find(p => p.user === user && p.pass === pass);
+        
+        if (found) {
+            currentUser = found;
+            document.getElementById('loginModal').style.display = 'none';
             
             document.getElementById('publicPanel').classList.remove('active');
-            document.getElementById('bookingPanel').classList.add('active');
+            document.getElementById('dashboardPanel').classList.add('active');
             
-            document.getElementById('bookingPsychName').textContent = `Agendar con ${selectedProfessional.name}`;
-            document.getElementById('selectedPsychInfo').textContent = `Profesional: ${selectedProfessional.name}`;
+            document.getElementById('dashboardTitle').textContent = 
+                found.role === 'admin' ? 'Panel Administrador' : `Panel de ${found.name}`;
             
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('bookingDate').min = today;
-            document.getElementById('bookingDate').value = today;
+            // Mostrar tabs según rol
+            document.getElementById('tabProfesionales').style.display = found.role === 'admin' ? 'block' : 'none';
+            document.getElementById('tabBoxes').style.display = found.role === 'admin' ? 'block' : 'none';
+            document.getElementById('tabDisponibilidad').style.display = found.role === 'admin' ? 'none' : 'block';
             
-            loadAvailableSlots();
-        }
-
-        function backToPublic() {
-            document.getElementById('bookingPanel').classList.remove('active');
-            document.getElementById('publicPanel').classList.add('active');
-        }
-
-        function loadAvailableSlots() {
-            const date = document.getElementById('bookingDate').value;
-            if (!date || !selectedProfessional) return;
-            
-            const key = `${selectedProfessional.id}_${date}`;
-            const professionalSlots = availabilities[key] || [];
-            
-            // Filtrar slots ya reservados
-            const bookedSlots = appointments
-                .filter(a => a.professionalId === selectedProfessional.id && a.date === date)
-                .map(a => a.time);
-            
-            const availableSlots = professionalSlots.filter(s => !bookedSlots.includes(s));
-            
-            const container = document.getElementById('timeSlotsContainer');
-            container.innerHTML = '';
-            
-            if (availableSlots.length === 0) {
-                container.innerHTML = '<p>No hay horarios disponibles</p>';
-                return;
+            if (found.role === 'admin') {
+                renderProfessionalsTable();
+                renderBoxesTable();
             }
             
-            availableSlots.forEach(time => {
+            renderCitas();
+            console.log("✅ Login exitoso:", found.name);
+        } else {
+            alert('❌ Usuario o contraseña incorrectos');
+            console.log("❌ Login fallido");
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        document.getElementById('dashboardPanel').classList.remove('active');
+        document.getElementById('publicPanel').classList.add('active');
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    }
+
+    // ============================================
+    // GESTIÓN DE PROFESIONALES (solo admin)
+    // ============================================
+    function showAddProfessional() {
+        document.getElementById('professionalModalTitle').textContent = 'Nuevo Profesional';
+        document.getElementById('editProfessionalId').value = '';
+        document.getElementById('profName').value = '';
+        document.getElementById('profSpec').value = '';
+        document.getElementById('profUser').value = '';
+        document.getElementById('profPass').value = '';
+        document.getElementById('profPriceOnline').value = '';
+        document.getElementById('profPricePresencial').value = '';
+        document.getElementById('professionalModal').style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function saveProfessional() {
+        const id = document.getElementById('editProfessionalId').value || Date.now();
+        const professional = {
+            id: parseInt(id),
+            name: document.getElementById('profName').value,
+            spec: document.getElementById('profSpec').value,
+            user: document.getElementById('profUser').value,
+            pass: document.getElementById('profPass').value,
+            priceOnline: parseInt(document.getElementById('profPriceOnline').value) || 0,
+            pricePresencial: parseInt(document.getElementById('profPricePresencial').value) || 0,
+            role: 'professional'
+        };
+
+        if (!professional.name || !professional.user || !professional.pass) {
+            alert('Completa los campos obligatorios');
+            return;
+        }
+
+        professionals = professionals.filter(p => p.id !== professional.id || p.role === 'admin');
+        professionals.push(professional);
+        
+        database.ref('professionals').set(professionals);
+        document.getElementById('professionalModal').style.display = 'none';
+    }
+
+    function renderProfessionalsTable() {
+        const table = document.getElementById('professionalsTable');
+        if (!table) return;
+        
+        const pros = professionals.filter(p => p.role !== 'admin');
+        
+        table.innerHTML = pros.map(p => `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.spec || ''}</td>
+                <td>${p.user}</td>
+                <td>$${p.priceOnline || 0}</td>
+                <td>$${p.pricePresencial || 0}</td>
+                <td>
+                    <button class="btn btn-primary" onclick="editProfessional(${p.id})">Editar</button>
+                    <button class="btn btn-danger" onclick="deleteProfessional(${p.id})">Eliminar</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function editProfessional(id) {
+        const p = professionals.find(p => p.id === id);
+        document.getElementById('professionalModalTitle').textContent = 'Editar Profesional';
+        document.getElementById('editProfessionalId').value = p.id;
+        document.getElementById('profName').value = p.name;
+        document.getElementById('profSpec').value = p.spec || '';
+        document.getElementById('profUser').value = p.user;
+        document.getElementById('profPass').value = p.pass;
+        document.getElementById('profPriceOnline').value = p.priceOnline || 0;
+        document.getElementById('profPricePresencial').value = p.pricePresencial || 0;
+        document.getElementById('professionalModal').style.display = 'flex';
+    }
+
+    function deleteProfessional(id) {
+        if (confirm('¿Eliminar profesional?')) {
+            professionals = professionals.filter(p => p.id !== id);
+            database.ref('professionals').set(professionals);
+        }
+    }
+
+    // ============================================
+    // GESTIÓN DE BOXES (solo admin)
+    // ============================================
+    function showAddBox() {
+        document.getElementById('editBoxId').value = '';
+        document.getElementById('boxName').value = '';
+        document.getElementById('boxLocation').value = '';
+        document.getElementById('boxStart').value = '09:00';
+        document.getElementById('boxEnd').value = '20:00';
+        document.querySelectorAll('.boxDay').forEach(cb => cb.checked = cb.value <= 5);
+        document.getElementById('boxModal').style.display = 'flex';
+    }
+
+    function saveBox() {
+        const id = document.getElementById('editBoxId').value || Date.now();
+        const days = Array.from(document.querySelectorAll('.boxDay:checked')).map(cb => parseInt(cb.value));
+        
+        const box = {
+            id: parseInt(id),
+            name: document.getElementById('boxName').value,
+            location: document.getElementById('boxLocation').value,
+            startTime: document.getElementById('boxStart').value,
+            endTime: document.getElementById('boxEnd').value,
+            days: days,
+            active: true
+        };
+
+        if (!box.name || !box.startTime || !box.endTime || days.length === 0) {
+            alert('Completa todos los campos');
+            return;
+        }
+
+        boxes = boxes.filter(b => b.id !== box.id);
+        boxes.push(box);
+        
+        database.ref('boxes').set(boxes);
+        document.getElementById('boxModal').style.display = 'none';
+    }
+
+    function renderBoxesTable() {
+        const table = document.getElementById('boxesTable');
+        if (!table) return;
+        
+        const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        
+        table.innerHTML = boxes.map(b => `
+            <tr>
+                <td>${b.name}</td>
+                <td>${b.location || ''}</td>
+                <td>${b.startTime} - ${b.endTime}</td>
+                <td>${b.days.map(d => dayNames[d]).join(', ')}</td>
+                <td>${b.active ? 'Activo' : 'Inactivo'}</td>
+                <td>
+                    <button class="btn btn-primary" onclick="editBox(${b.id})">Editar</button>
+                    <button class="btn btn-danger" onclick="deleteBox(${b.id})">Eliminar</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function editBox(id) {
+        const b = boxes.find(b => b.id === id);
+        document.getElementById('editBoxId').value = b.id;
+        document.getElementById('boxName').value = b.name;
+        document.getElementById('boxLocation').value = b.location || '';
+        document.getElementById('boxStart').value = b.startTime;
+        document.getElementById('boxEnd').value = b.endTime;
+        
+        document.querySelectorAll('.boxDay').forEach(cb => cb.checked = b.days.includes(parseInt(cb.value)));
+        document.getElementById('boxModal').style.display = 'flex';
+    }
+
+    function deleteBox(id) {
+        if (confirm('¿Eliminar box?')) {
+            boxes = boxes.filter(b => b.id !== id);
+            database.ref('boxes').set(boxes);
+        }
+    }
+
+    // ============================================
+    // DISPONIBILIDAD DE PROFESIONALES
+    // ============================================
+    function loadProfessionalSlots() {
+        if (!currentUser || currentUser.role === 'admin') return;
+        
+        const date = document.getElementById('availDate').value;
+        if (!date) return;
+        
+        const key = `${currentUser.id}_${date}`;
+        const slots = availabilities[key] || [];
+        
+        const container = document.getElementById('professionalSlots');
+        container.innerHTML = '';
+        
+        // Generar slots de ejemplo (cada 30 minutos)
+        for (let hour = 8; hour <= 18; hour++) {
+            for (let min = 0; min < 60; min += 30) {
+                const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+                const isSelected = slots.includes(time);
+                
                 const slot = document.createElement('div');
-                slot.className = `time-slot`;
+                slot.className = `time-slot ${isSelected ? 'selected' : ''}`;
                 slot.textContent = time;
-                slot.onclick = () => selectTimeSlot(time);
+                slot.onclick = () => toggleSlot(time);
                 container.appendChild(slot);
-            });
-        }
-
-        function selectTimeSlot(time) {
-            selectedSlot = time;
-            
-            // Marcar visualmente
-            document.querySelectorAll('#timeSlotsContainer .time-slot').forEach(s => {
-                s.classList.remove('selected');
-            });
-            event.target.classList.add('selected');
-            
-            document.getElementById('selectedDateTime').textContent = `Fecha: ${document.getElementById('bookingDate').value} ${time}`;
-            
-            // Buscar box disponible
-            checkBoxAvailability();
-        }
-
-        function checkBoxAvailability() {
-            const date = document.getElementById('bookingDate').value;
-            const time = selectedSlot;
-            
-            if (!date || !time) return;
-            
-            const dayOfWeek = new Date(date).getDay();
-            
-            // Boxes disponibles en ese horario
-            const availableBoxes = boxes.filter(box => {
-                if (!box.active) return false;
-                if (!box.days.includes(dayOfWeek)) return false;
-                
-                // Verificar si está dentro del horario del box
-                const boxStart = box.startTime.split(':').map(Number);
-                const boxEnd = box.endTime.split(':').map(Number);
-                const slotTime = time.split(':').map(Number);
-                
-                const boxStartMin = boxStart[0] * 60 + boxStart[1];
-                const boxEndMin = boxEnd[0] * 60 + boxEnd[1];
-                const slotMin = slotTime[0] * 60 + slotTime[1];
-                
-                if (slotMin < boxStartMin || slotMin >= boxEndMin) return false;
-                
-                // Verificar si no está ocupado por otra cita
-                const isBooked = appointments.some(a => 
-                    a.boxId === box.id && 
-                    a.date === date && 
-                    a.time === time
-                );
-                
-                return !isBooked;
-            });
-            
-            const container = document.getElementById('boxSelectorContainer');
-            const selector = document.getElementById('boxSelector');
-            
-            if (availableBoxes.length === 0) {
-                container.style.display = 'none';
-                selectedBox = null;
-                document.getElementById('selectedBox').textContent = '';
-                document.getElementById('confirmBtn').disabled = true;
-                return;
             }
-            
-            container.style.display = 'block';
-            selector.innerHTML = availableBoxes.map(box => `
-                <div class="box-option" onclick="selectBox(${box.id})">${box.name} (${box.location || 'Sin ubicación'})</div>
-            `).join('');
-            
-            document.getElementById('confirmBtn').disabled = false;
         }
+    }
 
-        function selectBox(boxId) {
-            selectedBox = boxes.find(b => b.id === boxId);
-            
-            document.querySelectorAll('.box-option').forEach(opt => opt.classList.remove('selected'));
-            event.target.classList.add('selected');
-            
-            document.getElementById('selectedBox').textContent = `Box: ${selectedBox.name}`;
-            document.getElementById('selectedPrice').textContent = 
-                `Valor: $${selectedProfessional.pricePresencial || selectedProfessional.priceOnline || 0}`;
+    function toggleSlot(time) {
+        const date = document.getElementById('availDate').value;
+        if (!date) return alert('Selecciona una fecha');
+        
+        const key = `${currentUser.id}_${date}`;
+        const slots = availabilities[key] || [];
+        
+        if (slots.includes(time)) {
+            availabilities[key] = slots.filter(s => s !== time);
+        } else {
+            availabilities[key] = [...slots, time].sort();
         }
+        
+        loadProfessionalSlots();
+    }
 
-        function confirmBooking() {
-            const rut = document.getElementById('rut').value;
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const phone = document.getElementById('phone').value;
-            const date = document.getElementById('bookingDate').value;
-            
-            if (!rut || !name || !email || !date || !selectedSlot) {
-                alert('Completa todos los datos');
-                return;
-            }
-            
-            if (!selectedBox) {
-                alert('Selecciona un box disponible');
-                return;
-            }
-            
-            const appointment = {
-                id: Date.now(),
-                patientRut: rut,
-                patientName: name,
-                patientEmail: email,
-                patientPhone: phone,
-                professionalId: selectedProfessional.id,
-                professionalName: selectedProfessional.name,
-                boxId: selectedBox.id,
-                boxName: selectedBox.name,
-                date: date,
-                time: selectedSlot,
-                type: 'presencial',
-                price: selectedProfessional.pricePresencial || 0,
-                status: 'confirmada',
-                createdAt: new Date().toISOString()
-            };
-            
-            appointments.push(appointment);
-            db.ref('appointments').set(appointments);
-            
-            alert('¡Reserva confirmada!');
-            backToPublic();
+    function saveAvailability() {
+        database.ref('availabilities').set(availabilities);
+        alert('Disponibilidad guardada');
+    }
+
+    function addTimeSlot() {
+        const time = prompt('Ingresa horario (HH:MM)');
+        if (time && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+            toggleSlot(time);
         }
+    }
 
-        function renderCitas() {
-            const table = document.getElementById('citasTable');
-            let filtered = appointments;
-            
-            if (currentUser?.role !== 'admin') {
-                filtered = appointments.filter(a => a.professionalId === currentUser?.id);
-            }
-            
-            table.innerHTML = filtered.map(a => `
-                <tr>
-                    <td>${a.date}</td>
-                    <td>${a.time}</td>
-                    <td>${a.patientName}</td>
-                    <td>${a.professionalName}</td>
-                    <td>${a.boxName || ''}</td>
-                    <td>${a.status}</td>
-                </tr>
-            `).join('');
+    // ============================================
+    // RESERVAS DE CITAS
+    // ============================================
+    function selectProfessional(id) {
+        selectedProfessional = professionals.find(p => p.id === id);
+        selectedSlot = null;
+        selectedBox = null;
+        
+        document.getElementById('publicPanel').classList.remove('active');
+        document.getElementById('bookingPanel').classList.add('active');
+        
+        document.getElementById('bookingPsychName').textContent = `Agendar con ${selectedProfessional.name}`;
+        document.getElementById('selectedPsychInfo').textContent = `Profesional: ${selectedProfessional.name}`;
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('bookingDate').min = today;
+        document.getElementById('bookingDate').value = today;
+        
+        loadAvailableSlots();
+    }
+
+    function backToPublic() {
+        document.getElementById('bookingPanel').classList.remove('active');
+        document.getElementById('publicPanel').classList.add('active');
+    }
+
+    function loadAvailableSlots() {
+        const date = document.getElementById('bookingDate').value;
+        if (!date || !selectedProfessional) return;
+        
+        const key = `${selectedProfessional.id}_${date}`;
+        const professionalSlots = availabilities[key] || [];
+        
+        // Filtrar slots ya reservados
+        const bookedSlots = appointments
+            .filter(a => a.professionalId === selectedProfessional.id && a.date === date)
+            .map(a => a.time);
+        
+        const availableSlots = professionalSlots.filter(s => !bookedSlots.includes(s));
+        
+        const container = document.getElementById('timeSlotsContainer');
+        container.innerHTML = '';
+        
+        if (availableSlots.length === 0) {
+            container.innerHTML = '<p>No hay horarios disponibles</p>';
+            document.getElementById('boxSelectorContainer').style.display = 'none';
+            return;
         }
+        
+        availableSlots.forEach(time => {
+            const slot = document.createElement('div');
+            slot.className = `time-slot`;
+            slot.textContent = time;
+            slot.onclick = () => selectTimeSlot(time);
+            container.appendChild(slot);
+        });
+    }
 
-        // ============================================
-        // INICIALIZACIÓN
-        // ============================================
+    function selectTimeSlot(time) {
+        selectedSlot = time;
+        
+        // Marcar visualmente
+        document.querySelectorAll('#timeSlotsContainer .time-slot').forEach(s => {
+            s.classList.remove('selected');
+        });
+        event.target.classList.add('selected');
+        
+        document.getElementById('selectedDateTime').textContent = `Fecha: ${document.getElementById('bookingDate').value} ${time}`;
+        
+        // Buscar box disponible
+        checkBoxAvailability();
+    }
+
+    function checkBoxAvailability() {
+        const date = document.getElementById('bookingDate').value;
+        const time = selectedSlot;
+        
+        if (!date || !time) return;
+        
+        const dayOfWeek = new Date(date).getDay();
+        
+        // Boxes disponibles en ese horario
+        const availableBoxes = boxes.filter(box => {
+            if (!box.active) return false;
+            if (!box.days.includes(dayOfWeek)) return false;
+            
+            // Verificar si está dentro del horario del box
+            const boxStart = box.startTime.split(':').map(Number);
+            const boxEnd = box.endTime.split(':').map(Number);
+            const slotTime = time.split(':').map(Number);
+            
+            const boxStartMin = boxStart[0] * 60 + boxStart[1];
+            const boxEndMin = boxEnd[0] * 60 + boxEnd[1];
+            const slotMin = slotTime[0] * 60 + slotTime[1];
+            
+            if (slotMin < boxStartMin || slotMin >= boxEndMin) return false;
+            
+            // Verificar si no está ocupado por otra cita
+            const isBooked = appointments.some(a => 
+                a.boxId === box.id && 
+                a.date === date && 
+                a.time === time
+            );
+            
+            return !isBooked;
+        });
+        
+        const container = document.getElementById('boxSelectorContainer');
+        const selector = document.getElementById('boxSelector');
+        const confirmBtn = document.getElementById('confirmBtn');
+        
+        if (availableBoxes.length === 0) {
+            container.style.display = 'none';
+            selectedBox = null;
+            document.getElementById('selectedBox').textContent = '';
+            confirmBtn.disabled = true;
+            return;
+        }
+        
+        container.style.display = 'block';
+        selector.innerHTML = availableBoxes.map(box => `
+            <div class="box-option" onclick="selectBox(${box.id})">${box.name} (${box.location || 'Sin ubicación'})</div>
+        `).join('');
+        
+        confirmBtn.disabled = false;
+    }
+
+    function selectBox(boxId) {
+        selectedBox = boxes.find(b => b.id === boxId);
+        
+        document.querySelectorAll('.box-option').forEach(opt => opt.classList.remove('selected'));
+        event.target.classList.add('selected');
+        
+        document.getElementById('selectedBox').textContent = `Box: ${selectedBox.name}`;
+        document.getElementById('selectedPrice').textContent = 
+            `Valor: $${selectedProfessional.pricePresencial || selectedProfessional.priceOnline || 0}`;
+    }
+
+    function confirmBooking() {
+        const rut = document.getElementById('rut').value;
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const date = document.getElementById('bookingDate').value;
+        
+        if (!rut || !name || !email || !date || !selectedSlot) {
+            alert('Completa todos los datos');
+            return;
+        }
+        
+        if (!selectedBox) {
+            alert('Selecciona un box disponible');
+            return;
+        }
+        
+        const appointment = {
+            id: Date.now(),
+            patientRut: rut,
+            patientName: name,
+            patientEmail: email,
+            patientPhone: phone,
+            professionalId: selectedProfessional.id,
+            professionalName: selectedProfessional.name,
+            boxId: selectedBox.id,
+            boxName: selectedBox.name,
+            date: date,
+            time: selectedSlot,
+            type: 'presencial',
+            price: selectedProfessional.pricePresencial || 0,
+            status: 'confirmada',
+            createdAt: new Date().toISOString()
+        };
+        
+        appointments.push(appointment);
+        database.ref('appointments').set(appointments);
+        
+        alert('¡Reserva confirmada!');
+        
+        // Limpiar formulario
+        document.getElementById('rut').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('phone').value = '';
+        
+        backToPublic();
+    }
+
+    function renderCitas() {
+        const table = document.getElementById('citasTable');
+        if (!table) return;
+        
+        let filtered = appointments;
+        if (currentUser && currentUser.role !== 'admin') {
+            filtered = appointments.filter(a => a.professionalId === currentUser?.id);
+        }
+        
+        if (filtered.length === 0) {
+            table.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay citas</td></tr>';
+            return;
+        }
+        
+        table.innerHTML = filtered.map(a => `
+            <tr>
+                <td>${a.date}</td>
+                <td>${a.time}</td>
+                <td>${a.patientName}</td>
+                <td>${a.professionalName}</td>
+                <td>${a.boxName || ''}</td>
+                <td>${a.status}</td>
+            </tr>
+        `).join('');
+    }
+
+    // ============================================
+    // INICIALIZACIÓN
+    // ============================================
+    window.onload = function() {
+        console.log("📄 Página cargada, iniciando Firebase...");
         loadData();
-    </script>
+        
+        // Mostrar mensaje de bienvenida
+        setTimeout(() => {
+            console.log("✅ Sistema listo. Usuario admin: Admin / Nina2026");
+        }, 2000);
+    };
+</script>
 </body>
 </html>

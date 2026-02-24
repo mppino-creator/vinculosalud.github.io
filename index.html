@@ -366,6 +366,7 @@
             width: 100%;
             position: relative;
             overflow: hidden;
+            background: #f1f5f9; /* Fondo gris por defecto */
         }
 
         .img-container img {
@@ -807,6 +808,47 @@
             box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
 
+        /* File Upload */
+        .file-upload {
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            background: #f8fafc;
+        }
+
+        .file-upload:hover {
+            background: #e0e7ff;
+            border-color: var(--primary-dark);
+        }
+
+        .file-upload i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .file-upload p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 10px auto;
+            border: 3px solid var(--primary);
+            display: block;
+        }
+
         /* Table */
         .table-container { 
             border-radius: 20px; 
@@ -917,6 +959,11 @@
             border-radius: 20px;
             font-size: 0.7rem;
             font-weight: 600;
+        }
+
+        .history-amount {
+            font-weight: 600;
+            color: var(--success);
         }
 
         .edit-timeout {
@@ -1102,6 +1149,37 @@
             color: var(--primary);
         }
 
+        /* Stats Cards */
+        .patient-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .stat-card .number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-card .label {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 480px) {
             .container {
@@ -1144,6 +1222,10 @@
 
             .instagram-badge {
                 top: 60px;
+            }
+
+            .patient-stats {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -1223,7 +1305,7 @@
     </div>
 </div>
 
-<!-- Modal de Edición de Terapeuta -->
+<!-- Modal de Edición de Terapeuta (CON CARGA DE FOTO) -->
 <div class="modal" id="editTherapistModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeEditTherapistModal()">&times;</button>
@@ -1251,10 +1333,16 @@
                 <input type="text" id="editPass">
             </div>
             
-            <div class="form-group">
-                <label>Foto URL *</label>
-                <input type="text" id="editImg" placeholder="https://ejemplo.com/foto.jpg">
-                <small style="color:var(--text-light);">Pega la URL de la imagen aquí</small>
+            <div class="form-group" style="grid-column:1/-1;">
+                <label>Foto de Perfil</label>
+                <div class="file-upload" onclick="document.getElementById('editPhotoInput').click()">
+                    <i class="fa fa-cloud-upload-alt"></i>
+                    <p>Haz clic para seleccionar una foto desde tu dispositivo</p>
+                    <p style="font-size:0.7rem; margin-top:5px;">Formatos: JPG, PNG (máx 5MB)</p>
+                </div>
+                <input type="file" id="editPhotoInput" accept="image/*" style="display:none;" onchange="previewEditImage(this)">
+                <img id="editPhotoPreview" class="image-preview" src="" style="display:none;">
+                <small style="color:var(--text-light); display:block; margin-top:5px;">La foto se guardará automáticamente al seleccionarla</small>
             </div>
             
             <div class="form-group">
@@ -1299,7 +1387,7 @@
     </div>
 </div>
 
-<!-- Modal de Paciente con RUT e Historial -->
+<!-- Modal de Paciente con RUT e Historial MEJORADO -->
 <div class="modal" id="patientModal">
     <div class="modal-content" style="max-width: 700px;">
         <button class="modal-close" onclick="closePatientModal()">&times;</button>
@@ -1336,7 +1424,10 @@
             <textarea id="patientNotes" rows="4" placeholder="Antecedentes, diagnósticos, observaciones importantes..."></textarea>
         </div>
         
-        <!-- Historial de Atenciones -->
+        <!-- Estadísticas del Paciente -->
+        <div id="patientStatsContainer" style="display:none;" class="patient-stats"></div>
+        
+        <!-- Historial de Atenciones MEJORADO -->
         <div id="patientHistoryContainer" style="margin: 20px 0; display: none;">
             <h3 style="margin-bottom: 15px;">📋 Historial de Atenciones</h3>
             <div id="patientHistoryList" class="patient-history"></div>
@@ -1423,7 +1514,7 @@
     </div>
 </div>
 
-<!-- Modal de Gestión de Boxes (SOLO ADMIN) -->
+<!-- Modal de Gestión de Boxes -->
 <div class="modal" id="boxModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeBoxModal()">&times;</button>
@@ -1488,6 +1579,86 @@
                 </thead>
                 <tbody id="boxTableBody"></tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Añadir Profesional (CON CARGA DE FOTO) -->
+<div class="modal" id="addStaffModal">
+    <div class="modal-content" style="max-width: 800px;">
+        <button class="modal-close" onclick="closeAddStaffModal()">&times;</button>
+        <h2 style="margin-bottom: 25px;">➕ Añadir Nuevo Profesional</h2>
+        
+        <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
+            <div class="form-group">
+                <label>Nombre Completo *</label>
+                <input type="text" id="addName">
+            </div>
+            
+            <div class="form-group">
+                <label>Especialidad *</label>
+                <input type="text" id="addSpec" placeholder="Ej: Psicología, Terapia de pareja">
+            </div>
+            
+            <div class="form-group">
+                <label>Usuario *</label>
+                <input type="text" id="addUser">
+            </div>
+            
+            <div class="form-group">
+                <label>Contraseña *</label>
+                <input type="text" id="addPass">
+            </div>
+            
+            <div class="form-group" style="grid-column:1/-1;">
+                <label>Foto de Perfil</label>
+                <div class="file-upload" onclick="document.getElementById('addPhotoInput').click()">
+                    <i class="fa fa-cloud-upload-alt"></i>
+                    <p>Haz clic para seleccionar una foto desde tu dispositivo</p>
+                    <p style="font-size:0.7rem; margin-top:5px;">Formatos: JPG, PNG (máx 5MB)</p>
+                </div>
+                <input type="file" id="addPhotoInput" accept="image/*" style="display:none;" onchange="previewAddImage(this)">
+                <img id="addPhotoPreview" class="image-preview" src="" style="display:none;">
+            </div>
+            
+            <div class="form-group">
+                <label>WhatsApp</label>
+                <input type="text" id="addWhatsapp" placeholder="+56912345678">
+            </div>
+            
+            <div class="form-group">
+                <label>Instagram (opcional)</label>
+                <input type="text" id="addInstagram" placeholder="usuario sin @">
+            </div>
+            
+            <div class="form-group">
+                <label>Dirección</label>
+                <input type="text" id="addAddress">
+            </div>
+            
+            <div class="form-group">
+                <label>Teléfono</label>
+                <input type="text" id="addPhone">
+            </div>
+            
+            <div class="form-group">
+                <label>Precio Online ($)</label>
+                <input type="number" id="addPriceOnline">
+            </div>
+            
+            <div class="form-group">
+                <label>Precio Presencial ($)</label>
+                <input type="number" id="addPricePresencial">
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:15px; margin-top:20px;">
+            <button class="btn-staff" style="background:var(--primary); flex:1; justify-content:center;" onclick="addStaff()">
+                Guardar Profesional
+            </button>
+            <button class="btn-staff" style="background:var(--text-light); flex:0.5; justify-content:center;" onclick="closeAddStaffModal()">
+                Cancelar
+            </button>
         </div>
     </div>
 </div>
@@ -1599,7 +1770,7 @@
                     </div>
                     <div class="form-group">
                         <label>Horario *</label>
-                        <select id="custTime" onchange="updateAvailableSlotsWithBoxes()">
+                        <select id="custTime" onchange="updateBookingDetails()">
                             <option value="">Selecciona una fecha</option>
                         </select>
                     </div>
@@ -1662,7 +1833,7 @@
         </div>
     </div>
 
-    <!-- Panel de Dashboard (CON BOXES) -->
+    <!-- Panel de Dashboard -->
     <div id="dashboard" class="panel">
         <div class="dashboard-header">
             <div>
@@ -1720,7 +1891,7 @@
             </div>
         </div>
 
-        <!-- Tab: Pacientes con Historial -->
+        <!-- Tab: Pacientes con Historial MEJORADO -->
         <div id="tabPacientes" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <h3>Gestión de Pacientes</h3>
@@ -1738,20 +1909,11 @@
 
         <!-- Tab: Profesionales (Admin) -->
         <div id="tabProfesionales" class="tab-content">
-            <h3>Gestión de Profesionales</h3>
-            <div class="admin-form">
-                <input type="text" id="addName" placeholder="Nombre completo">
-                <input type="text" id="addSpec" placeholder="Especialidad">
-                <input type="number" id="addPriceOnline" placeholder="Precio Online ($)">
-                <input type="number" id="addPricePresencial" placeholder="Precio Presencial ($)">
-                <input type="text" id="addUser" placeholder="Usuario">
-                <input type="text" id="addPass" placeholder="Contraseña">
-                <input type="text" id="addImg" placeholder="URL Foto">
-                <input type="text" id="addWhatsapp" placeholder="WhatsApp">
-                <input type="text" id="addInstagram" placeholder="Instagram (sin @)">
-                <input type="text" id="addAddress" placeholder="Dirección">
-                <input type="text" id="addPhone" placeholder="Teléfono">
-                <button class="btn-staff" style="background:var(--primary); grid-column:1/-1;" onclick="addStaff()">Añadir Profesional</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
+                <h3>Gestión de Profesionales</h3>
+                <button class="btn-staff" style="background:var(--primary)" onclick="showAddStaffModal()">
+                    <i class="fa fa-plus"></i> Nuevo Profesional
+                </button>
             </div>
             
             <h3>Lista de Profesionales</h3>
@@ -1904,7 +2066,7 @@
 
 <script>
     // ============================================
-    // SISTEMA COMPLETO - VERSIÓN FINAL CON BOXES
+    // SISTEMA COMPLETO - VERSIÓN FINAL CON TODAS LAS FUNCIONALIDADES
     // ============================================
 
     // Toast System
@@ -1923,8 +2085,8 @@
         }, duration);
     }
 
-    // Base de datos inicial (SEGURA - sin credenciales visibles)
-    let staff = JSON.parse(localStorage.getItem('mc_staff_v12')) || (function() {
+    // Base de datos inicial
+    let staff = JSON.parse(localStorage.getItem('mc_staff_v13')) || (function() {
         const initialStaff = [
             { 
                 id: 1, 
@@ -2013,7 +2175,7 @@
     })();
 
     // Boxes (gestión de espacios físicos)
-    let boxes = JSON.parse(localStorage.getItem('mc_boxes_v2')) || [
+    let boxes = JSON.parse(localStorage.getItem('mc_boxes_v3')) || [
         {
             id: 1,
             name: 'Box 1',
@@ -2047,7 +2209,7 @@
     ];
 
     // Mensajes/Testimonios
-    let messages = JSON.parse(localStorage.getItem('mc_messages_v5')) || [
+    let messages = JSON.parse(localStorage.getItem('mc_messages_v6')) || [
         {
             id: 1,
             name: 'Carolina Méndez',
@@ -2083,8 +2245,8 @@
         }
     ];
 
-    let patients = JSON.parse(localStorage.getItem('mc_patients_v8')) || [];
-    let appointments = JSON.parse(localStorage.getItem('mc_apps_v12')) || [];
+    let patients = JSON.parse(localStorage.getItem('mc_patients_v9')) || [];
+    let appointments = JSON.parse(localStorage.getItem('mc_apps_v13')) || [];
     
     // Variables globales
     let selectedPsych = null;
@@ -2093,6 +2255,7 @@
     let generatedSlots = [];
     let selectedWeekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'];
     let selectedBoxId = null;
+    let tempImageData = null; // Para almacenar imagen temporal
     const EDIT_HOURS = 24; // Horas para editar citas como profesional
 
     // Funciones de utilidad
@@ -2101,11 +2264,11 @@
     }
 
     function save() {
-        localStorage.setItem('mc_staff_v12', JSON.stringify(staff));
-        localStorage.setItem('mc_apps_v12', JSON.stringify(appointments));
-        localStorage.setItem('mc_patients_v8', JSON.stringify(patients));
-        localStorage.setItem('mc_messages_v5', JSON.stringify(messages));
-        localStorage.setItem('mc_boxes_v2', JSON.stringify(boxes));
+        localStorage.setItem('mc_staff_v13', JSON.stringify(staff));
+        localStorage.setItem('mc_apps_v13', JSON.stringify(appointments));
+        localStorage.setItem('mc_patients_v9', JSON.stringify(patients));
+        localStorage.setItem('mc_messages_v6', JSON.stringify(messages));
+        localStorage.setItem('mc_boxes_v3', JSON.stringify(boxes));
         
         if (currentUser) {
             updateStats();
@@ -2127,7 +2290,35 @@
     }
 
     // ============================================
-    // FUNCIONES DE BOXES (NUEVO)
+    // FUNCIONES DE CARGA DE IMÁGENES (NUEVO)
+    // ============================================
+
+    function previewAddImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('addPhotoPreview').src = e.target.result;
+                document.getElementById('addPhotoPreview').style.display = 'block';
+                tempImageData = e.target.result; // Guardar imagen temporalmente
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewEditImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editPhotoPreview').src = e.target.result;
+                document.getElementById('editPhotoPreview').style.display = 'block';
+                tempImageData = e.target.result; // Guardar imagen temporalmente
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // ============================================
+    // FUNCIONES DE BOXES
     // ============================================
 
     function showBoxModal() {
@@ -2181,9 +2372,7 @@
     }
 
     function renderBoxesTable() {
-        // Para el modal
         const tbModal = document.getElementById('boxTableBody');
-        // Para el dashboard
         const tbDashboard = document.getElementById('boxTableBodyDashboard');
         
         const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
@@ -2266,7 +2455,6 @@
     function deleteBox(id) {
         if (confirm('¿Eliminar este box? Las citas asociadas quedarán sin box asignado.')) {
             boxes = boxes.filter(b => b.id !== id);
-            // Actualizar citas que usaban este box
             appointments.forEach(a => {
                 if (a.boxId === id) a.boxId = null;
             });
@@ -2276,7 +2464,6 @@
         }
     }
 
-    // Función para obtener boxes disponibles en una fecha y hora específicas
     function getAvailableBoxes(date, time) {
         if (!date || !time) return [];
         
@@ -2287,7 +2474,6 @@
             if (!box.active) return false;
             if (!box.days.includes(dayOfWeek)) return false;
             
-            // Verificar si el horario está dentro del rango del box
             const [boxStartHour, boxStartMin] = box.startTime.split(':').map(Number);
             const [boxEndHour, boxEndMin] = box.endTime.split(':').map(Number);
             const [appHour, appMin] = time.split(':').map(Number);
@@ -2298,7 +2484,6 @@
             
             if (appMinutes < boxStartMinutes || appMinutes >= boxEndMinutes) return false;
             
-            // Verificar si el box ya está ocupado en ese horario
             const boxOccupied = appointments.some(a => 
                 a.boxId === box.id && 
                 a.date === date && 
@@ -2555,7 +2740,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE RESERVA (CON BOXES)
+    // FUNCIONES DE RESERVA
     // ============================================
 
     function openBooking(id) {
@@ -2691,20 +2876,18 @@
         
         availableSlots.forEach(slot => {
             if (!bookedTimes.includes(slot.time)) {
-                // Verificar disponibilidad de boxes para este horario
-                const availableBoxes = getAvailableBoxes(date, slot.time);
                 const option = document.createElement('option');
                 option.value = slot.time;
+                option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
+                if (slot.isOvercupo) option.style.color = '#f59e0b';
                 
-                if (availableBoxes.length > 0) {
-                    option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '') + ` (${availableBoxes.length} boxes)`;
-                } else {
-                    option.textContent = slot.time + ' (sin boxes disponibles)';
+                const availableBoxes = getAvailableBoxes(date, slot.time);
+                if (availableBoxes.length === 0) {
                     option.disabled = true;
+                    option.textContent += ' (sin boxes disponibles)';
                     option.style.color = 'var(--text-light)';
                 }
                 
-                if (slot.isOvercupo) option.style.color = '#f59e0b';
                 timeSelect.appendChild(option);
             }
         });
@@ -2716,7 +2899,6 @@
             return;
         }
 
-        // Si hay un horario seleccionado, actualizar boxes
         const time = document.getElementById('custTime').value;
         if (time) {
             updateBoxSelector(date, time);
@@ -2905,7 +3087,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE LOGIN Y DASHBOARD (SEGURAS)
+    // FUNCIONES DE LOGIN Y DASHBOARD
     // ============================================
 
     function showLoginModal() {
@@ -3062,7 +3244,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE PACIENTES CON HISTORIAL
+    // FUNCIONES DE PACIENTES CON HISTORIAL MEJORADO
     // ============================================
 
     function renderPatients() {
@@ -3088,6 +3270,7 @@
             const nextAppt = patientApps.find(a => new Date(a.date + 'T' + a.time) > new Date());
             const totalSessions = patientApps.length;
             const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
+            const totalAmount = patientApps.reduce((sum, a) => sum + a.price, 0);
             
             const recentApps = patientApps.slice(0, 3);
             
@@ -3101,6 +3284,10 @@
                         <span><i class="fa fa-id-card"></i> ${p.rut || 'Sin RUT'}</span>
                         <span><i class="fa fa-envelope"></i> ${p.email}</span>
                         ${p.phone ? `<span><i class="fa fa-phone"></i> ${p.phone}</span>` : ''}
+                    </div>
+                    <div style="display:flex; gap:15px; margin-top:10px; font-size:0.8rem;">
+                        <span><i class="fa fa-credit-card"></i> Pagado: $${totalPaid.toLocaleString()}</span>
+                        <span><i class="fa fa-clock"></i> Total: $${totalAmount.toLocaleString()}</span>
                     </div>
                     ${nextAppt ? `
                         <div style="background:#e6f7e6; padding:8px; border-radius:8px; margin-top:10px;">
@@ -3117,6 +3304,7 @@
                                     <span class="history-psych">${a.psych}</span>
                                     <span class="history-type">${a.type === 'online' ? '🌐' : '🏢'}</span>
                                     ${a.boxName ? `<span class="history-box">${a.boxName}</span>` : ''}
+                                    <span class="history-amount">$${a.price.toLocaleString()}</span>
                                 </div>
                             `).join('')}
                         </div>
@@ -3136,6 +3324,7 @@
         document.getElementById('patientNotes').value = '';
         document.getElementById('patientModalTitle').innerText = 'Nuevo Paciente';
         document.getElementById('patientHistoryContainer').style.display = 'none';
+        document.getElementById('patientStatsContainer').style.display = 'none';
         document.getElementById('patientModal').style.display = 'flex';
     }
 
@@ -3155,19 +3344,47 @@
         const patientApps = appointments.filter(a => a.patientId === patient.id).sort((a, b) => new Date(b.date) - new Date(a.date));
         const historyContainer = document.getElementById('patientHistoryContainer');
         const historyList = document.getElementById('patientHistoryList');
+        const statsContainer = document.getElementById('patientStatsContainer');
         
         if (patientApps.length > 0) {
+            // Calcular estadísticas
+            const totalSessions = patientApps.length;
+            const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
+            const totalAmount = patientApps.reduce((sum, a) => sum + a.price, 0);
+            const onlineSessions = patientApps.filter(a => a.type === 'online').length;
+            const presencialSessions = patientApps.filter(a => a.type === 'presencial').length;
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="number">${totalSessions}</div>
+                    <div class="label">Total Sesiones</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">$${totalPaid.toLocaleString()}</div>
+                    <div class="label">Pagado</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">${onlineSessions}/${presencialSessions}</div>
+                    <div class="label">Online/Presencial</div>
+                </div>
+            `;
+            statsContainer.style.display = 'grid';
+            
             historyList.innerHTML = patientApps.map(a => `
                 <div class="history-item">
                     <span class="history-date">${a.date} ${a.time}</span>
                     <span class="history-psych">${a.psych}</span>
                     <span class="history-type">${a.type === 'online' ? 'Online' : 'Presencial'}</span>
                     ${a.boxName ? `<span class="history-box">${a.boxName}</span>` : ''}
-                    <span>$${a.price.toLocaleString()}</span>
+                    <span class="history-amount">$${a.price.toLocaleString()}</span>
+                    <span style="color:${a.paymentStatus === 'pagado' ? 'var(--success)' : 'var(--warning)'}">
+                        ${a.paymentStatus === 'pagado' ? '✓' : '⏳'}
+                    </span>
                 </div>
             `).join('');
             historyContainer.style.display = 'block';
         } else {
+            statsContainer.style.display = 'none';
             historyContainer.style.display = 'none';
         }
         
@@ -3509,8 +3726,28 @@
     }
 
     // ============================================
-    // FUNCIONES DE ADMIN
+    // FUNCIONES DE ADMIN (CON CARGA DE IMÁGENES)
     // ============================================
+
+    function showAddStaffModal() {
+        document.getElementById('addStaffModal').style.display = 'flex';
+        document.getElementById('addName').value = '';
+        document.getElementById('addSpec').value = '';
+        document.getElementById('addUser').value = '';
+        document.getElementById('addPass').value = '';
+        document.getElementById('addWhatsapp').value = '';
+        document.getElementById('addInstagram').value = '';
+        document.getElementById('addAddress').value = '';
+        document.getElementById('addPhone').value = '';
+        document.getElementById('addPriceOnline').value = '';
+        document.getElementById('addPricePresencial').value = '';
+        document.getElementById('addPhotoPreview').style.display = 'none';
+        tempImageData = null;
+    }
+
+    function closeAddStaffModal() {
+        document.getElementById('addStaffModal').style.display = 'none';
+    }
 
     function renderStaffTable() {
         const tb = document.getElementById('staffTableBody');
@@ -3569,7 +3806,7 @@
             pass: pass,
             whatsapp: whatsapp,
             instagram: instagram,
-            img: document.getElementById('addImg').value || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+            img: tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
             address: address,
             phone: phone,
             stars: 5,
@@ -3580,10 +3817,7 @@
         });
 
         save();
-        
-        ['addName','addSpec','addPriceOnline','addPricePresencial','addUser','addPass','addWhatsapp','addInstagram','addImg','addAddress','addPhone']
-            .forEach(id => document.getElementById(id).value = '');
-        
+        closeAddStaffModal();
         showToast('Profesional añadido', 'success');
     }
 
@@ -3596,7 +3830,6 @@
         document.getElementById('editSpec').value = therapist.spec || '';
         document.getElementById('editUser').value = therapist.user || '';
         document.getElementById('editPass').value = '';
-        document.getElementById('editImg').value = therapist.img || '';
         document.getElementById('editWhatsapp').value = therapist.whatsapp || '';
         document.getElementById('editInstagram').value = therapist.instagram || '';
         document.getElementById('editAddress').value = therapist.address || '';
@@ -3604,6 +3837,14 @@
         document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
         document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
         
+        if (therapist.img) {
+            document.getElementById('editPhotoPreview').src = therapist.img;
+            document.getElementById('editPhotoPreview').style.display = 'block';
+        } else {
+            document.getElementById('editPhotoPreview').style.display = 'none';
+        }
+        
+        tempImageData = null;
         document.getElementById('editTherapistModal').style.display = 'flex';
     }
 
@@ -3619,13 +3860,16 @@
         therapist.name = document.getElementById('editName').value;
         therapist.spec = document.getElementById('editSpec').value;
         therapist.user = document.getElementById('editUser').value;
-        therapist.img = document.getElementById('editImg').value;
         therapist.whatsapp = document.getElementById('editWhatsapp').value;
         therapist.instagram = document.getElementById('editInstagram').value;
         therapist.address = document.getElementById('editAddress').value;
         therapist.phone = document.getElementById('editPhone').value;
         therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
         therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
+
+        if (tempImageData) {
+            therapist.img = tempImageData;
+        }
 
         const newPass = document.getElementById('editPass').value;
         if (newPass) therapist.pass = newPass;
@@ -3692,7 +3936,7 @@
     updateMarquee();
     renderBoxesTable();
 
-    // Event listeners para boxes
+    // Event listeners
     document.getElementById('custTime').addEventListener('change', function() {
         const date = document.getElementById('custDate').value;
         const time = this.value;

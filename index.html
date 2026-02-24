@@ -2132,95 +2132,67 @@
     // ============================================
     function cargarDatosIniciales() {
         // Staff (profesionales)
-        db.ref('Staff').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                // Convertir objeto a array
-                staff = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            } else {
-                staff = [
-                    { 
-                        id: 1, 
-                        name: 'Psic. Alison Gutiérrez', 
-                        spec: 'Terapia Cognitiva, Ansiedad, Depresión, Estrés', 
-                        priceOnline: 45000,
-                        pricePresencial: 50000,
-                        user: 'isabel',
-                        pass: 'isabel2026', 
-                        img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500',
-                        whatsapp: '+56987654321',
-                        instagram: 'alison.psicologa',
-                        stars: 5,
-                        address: 'Av. Providencia 1234, Santiago',
-                        phone: '+56 9 8765 4321',
-                        paymentMethods: { transfer: true, card: true, cash: true, bankDetails: {} },
-                        sessionDuration: 50,
-                        breakBetween: 10,
-                        availability: {}
-                    },
-                    { 
-                        id: 2, 
-                        name: 'Dr. Julián Sossa', 
-                        spec: 'Psiquiatría, Trastornos del ánimo, Ansiedad', 
-                        priceOnline: 65000,
-                        pricePresencial: 70000,
-                        user: 'julian',
-                        pass: 'julian2026', 
-                        img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500',
-                        whatsapp: '+56976543210',
-                        instagram: 'dr.julianpsiquiatra',
-                        stars: 5,
-                        address: 'Av. Las Condes 7890, Las Condes',
-                        phone: '+56 9 7654 3210',
-                        paymentMethods: { transfer: true, card: false, cash: true, bankDetails: {} },
-                        sessionDuration: 50,
-                        breakBetween: 15,
-                        availability: {}
-                    },
-                    { 
-                        id: 3, 
-                        name: 'Dra. Martina Luz', 
-                        spec: 'Mindfulness, Estrés, Yoga Terapéutico, Meditación', 
-                        priceOnline: 40000,
-                        pricePresencial: 45000,
-                        user: 'martina',
-                        pass: 'martina2026', 
-                        img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500',
-                        whatsapp: '+56965432109',
-                        instagram: 'martina.bienestar',
-                        stars: 4,
-                        address: 'Av. Vitacura 4567, Vitacura',
-                        phone: '+56 9 6543 2109',
-                        paymentMethods: { transfer: false, card: true, cash: true, bankDetails: {} },
-                        sessionDuration: 45,
-                        breakBetween: 15,
-                        availability: {}
-                    },
-                    {
-                        id: 9999,
-                        name: 'Administrador',
-                        spec: 'ADMIN_HIDDEN',
-                        priceOnline: 0,
-                        pricePresencial: 0,
-                        user: 'Admin',
-                        pass: 'Nina2026',
-                        img: '',
-                        whatsapp: '',
-                        instagram: '',
-                        stars: 0,
-                        address: '',
-                        phone: '',
-                        isHiddenAdmin: true,
-                        paymentMethods: {},
-                        sessionDuration: 0,
-                        breakBetween: 0,
-                        availability: {}
-                    }
-                ];
+
+db.ref('Staff').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+        // Convertir objeto a array, ADAPTANDO los datos existentes
+        staff = Object.keys(data).map(key => {
+            const item = data[key];
+            
+            // Si SOLO tiene name y pass (datos del primer código)
+            if (item.name && item.pass && !item.usuario && !item.user) {
+                console.log("Adaptando usuario existente:", item.name);
+                return {
+                    id: key,
+                    name: item.name,
+                    // Usar el nombre como usuario (sin espacios)
+                    usuario: item.name.split(' ')[0] || item.name,
+                    pass: item.pass,
+                    spec: 'Profesional', // Valor por defecto
+                    priceOnline: 0,
+                    pricePresencial: 0,
+                    img: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+                    whatsapp: '',
+                    instagram: '',
+                    stars: 5,
+                    address: '',
+                    phone: '',
+                    paymentMethods: { transfer: false, card: false, cash: true, bankDetails: {} },
+                    sessionDuration: 50,
+                    breakBetween: 10,
+                    availability: {}
+                };
+            } 
+            // Si ya tiene la estructura completa
+            else {
+                return { 
+                    id: key, 
+                    ...item,
+                    usuario: item.usuario || item.user || '', // Compatibilidad
+                    priceOnline: item.priceOnline || 0,
+                    pricePresencial: item.pricePresencial || 0,
+                    spec: item.spec || 'Profesional',
+                    img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+                    whatsapp: item.whatsapp || '',
+                    instagram: item.instagram || '',
+                    stars: item.stars || 5,
+                    address: item.address || '',
+                    phone: item.phone || '',
+                    paymentMethods: item.paymentMethods || { transfer: false, card: false, cash: true, bankDetails: {} },
+                    sessionDuration: item.sessionDuration || 50,
+                    breakBetween: item.breakBetween || 10,
+                    availability: item.availability || {}
+                };
             }
-            filterProfessionals();
-            if (currentUser?.role === 'admin') renderStaffTable();
         });
+    } else {
+        // Solo si NO HAY NINGÚN DATO, crear ejemplos
+        staff = [ /* ... datos de ejemplo ... */ ];
+    }
+    filterProfessionals();
+    if (currentUser?.role === 'admin') renderStaffTable();
+});
         
         // Boxes
         db.ref('Boxes').on('value', (snapshot) => {
@@ -3145,37 +3117,40 @@
     }
 
     function processLogin() {
-        const user = document.getElementById('loginUser').value;
-        const pass = document.getElementById('loginPass').value;
-        const btn = document.getElementById('loginBtn');
-        
-        if (!user || !pass) {
-            showToast('Ingresa usuario y contraseña', 'error');
-            return;
-        }
-
-        btn.innerHTML = '<span class="spinner"></span> Verificando...';
-        btn.disabled = true;
-
-        const foundUser = staff.find(s => s.user === user && s.pass === pass);
-        
-        if (foundUser) {
-            if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
-                currentUser = { role: 'admin', data: foundUser };
-                showDashboard();
-                showToast('Acceso administrador concedido', 'success');
-            } else {
-                currentUser = { role: 'psych', data: foundUser };
-                showDashboard();
-                showToast(`Bienvenido ${foundUser.name}`, 'success');
-            }
-            closeLoginModal();
-        } else { 
-            showToast('Usuario o contraseña incorrectos', 'error');
-            btn.innerHTML = 'Ingresar al Panel';
-            btn.disabled = false;
-        }
+    const user = document.getElementById('loginUser').value;
+    const pass = document.getElementById('loginPass').value;
+    const btn = document.getElementById('loginBtn');
+    
+    if (!user || !pass) {
+        showToast('Ingresa usuario y contraseña', 'error');
+        return;
     }
+
+    btn.innerHTML = '<span class="spinner"></span> Verificando...';
+    btn.disabled = true;
+
+    // Buscar en usuario O en name (para compatibilidad)
+    const foundUser = staff.find(s => 
+        (s.usuario === user || s.name === user) && s.pass === pass
+    );
+    
+    if (foundUser) {
+        if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
+            currentUser = { role: 'admin', data: foundUser };
+            showDashboard();
+            showToast('Acceso administrador concedido', 'success');
+        } else {
+            currentUser = { role: 'psych', data: foundUser };
+            showDashboard();
+            showToast(`Bienvenido ${foundUser.name}`, 'success');
+        }
+        closeLoginModal();
+    } else { 
+        showToast('Usuario o contraseña incorrectos', 'error');
+        btn.innerHTML = 'Ingresar al Panel';
+        btn.disabled = false;
+    }
+}
 
     function logout() {
         currentUser = null;
@@ -3788,29 +3763,29 @@
     }
 
     function renderStaffTable() {
-        const tb = document.getElementById('staffTableBody');
-        if (!tb) return;
+    const tb = document.getElementById('staffTableBody');
+    if (!tb) return;
 
-        const visibleStaff = staff.filter(s => !s.isHiddenAdmin);
-        tb.innerHTML = visibleStaff.map(p => `
-            <tr>
-                <td>${p.name}</td>
-                <td>${p.spec.substring(0, 30)}...</td>
-                <td>${p.user}</td>
-                <td>$${p.priceOnline}/$${p.pricePresencial}</td>
-                <td>${p.whatsapp || '—'}</td>
-                <td>${p.instagram || '—'}</td>
-                <td>
-                    <button onclick="editTherapist(${p.id})" class="btn-icon" style="background:var(--primary); color:white;">
-                        <i class="fa fa-edit"></i>
-                    </button>
-                    <button onclick="deleteStaff(${p.id})" class="btn-icon" style="background:var(--danger); color:white;">
-                        <i class="fa fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
+    const visibleStaff = staff.filter(s => !s.isHiddenAdmin);
+    tb.innerHTML = visibleStaff.map(p => `
+        <tr>
+            <td>${p.name}</td>
+            <td>${p.spec.substring(0, 30)}...</td>
+            <td>${p.usuario || p.name || '—'}</td>  <!-- Mostrar usuario o nombre -->
+            <td>$${p.priceOnline}/$${p.pricePresencial}</td>
+            <td>${p.whatsapp || '—'}</td>
+            <td>${p.instagram || '—'}</td>
+            <td>
+                <button onclick="editTherapist(${p.id})" class="btn-icon" style="background:var(--primary); color:white;">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button onclick="deleteStaff(${p.id})" class="btn-icon" style="background:var(--danger); color:white;">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
 
     function addStaff() {
         const name = document.getElementById('addName').value;

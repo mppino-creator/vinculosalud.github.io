@@ -3116,7 +3116,9 @@
     }
 
     // ============================================
-// FUNCIÓN DE LOGIN CORREGIDA
+    
+// ============================================
+// FUNCIÓN DE LOGIN CORREGIDA (SIN TIMEOUT)
 // ============================================
 function processLogin() {
     const user = document.getElementById('loginUser').value;
@@ -3131,27 +3133,25 @@ function processLogin() {
     btn.innerHTML = '<span class="spinner"></span> Verificando...';
     btn.disabled = true;
 
-    // Verificar en el array staff (que ya debería estar cargado desde Firebase)
-    setTimeout(() => {
-        const foundUser = staff.find(s => s.user === user && s.pass === pass);
-        
-        if (foundUser) {
-            if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
-                currentUser = { role: 'admin', data: foundUser };
-                showDashboard();
-                showToast('Acceso administrador concedido', 'success');
-            } else {
-                currentUser = { role: 'psych', data: foundUser };
-                showDashboard();
-                showToast(`Bienvenido ${foundUser.name}`, 'success');
-            }
-            closeLoginModal();
-        } else { 
-            showToast('Usuario o contraseña incorrectos', 'error');
-            btn.innerHTML = 'Ingresar al Panel';
-            btn.disabled = false;
+    // Verificar directamente (sin setTimeout)
+    const foundUser = staff.find(s => s.user === user && s.pass === pass);
+    
+    if (foundUser) {
+        if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
+            currentUser = { role: 'admin', data: foundUser };
+            showDashboard();
+            showToast('Acceso administrador concedido', 'success');
+        } else {
+            currentUser = { role: 'psych', data: foundUser };
+            showDashboard();
+            showToast(`Bienvenido ${foundUser.name}`, 'success');
         }
-    }, 500); // Pequeño retraso para asegurar que los datos están cargados
+        closeLoginModal();
+    } else { 
+        showToast('Usuario o contraseña incorrectos', 'error');
+        btn.innerHTML = 'Ingresar al Panel';
+        btn.disabled = false;
+    }
 }
 
     function logout() {

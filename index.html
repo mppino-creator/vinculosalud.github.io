@@ -3815,117 +3815,126 @@ db.ref('Staff').on('value', (snapshot) => {
 }
 
     function addStaff() {
-        const name = document.getElementById('addName').value;
-        const spec = document.getElementById('addSpec').value;
-        const priceOnline = document.getElementById('addPriceOnline').value;
-        const pricePresencial = document.getElementById('addPricePresencial').value;
-        const user = document.getElementById('addUser').value;
-        const pass = document.getElementById('addPass').value;
-        const whatsapp = document.getElementById('addWhatsapp')?.value || '';
-        const instagram = document.getElementById('addInstagram')?.value || '';
-        const address = document.getElementById('addAddress')?.value || '';
-        const phone = document.getElementById('addPhone')?.value || '';
-        
-        if (!name || !spec || !priceOnline || !pricePresencial || !user || !pass) {
-            showToast('Completa todos los campos', 'error');
-            return;
-        }
-
-        if (staff.some(s => s.user === user)) {
-            showToast('El usuario ya existe', 'error');
-            return;
-        }
-
-        staff.push({
-            id: Date.now(),
-            name: name,
-            spec: spec,
-            priceOnline: parseInt(priceOnline),
-            pricePresencial: parseInt(pricePresencial),
-            user: user,
-            pass: pass,
-            whatsapp: whatsapp,
-            instagram: instagram,
-            img: tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-            address: address,
-            phone: phone,
-            stars: 5,
-            paymentMethods: { transfer: false, card: false, cash: true, bankDetails: {} },
-            sessionDuration: 50,
-            breakBetween: 10,
-            availability: {}
-        });
-
-        save();
-        closeAddStaffModal();
-        showToast('Profesional añadido', 'success');
+    const name = document.getElementById('addName').value;
+    const spec = document.getElementById('addSpec').value;
+    const priceOnline = document.getElementById('addPriceOnline').value;
+    const pricePresencial = document.getElementById('addPricePresencial').value;
+    const usuario = document.getElementById('addUser').value; // Cambiar nombre de variable
+    const pass = document.getElementById('addPass').value;
+    const whatsapp = document.getElementById('addWhatsapp')?.value || '';
+    const instagram = document.getElementById('addInstagram')?.value || '';
+    const address = document.getElementById('addAddress')?.value || '';
+    const phone = document.getElementById('addPhone')?.value || '';
+    
+    if (!name || !spec || !priceOnline || !pricePresencial || !usuario || !pass) {
+        showToast('Completa todos los campos', 'error');
+        return;
     }
+
+    if (staff.some(s => s.usuario === usuario)) { // Cambiar a usuario
+        showToast('El usuario ya existe', 'error');
+        return;
+    }
+
+    staff.push({
+        id: Date.now(),
+        name: name,
+        spec: spec,
+        priceOnline: parseInt(priceOnline),
+        pricePresencial: parseInt(pricePresencial),
+        usuario: usuario, // Cambiar a usuario
+        pass: pass,
+        whatsapp: whatsapp,
+        instagram: instagram,
+        img: tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+        address: address,
+        phone: phone,
+        stars: 5,
+        paymentMethods: { transfer: false, card: false, cash: true, bankDetails: {} },
+        sessionDuration: 50,
+        breakBetween: 10,
+        availability: {}
+    });
+
+    save();
+    closeAddStaffModal();
+    showToast('Profesional añadido', 'success');
+}
 
     function editTherapist(id) {
-        const therapist = staff.find(s => s.id === id);
-        if (!therapist) return;
-        
-        document.getElementById('editTherapistId').value = therapist.id;
-        document.getElementById('editName').value = therapist.name || '';
-        document.getElementById('editSpec').value = therapist.spec || '';
-        document.getElementById('editUser').value = therapist.user || '';
-        document.getElementById('editPass').value = '';
-        document.getElementById('editWhatsapp').value = therapist.whatsapp || '';
-        document.getElementById('editInstagram').value = therapist.instagram || '';
-        document.getElementById('editAddress').value = therapist.address || '';
-        document.getElementById('editPhone').value = therapist.phone || '';
-        document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
-        document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
-        
-        if (therapist.img) {
-            document.getElementById('editPhotoPreview').src = therapist.img;
-            document.getElementById('editPhotoPreview').style.display = 'block';
-        } else {
-            document.getElementById('editPhotoPreview').style.display = 'none';
-        }
-        
-        tempImageData = null;
-        document.getElementById('editTherapistModal').style.display = 'flex';
+    const therapist = staff.find(s => s.id == id); // Usar == para comparar string con número
+    if (!therapist) return;
+    
+    document.getElementById('editTherapistId').value = therapist.id;
+    document.getElementById('editName').value = therapist.name || '';
+    document.getElementById('editSpec').value = therapist.spec || '';
+    document.getElementById('editUser').value = therapist.usuario || therapist.user || '';
+    document.getElementById('editPass').value = '';
+    document.getElementById('editWhatsapp').value = therapist.whatsapp || '';
+    document.getElementById('editInstagram').value = therapist.instagram || '';
+    document.getElementById('editAddress').value = therapist.address || '';
+    document.getElementById('editPhone').value = therapist.phone || '';
+    document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
+    document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
+    
+    if (therapist.img) {
+        document.getElementById('editPhotoPreview').src = therapist.img;
+        document.getElementById('editPhotoPreview').style.display = 'block';
+    } else {
+        document.getElementById('editPhotoPreview').style.display = 'none';
     }
+    
+    tempImageData = null;
+    document.getElementById('editTherapistModal').style.display = 'flex';
+}
 
     function closeEditTherapistModal() {
         document.getElementById('editTherapistModal').style.display = 'none';
     }
 
     function updateTherapist() {
-        const id = parseInt(document.getElementById('editTherapistId').value);
-        const therapist = staff.find(s => s.id === id);
-        if (!therapist) return;
+    const id = document.getElementById('editTherapistId').value; // No convertir a número
+    const therapist = staff.find(s => s.id == id); // Usar ==
+    if (!therapist) return;
 
-        therapist.name = document.getElementById('editName').value;
-        therapist.spec = document.getElementById('editSpec').value;
-        therapist.user = document.getElementById('editUser').value;
-        therapist.whatsapp = document.getElementById('editWhatsapp').value;
-        therapist.instagram = document.getElementById('editInstagram').value;
-        therapist.address = document.getElementById('editAddress').value;
-        therapist.phone = document.getElementById('editPhone').value;
-        therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
-        therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
+    therapist.name = document.getElementById('editName').value;
+    therapist.spec = document.getElementById('editSpec').value;
+    therapist.usuario = document.getElementById('editUser').value; // Cambiar a usuario
+    therapist.whatsapp = document.getElementById('editWhatsapp').value;
+    therapist.instagram = document.getElementById('editInstagram').value;
+    therapist.address = document.getElementById('editAddress').value;
+    therapist.phone = document.getElementById('editPhone').value;
+    therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
+    therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
 
-        if (tempImageData) {
-            therapist.img = tempImageData;
-        }
-
-        const newPass = document.getElementById('editPass').value;
-        if (newPass) therapist.pass = newPass;
-
-        save();
-        closeEditTherapistModal();
-        renderStaffTable();
-        showToast('Profesional actualizado', 'success');
+    if (tempImageData) {
+        therapist.img = tempImageData;
     }
 
+    const newPass = document.getElementById('editPass').value;
+    if (newPass) therapist.pass = newPass;
+
+    save();
+    closeEditTherapistModal();
+    renderStaffTable();
+    showToast('Profesional actualizado', 'success');
+}
+
     function deleteStaff(id) {
-        const therapist = staff.find(s => s.id === id);
-        if (therapist?.isHiddenAdmin) {
-            showToast('No se puede eliminar al admin', 'error');
-            return;
-        }
+    const therapist = staff.find(s => s.id == id); // Usar == para comparar string con número
+    if (therapist?.isHiddenAdmin) {
+        showToast('No se puede eliminar al admin', 'error');
+        return;
+    }
+    
+    if (confirm('¿Eliminar profesional y todos sus datos?')) {
+        appointments = appointments.filter(a => a.psychId != id); // Usar !=
+        patients = patients.filter(p => p.psychId != id); // Usar !=
+        staff = staff.filter(s => s.id != id); // Usar !=
+        save();
+        showToast('Profesional eliminado', 'success');
+    }
+}
         
         if (confirm('¿Eliminar profesional y todos sus datos?')) {
             appointments = appointments.filter(a => a.psychId !== id);

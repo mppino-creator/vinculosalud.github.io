@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* [Mantén todos los estilos que ya tienes aquí] */
         * {
             margin: 0;
             padding: 0;
@@ -366,7 +367,7 @@
             width: 100%;
             position: relative;
             overflow: hidden;
-            background: #f1f5f9; /* Fondo gris por defecto */
+            background: #f1f5f9;
         }
 
         .img-container img {
@@ -1235,7 +1236,7 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Modal de Login (SEGURO - sin mostrar credenciales) -->
+<!-- Modal de Login (CORREGIDO) -->
 <div class="modal" id="loginModal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeLoginModal()">&times;</button>
@@ -2066,7 +2067,7 @@
 
 <script>
     // ============================================
-    // SISTEMA COMPLETO - VERSIÓN FINAL CON TODAS LAS FUNCIONALIDADES
+    // SISTEMA COMPLETO - VERSIÓN CORREGIDA
     // ============================================
 
     // Toast System
@@ -2085,8 +2086,8 @@
         }, duration);
     }
 
-    // Base de datos inicial
-    let staff = JSON.parse(localStorage.getItem('mc_staff_v13')) || (function() {
+    // Base de datos inicial (solo se usa si no hay datos guardados)
+    let staff = JSON.parse(localStorage.getItem('mc_staff_v14')) || (function() {
         const initialStaff = [
             { 
                 id: 1, 
@@ -2147,7 +2148,7 @@
             }
         ];
         
-        // Admin oculto (solo se crea si no existe)
+        // Admin oculto
         if (!initialStaff.some(s => s.user === 'Admin')) {
             initialStaff.push({
                 id: 9999,
@@ -2174,15 +2175,15 @@
         return initialStaff;
     })();
 
-    // Boxes (gestión de espacios físicos)
-    let boxes = JSON.parse(localStorage.getItem('mc_boxes_v3')) || [
+    // Boxes
+    let boxes = JSON.parse(localStorage.getItem('mc_boxes_v4')) || [
         {
             id: 1,
             name: 'Box 1',
             location: 'Piso 1 - Sector A',
             startTime: '09:00',
             endTime: '20:00',
-            days: [1,2,3,4,5], // Lunes a Viernes
+            days: [1,2,3,4,5],
             description: 'Box equipado con camilla y escritorio',
             active: true
         },
@@ -2202,14 +2203,14 @@
             location: 'Piso 2',
             startTime: '14:00',
             endTime: '22:00',
-            days: [1,2,3,4,5,6], // Lunes a Sábado
+            days: [1,2,3,4,5,6],
             description: 'Box para atenciones vespertinas',
             active: true
         }
     ];
 
-    // Mensajes/Testimonios
-    let messages = JSON.parse(localStorage.getItem('mc_messages_v6')) || [
+    // Mensajes
+    let messages = JSON.parse(localStorage.getItem('mc_messages_v7')) || [
         {
             id: 1,
             name: 'Carolina Méndez',
@@ -2245,8 +2246,8 @@
         }
     ];
 
-    let patients = JSON.parse(localStorage.getItem('mc_patients_v9')) || [];
-    let appointments = JSON.parse(localStorage.getItem('mc_apps_v13')) || [];
+    let patients = JSON.parse(localStorage.getItem('mc_patients_v10')) || [];
+    let appointments = JSON.parse(localStorage.getItem('mc_apps_v14')) || [];
     
     // Variables globales
     let selectedPsych = null;
@@ -2255,8 +2256,8 @@
     let generatedSlots = [];
     let selectedWeekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'];
     let selectedBoxId = null;
-    let tempImageData = null; // Para almacenar imagen temporal
-    const EDIT_HOURS = 24; // Horas para editar citas como profesional
+    let tempImageData = null;
+    const EDIT_HOURS = 24;
 
     // Funciones de utilidad
     function getPublicStaff() {
@@ -2264,11 +2265,11 @@
     }
 
     function save() {
-        localStorage.setItem('mc_staff_v13', JSON.stringify(staff));
-        localStorage.setItem('mc_apps_v13', JSON.stringify(appointments));
-        localStorage.setItem('mc_patients_v9', JSON.stringify(patients));
-        localStorage.setItem('mc_messages_v6', JSON.stringify(messages));
-        localStorage.setItem('mc_boxes_v3', JSON.stringify(boxes));
+        localStorage.setItem('mc_staff_v14', JSON.stringify(staff));
+        localStorage.setItem('mc_apps_v14', JSON.stringify(appointments));
+        localStorage.setItem('mc_patients_v10', JSON.stringify(patients));
+        localStorage.setItem('mc_messages_v7', JSON.stringify(messages));
+        localStorage.setItem('mc_boxes_v4', JSON.stringify(boxes));
         
         if (currentUser) {
             updateStats();
@@ -2290,7 +2291,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE CARGA DE IMÁGENES (NUEVO)
+    // FUNCIONES DE CARGA DE IMÁGENES
     // ============================================
 
     function previewAddImage(input) {
@@ -2299,7 +2300,7 @@
             reader.onload = function(e) {
                 document.getElementById('addPhotoPreview').src = e.target.result;
                 document.getElementById('addPhotoPreview').style.display = 'block';
-                tempImageData = e.target.result; // Guardar imagen temporalmente
+                tempImageData = e.target.result;
             };
             reader.readAsDataURL(input.files[0]);
         }
@@ -2311,7 +2312,7 @@
             reader.onload = function(e) {
                 document.getElementById('editPhotoPreview').src = e.target.result;
                 document.getElementById('editPhotoPreview').style.display = 'block';
-                tempImageData = e.target.result; // Guardar imagen temporalmente
+                tempImageData = e.target.result;
             };
             reader.readAsDataURL(input.files[0]);
         }
@@ -3087,7 +3088,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE LOGIN Y DASHBOARD
+    // FUNCIONES DE LOGIN Y DASHBOARD (CORREGIDAS)
     // ============================================
 
     function showLoginModal() {
@@ -3115,26 +3116,25 @@
         btn.innerHTML = '<span class="spinner"></span> Verificando...';
         btn.disabled = true;
 
-        setTimeout(() => {
-            const foundUser = staff.find(s => s.user === user && s.pass === pass);
-            
-            if (foundUser) {
-                if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
-                    currentUser = { role: 'admin', data: foundUser };
-                    showDashboard();
-                    showToast('Acceso administrador concedido', 'success');
-                } else {
-                    currentUser = { role: 'psych', data: foundUser };
-                    showDashboard();
-                    showToast(`Bienvenido ${foundUser.name}`, 'success');
-                }
-                closeLoginModal();
-            } else { 
-                showToast('Usuario o contraseña incorrectos', 'error');
-                btn.innerHTML = 'Ingresar al Panel';
-                btn.disabled = false;
+        // Verificación directa sin setTimeout para evitar problemas
+        const foundUser = staff.find(s => s.user === user && s.pass === pass);
+        
+        if (foundUser) {
+            if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
+                currentUser = { role: 'admin', data: foundUser };
+                showDashboard();
+                showToast('Acceso administrador concedido', 'success');
+            } else {
+                currentUser = { role: 'psych', data: foundUser };
+                showDashboard();
+                showToast(`Bienvenido ${foundUser.name}`, 'success');
             }
-        }, 800);
+            closeLoginModal();
+        } else { 
+            showToast('Usuario o contraseña incorrectos', 'error');
+            btn.innerHTML = 'Ingresar al Panel';
+            btn.disabled = false;
+        }
     }
 
     function logout() {
@@ -3347,10 +3347,8 @@
         const statsContainer = document.getElementById('patientStatsContainer');
         
         if (patientApps.length > 0) {
-            // Calcular estadísticas
             const totalSessions = patientApps.length;
             const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
-            const totalAmount = patientApps.reduce((sum, a) => sum + a.price, 0);
             const onlineSessions = patientApps.filter(a => a.type === 'online').length;
             const presencialSessions = patientApps.filter(a => a.type === 'presencial').length;
             

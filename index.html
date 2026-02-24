@@ -3129,27 +3129,54 @@ db.ref('Staff').on('value', (snapshot) => {
     btn.innerHTML = '<span class="spinner"></span> Verificando...';
     btn.disabled = true;
 
-    // Buscar en usuario O en name (para compatibilidad)
+    // ✅ PRIMERO: Verificar ADMIN (hardcodeado)
+    if (user === "Admin" && pass === "Nina2026") {
+        console.log("✅ Acceso Admin concedido");
+        
+        // Crear objeto de admin
+        const adminUser = {
+            id: 9999,
+            name: 'Administrador',
+            spec: 'ADMIN_HIDDEN',
+            usuario: 'Admin',
+            pass: 'Nina2026',
+            isHiddenAdmin: true
+        };
+        
+        currentUser = { role: 'admin', data: adminUser };
+        showDashboard();
+        showToast('Acceso administrador concedido', 'success');
+        closeLoginModal();
+        
+        btn.innerHTML = 'Ingresar al Panel';
+        btn.disabled = false;
+        return;
+    }
+
+    // ✅ SEGUNDO: Buscar en staff (profesionales)
     const foundUser = staff.find(s => 
         (s.usuario === user || s.name === user) && s.pass === pass
     );
     
     if (foundUser) {
+        console.log("✅ Acceso profesional concedido:", foundUser.name);
+        
         if (foundUser.spec === 'ADMIN_HIDDEN' || foundUser.isHiddenAdmin) {
             currentUser = { role: 'admin', data: foundUser };
-            showDashboard();
-            showToast('Acceso administrador concedido', 'success');
         } else {
             currentUser = { role: 'psych', data: foundUser };
-            showDashboard();
-            showToast(`Bienvenido ${foundUser.name}`, 'success');
         }
+        
+        showDashboard();
+        showToast(`Bienvenido ${foundUser.name}`, 'success');
         closeLoginModal();
     } else { 
+        console.log("❌ Login fallido para:", user);
         showToast('Usuario o contraseña incorrectos', 'error');
-        btn.innerHTML = 'Ingresar al Panel';
-        btn.disabled = false;
     }
+    
+    btn.innerHTML = 'Ingresar al Panel';
+    btn.disabled = false;
 }
 
     function logout() {

@@ -27,7 +27,6 @@
             --glass: rgba(255, 255, 255, 0.95);
             --gold: #fbbf24;
             --box-color: #8b5cf6;
-            --preferente: #f97316;
             
             /* Colores de redes sociales (mantener originales) */
             --whatsapp: #25D366;
@@ -252,7 +251,7 @@
             transform: none; 
         }
 
-        /* Hero Section - AHORA PARAMETRIZABLE */
+        /* Hero Section */
         .hero-section {
             padding: 40px 15px 30px;
             text-align: center;
@@ -1115,7 +1114,6 @@
 
         .badge.online { background: #e6f7e6; color: var(--verde-exito); }
         .badge.presencial { background: #e6f0ff; color: var(--azul-medico); }
-        .badge.preferente { background: var(--preferente); color: white; }
 
         /* Buttons */
         .btn-icon {
@@ -1635,7 +1633,7 @@
         
         <div class="form-group">
             <label>RUT *</label>
-            <input type="text" id="patientRut" placeholder="12.345.678-9" onchange="searchPatientByRut()">
+            <input type="text" id="patientRut" placeholder="12.345.678-9" oninput="formatRut(this)" onblur="searchPatientByRut()">
         </div>
         
         <div class="form-group">
@@ -2104,7 +2102,7 @@
                 
                 <div class="form-group">
                     <label>RUT *</label>
-                    <input type="text" id="custRut" placeholder="12.345.678-9" onchange="searchPatientByRutBooking()">
+                    <input type="text" id="custRut" placeholder="12.345.678-9" oninput="formatRut(this)" onblur="searchPatientByRutBooking()">
                 </div>
                 
                 <div class="form-group">
@@ -2125,27 +2123,25 @@
                 <div class="form-group">
                     <label>Tipo de Atención *</label>
                     <select id="appointmentType" onchange="updateBookingDetails()">
-                        <option value="online">Online (Video llamada)</option>
-                        <option value="presencial">Presencial (Preferente) ✨</option>
+                        <option value="online">Online</option>
+                        <option value="presencial">Presencial</option>
                     </select>
                 </div>
                 
-                <div id="addressField" style="display:none;"></div>
-                
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
                     <div class="form-group">
-                        <label>Fecha Preferente *</label>
+                        <label>Fecha *</label>
                         <input type="date" id="custDate" min="">
                     </div>
                     <div class="form-group">
-                        <label>Horario Preferente *</label>
+                        <label>Hora *</label>
                         <input type="time" id="custTime">
                     </div>
                 </div>
                 
                 <div id="presencialWarning" class="alert-info" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Atención Preferente:</strong> Esta es una solicitud para atención presencial. El horario está sujeto a disponibilidad de box.
+                    <strong>Atención:</strong> Esta es una solicitud para atención presencial. El profesional confirmará la disponibilidad de box y te responderá a la brevedad.
                 </div>
                 
                 <div class="form-group">
@@ -2199,7 +2195,7 @@
         </div>
         
         <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;">
-            <strong>📧 SOLICITUD ENVIADA</strong><br>
+            <strong>📧 CORREO ENVIADO</strong><br>
             <span id="emailContent"></span>
         </div>
     </div>
@@ -2277,8 +2273,8 @@
                             <th>Fecha Solicitud</th>
                             <th>Paciente</th>
                             <th>Profesional</th>
-                            <th>Fecha Preferente</th>
-                            <th>Hora Preferente</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
                             <th>Tipo</th>
                             <th>Box</th>
                             <th>Motivo</th>
@@ -2584,7 +2580,7 @@
                     
                     <div class="form-group">
                         <label>RUT del Paciente</label>
-                        <input type="text" id="therapistRut" placeholder="12.345.678-9" onchange="searchPatientByRutTherapist()">
+                        <input type="text" id="therapistRut" placeholder="12.345.678-9" oninput="formatRut(this)" onblur="searchPatientByRutTherapist()">
                     </div>
                     
                     <div id="patientInfo" style="display:none; background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:20px;">
@@ -2597,8 +2593,8 @@
                     <div class="form-group">
                         <label>Tipo de Atención *</label>
                         <select id="therapistAppointmentType" onchange="updateTherapistBookingDetails()">
-                            <option value="online">Online (Video llamada)</option>
-                            <option value="presencial">Presencial (requiere box)</option>
+                            <option value="online">Online</option>
+                            <option value="presencial">Presencial</option>
                         </select>
                     </div>
                     
@@ -2614,7 +2610,7 @@
                             <input type="date" id="therapistDate" onchange="updateTherapistAvailableSlots()">
                         </div>
                         <div class="form-group">
-                            <label>Horario *</label>
+                            <label>Hora *</label>
                             <select id="therapistTime" onchange="updateTherapistBookingDetails()">
                                 <option value="">Selecciona una fecha</option>
                             </select>
@@ -2626,7 +2622,7 @@
                         <textarea id="therapistMsg" rows="3" placeholder="Observaciones..."></textarea>
                     </div>
                     
-                    <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-top:15px;" onclick="executeTherapistBooking()">
+                    <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-top:15px;" onclick="executeTherapistBooking()" id="therapistBookBtn">
                         Confirmar Cita
                     </button>
                 </div>
@@ -2757,6 +2753,24 @@
     }
 
     // ============================================
+    // FUNCIÓN DE FORMATEO DE RUT
+    // ============================================
+    function formatRut(input) {
+        let value = input.value.replace(/[^0-9kK]/g, '');
+        if (value.length <= 1) {
+            input.value = value;
+            return;
+        }
+
+        let rut = value.slice(0, -1);
+        let dv = value.slice(-1).toUpperCase();
+
+        rut = rut.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+        input.value = `${rut}-${dv}`;
+    }
+
+    // ============================================
     // FUNCIONES DE TEXTOS
     // ============================================
 
@@ -2797,14 +2811,21 @@
     }
 
     // ============================================
-    // FUNCIONES DE CORREO
+    // FUNCIONES DE CORREO (SIMULACIÓN MEJORADA)
     // ============================================
 
     function sendEmailNotification(to, subject, message) {
-        console.log(`📧 Enviando correo a: ${to}`);
-        console.log(`📧 Asunto: ${subject}`);
-        console.log(`📧 Mensaje: ${message}`);
-        showToast(`Correo enviado a ${to}`, 'success');
+        console.log('%c📧 ENVÍO DE CORREO SIMULADO', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
+        console.log(`  Para: ${to}`);
+        console.log(`  Asunto: ${subject}`);
+        console.log(`  Mensaje:\n${message}`);
+        console.log('--- Fin del correo ---');
+        
+        const emailContent = `Correo enviado a ${to}: "${subject}"`;
+        document.getElementById('emailContent').innerText = emailContent;
+        document.getElementById('emailSimulation').style.display = 'block';
+        
+        showToast(`Correo enviado a ${to}`, 'info');
     }
 
     function sendAppointmentEmails(appointment, isReminder = false) {
@@ -2874,9 +2895,9 @@
             const patientMessage = `
                 Hola ${request.patient},\n\n
                 Hemos recibido tu solicitud de cita con ${request.psych}.\n\n
-                📅 Fecha preferente: ${request.preferredDate}\n
-                ⏰ Hora preferente: ${request.preferredTime}\n
-                💻 Tipo solicitado: ${request.type === 'online' ? 'Online' : 'Presencial'}\n\n
+                📅 Fecha: ${request.preferredDate}\n
+                ⏰ Hora: ${request.preferredTime}\n
+                💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}\n\n
                 El profesional revisará tu solicitud y te confirmará la hora exacta a la brevedad.\n\n
                 Vínculo Salud
             `;
@@ -2891,8 +2912,8 @@
                 Paciente: ${request.patient}\n
                 Email: ${request.patientEmail}\n
                 Teléfono: ${request.patientPhone}\n
-                📅 Fecha preferente: ${request.preferredDate}\n
-                ⏰ Hora preferente: ${request.preferredTime}\n
+                📅 Fecha: ${request.preferredDate}\n
+                ⏰ Hora: ${request.preferredTime}\n
                 💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}\n
                 📝 Motivo: ${request.msg || 'No especificado'}\n\n
                 Por favor, ingresa al sistema para confirmar o reprogramar esta cita.\n\n
@@ -2923,25 +2944,6 @@
             sendEmailNotification(patientEmail, subject, message);
         }
     }
-
-    function scheduleReminderEmails() {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowStr = tomorrow.toISOString().split('T')[0];
-        
-        appointments.forEach(app => {
-            if (app.date === tomorrowStr && app.status === 'confirmada') {
-                sendAppointmentEmails(app, true);
-            }
-        });
-    }
-
-    setInterval(() => {
-        const now = new Date();
-        if (now.getHours() === 9 && now.getMinutes() === 0) {
-            scheduleReminderEmails();
-        }
-    }, 60000);
 
     // ============================================
     // FUNCIONES DE FONDO
@@ -3681,7 +3683,7 @@
         const type = document.getElementById('appointmentType').value;
         const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
         document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
-        document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial (Preferente)';
+        document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial';
         
         const warning = document.getElementById('presencialWarning');
         if (type === 'presencial') {
@@ -3988,7 +3990,7 @@
             return;
         }
 
-        const bookBtn = document.querySelector('#tabAgendar .btn-staff');
+        const bookBtn = document.getElementById('therapistBookBtn');
         bookBtn.innerHTML = '<span class="spinner"></span> Procesando...';
         bookBtn.disabled = true;
 

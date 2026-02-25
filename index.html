@@ -195,7 +195,7 @@
             padding: 0 15px;
         }
 
-        /* Navigation - AHORA CON LOGO PARAMETRIZABLE */
+        /* Navigation - CON LOGO FIJO Y TEXTO SEPARADO */
         header.nav-container {
             padding: 15px 0;
             position: sticky;
@@ -234,7 +234,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             white-space: nowrap;
-            cursor: pointer;
         }
 
         .logo-text-input {
@@ -2158,12 +2157,6 @@
         <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">🖼️ Logo del Sitio</h2>
         
         <div class="form-group">
-            <label>Texto del Logo (si no hay imagen)</label>
-            <input type="text" id="logoText" value="Vínculo Salud" class="form-control">
-            <small style="color:var(--text-light);">Este texto se muestra cuando no hay logo</small>
-        </div>
-        
-        <div class="form-group">
             <label>Logo (imagen)</label>
             <div class="file-upload" onclick="document.getElementById('logoInput').click()">
                 <i class="fa fa-cloud-upload-alt"></i>
@@ -2171,6 +2164,11 @@
                 <p style="font-size:0.7rem; margin-top:5px;">Formatos: JPG, PNG (máx 2MB)</p>
             </div>
             <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewLogo(this)">
+        </div>
+        
+        <div class="form-group">
+            <label>Texto del Logo (se muestra si no hay imagen)</label>
+            <input type="text" id="logoText" value="Vínculo Salud" class="form-control">
         </div>
         
         <div id="currentLogoPreview" style="margin:20px 0; text-align:center;">
@@ -2208,6 +2206,10 @@
         <section class="hero-section">
             <h1 id="heroTitleDisplay">Bienestar <br>a tu alcance</h1>
             <p id="heroSubtitleDisplay">Encuentra al profesional ideal y agenda tu sesión</p>
+            <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <span class="badge online" style="font-size: 1rem; padding: 8px 20px;"><i class="fa fa-video"></i> Atención Online</span>
+                <span class="badge presencial" style="font-size: 1rem; padding: 8px 20px;"><i class="fa fa-building"></i> Atención Presencial</span>
+            </div>
         </section>
 
         <div class="filters">
@@ -2283,7 +2285,7 @@
                     <div class="form-group">
                         <label>Hora *</label>
                         <select id="custTime" onchange="checkOnlineAvailability()">
-                            <option value="">Selecciona una hora</option>
+                            <option value="">Primero selecciona fecha</option>
                         </select>
                     </div>
                 </div>
@@ -2295,7 +2297,7 @@
                 
                 <div id="presencialWarning" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Solicitud Presencial:</strong> Esta es una solicitud que será revisada por el profesional. La hora definitiva se coordinará contigo.
+                    <strong>Solicitud Presencial:</strong> Esta es una solicitud que será revisada por el profesional. Solo necesitas indicar el día, el horario se coordinará contigo.
                 </div>
                 
                 <div class="form-group">
@@ -2917,6 +2919,7 @@
     let tempLogoData = null;
     let tempQrData = null;
     let selectedPatientForTherapist = null;
+    let dataLoaded = false;
     const EDIT_HOURS = 24;
 
     function getPublicStaff() {
@@ -2997,6 +3000,8 @@
         
         if (tempLogoData) {
             logoImage.url = tempLogoData;
+        } else {
+            logoImage.url = '';
         }
         
         db.ref('LogoImage').set(logoImage);
@@ -3070,21 +3075,21 @@
     }
 
     // ============================================
-    // FUNCIÓN DE CORREO (CORREGIDA)
+    // FUNCIÓN DE CORREO (CORREGIDA CON SIMULACIÓN)
     // ============================================
 
     function sendEmailNotification(to, subject, message) {
-        // Simulación de envío de correo (para evitar errores)
         console.log(`📧 Simulación de correo a: ${to}`);
         console.log(`📧 Asunto: ${subject}`);
         console.log(`📧 Mensaje: ${message}`);
         
-        // Mostrar simulación
         showToast(`Correo simulado enviado a ${to}`, 'success');
         
         const emailContent = `Correo enviado a ${to}: "${subject}"`;
         document.getElementById('emailContent').innerText = emailContent;
         document.getElementById('emailSimulation').style.display = 'block';
+        
+        return true;
     }
 
     // ============================================
@@ -3527,11 +3532,14 @@ Vínculo Salud
     }
 
     // ============================================
-    // CARGAR DATOS DESDE FIREBASE
+    // CARGAR DATOS DESDE FIREBASE CON MEJORA DE CARGA
     // ============================================
     
     function cargarDatosIniciales() {
-        db.ref('Staff').on('value', (snapshot) => {
+        // Mostrar un indicador de carga
+        document.getElementById('publicGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Cargando profesionales...</p></div>';
+        
+        db.ref('Staff').once('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 staff = Object.keys(data).map(key => {
@@ -3585,7 +3593,6 @@ Vínculo Salud
                     }
                 });
             } else {
-                // SIN PROFESIONALES POR DEFECTO, SOLO ADMIN
                 staff = [];
             }
             
@@ -3616,6 +3623,9 @@ Vínculo Salud
             
             filterProfessionals();
             if (currentUser?.role === 'admin') renderStaffTable();
+            
+            // Marcar datos cargados
+            dataLoaded = true;
         });
         
         db.ref('Boxes').on('value', (snapshot) => {
@@ -3934,6 +3944,11 @@ Vínculo Salud
         // Limpiar opciones
         timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
         
+        if (type === 'presencial') {
+            timeSelect.innerHTML = '<option value="">Selecciona un día (la hora se coordinará)</option>';
+            return;
+        }
+        
         // Obtener slots disponibles
         const availableSlots = selectedPsych.availability?.[date] || [];
         const bookedTimes = appointments
@@ -3969,6 +3984,11 @@ Vínculo Salud
         const date = document.getElementById('custDate').value;
         const time = document.getElementById('custTime').value;
         const type = document.getElementById('appointmentType').value;
+        
+        if (type === 'presencial') {
+            document.getElementById('onlineAvailabilityMsg').style.display = 'none';
+            return true;
+        }
         
         if (type === 'online' && date && time) {
             // Verificar si la fecha/hora ya pasó
@@ -4021,7 +4041,6 @@ Vínculo Salud
         } else {
             warning.style.display = 'none';
             onlineMsg.style.display = 'block';
-            checkOnlineAvailability();
         }
         
         // Actualizar horarios disponibles
@@ -4053,8 +4072,13 @@ Vínculo Salud
         const msg = document.getElementById('custMsg').value;
         const acceptPolicy = document.getElementById('acceptPolicy').checked;
         
-        if (!rut || !name || !email || !date || !time || !paymentMethod) {
-            showToast('Completa todos los campos obligatorios', 'error');
+        if (!rut || !name || !email || !date || !paymentMethod) {
+            showToast('Completa todos los campos obligatorios (RUT, nombre, email, fecha y método de pago)', 'error');
+            return;
+        }
+
+        if (type === 'online' && !time) {
+            showToast('Para atención online debes seleccionar una hora', 'error');
             return;
         }
 
@@ -4063,13 +4087,15 @@ Vínculo Salud
             return;
         }
 
-        // Validar que la hora no haya pasado
-        const selectedDateTime = new Date(date + 'T' + time);
-        const now = new Date();
-        
-        if (selectedDateTime < now) {
-            showToast('No puedes agendar una hora que ya pasó', 'error');
-            return;
+        // Validar que la hora no haya pasado (solo para online)
+        if (type === 'online') {
+            const selectedDateTime = new Date(date + 'T' + time);
+            const now = new Date();
+            
+            if (selectedDateTime < now) {
+                showToast('No puedes agendar una hora que ya pasó', 'error');
+                return;
+            }
         }
 
         // Verificar disponibilidad para online
@@ -4210,7 +4236,7 @@ Vínculo Salud
                     psych: selectedPsych.name,
                     psychId: selectedPsych.id,
                     preferredDate: date,
-                    preferredTime: time,
+                    preferredTime: 'A coordinar',
                     type: type,
                     boxId: null,
                     boxName: null,
@@ -4229,10 +4255,6 @@ Vínculo Salud
             
             bookBtn.innerHTML = 'SOLICITAR CITA';
             bookBtn.disabled = false;
-            
-            setTimeout(() => {
-                location.reload();
-            }, 3000);
         }, 1500);
     }
 
@@ -5827,14 +5849,7 @@ Vínculo Salud
             save();
             
             if (appointment?.patientEmail) {
-                const subject = 'Cita cancelada - Vínculo Salud';
-                const message = `
-                    Hola ${appointment.patient},\n\n
-                    Tu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.\n\n
-                    Si necesitas reagendar, contáctanos.\n\n
-                    Vínculo Salud
-                `;
-                sendEmailNotification(appointment.patientEmail, subject, message);
+                sendCancellationEmail(appointment);
             }
             
             showToast('Cita cancelada', 'success');

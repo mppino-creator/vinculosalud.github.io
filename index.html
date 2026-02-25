@@ -27,6 +27,7 @@
             --glass: rgba(255, 255, 255, 0.95);
             --gold: #fbbf24;
             --box-color: #8b5cf6;
+            --preferente: #f97316;
             
             /* Colores de redes sociales (mantener originales) */
             --whatsapp: #25D366;
@@ -1114,6 +1115,7 @@
 
         .badge.online { background: #e6f7e6; color: var(--verde-exito); }
         .badge.presencial { background: #e6f0ff; color: var(--azul-medico); }
+        .badge.preferente { background: var(--preferente); color: white; }
 
         /* Buttons */
         .btn-icon {
@@ -1185,6 +1187,57 @@
             opacity: 0.5;
             cursor: not-allowed;
             background: #f1f5f9;
+        }
+
+        .box-option.taken {
+            background: #f1f5f9;
+            color: var(--text-light);
+            border-color: var(--text-light);
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .box-option.taken::after {
+            content: "🔒";
+            margin-left: 5px;
+            font-size: 0.8rem;
+        }
+
+        /* Box Schedule */
+        .box-schedule {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .schedule-item:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-time {
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        .schedule-professional {
+            flex: 1;
+        }
+
+        .schedule-box {
+            background: var(--box-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
         }
 
         /* Email Simulation */
@@ -1707,7 +1760,7 @@
         <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
             <div class="form-group">
                 <label>Nombre del Box *</label>
-                <input type="text" id="boxName" placeholder="Ej: Box 1">
+                <input type="text" id="boxName" placeholder="Ej: BOX A, BOX B, BOX C">
             </div>
             
             <div class="form-group">
@@ -1914,6 +1967,14 @@
                 <input type="checkbox" id="globalCash" checked> 
                 <label>Efectivo (en consulta)</label>
             </div>
+            <div class="payment-method-item">
+                <input type="checkbox" id="globalMercadoPago"> 
+                <label>Mercado Pago</label>
+            </div>
+            <div class="payment-method-item">
+                <input type="checkbox" id="globalWebpay"> 
+                <label>Webpay</label>
+            </div>
         </div>
         
         <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="saveGlobalPaymentMethods()">
@@ -2030,7 +2091,7 @@
         </div>
     </main>
 
-    <!-- Panel de Reserva (para pacientes) - CORREGIDO para presencial -->
+    <!-- Panel de Reserva (para pacientes) -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
             <h2 style="color: var(--azul-oscuro);">Solicitar Cita con <span id="psychName"></span></h2>
@@ -2065,12 +2126,9 @@
                     <label>Tipo de Atención *</label>
                     <select id="appointmentType" onchange="updateBookingDetails()">
                         <option value="online">Online (Video llamada)</option>
-                        <option value="presencial">Presencial en consultorio</option>
+                        <option value="presencial">Presencial (Preferente) ✨</option>
                     </select>
                 </div>
-                
-                <!-- Selección de Box (solo para presencial) - OCULTO para pacientes -->
-                <div id="boxField" style="display:none;"></div>
                 
                 <div id="addressField" style="display:none;"></div>
                 
@@ -2087,7 +2145,7 @@
                 
                 <div id="presencialWarning" class="alert-info" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Horario tentativo:</strong> La hora seleccionada es tentativa y está sujeta a confirmación por parte del profesional.
+                    <strong>Atención Preferente:</strong> Esta es una solicitud para atención presencial. El horario está sujeto a disponibilidad de box.
                 </div>
                 
                 <div class="form-group">
@@ -2122,7 +2180,7 @@
                 </div>
                 
                 <div style="margin:20px 0;">
-                    <label style="color:white; margin-bottom:10px; display:block;">Método de Pago Preferente</label>
+                    <label style="color:white; margin-bottom:10px; display:block;">Método de Pago</label>
                     <select id="paymentMethod" style="width:100%; padding:12px; border-radius:10px;" onchange="showPaymentDetails()">
                         <option value="">Selecciona método</option>
                     </select>
@@ -2444,6 +2502,14 @@
                     <input type="checkbox" id="myCash" checked> 
                     <label>Efectivo (en consulta)</label>
                 </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myMercadoPago"> 
+                    <label>Mercado Pago</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myWebpay"> 
+                    <label>Webpay</label>
+                </div>
                 
                 <button class="btn-staff" style="background:var(--verde-exito); margin-top:20px;" onclick="saveMyConfig()">
                     Guardar Configuración
@@ -2496,6 +2562,11 @@
                     <tbody id="boxTableBodyDashboard"></tbody>
                 </table>
             </div>
+            
+            <div class="box-schedule" id="boxScheduleView" style="margin-top:30px;">
+                <h3 style="color: var(--azul-oscuro); margin-bottom:15px;">📋 Ocupación de Boxes - Hoy</h3>
+                <div id="boxOccupancy"></div>
+            </div>
         </div>
 
         <!-- Tab: Agendar Cita (para terapeutas) -->
@@ -2527,7 +2598,7 @@
                         <label>Tipo de Atención *</label>
                         <select id="therapistAppointmentType" onchange="updateTherapistBookingDetails()">
                             <option value="online">Online (Video llamada)</option>
-                            <option value="presencial">Presencial en consultorio</option>
+                            <option value="presencial">Presencial (requiere box)</option>
                         </select>
                     </div>
                     
@@ -2600,6 +2671,8 @@
                             <option value="transfer">Transferencia</option>
                             <option value="cash">Efectivo</option>
                             <option value="card">Tarjeta</option>
+                            <option value="mercadopago">Mercado Pago</option>
+                            <option value="webpay">Webpay</option>
                         </select>
                     </div>
                 </div>
@@ -2659,7 +2732,9 @@
         transfer: true,
         cardPresencial: true,
         cardOnline: false,
-        cash: true
+        cash: true,
+        mercadopago: false,
+        webpay: false
     };
     let backgroundImage = {
         url: '',
@@ -2762,7 +2837,7 @@
                 💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}\n
                 ${appointment.boxName ? `📍 Box: ${appointment.boxName}\n` : ''}
                 📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}\n\n
-                💳 Método de pago: ${appointment.paymentMethod === 'transfer' ? 'Transferencia bancaria' : appointment.paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}\n\n
+                💳 Método de pago: ${appointment.paymentMethod === 'transfer' ? 'Transferencia bancaria' : appointment.paymentMethod === 'cash' ? 'Efectivo' : appointment.paymentMethod === 'mercadopago' ? 'Mercado Pago' : appointment.paymentMethod === 'webpay' ? 'Webpay' : 'Tarjeta'}\n\n
                 Si necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de anticipación.\n\n
                 Vínculo Salud
             `;
@@ -2979,6 +3054,8 @@
         document.getElementById('globalCardPresencial').checked = globalPaymentMethods.cardPresencial;
         document.getElementById('globalCardOnline').checked = globalPaymentMethods.cardOnline;
         document.getElementById('globalCash').checked = globalPaymentMethods.cash;
+        document.getElementById('globalMercadoPago').checked = globalPaymentMethods.mercadopago;
+        document.getElementById('globalWebpay').checked = globalPaymentMethods.webpay;
     }
 
     function closePaymentMethodsModal() {
@@ -2990,7 +3067,9 @@
             transfer: document.getElementById('globalTransfer').checked,
             cardPresencial: document.getElementById('globalCardPresencial').checked,
             cardOnline: document.getElementById('globalCardOnline').checked,
-            cash: document.getElementById('globalCash').checked
+            cash: document.getElementById('globalCash').checked,
+            mercadopago: document.getElementById('globalMercadoPago').checked,
+            webpay: document.getElementById('globalWebpay').checked
         };
         
         db.ref('PaymentMethods').set(globalPaymentMethods);
@@ -3007,6 +3086,8 @@
                 <p>✅ Tarjeta Presencial: ${globalPaymentMethods.cardPresencial ? 'Activado' : 'Desactivado'}</p>
                 <p>✅ Tarjeta Online: ${globalPaymentMethods.cardOnline ? 'Activado' : 'Desactivado'}</p>
                 <p>✅ Efectivo: ${globalPaymentMethods.cash ? 'Activado' : 'Desactivado'}</p>
+                <p>✅ Mercado Pago: ${globalPaymentMethods.mercadopago ? 'Activado' : 'Desactivado'}</p>
+                <p>✅ Webpay: ${globalPaymentMethods.webpay ? 'Activado' : 'Desactivado'}</p>
             `;
         }
     }
@@ -3201,8 +3282,8 @@
                         spec: ['Terapia Cognitiva', 'Ansiedad', 'Depresión'], 
                         priceOnline: 45000,
                         pricePresencial: 50000,
-                        usuario: 'isabel',
-                        pass: 'isabel2026',
+                        usuario: 'alison',
+                        pass: 'alison2026',
                         email: 'alison@vinculosalud.cl',
                         img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500',
                         whatsapp: '+56987654321',
@@ -3292,12 +3373,13 @@
                 boxes = Object.keys(data).map(key => ({ id: key, ...data[key] }));
             } else {
                 boxes = [
-                    { id: 1, name: 'Box 1', location: 'Piso 1 - Sector A', startTime: '09:00', endTime: '20:00', days: [1,2,3,4,5], description: 'Box equipado con camilla y escritorio', active: true },
-                    { id: 2, name: 'Box 2', location: 'Piso 1 - Sector B', startTime: '09:00', endTime: '20:00', days: [1,2,3,4,5], description: 'Box con vista al exterior', active: true },
-                    { id: 3, name: 'Box 3', location: 'Piso 2', startTime: '14:00', endTime: '22:00', days: [1,2,3,4,5,6], description: 'Box para atenciones vespertinas', active: true }
+                    { id: 1, name: 'BOX A', location: 'Piso 1 - Sector A', startTime: '09:00', endTime: '20:00', days: [1,2,3,4,5], description: 'Box principal con camilla', active: true },
+                    { id: 2, name: 'BOX B', location: 'Piso 1 - Sector B', startTime: '09:00', endTime: '20:00', days: [1,2,3,4,5], description: 'Box con vista al exterior', active: true },
+                    { id: 3, name: 'BOX C', location: 'Piso 2', startTime: '14:00', endTime: '22:00', days: [1,2,3,4,5,6], description: 'Box para atenciones vespertinas', active: true }
                 ];
             }
             if (currentUser?.role === 'admin') renderBoxesTable();
+            if (currentUser?.role === 'psych') renderBoxOccupancy();
         });
         
         db.ref('Patients').on('value', (snapshot) => {
@@ -3321,6 +3403,7 @@
                 updateStats();
                 renderPendingRequests();
             }
+            if (currentUser?.role === 'psych') renderBoxOccupancy();
         });
         
         db.ref('PendingRequests').on('value', (snapshot) => {
@@ -3410,6 +3493,7 @@
             }
             if (currentUser.role === 'psych') {
                 renderPatients();
+                renderBoxOccupancy();
                 if (document.getElementById('tabDisponibilidad')?.classList.contains('active')) {
                     loadTimeSlots();
                 }
@@ -3560,6 +3644,12 @@
         if (methods.cash) {
             select.innerHTML += '<option value="cash">Efectivo (en consulta)</option>';
         }
+        if (methods.mercadopago) {
+            select.innerHTML += '<option value="mercadopago">Mercado Pago</option>';
+        }
+        if (methods.webpay) {
+            select.innerHTML += '<option value="webpay">Webpay</option>';
+        }
     }
 
     function showPaymentDetails() {
@@ -3576,6 +3666,12 @@
                 <p><strong>RUT:</strong> ${bank.rut || ''}</p>
                 <p><strong>Email:</strong> ${bank.email || ''}</p>
             `;
+        } else if (method === 'mercadopago' || method === 'webpay') {
+            detailsDiv.style.display = 'block';
+            detailsDiv.innerHTML = `
+                <h4 style="margin-bottom:10px;">Pago Online</h4>
+                <p>Serás redirigido a la pasarela de pago al confirmar la cita.</p>
+            `;
         } else {
             detailsDiv.style.display = 'none';
         }
@@ -3585,7 +3681,7 @@
         const type = document.getElementById('appointmentType').value;
         const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
         document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
-        document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial';
+        document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial (Preferente)';
         
         const warning = document.getElementById('presencialWarning');
         if (type === 'presencial') {
@@ -3621,6 +3717,18 @@
         
         if (!rut || !name || !email || !date || !time || !paymentMethod) {
             showToast('Completa todos los campos obligatorios', 'error');
+            return;
+        }
+
+        // Verificar si el profesional ya tiene una cita a la misma hora (online o presencial)
+        const existingAppointment = appointments.find(a => 
+            a.psychId == selectedPsych.id && 
+            a.date === date && 
+            a.time === time
+        );
+
+        if (existingAppointment) {
+            showToast('El profesional ya tiene una cita agendada en este horario', 'error');
             return;
         }
 
@@ -3863,6 +3971,18 @@
             return;
         }
 
+        // Verificar si ya tiene una cita a la misma hora (online o presencial)
+        const existingAppointment = appointments.find(a => 
+            a.psychId == currentUser.data.id && 
+            a.date === date && 
+            a.time === time
+        );
+
+        if (existingAppointment) {
+            showToast('Ya tienes una cita agendada en este horario', 'error');
+            return;
+        }
+
         if (type === 'presencial' && !selectedTherapistBoxId) {
             showToast('Debes seleccionar un box para atención presencial', 'error');
             return;
@@ -3935,8 +4055,39 @@
             selectedPatientForTherapist = null;
             selectedTherapistBoxId = null;
             
+            renderBoxOccupancy();
             switchTab('citas');
         }, 1500);
+    }
+
+    // ============================================
+    // FUNCIONES DE BOXES (OCUPACIÓN Y VISUALIZACIÓN)
+    // ============================================
+
+    function renderBoxOccupancy() {
+        const container = document.getElementById('boxOccupancy');
+        if (!container) return;
+
+        const today = new Date().toISOString().split('T')[0];
+        const todayAppointments = appointments.filter(a => a.date === today && a.type === 'presencial' && a.status === 'confirmada');
+        
+        if (todayAppointments.length === 0) {
+            container.innerHTML = '<p style="text-align:center; padding:20px;">No hay boxes ocupados hoy</p>';
+            return;
+        }
+
+        const sortedApps = todayAppointments.sort((a, b) => a.time.localeCompare(b.time));
+        
+        container.innerHTML = sortedApps.map(a => {
+            const box = boxes.find(b => b.id == a.boxId);
+            return `
+                <div class="schedule-item">
+                    <span class="schedule-time">${a.time}</span>
+                    <span class="schedule-professional"><strong>${a.psych}</strong> - ${a.patient}</span>
+                    <span class="schedule-box">${box ? box.name : 'Box no asignado'}</span>
+                </div>
+            `;
+        }).join('');
     }
 
     // ============================================
@@ -3956,67 +4107,67 @@
     }
 
     function processLogin() {
-    const user = document.getElementById('loginUser').value;
-    const pass = document.getElementById('loginPass').value;
-    const btn = document.getElementById('loginBtn');
-    
-    if (!user || !pass) {
-        showToast('Ingresa usuario y contraseña', 'error');
-        return;
-    }
+        const user = document.getElementById('loginUser').value;
+        const pass = document.getElementById('loginPass').value;
+        const btn = document.getElementById('loginBtn');
+        
+        if (!user || !pass) {
+            showToast('Ingresa usuario y contraseña', 'error');
+            return;
+        }
 
-    btn.innerHTML = '<span class="spinner"></span> Verificando...';
-    btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Verificando...';
+        btn.disabled = true;
 
-    if (user === "Admin" && pass === "Nina2026") {
-        console.log("✅ Acceso Admin concedido");
+        if (user === "Admin" && pass === "Nina2026") {
+            console.log("✅ Acceso Admin concedido");
+            
+            const adminUser = {
+                id: 9999,
+                name: 'Administrador',
+                spec: ['ADMIN_HIDDEN'],
+                usuario: 'Admin',
+                pass: 'Nina2026',
+                isHiddenAdmin: true
+            };
+            
+            currentUser = { role: 'admin', data: adminUser };
+            
+            closeLoginModal();
+            
+            showDashboard();
+            showToast('Acceso administrador concedido', 'success');
+            
+            btn.innerHTML = 'Ingresar al Panel';
+            btn.disabled = false;
+            return;
+        }
+
+        const foundUser = staff.find(s => 
+            (s.usuario === user || s.name === user) && s.pass === pass
+        );
         
-        const adminUser = {
-            id: 9999,
-            name: 'Administrador',
-            spec: ['ADMIN_HIDDEN'],
-            usuario: 'Admin',
-            pass: 'Nina2026',
-            isHiddenAdmin: true
-        };
-        
-        currentUser = { role: 'admin', data: adminUser };
-        
-        closeLoginModal();
-        
-        showDashboard();
-        showToast('Acceso administrador concedido', 'success');
+        if (foundUser) {
+            console.log("✅ Acceso profesional concedido:", foundUser.name);
+            
+            if (foundUser.spec && foundUser.spec.includes('ADMIN_HIDDEN') || foundUser.isHiddenAdmin) {
+                currentUser = { role: 'admin', data: foundUser };
+            } else {
+                currentUser = { role: 'psych', data: foundUser };
+            }
+            
+            closeLoginModal();
+            
+            showDashboard();
+            showToast(`Bienvenido ${foundUser.name}`, 'success');
+        } else { 
+            console.log("❌ Login fallido para:", user);
+            showToast('Usuario o contraseña incorrectos', 'error');
+        }
         
         btn.innerHTML = 'Ingresar al Panel';
         btn.disabled = false;
-        return;
     }
-
-    const foundUser = staff.find(s => 
-        (s.usuario === user || s.name === user) && s.pass === pass
-    );
-    
-    if (foundUser) {
-        console.log("✅ Acceso profesional concedido:", foundUser.name);
-        
-        if (foundUser.spec && foundUser.spec.includes('ADMIN_HIDDEN') || foundUser.isHiddenAdmin) {
-            currentUser = { role: 'admin', data: foundUser };
-        } else {
-            currentUser = { role: 'psych', data: foundUser };
-        }
-        
-        closeLoginModal();
-        
-        showDashboard();
-        showToast(`Bienvenido ${foundUser.name}`, 'success');
-    } else { 
-        console.log("❌ Login fallido para:", user);
-        showToast('Usuario o contraseña incorrectos', 'error');
-    }
-    
-    btn.innerHTML = 'Ingresar al Panel';
-    btn.disabled = false;
-}
 
     function logout() {
         currentUser = null;
@@ -4024,45 +4175,66 @@
     }
 
     function showDashboard() {
-    document.getElementById('clientView').style.display = 'none';
-    document.getElementById('bookingPanel').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    
-    const isAdmin = currentUser.role === 'admin';
-    const isPsych = currentUser.role === 'psych';
-    
-    document.getElementById('adminTabProfesionales').style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('adminTabEspecialidades').style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('adminTabPagos').style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('adminTabFondo').style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('adminTabTextos').style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('psychTab').style.display = isPsych ? 'block' : 'none';
-    document.getElementById('configTab').style.display = isPsych ? 'block' : 'none';
-    document.getElementById('messagesTab').style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('boxesTab').style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('agendarTab').style.display = isPsych ? 'block' : 'none';
-    
-    if (isAdmin) {
-        document.getElementById('dashTitle').innerText = "Panel Administrador";
-        renderStaffTable();
-        renderMessagesTable();
-        renderBoxesTable();
-        updatePaymentMethodsInfo();
-    } else {
-        document.getElementById('dashTitle').innerText = `Panel de ${currentUser.data.name}`;
-        document.getElementById('availDate').min = new Date().toISOString().split('T')[0];
-        loadMyConfig();
-    }
-    
-    updateStats();
-    renderPatients();
-    renderPendingRequests();
-    switchTab('citas');
+        document.getElementById('clientView').style.display = 'none';
+        document.getElementById('bookingPanel').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        
+        const isAdmin = currentUser.role === 'admin';
+        const isPsych = currentUser.role === 'psych';
+        
+        document.getElementById('adminTabProfesionales').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminTabEspecialidades').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminTabPagos').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminTabFondo').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminTabTextos').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('psychTab').style.display = isPsych ? 'block' : 'none';
+        document.getElementById('configTab').style.display = isPsych ? 'block' : 'none';
+        document.getElementById('messagesTab').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('boxesTab').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('agendarTab').style.display = isPsych ? 'block' : 'none';
+        
+        if (isAdmin) {
+            document.getElementById('dashTitle').innerText = "Panel Administrador";
+            renderStaffTable();
+            renderMessagesTable();
+            renderBoxesTable();
+            updatePaymentMethodsInfo();
+        } else {
+            document.getElementById('dashTitle').innerText = `Panel de ${currentUser.data.name}`;
+            document.getElementById('availDate').min = new Date().toISOString().split('T')[0];
+            loadMyConfig();
+            renderBoxOccupancy();
+        }
+        
+        updateStats();
+        renderPatients();
+        renderPendingRequests();
+        switchTab('citas');
     }
 
     function switchTab(tabName) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(t => t.classList.remove('active'));
+        
+        // Buscar el tab por el texto y activarlo
+        tabs.forEach(t => {
+            if (t.textContent.trim().toLowerCase().includes(tabName.toLowerCase()) || 
+                (tabName === 'citas' && t.textContent.trim() === 'Citas') ||
+                (tabName === 'solicitudes' && t.textContent.trim() === 'Solicitudes Pendientes') ||
+                (tabName === 'pacientes' && t.textContent.trim() === 'Pacientes') ||
+                (tabName === 'profesionales' && t.textContent.trim() === 'Profesionales') ||
+                (tabName === 'especialidades' && t.textContent.trim() === 'Especialidades') ||
+                (tabName === 'pagos' && t.textContent.trim() === 'Métodos de Pago') ||
+                (tabName === 'fondo' && t.textContent.trim() === 'Fondo') ||
+                (tabName === 'textos' && t.textContent.trim() === 'Textos') ||
+                (tabName === 'disponibilidad' && t.textContent.trim() === 'Disponibilidad') ||
+                (tabName === 'configuracion' && t.textContent.trim() === 'Mi Config') ||
+                (tabName === 'mensajes' && t.textContent.trim() === 'Mensajes') ||
+                (tabName === 'boxes' && t.textContent.trim() === 'Boxes') ||
+                (tabName === 'agendar' && t.textContent.trim() === 'Agendar Cita')) {
+                t.classList.add('active');
+            }
+        });
         
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
@@ -4072,6 +4244,7 @@
         if (tabName === 'configuracion' && currentUser.role === 'psych') loadMyConfig();
         if (tabName === 'mensajes' && currentUser.role === 'admin') renderMessagesTable();
         if (tabName === 'boxes' && currentUser.role === 'admin') renderBoxesTable();
+        if (tabName === 'boxes' && currentUser.role === 'psych') renderBoxOccupancy();
         if (tabName === 'solicitudes') renderPendingRequests();
     }
 
@@ -4626,6 +4799,8 @@
         document.getElementById('myCardPresencial').checked = methods.cardPresencial !== false;
         document.getElementById('myCardOnline').checked = methods.cardOnline || false;
         document.getElementById('myCash').checked = methods.cash !== false;
+        document.getElementById('myMercadoPago').checked = methods.mercadopago || false;
+        document.getElementById('myWebpay').checked = methods.webpay || false;
     }
 
     function saveMyConfig() {
@@ -4650,7 +4825,9 @@
             transfer: document.getElementById('myTransfer').checked,
             cardPresencial: document.getElementById('myCardPresencial').checked,
             cardOnline: document.getElementById('myCardOnline').checked,
-            cash: document.getElementById('myCash').checked
+            cash: document.getElementById('myCash').checked,
+            mercadopago: document.getElementById('myMercadoPago').checked,
+            webpay: document.getElementById('myWebpay').checked
         };
         
         const staffIndex = staff.findIndex(s => s.id == psych.id);

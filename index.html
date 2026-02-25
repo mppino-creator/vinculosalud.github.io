@@ -195,7 +195,7 @@
             padding: 0 15px;
         }
 
-        /* Navigation */
+        /* Navigation - AHORA CON LOGO */
         header.nav-container {
             padding: 15px 0;
             position: sticky;
@@ -213,14 +213,36 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
 
-        .logo { 
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .logo-img {
+            height: 40px;
+            width: auto;
+            max-width: 150px;
+            object-fit: contain;
+        }
+
+        .logo-text { 
             font-weight: 900; 
-            font-size: 2rem;
+            font-size: 1.5rem;
             background: linear-gradient(to right, var(--azul-oscuro), var(--azul-medico));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            cursor: pointer;
             white-space: nowrap;
+        }
+
+        @media (max-width: 480px) {
+            .logo-text {
+                font-size: 1.2rem;
+            }
+            .logo-img {
+                height: 30px;
+            }
         }
 
         .btn-staff {
@@ -1303,8 +1325,8 @@
                 font-size: 0.8rem;
             }
 
-            .logo {
-                font-size: 1.5rem;
+            .logo-text {
+                font-size: 1.2rem;
             }
 
             .price-details {
@@ -1474,7 +1496,7 @@
     </div>
 </div>
 
-<!-- Modal de Edición de Terapeuta (CON DATOS BANCARIOS) -->
+<!-- Modal de Edición de Terapeuta (CON LINKS DE PAGO Y QR) -->
 <div class="modal" id="editTherapistModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeEditTherapistModal()">&times;</button>
@@ -1519,7 +1541,6 @@
                 </div>
                 <input type="file" id="editPhotoInput" accept="image/*" style="display:none;" onchange="previewEditImage(this)">
                 <img id="editPhotoPreview" class="image-preview" src="" style="display:none;">
-                <small style="color:var(--text-light); display:block; margin-top:5px;">La foto se guardará automáticamente al seleccionarla</small>
             </div>
             
             <div class="form-group">
@@ -1528,7 +1549,7 @@
             </div>
             
             <div class="form-group">
-                <label>Instagram (opcional)</label>
+                <label>Instagram</label>
                 <input type="text" id="editInstagram" placeholder="usuario sin @">
             </div>
             
@@ -1559,7 +1580,7 @@
             
             <div class="form-group">
                 <label>Banco</label>
-                <input type="text" id="editBank" placeholder="Ej: Banco Estado">
+                <input type="text" id="editBank">
             </div>
             
             <div class="form-group">
@@ -1574,7 +1595,7 @@
             
             <div class="form-group">
                 <label>Número de Cuenta</label>
-                <input type="text" id="editAccountNumber" placeholder="Número de cuenta">
+                <input type="text" id="editAccountNumber">
             </div>
             
             <div class="form-group">
@@ -1584,7 +1605,34 @@
             
             <div class="form-group">
                 <label>Email para transferencias</label>
-                <input type="email" id="editBankEmail" placeholder="email@banco.cl">
+                <input type="email" id="editBankEmail">
+            </div>
+            
+            <!-- 🔵 NUEVO: Links de Pago y QR -->
+            <div class="form-group" style="grid-column:1/-1;">
+                <h4 style="margin:15px 0; color: var(--azul-medico);">🔗 Links de Pago (SumUp)</h4>
+            </div>
+            
+            <div class="form-group">
+                <label>Link de pago ONLINE</label>
+                <input type="url" id="editPaymentLinkOnline" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
+                <small style="color:var(--text-light);">Ej: https://pay.sumup.com/b2c/Q133Z3BA</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Link de pago PRESENCIAL</label>
+                <input type="url" id="editPaymentLinkPresencial" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
+                <small style="color:var(--text-light);">Ej: https://pay.sumup.com/b2c/Q14AXQSS</small>
+            </div>
+            
+            <div class="form-group">
+                <label>QR de pago (opcional)</label>
+                <div class="file-upload" onclick="document.getElementById('editQrInput').click()">
+                    <i class="fa fa-qrcode"></i>
+                    <p>Haz clic para subir imagen del QR</p>
+                </div>
+                <input type="file" id="editQrInput" accept="image/*" style="display:none;" onchange="previewQrImage(this)">
+                <img id="editQrPreview" class="image-preview" src="" style="display:none; width:150px; height:150px; border-radius:10px; margin-top:10px;">
             </div>
         </div>
         
@@ -1666,6 +1714,9 @@
         <div id="patientHistoryContainer" style="margin: 20px 0; display: none;">
             <h3 style="margin-bottom: 15px; color: var(--azul-oscuro);">📋 Historial de Atenciones</h3>
             <div id="patientHistoryList" class="patient-history"></div>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-top:15px;" onclick="printPatientSummary()">
+                <i class="fa fa-print"></i> Imprimir Resumen
+            </button>
         </div>
         
         <button class="btn-staff" style="width:100%; justify-content:center; background:var(--verde-exito);" onclick="savePatient()">
@@ -1758,7 +1809,7 @@
         <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
             <div class="form-group">
                 <label>Nombre del Box *</label>
-                <input type="text" id="boxName" placeholder="Ej: BOX A, BOX B, BOX C">
+                <input type="text" id="boxName" placeholder="Ej: BOX A">
             </div>
             
             <div class="form-group">
@@ -1818,7 +1869,7 @@
     </div>
 </div>
 
-<!-- Modal para Añadir Profesional (CON EMAIL Y DATOS BANCARIOS) -->
+<!-- Modal para Añadir Profesional (CON LINKS DE PAGO Y QR) -->
 <div class="modal" id="addStaffModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeAddStaffModal()">&times;</button>
@@ -1866,12 +1917,12 @@
             
             <div class="form-group">
                 <label>WhatsApp</label>
-                <input type="text" id="addWhatsapp" placeholder="+56912345678">
+                <input type="text" id="addWhatsapp">
             </div>
             
             <div class="form-group">
-                <label>Instagram (opcional)</label>
-                <input type="text" id="addInstagram" placeholder="usuario sin @">
+                <label>Instagram</label>
+                <input type="text" id="addInstagram">
             </div>
             
             <div class="form-group">
@@ -1901,7 +1952,7 @@
             
             <div class="form-group">
                 <label>Banco</label>
-                <input type="text" id="addBank" placeholder="Ej: Banco Estado">
+                <input type="text" id="addBank">
             </div>
             
             <div class="form-group">
@@ -1916,7 +1967,7 @@
             
             <div class="form-group">
                 <label>Número de Cuenta</label>
-                <input type="text" id="addAccountNumber" placeholder="Número de cuenta">
+                <input type="text" id="addAccountNumber">
             </div>
             
             <div class="form-group">
@@ -1926,7 +1977,34 @@
             
             <div class="form-group">
                 <label>Email para transferencias</label>
-                <input type="email" id="addBankEmail" placeholder="email@banco.cl">
+                <input type="email" id="addBankEmail">
+            </div>
+            
+            <!-- 🔵 NUEVO: Links de Pago y QR -->
+            <div class="form-group" style="grid-column:1/-1;">
+                <h4 style="margin:15px 0; color: var(--azul-medico);">🔗 Links de Pago (SumUp)</h4>
+            </div>
+            
+            <div class="form-group">
+                <label>Link de pago ONLINE</label>
+                <input type="url" id="addPaymentLinkOnline" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
+                <small style="color:var(--text-light);">Ej: https://pay.sumup.com/b2c/Q133Z3BA</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Link de pago PRESENCIAL</label>
+                <input type="url" id="addPaymentLinkPresencial" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
+                <small style="color:var(--text-light);">Ej: https://pay.sumup.com/b2c/Q14AXQSS</small>
+            </div>
+            
+            <div class="form-group">
+                <label>QR de pago (opcional)</label>
+                <div class="file-upload" onclick="document.getElementById('addQrInput').click()">
+                    <i class="fa fa-qrcode"></i>
+                    <p>Haz clic para subir imagen del QR</p>
+                </div>
+                <input type="file" id="addQrInput" accept="image/*" style="display:none;" onchange="previewAddQrImage(this)">
+                <img id="addQrPreview" class="image-preview" src="" style="display:none; width:150px; height:150px; border-radius:10px; margin-top:10px;">
             </div>
         </div>
         
@@ -2042,11 +2120,43 @@
     </div>
 </div>
 
+<!-- Modal de Configuración de Logo (NUEVO) -->
+<div class="modal" id="logoModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <button class="modal-close" onclick="closeLogoModal()">&times;</button>
+        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">🖼️ Logo del Sitio</h2>
+        
+        <div class="form-group">
+            <label>Logo</label>
+            <div class="file-upload" onclick="document.getElementById('logoInput').click()">
+                <i class="fa fa-cloud-upload-alt"></i>
+                <p>Haz clic para seleccionar el logo</p>
+                <p style="font-size:0.7rem; margin-top:5px;">Formatos: JPG, PNG (máx 2MB)</p>
+            </div>
+            <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewLogo(this)">
+        </div>
+        
+        <div id="currentLogoPreview" style="margin:20px 0; text-align:center;">
+            <img id="logoPreview" src="" style="max-width:200px; max-height:80px; border-radius:8px; display:none;">
+        </div>
+        
+        <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-bottom:10px;" onclick="saveLogo()">
+            Guardar Logo
+        </button>
+        <button class="btn-staff" style="width:100%; background:var(--rojo-alerta);" onclick="removeLogo()">
+            Eliminar Logo
+        </button>
+    </div>
+</div>
+
 <!-- Contenedor Principal -->
 <div class="container">
     <header class="nav-container">
         <nav class="glass">
-            <div class="logo" onclick="location.reload()">Vínculo Salud</div>
+            <div class="logo-container" onclick="location.reload()">
+                <img id="headerLogo" class="logo-img" src="" style="display:none;" alt="Logo">
+                <span id="headerLogoText" class="logo-text">Vínculo Salud</span>
+            </div>
             <button class="btn-staff" onclick="showLoginModal()">
                 <i class="fa fa-lock"></i> Staff
             </button>
@@ -2139,9 +2249,14 @@
                     </div>
                 </div>
                 
-                <div id="presencialWarning" class="alert-info" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
+                <div id="onlineAvailabilityMsg" style="background:#e6f7e6; padding:15px; border-radius:12px; margin:15px 0; display:none;">
+                    <i class="fa fa-check-circle" style="color: var(--verde-exito);"></i> 
+                    Horario disponible para reserva inmediata.
+                </div>
+                
+                <div id="presencialWarning" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Atención:</strong> Esta es una solicitud para atención presencial. El profesional confirmará la disponibilidad de box y te responderá a la brevedad.
+                    <strong>Solicitud Presencial:</strong> Esta es una solicitud que será revisada por el profesional. La hora definitiva se coordinará contigo.
                 </div>
                 
                 <div class="form-group">
@@ -2151,7 +2266,7 @@
                 
                 <div class="alert-info" style="background:#e8f4fd; padding:15px; border-radius:12px; margin-top:20px;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Importante:</strong> Esta es una solicitud de cita. El profesional revisará tu solicitud y te confirmará la hora exacta vía email.
+                    <strong>Política de Cancelación:</strong> En caso de no asistir a la cita, se retendrá el valor de la sesión como compensación por el tiempo reservado.
                 </div>
             </div>
             
@@ -2163,6 +2278,11 @@
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
                     <span style="color:white;">Valor Sesión</span>
                     <span id="bookingPrice" style="color:white;">$0</span>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <span style="color:white;">Seña (50%)</span>
+                    <span id="bookingDeposit" style="color:var(--naranja-aviso);">$0</span>
                 </div>
                 
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
@@ -2184,6 +2304,13 @@
                 
                 <div id="paymentDetails" style="display:none; margin:20px 0; padding:15px; background:rgba(255,255,255,0.1); border-radius:12px;"></div>
                 
+                <div style="margin:15px 0;">
+                    <label style="display:flex; align-items:center; gap:10px; color:white; font-size:0.9rem;">
+                        <input type="checkbox" id="acceptPolicy">
+                        <span>Acepto la política de cancelación y el pago del 50% como seña</span>
+                    </label>
+                </div>
+                
                 <button class="btn-staff" style="width:100%; height:50px; background:var(--naranja-aviso); justify-content:center;" onclick="executeBooking()" id="bookBtn">
                     SOLICITAR CITA
                 </button>
@@ -2193,6 +2320,9 @@
                 </p>
             </div>
         </div>
+        
+        <!-- 🔵 NUEVO: Contenedor para links de pago -->
+        <div id="paymentLinkContainer" style="grid-column:1/-1; margin-top:20px; display:none;"></div>
         
         <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;">
             <strong>📧 CORREO ENVIADO</strong><br>
@@ -2234,6 +2364,7 @@
             <div class="tab" id="adminTabPagos" style="display:none;" onclick="switchTab('pagos')">Métodos de Pago</div>
             <div class="tab" id="adminTabFondo" style="display:none;" onclick="switchTab('fondo')">Fondo</div>
             <div class="tab" id="adminTabTextos" style="display:none;" onclick="switchTab('textos')">Textos</div>
+            <div class="tab" id="adminTabLogo" style="display:none;" onclick="switchTab('logo')">Logo</div>
             <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
             <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
             <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
@@ -2359,6 +2490,14 @@
                 <i class="fa fa-image"></i> Configurar Fondo
             </button>
             <div id="currentBackgroundInfo" style="text-align:center;"></div>
+        </div>
+
+        <!-- Tab: Logo (Admin) -->
+        <div id="tabLogo" class="tab-content">
+            <h3 style="color: var(--azul-oscuro);">Configuración del Logo</h3>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showLogoModal()">
+                <i class="fa fa-image"></i> Configurar Logo
+            </button>
         </div>
 
         <!-- Tab: Textos (Admin) -->
@@ -2736,6 +2875,9 @@
         url: '',
         opacity: 10
     };
+    let logoImage = {
+        url: ''
+    };
     let selectedPsych = null;
     let currentUser = null;
     let currentRating = 5;
@@ -2745,6 +2887,8 @@
     let selectedTherapistBoxId = null;
     let tempImageData = null;
     let tempBackgroundImageData = null;
+    let tempLogoData = null;
+    let tempQrData = null; // 🔵 NUEVO: Variable para QR
     let selectedPatientForTherapist = null;
     const EDIT_HOURS = 24;
 
@@ -2768,6 +2912,77 @@
         rut = rut.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
         input.value = `${rut}-${dv}`;
+    }
+
+    // ============================================
+    // FUNCIONES DE LOGO
+    // ============================================
+
+    function cargarLogo() {
+        db.ref('LogoImage').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.url) {
+                logoImage = data;
+                document.getElementById('headerLogo').src = data.url;
+                document.getElementById('headerLogo').style.display = 'inline-block';
+                document.getElementById('headerLogoText').style.display = 'none';
+            } else {
+                document.getElementById('headerLogo').style.display = 'none';
+                document.getElementById('headerLogoText').style.display = 'inline-block';
+            }
+        });
+    }
+
+    function showLogoModal() {
+        document.getElementById('logoModal').style.display = 'flex';
+        if (logoImage.url) {
+            document.getElementById('logoPreview').src = logoImage.url;
+            document.getElementById('logoPreview').style.display = 'block';
+        }
+    }
+
+    function closeLogoModal() {
+        document.getElementById('logoModal').style.display = 'none';
+        tempLogoData = null;
+    }
+
+    function previewLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('logoPreview').src = e.target.result;
+                document.getElementById('logoPreview').style.display = 'block';
+                tempLogoData = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function saveLogo() {
+        if (tempLogoData) {
+            logoImage.url = tempLogoData;
+            db.ref('LogoImage').set(logoImage);
+            
+            document.getElementById('headerLogo').src = logoImage.url;
+            document.getElementById('headerLogo').style.display = 'inline-block';
+            document.getElementById('headerLogoText').style.display = 'none';
+            
+            closeLogoModal();
+            showToast('Logo guardado correctamente', 'success');
+        }
+    }
+
+    function removeLogo() {
+        if (confirm('¿Eliminar el logo?')) {
+            logoImage = { url: '' };
+            db.ref('LogoImage').set(logoImage);
+            
+            document.getElementById('headerLogo').style.display = 'none';
+            document.getElementById('headerLogoText').style.display = 'inline-block';
+            
+            closeLogoModal();
+            showToast('Logo eliminado', 'success');
+        }
     }
 
     // ============================================
@@ -2811,139 +3026,246 @@
     }
 
     // ============================================
-    // FUNCIONES DE CORREO (SIMULACIÓN MEJORADA)
-    // ============================================
+// FUNCIÓN DE CORREO REAL CON SENDGRID
+// ============================================
 
-    function sendEmailNotification(to, subject, message) {
-        console.log('%c📧 ENVÍO DE CORREO SIMULADO', 'background: #3498db; color: white; padding: 2px 5px; border-radius: 3px;');
-        console.log(`  Para: ${to}`);
-        console.log(`  Asunto: ${subject}`);
-        console.log(`  Mensaje:\n${message}`);
-        console.log('--- Fin del correo ---');
+function sendEmailNotification(to, subject, message) {
+    // Configuración de SendGrid
+    const sendGridApiKey = 'TU_API_KEY_DE_SENDGRID'; // ← REEMPLAZA ESTO CON TU API KEY
+    
+    // Mostrar indicador de envío
+    showToast('Enviando correo...', 'info', 2000);
+    
+    fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${sendGridApiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            personalizations: [{
+                to: [{ email: to }],
+                subject: subject
+            }],
+            from: {
+                email: 'notificaciones@vinculosalud.cl', // ← CAMBIA POR TU CORREO VERIFICADO
+                name: 'Vínculo Salud'
+            },
+            content: [{
+                type: 'text/plain',
+                value: message
+            }],
+            // Configuración de seguimiento (opcional, mejora la entrega)
+            tracking_settings: {
+                click_tracking: { enable: true },
+                open_tracking: { enable: true }
+            }
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log(`✅ Correo enviado exitosamente a ${to}`);
+            showToast(`📧 Correo enviado a ${to}`, 'success');
+            
+            // También mostrar en la simulación para referencia visual
+            const emailContent = `Correo enviado a ${to}: "${subject}"`;
+            document.getElementById('emailContent').innerText = emailContent;
+            document.getElementById('emailSimulation').style.display = 'block';
+        } else {
+            console.error('❌ Error en el envío:', response.status, response.statusText);
+            showToast('Error al enviar correo. Verifica la consola.', 'error');
+            
+            // Fallback: mostrar simulación para no interrumpir el flujo
+            const emailContent = `[FALLO EN ENVÍO] Correo a ${to}: "${subject}"`;
+            document.getElementById('emailContent').innerText = emailContent;
+            document.getElementById('emailSimulation').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error de red al enviar correo:', error);
+        showToast('Error de conexión al enviar correo', 'error');
         
-        const emailContent = `Correo enviado a ${to}: "${subject}"`;
+        // Fallback: mostrar simulación
+        const emailContent = `[ERROR DE RED] Correo a ${to}: "${subject}"`;
         document.getElementById('emailContent').innerText = emailContent;
         document.getElementById('emailSimulation').style.display = 'block';
-        
-        showToast(`Correo enviado a ${to}`, 'info');
-    }
+    });
+}
 
-    function sendAppointmentEmails(appointment, isReminder = false) {
-        const patientEmail = appointment.patientEmail;
-        const psych = staff.find(s => s.id == appointment.psychId);
-        const psychEmail = psych?.email || '';
-        
-        let subject, message;
-        
-        if (isReminder) {
-            subject = `Recordatorio: Cita con ${appointment.psych} - Mañana`;
-            message = `
-                Hola ${appointment.patient},\n\n
-                Te recordamos que tienes una cita MAÑANA con ${appointment.psych}.\n\n
-                📅 Fecha: ${appointment.date}\n
-                ⏰ Hora: ${appointment.time}\n
-                💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}\n
-                ${appointment.boxName ? `📍 Box: ${appointment.boxName}\n` : ''}
-                📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}\n\n
-                Por favor, confirma tu asistencia.\n\n
-                Vínculo Salud
-            `;
-        } else {
-            subject = `Confirmación de cita - Vínculo Salud`;
-            message = `
-                Hola ${appointment.patient},\n\n
-                Tu cita ha sido confirmada con ${appointment.psych}.\n\n
-                📅 Fecha: ${appointment.date}\n
-                ⏰ Hora: ${appointment.time}\n
-                💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}\n
-                ${appointment.boxName ? `📍 Box: ${appointment.boxName}\n` : ''}
-                📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}\n\n
-                💳 Método de pago: ${appointment.paymentMethod === 'transfer' ? 'Transferencia bancaria' : appointment.paymentMethod === 'cash' ? 'Efectivo' : appointment.paymentMethod === 'mercadopago' ? 'Mercado Pago' : appointment.paymentMethod === 'webpay' ? 'Webpay' : 'Tarjeta'}\n\n
-                Si necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de anticipación.\n\n
-                Vínculo Salud
-            `;
-        }
-        
-        if (patientEmail) {
-            sendEmailNotification(patientEmail, subject, message);
-        }
-        
-        if (!isReminder && psychEmail) {
-            const psychSubject = `Nueva cita confirmada - ${appointment.patient}`;
-            const psychMessage = `
-                Hola ${appointment.psych},\n\n
-                Se ha confirmado una nueva cita.\n\n
-                Paciente: ${appointment.patient}\n
-                📅 Fecha: ${appointment.date}\n
-                ⏰ Hora: ${appointment.time}\n
-                💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}\n
-                ${appointment.boxName ? `📍 Box: ${appointment.boxName}\n` : ''}
-                📝 Notas: ${appointment.msg || 'Sin observaciones'}\n\n
-                Vínculo Salud
-            `;
-            sendEmailNotification(psychEmail, psychSubject, psychMessage);
-        }
-    }
+// ============================================
+// FUNCIONES DE CORREO (MANTIENEN LA MISMA LÓGICA)
+// ============================================
 
-    function sendRequestEmail(request) {
-        const patientEmail = request.patientEmail;
-        const psych = staff.find(s => s.id == request.psychId);
-        const psychEmail = psych?.email || '';
-        
-        if (patientEmail) {
-            const patientSubject = `Solicitud de cita recibida - Vínculo Salud`;
-            const patientMessage = `
-                Hola ${request.patient},\n\n
-                Hemos recibido tu solicitud de cita con ${request.psych}.\n\n
-                📅 Fecha: ${request.preferredDate}\n
-                ⏰ Hora: ${request.preferredTime}\n
-                💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}\n\n
-                El profesional revisará tu solicitud y te confirmará la hora exacta a la brevedad.\n\n
-                Vínculo Salud
-            `;
-            sendEmailNotification(patientEmail, patientSubject, patientMessage);
-        }
-        
-        if (psychEmail) {
-            const psychSubject = `Nueva solicitud de cita - ${request.patient}`;
-            const psychMessage = `
-                Hola ${request.psych},\n\n
-                Has recibido una nueva solicitud de cita.\n\n
-                Paciente: ${request.patient}\n
-                Email: ${request.patientEmail}\n
-                Teléfono: ${request.patientPhone}\n
-                📅 Fecha: ${request.preferredDate}\n
-                ⏰ Hora: ${request.preferredTime}\n
-                💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}\n
-                📝 Motivo: ${request.msg || 'No especificado'}\n\n
-                Por favor, ingresa al sistema para confirmar o reprogramar esta cita.\n\n
-                Vínculo Salud
-            `;
-            sendEmailNotification(psychEmail, psychSubject, psychMessage);
-        }
-    }
+function sendAppointmentEmails(appointment, isReminder = false) {
+    const patientEmail = appointment.patientEmail;
+    const psych = staff.find(s => s.id == appointment.psychId);
+    const psychEmail = psych?.email || '';
+    
+    let subject, message;
+    
+    if (isReminder) {
+        subject = `Recordatorio: Cita con ${appointment.psych} - Mañana`;
+        message = `
+Hola ${appointment.patient},
 
-    function sendConfirmationEmail(request, appointment) {
-        const patientEmail = request.patientEmail;
-        const psych = staff.find(s => s.id == appointment.psychId);
-        
-        if (patientEmail) {
-            const subject = `Cita confirmada - Vínculo Salud`;
-            const message = `
-                Hola ${request.patient},\n\n
-                Tu solicitud de cita ha sido confirmada.\n\n
-                📅 Fecha: ${appointment.date}\n
-                ⏰ Hora: ${appointment.time}\n
-                💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}\n
-                ${appointment.boxName ? `📍 Box: ${appointment.boxName}\n` : ''}
-                📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}\n\n
-                💳 Método de pago: ${appointment.paymentMethod === 'transfer' ? 'Transferencia bancaria' : appointment.paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}\n\n
-                Por favor, llega 10 minutos antes de tu hora agendada.\n\n
-                Vínculo Salud
-            `;
-            sendEmailNotification(patientEmail, subject, message);
-        }
+Te recordamos que tienes una cita MAÑANA con ${appointment.psych}.
+
+📅 Fecha: ${appointment.date}
+⏰ Hora: ${appointment.time}
+💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}
+${appointment.boxName ? `📍 Box: ${appointment.boxName}` : ''}
+📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}
+
+Por favor, confirma tu asistencia.
+
+Vínculo Salud
+        `;
+    } else {
+        subject = `Confirmación de cita - Vínculo Salud`;
+        message = `
+Hola ${appointment.patient},
+
+Tu cita ha sido confirmada con ${appointment.psych}.
+
+📅 Fecha: ${appointment.date}
+⏰ Hora: ${appointment.time}
+💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}
+${appointment.boxName ? `📍 Box: ${appointment.boxName}` : ''}
+📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}
+
+💳 Método de pago: ${appointment.paymentMethod === 'transfer' ? 'Transferencia bancaria' : appointment.paymentMethod === 'cash' ? 'Efectivo' : appointment.paymentMethod === 'mercadopago' ? 'Mercado Pago' : appointment.paymentMethod === 'webpay' ? 'Webpay' : 'Tarjeta'}
+💰 Seña pagada (50%): $${appointment.depositAmount?.toLocaleString()}
+
+Si necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de anticipación. Recuerda que la seña no es reembolsable en caso de inasistencia.
+
+Vínculo Salud
+        `;
     }
+    
+    // Enviar al paciente
+    if (patientEmail) {
+        sendEmailNotification(patientEmail, subject, message);
+    }
+    
+    // Enviar al terapeuta (solo para citas nuevas, no recordatorios)
+    if (!isReminder && psychEmail) {
+        const psychSubject = `Nueva cita confirmada - ${appointment.patient}`;
+        const psychMessage = `
+Hola ${appointment.psych},
+
+Se ha confirmado una nueva cita.
+
+Paciente: ${appointment.patient}
+Email: ${appointment.patientEmail}
+Teléfono: ${appointment.patientPhone}
+📅 Fecha: ${appointment.date}
+⏰ Hora: ${appointment.time}
+💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}
+${appointment.boxName ? `📍 Box: ${appointment.boxName}` : ''}
+💰 Seña pagada: $${appointment.depositAmount?.toLocaleString()}
+📝 Notas: ${appointment.msg || 'Sin observaciones'}
+
+Vínculo Salud
+        `;
+        sendEmailNotification(psychEmail, psychSubject, psychMessage);
+    }
+}
+
+function sendRequestEmail(request) {
+    const patientEmail = request.patientEmail;
+    const psych = staff.find(s => s.id == request.psychId);
+    const psychEmail = psych?.email || '';
+    
+    // Correo al paciente
+    if (patientEmail) {
+        const patientSubject = `Solicitud de cita recibida - Vínculo Salud`;
+        const patientMessage = `
+Hola ${request.patient},
+
+Hemos recibido tu solicitud de cita con ${request.psych}.
+
+📅 Fecha solicitada: ${request.preferredDate}
+⏰ Hora solicitada: ${request.preferredTime}
+💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}
+💰 Seña requerida: $${request.depositAmount?.toLocaleString()} (50% del valor)
+
+El profesional revisará tu solicitud y te confirmará la hora exacta a la brevedad.
+
+Para consultas, puedes contactarnos directamente.
+
+Vínculo Salud
+        `;
+        sendEmailNotification(patientEmail, patientSubject, patientMessage);
+    }
+    
+    // Correo al terapeuta
+    if (psychEmail) {
+        const psychSubject = `Nueva solicitud de cita - ${request.patient}`;
+        const psychMessage = `
+Hola ${request.psych},
+
+Has recibido una nueva solicitud de cita.
+
+Paciente: ${request.patient}
+Email: ${request.patientEmail}
+Teléfono: ${request.patientPhone}
+📅 Fecha solicitada: ${request.preferredDate}
+⏰ Hora solicitada: ${request.preferredTime}
+💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}
+💰 Seña: $${request.depositAmount?.toLocaleString()}
+📝 Motivo: ${request.msg || 'No especificado'}
+
+Por favor, ingresa al sistema para confirmar o reprogramar esta cita.
+
+Vínculo Salud
+        `;
+        sendEmailNotification(psychEmail, psychSubject, psychMessage);
+    }
+}
+
+function sendConfirmationEmail(request, appointment) {
+    const patientEmail = request.patientEmail;
+    const psych = staff.find(s => s.id == appointment.psychId);
+    
+    if (patientEmail) {
+        const subject = `Cita confirmada - Vínculo Salud`;
+        const message = `
+Hola ${request.patient},
+
+Tu solicitud de cita ha sido confirmada.
+
+📅 Fecha: ${appointment.date}
+⏰ Hora: ${appointment.time}
+💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}
+${appointment.boxName ? `📍 Box: ${appointment.boxName}` : ''}
+📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}
+💰 Seña pagada: $${appointment.depositAmount?.toLocaleString()}
+
+Por favor, llega 10 minutos antes de tu hora agendada.
+
+Vínculo Salud
+        `;
+        sendEmailNotification(patientEmail, subject, message);
+    }
+}
+
+function sendCancellationEmail(appointment) {
+    if (appointment?.patientEmail) {
+        const subject = 'Cita cancelada - Vínculo Salud';
+        const message = `
+Hola ${appointment.patient},
+
+Tu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.
+
+💰 La seña del 50% ($${appointment.depositAmount?.toLocaleString()}) será retenida como compensación por el tiempo reservado, según la política de cancelación.
+
+Si necesitas reagendar, contáctanos.
+
+Vínculo Salud
+        `;
+        sendEmailNotification(appointment.patientEmail, subject, message);
+    }
+}
 
     // ============================================
     // FUNCIONES DE FONDO
@@ -3251,7 +3573,8 @@
                             paymentMethods: item.paymentMethods || globalPaymentMethods,
                             sessionDuration: item.sessionDuration || 50,
                             breakBetween: item.breakBetween || 10,
-                            availability: item.availability || {}
+                            availability: item.availability || {},
+                            paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' } // 🔵 NUEVO
                         };
                     } else {
                         return { 
@@ -3272,7 +3595,8 @@
                             paymentMethods: item.paymentMethods || globalPaymentMethods,
                             sessionDuration: item.sessionDuration || 50,
                             breakBetween: item.breakBetween || 10,
-                            availability: item.availability || {}
+                            availability: item.availability || {},
+                            paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' } // 🔵 NUEVO
                         };
                     }
                 });
@@ -3297,7 +3621,8 @@
                         paymentMethods: globalPaymentMethods,
                         sessionDuration: 50,
                         breakBetween: 10,
-                        availability: {}
+                        availability: {},
+                        paymentLinks: { online: 'https://pay.sumup.com/b2c/Q133Z3BA', presencial: 'https://pay.sumup.com/b2c/Q14AXQSS', qrCode: '' }
                     },
                     { 
                         id: 2, 
@@ -3318,7 +3643,8 @@
                         paymentMethods: globalPaymentMethods,
                         sessionDuration: 50,
                         breakBetween: 15,
-                        availability: {}
+                        availability: {},
+                        paymentLinks: { online: '', presencial: '', qrCode: '' }
                     },
                     { 
                         id: 3, 
@@ -3339,7 +3665,8 @@
                         paymentMethods: globalPaymentMethods,
                         sessionDuration: 45,
                         breakBetween: 15,
-                        availability: {}
+                        availability: {},
+                        paymentLinks: { online: '', presencial: '', qrCode: '' }
                     }
                 ];
             }
@@ -3363,7 +3690,8 @@
                 paymentMethods: {},
                 sessionDuration: 0,
                 breakBetween: 0,
-                availability: {}
+                availability: {},
+                paymentLinks: { online: '', presencial: '', qrCode: '' }
             });
             filterProfessionals();
             if (currentUser?.role === 'admin') renderStaffTable();
@@ -3440,6 +3768,7 @@
         cargarMetodosPago();
         cargarFondo();
         cargarTextos();
+        cargarLogo();
     }
 
     // ============================================
@@ -3626,6 +3955,9 @@
         loadPaymentMethods();
         updateBookingDetails();
         document.getElementById('emailSimulation').style.display = 'none';
+        
+        // Verificar disponibilidad inicial
+        checkOnlineAvailability();
     }
 
     function loadPaymentMethods() {
@@ -3662,7 +3994,7 @@
             const bank = selectedPsych.bankDetails;
             detailsDiv.style.display = 'block';
             detailsDiv.innerHTML = `
-                <h4 style="margin-bottom:10px;">Datos para Transferencia</h4>
+                <h4 style="margin-bottom:10px;">Datos para Transferencia (50% seña)</h4>
                 <p><strong>Banco:</strong> ${bank.bank || 'No especificado'}</p>
                 <p><strong>Cuenta:</strong> ${bank.accountType || ''} ${bank.accountNumber || ''}</p>
                 <p><strong>RUT:</strong> ${bank.rut || ''}</p>
@@ -3671,7 +4003,7 @@
         } else if (method === 'mercadopago' || method === 'webpay') {
             detailsDiv.style.display = 'block';
             detailsDiv.innerHTML = `
-                <h4 style="margin-bottom:10px;">Pago Online</h4>
+                <h4 style="margin-bottom:10px;">Pago Online (50% seña)</h4>
                 <p>Serás redirigido a la pasarela de pago al confirmar la cita.</p>
             `;
         } else {
@@ -3679,17 +4011,51 @@
         }
     }
 
+    function checkOnlineAvailability() {
+        const date = document.getElementById('custDate').value;
+        const time = document.getElementById('custTime').value;
+        const type = document.getElementById('appointmentType').value;
+        
+        if (type === 'online' && date && time) {
+            const existingAppointment = appointments.find(a => 
+                a.psychId == selectedPsych.id && 
+                a.date === date && 
+                a.time === time
+            );
+            
+            const isAvailable = !existingAppointment && 
+                selectedPsych.availability?.[date]?.some(s => s.time === time);
+            
+            if (isAvailable) {
+                document.getElementById('onlineAvailabilityMsg').style.display = 'block';
+                document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-check-circle"></i> Horario disponible para reserva inmediata.';
+            } else {
+                document.getElementById('onlineAvailabilityMsg').style.display = 'block';
+                document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-exclamation-circle"></i> Horario no disponible. Por favor selecciona otro.';
+                document.getElementById('onlineAvailabilityMsg').style.background = '#fff3cd';
+            }
+        }
+    }
+
     function updateBookingDetails() {
         const type = document.getElementById('appointmentType').value;
         const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
+        const deposit = Math.round(price * 0.5);
+        
         document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
+        document.getElementById('bookingDeposit').innerText = `$${deposit.toLocaleString()}`;
         document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial';
         
         const warning = document.getElementById('presencialWarning');
+        const onlineMsg = document.getElementById('onlineAvailabilityMsg');
+        
         if (type === 'presencial') {
             warning.style.display = 'block';
+            onlineMsg.style.display = 'none';
         } else {
             warning.style.display = 'none';
+            onlineMsg.style.display = 'block';
+            checkOnlineAvailability();
         }
     }
 
@@ -3716,22 +4082,36 @@
         const type = document.getElementById('appointmentType').value;
         const paymentMethod = document.getElementById('paymentMethod').value;
         const msg = document.getElementById('custMsg').value;
+        const acceptPolicy = document.getElementById('acceptPolicy').checked;
         
         if (!rut || !name || !email || !date || !time || !paymentMethod) {
             showToast('Completa todos los campos obligatorios', 'error');
             return;
         }
 
-        // Verificar si el profesional ya tiene una cita a la misma hora (online o presencial)
-        const existingAppointment = appointments.find(a => 
-            a.psychId == selectedPsych.id && 
-            a.date === date && 
-            a.time === time
-        );
-
-        if (existingAppointment) {
-            showToast('El profesional ya tiene una cita agendada en este horario', 'error');
+        if (!acceptPolicy) {
+            showToast('Debes aceptar la política de cancelación', 'error');
             return;
+        }
+
+        // Verificar disponibilidad para online
+        if (type === 'online') {
+            const existingAppointment = appointments.find(a => 
+                a.psychId == selectedPsych.id && 
+                a.date === date && 
+                a.time === time
+            );
+
+            if (existingAppointment) {
+                showToast('El profesional ya tiene una cita agendada en este horario', 'error');
+                return;
+            }
+
+            const isAvailable = selectedPsych.availability?.[date]?.some(s => s.time === time);
+            if (!isAvailable) {
+                showToast('Horario no disponible', 'error');
+                return;
+            }
         }
 
         const bookBtn = document.getElementById('bookBtn');
@@ -3756,32 +4136,121 @@
                 patients.push(patient);
             }
             
-            const request = {
-                id: Date.now(),
-                patientId: patient.id,
-                patient: name,
-                patientRut: rut,
-                patientEmail: email,
-                patientPhone: phone,
-                psych: selectedPsych.name,
-                psychId: selectedPsych.id,
-                preferredDate: date,
-                preferredTime: time,
-                type: type,
-                boxId: null,
-                boxName: null,
-                paymentMethod: paymentMethod,
-                msg: msg,
-                status: 'pendiente',
-                createdAt: new Date().toLocaleString()
-            };
+            const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
+            const deposit = Math.round(price * 0.5);
             
-            pendingRequests.push(request);
+            // 🔵 NUEVO: Mostrar link de pago después de crear la cita/solicitud
+            const paymentContainer = document.getElementById('paymentLinkContainer');
+            let paymentLink = '';
+            
+            if (type === 'online' && selectedPsych.paymentLinks?.online) {
+                paymentLink = selectedPsych.paymentLinks.online;
+            } else if (type === 'presencial' && selectedPsych.paymentLinks?.presencial) {
+                paymentLink = selectedPsych.paymentLinks.presencial;
+            }
+            
+            // Personalizar link con datos del paciente
+            if (paymentLink) {
+                const separator = paymentLink.includes('?') ? '&' : '?';
+                paymentLink = `${paymentLink}${separator}description=Atención ${type} - ${encodeURIComponent(name)}&customer_email=${encodeURIComponent(email)}&customer_name=${encodeURIComponent(name)}`;
+            }
+            
+            if (paymentContainer) {
+                let qrHtml = '';
+                if (selectedPsych.paymentLinks?.qrCode) {
+                    qrHtml = `
+                        <div style="text-align: center; margin: 20px 0;">
+                            <p style="font-weight:600; margin-bottom:10px;">📱 Escanea para pagar:</p>
+                            <img src="${selectedPsych.paymentLinks.qrCode}" 
+                                 style="width: 200px; height: 200px; border-radius: 12px; border: 3px solid var(--azul-medico); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        </div>
+                    `;
+                }
+                
+                paymentContainer.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center;">
+                        <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 Pago requerido</h4>
+                        <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${deposit.toLocaleString()}</p>
+                        <p style="margin-bottom:20px; opacity:0.9;">(50% de seña para confirmar la cita)</p>
+                        
+                        ${qrHtml}
+                        
+                        ${paymentLink ? `
+                            <a href="${paymentLink}" target="_blank" class="btn-staff" style="background: var(--verde-exito); text-decoration: none; padding: 15px 40px; font-size:1.2rem; margin-top:15px; display:inline-block;">
+                                <i class="fab fa-cc-visa"></i> Pagar con Tarjeta
+                            </a>
+                            <p style="margin-top:15px; font-size:0.9rem; opacity:0.8;">
+                                <i class="fas fa-lock"></i> Pago seguro procesado por SumUp
+                            </p>
+                        ` : ''}
+                        
+                        <p style="margin-top:20px; font-size:0.8rem; background: rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                            ⏰ Una vez realizado el pago, la cita se confirmará automáticamente y recibirás un email.
+                        </p>
+                    </div>
+                `;
+                paymentContainer.style.display = 'block';
+            }
+            
+            if (type === 'online') {
+                // Reserva online directa
+                const appointment = {
+                    id: Date.now(),
+                    patientId: patient.id,
+                    patient: name,
+                    patientRut: rut,
+                    patientEmail: email,
+                    patientPhone: phone,
+                    psych: selectedPsych.name,
+                    psychId: selectedPsych.id,
+                    date: date,
+                    time: time,
+                    type: type,
+                    boxId: null,
+                    boxName: null,
+                    price: price,
+                    depositPaid: true,
+                    depositAmount: deposit,
+                    paymentMethod: paymentMethod,
+                    paymentStatus: 'pagado',
+                    msg: msg,
+                    status: 'confirmada',
+                    createdAt: new Date().toISOString(),
+                    editableUntil: new Date(Date.now() + EDIT_HOURS * 60 * 60 * 1000).toISOString()
+                };
+                
+                appointments.push(appointment);
+                sendAppointmentEmails(appointment);
+                showToast('¡Cita confirmada! Revisa tu email', 'success');
+            } else {
+                // Solicitud presencial
+                const request = {
+                    id: Date.now(),
+                    patientId: patient.id,
+                    patient: name,
+                    patientRut: rut,
+                    patientEmail: email,
+                    patientPhone: phone,
+                    psych: selectedPsych.name,
+                    psychId: selectedPsych.id,
+                    preferredDate: date,
+                    preferredTime: time,
+                    type: type,
+                    boxId: null,
+                    boxName: null,
+                    paymentMethod: paymentMethod,
+                    depositAmount: deposit,
+                    msg: msg,
+                    status: 'pendiente',
+                    createdAt: new Date().toLocaleString()
+                };
+                
+                pendingRequests.push(request);
+                sendRequestEmail(request);
+                showToast('¡Solicitud enviada! El profesional te confirmará la hora', 'success');
+            }
+            
             save();
-            
-            sendRequestEmail(request);
-            
-            showToast(`¡Solicitud enviada! El profesional te confirmará la hora`, 'success');
             
             bookBtn.innerHTML = 'SOLICITAR CITA';
             bookBtn.disabled = false;
@@ -3973,7 +4442,7 @@
             return;
         }
 
-        // Verificar si ya tiene una cita a la misma hora (online o presencial)
+        // Verificar si ya tiene una cita a la misma hora
         const existingAppointment = appointments.find(a => 
             a.psychId == currentUser.data.id && 
             a.date === date && 
@@ -3996,6 +4465,7 @@
 
         setTimeout(() => {
             const price = type === 'online' ? currentUser.data.priceOnline : currentUser.data.pricePresencial;
+            const deposit = Math.round(price * 0.5);
             const box = type === 'presencial' ? boxes.find(b => b.id == selectedTherapistBoxId) : null;
             
             const appointment = {
@@ -4013,8 +4483,10 @@
                 boxId: type === 'presencial' ? selectedTherapistBoxId : null,
                 boxName: box ? box.name : null,
                 price: price,
+                depositPaid: true,
+                depositAmount: deposit,
                 paymentMethod: paymentMethod,
-                paymentStatus: paymentMethod === 'transfer' ? 'pendiente' : 'pagado',
+                paymentStatus: 'pagado',
                 msg: msg,
                 status: 'confirmada',
                 createdAt: new Date().toISOString(),
@@ -4063,7 +4535,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE BOXES (OCUPACIÓN Y VISUALIZACIÓN)
+    // FUNCIONES DE BOXES
     // ============================================
 
     function renderBoxOccupancy() {
@@ -4090,6 +4562,180 @@
                 </div>
             `;
         }).join('');
+    }
+
+    function showBoxModal() {
+        document.getElementById('boxModal').style.display = 'flex';
+        document.getElementById('boxName').value = '';
+        document.getElementById('boxLocation').value = '';
+        document.getElementById('boxStartTime').value = '09:00';
+        document.getElementById('boxEndTime').value = '20:00';
+        document.getElementById('boxDescription').value = '';
+        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
+        [1,2,3,4,5].forEach(d => {
+            const cb = document.querySelector(`.box-day[value="${d}"]`);
+            if (cb) cb.checked = true;
+        });
+        document.getElementById('saveBoxBtn').onclick = saveBox;
+    }
+
+    function closeBoxModal() {
+        document.getElementById('boxModal').style.display = 'none';
+    }
+
+    function saveBox() {
+        const name = document.getElementById('boxName').value;
+        const location = document.getElementById('boxLocation').value;
+        const startTime = document.getElementById('boxStartTime').value;
+        const endTime = document.getElementById('boxEndTime').value;
+        const description = document.getElementById('boxDescription').value;
+        const days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
+
+        if (!name || !startTime || !endTime || days.length === 0) {
+            showToast('Nombre, horario y días son obligatorios', 'error');
+            return;
+        }
+
+        const newBox = {
+            id: Date.now(),
+            name: name,
+            location: location,
+            startTime: startTime,
+            endTime: endTime,
+            days: days,
+            description: description,
+            active: true
+        };
+
+        boxes.push(newBox);
+        save();
+        closeBoxModal();
+        renderBoxesTable();
+        showToast('Box guardado correctamente', 'success');
+    }
+
+    function renderBoxesTable() {
+        const tbModal = document.getElementById('boxTableBody');
+        const tbDashboard = document.getElementById('boxTableBodyDashboard');
+        
+        const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+        
+        const rows = boxes.map(b => {
+            const daysStr = b.days.map(d => dayNames[d]).join(', ');
+            return `
+                <tr>
+                    <td><strong>${b.name}</strong></td>
+                    <td>${b.location || '—'}</td>
+                    <td>${b.startTime} - ${b.endTime}</td>
+                    <td>${daysStr}</td>
+                    <td><span class="badge" style="background:${b.active ? 'var(--verde-exito)' : 'var(--text-light)'}; color:white;">${b.active ? 'Activo' : 'Inactivo'}</span></td>
+                    <td>
+                        <button onclick="editBox(${b.id})" class="btn-icon" style="background:var(--azul-medico); color:white;">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button onclick="toggleBoxStatus(${b.id})" class="btn-icon" style="background:var(--naranja-aviso); color:white;">
+                            <i class="fa ${b.active ? 'fa-ban' : 'fa-check'}"></i>
+                        </button>
+                        <button onclick="deleteBox(${b.id})" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        if (tbModal) tbModal.innerHTML = rows;
+        if (tbDashboard) tbDashboard.innerHTML = rows;
+    }
+
+    function editBox(id) {
+        const box = boxes.find(b => b.id == id);
+        if (!box) return;
+
+        document.getElementById('boxName').value = box.name;
+        document.getElementById('boxLocation').value = box.location || '';
+        document.getElementById('boxStartTime').value = box.startTime;
+        document.getElementById('boxEndTime').value = box.endTime;
+        document.getElementById('boxDescription').value = box.description || '';
+        
+        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
+        box.days.forEach(d => {
+            const cb = document.querySelector(`.box-day[value="${d}"]`);
+            if (cb) cb.checked = true;
+        });
+
+        document.getElementById('saveBoxBtn').onclick = () => updateBox(id);
+        document.getElementById('boxModal').style.display = 'flex';
+    }
+
+    function updateBox(id) {
+        const box = boxes.find(b => b.id == id);
+        if (!box) return;
+
+        box.name = document.getElementById('boxName').value;
+        box.location = document.getElementById('boxLocation').value;
+        box.startTime = document.getElementById('boxStartTime').value;
+        box.endTime = document.getElementById('boxEndTime').value;
+        box.description = document.getElementById('boxDescription').value;
+        box.days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
+
+        save();
+        closeBoxModal();
+        renderBoxesTable();
+        showToast('Box actualizado', 'success');
+    }
+
+    function toggleBoxStatus(id) {
+        const box = boxes.find(b => b.id == id);
+        if (box) {
+            box.active = !box.active;
+            save();
+            renderBoxesTable();
+            showToast(`Box ${box.active ? 'activado' : 'desactivado'}`, 'success');
+        }
+    }
+
+    function deleteBox(id) {
+        if (confirm('¿Eliminar este box? Las citas asociadas quedarán sin box asignado.')) {
+            boxes = boxes.filter(b => b.id != id);
+            appointments.forEach(a => {
+                if (a.boxId == id) a.boxId = null;
+            });
+            save();
+            renderBoxesTable();
+            showToast('Box eliminado', 'success');
+        }
+    }
+
+    function getAvailableBoxes(date, time) {
+        if (!date || !time) return [];
+        
+        const selectedDate = new Date(date);
+        const dayOfWeek = selectedDate.getDay();
+        
+        return boxes.filter(box => {
+            if (!box.active) return false;
+            if (!box.days.includes(dayOfWeek)) return false;
+            
+            const [boxStartHour, boxStartMin] = box.startTime.split(':').map(Number);
+            const [boxEndHour, boxEndMin] = box.endTime.split(':').map(Number);
+            const [appHour, appMin] = time.split(':').map(Number);
+            
+            const boxStartMinutes = boxStartHour * 60 + boxStartMin;
+            const boxEndMinutes = boxEndHour * 60 + boxEndMin;
+            const appMinutes = appHour * 60 + appMin;
+            
+            if (appMinutes < boxStartMinutes || appMinutes >= boxEndMinutes) return false;
+            
+            const boxOccupied = appointments.some(a => 
+                a.boxId == box.id && 
+                a.date === date && 
+                a.time === time &&
+                a.status === 'confirmada'
+            );
+            
+            return !boxOccupied;
+        });
     }
 
     // ============================================
@@ -4189,6 +4835,7 @@
         document.getElementById('adminTabPagos').style.display = isAdmin ? 'block' : 'none';
         document.getElementById('adminTabFondo').style.display = isAdmin ? 'block' : 'none';
         document.getElementById('adminTabTextos').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminTabLogo').style.display = isAdmin ? 'block' : 'none';
         document.getElementById('psychTab').style.display = isPsych ? 'block' : 'none';
         document.getElementById('configTab').style.display = isPsych ? 'block' : 'none';
         document.getElementById('messagesTab').style.display = isAdmin ? 'block' : 'none';
@@ -4228,6 +4875,7 @@
                 (tabName === 'especialidades' && t.textContent.trim() === 'Especialidades') ||
                 (tabName === 'pagos' && t.textContent.trim() === 'Métodos de Pago') ||
                 (tabName === 'fondo' && t.textContent.trim() === 'Fondo') ||
+                (tabName === 'logo' && t.textContent.trim() === 'Logo') ||
                 (tabName === 'textos' && t.textContent.trim() === 'Textos') ||
                 (tabName === 'disponibilidad' && t.textContent.trim() === 'Disponibilidad') ||
                 (tabName === 'configuracion' && t.textContent.trim() === 'Mi Config') ||
@@ -4278,8 +4926,8 @@
             const canEdit = currentUser.role === 'admin' || 
                            (currentUser.role === 'psych' && new Date() < new Date(a.editableUntil));
             
-            let paymentStatusText = a.paymentMethod === 'transfer' ? (a.paymentStatus === 'pendiente' ? 'Pendiente' : 'Pagado') : 'Pagado';
-            let paymentStatusColor = a.paymentMethod === 'transfer' && a.paymentStatus === 'pendiente' ? 'var(--naranja-aviso)' : 'var(--verde-exito)';
+            let paymentStatusText = 'Pagado (seña 50%)';
+            let paymentStatusColor = 'var(--verde-exito)';
             
             tb.innerHTML += `
                 <tr>
@@ -4299,11 +4947,6 @@
                         ${(currentUser.role === 'admin' || canEdit) ? `
                             <button onclick="cancelAppointment(${a.id})" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
                                 <i class="fa fa-times"></i>
-                            </button>
-                        ` : ''}
-                        ${a.paymentMethod === 'transfer' && a.paymentStatus === 'pendiente' && currentUser.role === 'admin' ? `
-                            <button onclick="markAsPaid(${a.id})" class="btn-icon" style="background:var(--verde-exito); color:white;">
-                                <i class="fa fa-check"></i>
                             </button>
                         ` : ''}
                     </td>
@@ -4338,7 +4981,7 @@
             const patientApps = appointments.filter(a => a.patientId == p.id).sort((a, b) => new Date(b.date) - new Date(a.date));
             const nextAppt = patientApps.find(a => new Date(a.date + 'T' + a.time) > new Date());
             const totalSessions = patientApps.length;
-            const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
+            const totalPaid = patientApps.reduce((sum, a) => sum + a.price, 0);
             const totalAmount = patientApps.reduce((sum, a) => sum + a.price, 0);
             
             const recentApps = patientApps.slice(0, 3);
@@ -4355,8 +4998,7 @@
                         ${p.phone ? `<span><i class="fa fa-phone"></i> ${p.phone}</span>` : ''}
                     </div>
                     <div style="display:flex; gap:15px; margin-top:10px; font-size:0.8rem;">
-                        <span><i class="fa fa-credit-card"></i> Pagado: $${totalPaid.toLocaleString()}</span>
-                        <span><i class="fa fa-clock"></i> Total: $${totalAmount.toLocaleString()}</span>
+                        <span><i class="fa fa-credit-card"></i> Total Pagado: $${totalPaid.toLocaleString()}</span>
                     </div>
                     ${nextAppt ? `
                         <div style="background:#e6f7e6; padding:8px; border-radius:8px; margin-top:10px;">
@@ -4417,7 +5059,7 @@
         
         if (patientApps.length > 0) {
             const totalSessions = patientApps.length;
-            const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
+            const totalPaid = patientApps.reduce((sum, a) => sum + a.price, 0);
             const onlineSessions = patientApps.filter(a => a.type === 'online').length;
             const presencialSessions = patientApps.filter(a => a.type === 'presencial').length;
             
@@ -4428,7 +5070,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="number">$${totalPaid.toLocaleString()}</div>
-                    <div class="label">Pagado</div>
+                    <div class="label">Total Pagado</div>
                 </div>
                 <div class="stat-card">
                     <div class="number">${onlineSessions}/${presencialSessions}</div>
@@ -4444,9 +5086,6 @@
                     <span class="history-type">${a.type === 'online' ? 'Online' : 'Presencial'}</span>
                     ${a.boxName ? `<span class="history-box">${a.boxName}</span>` : ''}
                     <span class="history-amount">$${a.price.toLocaleString()}</span>
-                    <span style="color:${a.paymentStatus === 'pagado' ? 'var(--verde-exito)' : 'var(--naranja-aviso)'}">
-                        ${a.paymentStatus === 'pagado' ? '✓' : '⏳'}
-                    </span>
                 </div>
             `).join('');
             historyContainer.style.display = 'block';
@@ -4539,6 +5178,82 @@
         }
         
         showToast('Paciente guardado', 'success');
+    }
+
+    function printPatientSummary() {
+        const patientId = document.getElementById('editPatientId').value;
+        const patient = patients.find(p => p.id == patientId);
+        if (!patient) return;
+        
+        const patientApps = appointments.filter(a => a.patientId == patientId).sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        let summaryHtml = `
+            <html>
+            <head>
+                <title>Resumen de Atenciones - ${patient.name}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h1 { color: #2c3e50; }
+                    .header { margin-bottom: 30px; }
+                    .table { width: 100%; border-collapse: collapse; }
+                    .table th { background: #3498db; color: white; padding: 10px; text-align: left; }
+                    .table td { padding: 10px; border-bottom: 1px solid #ddd; }
+                    .total { margin-top: 20px; font-size: 1.2em; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Vínculo Salud - Resumen de Atenciones</h1>
+                    <p><strong>Paciente:</strong> ${patient.name}</p>
+                    <p><strong>RUT:</strong> ${patient.rut}</p>
+                    <p><strong>Email:</strong> ${patient.email}</p>
+                    <p><strong>Teléfono:</strong> ${patient.phone || '—'}</p>
+                </div>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Profesional</th>
+                            <th>Tipo</th>
+                            <th>Box</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        let total = 0;
+        patientApps.forEach(a => {
+            total += a.price;
+            summaryHtml += `
+                <tr>
+                    <td>${a.date}</td>
+                    <td>${a.time}</td>
+                    <td>${a.psych}</td>
+                    <td>${a.type === 'online' ? 'Online' : 'Presencial'}</td>
+                    <td>${a.boxName || '—'}</td>
+                    <td>$${a.price.toLocaleString()}</td>
+                </tr>
+            `;
+        });
+        
+        summaryHtml += `
+                    </tbody>
+                </table>
+                
+                <div class="total">
+                    Total Pagado: $${total.toLocaleString()}
+                </div>
+            </body>
+            </html>
+        `;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(summaryHtml);
+        printWindow.document.close();
+        printWindow.print();
     }
 
     // ============================================
@@ -4863,6 +5578,7 @@
         document.getElementById('addBankEmail').value = '';
         document.getElementById('addPhotoPreview').style.display = 'none';
         tempImageData = null;
+        tempQrData = null; // Reset QR temp data
     }
 
     function closeAddStaffModal() {
@@ -4916,6 +5632,10 @@
         const bankRut = document.getElementById('addBankRut')?.value || '';
         const bankEmail = document.getElementById('addBankEmail')?.value || '';
         
+        // 🔵 NUEVO: Obtener links de pago
+        const paymentLinkOnline = document.getElementById('addPaymentLinkOnline')?.value || '';
+        const paymentLinkPresencial = document.getElementById('addPaymentLinkPresencial')?.value || '';
+        
         if (!name || !email || selectedSpecs.length === 0 || !priceOnline || !pricePresencial || !usuario || !pass) {
             showToast('Completa todos los campos obligatorios', 'error');
             return;
@@ -4951,7 +5671,12 @@
             stars: 5,
             sessionDuration: 50,
             breakBetween: 10,
-            availability: {}
+            availability: {},
+            paymentLinks: {
+                online: paymentLinkOnline,
+                presencial: paymentLinkPresencial,
+                qrCode: tempQrData || ''
+            }
         });
 
         save();
@@ -4989,6 +5714,16 @@
         document.getElementById('editBankRut').value = bank.rut || '';
         document.getElementById('editBankEmail').value = bank.email || '';
         
+        // 🔵 NUEVO: Cargar links de pago
+        document.getElementById('editPaymentLinkOnline').value = therapist.paymentLinks?.online || '';
+        document.getElementById('editPaymentLinkPresencial').value = therapist.paymentLinks?.presencial || '';
+        if (therapist.paymentLinks?.qrCode) {
+            document.getElementById('editQrPreview').src = therapist.paymentLinks.qrCode;
+            document.getElementById('editQrPreview').style.display = 'block';
+        } else {
+            document.getElementById('editQrPreview').style.display = 'none';
+        }
+        
         if (therapist.img) {
             document.getElementById('editPhotoPreview').src = therapist.img;
             document.getElementById('editPhotoPreview').style.display = 'block';
@@ -4997,6 +5732,7 @@
         }
         
         tempImageData = null;
+        tempQrData = null;
         document.getElementById('editTherapistModal').style.display = 'flex';
     }
 
@@ -5029,6 +5765,13 @@
             accountNumber: document.getElementById('editAccountNumber').value,
             rut: document.getElementById('editBankRut').value,
             email: document.getElementById('editBankEmail').value
+        };
+
+        // 🔵 NUEVO: Guardar links de pago
+        therapist.paymentLinks = {
+            online: document.getElementById('editPaymentLinkOnline').value,
+            presencial: document.getElementById('editPaymentLinkPresencial').value,
+            qrCode: tempQrData || therapist.paymentLinks?.qrCode || ''
         };
 
         if (tempImageData) {
@@ -5071,7 +5814,7 @@
     }
 
     function cancelAppointment(id) {
-        if (confirm('¿Cancelar esta cita?')) {
+        if (confirm('¿Cancelar esta cita? La seña del 50% será retenida como compensación.')) {
             const appointment = appointments.find(a => a.id == id);
             appointments = appointments.filter(a => a.id != id);
             save();
@@ -5081,6 +5824,7 @@
                 const message = `
                     Hola ${appointment.patient},\n\n
                     Tu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.\n\n
+                    La seña del 50% ($${appointment.depositAmount?.toLocaleString()}) será retenida como compensación por el tiempo reservado.\n\n
                     Si necesitas reagendar, contáctanos.\n\n
                     Vínculo Salud
                 `;
@@ -5088,15 +5832,6 @@
             }
             
             showToast('Cita cancelada', 'success');
-        }
-    }
-
-    function markAsPaid(id) {
-        const appointment = appointments.find(a => a.id == id);
-        if (appointment) {
-            appointment.paymentStatus = 'pagado';
-            save();
-            showToast('Pago marcado como recibido', 'success');
         }
     }
 
@@ -5193,8 +5928,9 @@
                         </div>
                         <div class="price-box">
                             <div class="price-details">
-                                <small><i class="fa fa-video"></i> Consulta Online</small>
-                                <small><i class="fa fa-building"></i> Consulta Presencial</small>
+                                <small><i class="fa fa-video"></i> Online: $${p.priceOnline.toLocaleString()}</small>
+                                <small><i class="fa fa-building"></i> Presencial: $${p.pricePresencial.toLocaleString()}</small>
+                                <small><i class="fa fa-clock"></i> Seña 50%</small>
                             </div>
                             <button class="btn-book" onclick="event.stopPropagation(); openBooking(${p.id})">
                                 Agendar
@@ -5355,7 +6091,7 @@
     }
 
     // ============================================
-    // FUNCIONES DE CARGA DE IMÁGENES
+    // FUNCIONES DE CARGA DE IMÁGENES (INCLUYE QR)
     // ============================================
 
     function previewAddImage(input) {
@@ -5382,182 +6118,30 @@
         }
     }
 
-    // ============================================
-    // FUNCIONES DE BOXES
-    // ============================================
-
-    function showBoxModal() {
-        document.getElementById('boxModal').style.display = 'flex';
-        document.getElementById('boxName').value = '';
-        document.getElementById('boxLocation').value = '';
-        document.getElementById('boxStartTime').value = '09:00';
-        document.getElementById('boxEndTime').value = '20:00';
-        document.getElementById('boxDescription').value = '';
-        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
-        [1,2,3,4,5].forEach(d => {
-            const cb = document.querySelector(`.box-day[value="${d}"]`);
-            if (cb) cb.checked = true;
-        });
-        document.getElementById('saveBoxBtn').onclick = saveBox;
-    }
-
-    function closeBoxModal() {
-        document.getElementById('boxModal').style.display = 'none';
-    }
-
-    function saveBox() {
-        const name = document.getElementById('boxName').value;
-        const location = document.getElementById('boxLocation').value;
-        const startTime = document.getElementById('boxStartTime').value;
-        const endTime = document.getElementById('boxEndTime').value;
-        const description = document.getElementById('boxDescription').value;
-        const days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
-
-        if (!name || !startTime || !endTime || days.length === 0) {
-            showToast('Nombre, horario y días son obligatorios', 'error');
-            return;
-        }
-
-        const newBox = {
-            id: Date.now(),
-            name: name,
-            location: location,
-            startTime: startTime,
-            endTime: endTime,
-            days: days,
-            description: description,
-            active: true
-        };
-
-        boxes.push(newBox);
-        save();
-        closeBoxModal();
-        renderBoxesTable();
-        showToast('Box guardado correctamente', 'success');
-    }
-
-    function renderBoxesTable() {
-        const tbModal = document.getElementById('boxTableBody');
-        const tbDashboard = document.getElementById('boxTableBodyDashboard');
-        
-        const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
-        
-        const rows = boxes.map(b => {
-            const daysStr = b.days.map(d => dayNames[d]).join(', ');
-            return `
-                <tr>
-                    <td><strong>${b.name}</strong></td>
-                    <td>${b.location || '—'}</td>
-                    <td>${b.startTime} - ${b.endTime}</td>
-                    <td>${daysStr}</td>
-                    <td><span class="badge" style="background:${b.active ? 'var(--verde-exito)' : 'var(--text-light)'}; color:white;">${b.active ? 'Activo' : 'Inactivo'}</span></td>
-                    <td>
-                        <button onclick="editBox(${b.id})" class="btn-icon" style="background:var(--azul-medico); color:white;">
-                            <i class="fa fa-edit"></i>
-                        </button>
-                        <button onclick="toggleBoxStatus(${b.id})" class="btn-icon" style="background:var(--naranja-aviso); color:white;">
-                            <i class="fa ${b.active ? 'fa-ban' : 'fa-check'}"></i>
-                        </button>
-                        <button onclick="deleteBox(${b.id})" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        if (tbModal) tbModal.innerHTML = rows;
-        if (tbDashboard) tbDashboard.innerHTML = rows;
-    }
-
-    function editBox(id) {
-        const box = boxes.find(b => b.id == id);
-        if (!box) return;
-
-        document.getElementById('boxName').value = box.name;
-        document.getElementById('boxLocation').value = box.location || '';
-        document.getElementById('boxStartTime').value = box.startTime;
-        document.getElementById('boxEndTime').value = box.endTime;
-        document.getElementById('boxDescription').value = box.description || '';
-        
-        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
-        box.days.forEach(d => {
-            const cb = document.querySelector(`.box-day[value="${d}"]`);
-            if (cb) cb.checked = true;
-        });
-
-        document.getElementById('saveBoxBtn').onclick = () => updateBox(id);
-        document.getElementById('boxModal').style.display = 'flex';
-    }
-
-    function updateBox(id) {
-        const box = boxes.find(b => b.id == id);
-        if (!box) return;
-
-        box.name = document.getElementById('boxName').value;
-        box.location = document.getElementById('boxLocation').value;
-        box.startTime = document.getElementById('boxStartTime').value;
-        box.endTime = document.getElementById('boxEndTime').value;
-        box.description = document.getElementById('boxDescription').value;
-        box.days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
-
-        save();
-        closeBoxModal();
-        renderBoxesTable();
-        showToast('Box actualizado', 'success');
-    }
-
-    function toggleBoxStatus(id) {
-        const box = boxes.find(b => b.id == id);
-        if (box) {
-            box.active = !box.active;
-            save();
-            renderBoxesTable();
-            showToast(`Box ${box.active ? 'activado' : 'desactivado'}`, 'success');
+    // 🔵 NUEVO: Función para previsualizar QR en edición
+    function previewQrImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editQrPreview').src = e.target.result;
+                document.getElementById('editQrPreview').style.display = 'block';
+                tempQrData = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
         }
     }
 
-    function deleteBox(id) {
-        if (confirm('¿Eliminar este box? Las citas asociadas quedarán sin box asignado.')) {
-            boxes = boxes.filter(b => b.id != id);
-            appointments.forEach(a => {
-                if (a.boxId == id) a.boxId = null;
-            });
-            save();
-            renderBoxesTable();
-            showToast('Box eliminado', 'success');
+    // 🔵 NUEVO: Función para previsualizar QR al añadir
+    function previewAddQrImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('addQrPreview').src = e.target.result;
+                document.getElementById('addQrPreview').style.display = 'block';
+                tempQrData = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
         }
-    }
-
-    function getAvailableBoxes(date, time) {
-        if (!date || !time) return [];
-        
-        const selectedDate = new Date(date);
-        const dayOfWeek = selectedDate.getDay();
-        
-        return boxes.filter(box => {
-            if (!box.active) return false;
-            if (!box.days.includes(dayOfWeek)) return false;
-            
-            const [boxStartHour, boxStartMin] = box.startTime.split(':').map(Number);
-            const [boxEndHour, boxEndMin] = box.endTime.split(':').map(Number);
-            const [appHour, appMin] = time.split(':').map(Number);
-            
-            const boxStartMinutes = boxStartHour * 60 + boxStartMin;
-            const boxEndMinutes = boxEndHour * 60 + boxEndMin;
-            const appMinutes = appHour * 60 + appMin;
-            
-            if (appMinutes < boxStartMinutes || appMinutes >= boxEndMinutes) return false;
-            
-            const boxOccupied = appointments.some(a => 
-                a.boxId == box.id && 
-                a.date === date && 
-                a.time === time &&
-                a.status === 'confirmada'
-            );
-            
-            return !boxOccupied;
-        });
     }
 
     // ============================================
@@ -5566,21 +6150,18 @@
 
     cargarDatosIniciales();
 
-    document.getElementById('custTime').addEventListener('change', function() {
-        const date = document.getElementById('custDate').value;
-        const time = this.value;
-        if (date && time) {
-            updateBoxSelector(date, time);
-        }
+    document.getElementById('custDate').addEventListener('change', function() {
+        checkOnlineAvailability();
+        updateBookingDetails();
     });
 
-    document.getElementById('custDate').addEventListener('change', function() {
-        const time = document.getElementById('custTime').value;
-        if (this.value && time) {
-            updateBoxSelector(this.value, time);
-        } else if (this.value) {
-            updateAvailableSlotsWithBoxes();
-        }
+    document.getElementById('custTime').addEventListener('change', function() {
+        checkOnlineAvailability();
+        updateBookingDetails();
+    });
+
+    document.getElementById('appointmentType').addEventListener('change', function() {
+        updateBookingDetails();
     });
 
     document.getElementById('therapistTime').addEventListener('change', function() {

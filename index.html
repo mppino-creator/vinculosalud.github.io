@@ -3636,36 +3636,37 @@
     }
 
     function showDashboard() {
-        document.getElementById('clientView').style.display = 'none';
-        document.getElementById('bookingPanel').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        
-        const isAdmin = currentUser.role === 'admin';
-        const isPsych = currentUser.role === 'psych';
-        
-        document.getElementById('adminTab').style.display = isAdmin ? 'block' : 'none';
-        document.querySelectorAll('#adminTab')[1].style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('psychTab').style.display = isPsych ? 'block' : 'none';
-        document.getElementById('configTab').style.display = isPsych ? 'block' : 'none';
-        document.getElementById('messagesTab').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('boxesTab').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('agendarTab').style.display = isPsych ? 'block' : 'none';
-        
-        if (isAdmin) {
-            document.getElementById('dashTitle').innerText = "Panel Administrador";
-            renderStaffTable();
-            renderMessagesTable();
-            renderBoxesTable();
-        } else {
-            document.getElementById('dashTitle').innerText = `Panel de ${currentUser.data.name}`;
-            document.getElementById('availDate').min = new Date().toISOString().split('T')[0];
-            loadMyConfig();
-        }
-        
-        updateStats();
-        renderPatients();
-        renderPendingRequests();
-        switchTab('citas');
+    document.getElementById('clientView').style.display = 'none';
+    document.getElementById('bookingPanel').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    
+    const isAdmin = currentUser.role === 'admin';
+    const isPsych = currentUser.role === 'psych';
+    
+    // ✅ CORREGIDO: Usar los IDs correctos
+    document.getElementById('adminTabProfesionales').style.display = isAdmin ? 'block' : 'none';
+    document.getElementById('adminTabEspecialidades').style.display = isAdmin ? 'block' : 'none';
+    document.getElementById('psychTab').style.display = isPsych ? 'block' : 'none';
+    document.getElementById('configTab').style.display = isPsych ? 'block' : 'none';
+    document.getElementById('messagesTab').style.display = isAdmin ? 'block' : 'none';
+    document.getElementById('boxesTab').style.display = isAdmin ? 'block' : 'none';
+    document.getElementById('agendarTab').style.display = isPsych ? 'block' : 'none';
+    
+    if (isAdmin) {
+        document.getElementById('dashTitle').innerText = "Panel Administrador";
+        renderStaffTable();
+        renderMessagesTable();
+        renderBoxesTable();
+    } else {
+        document.getElementById('dashTitle').innerText = `Panel de ${currentUser.data.name}`;
+        document.getElementById('availDate').min = new Date().toISOString().split('T')[0];
+        loadMyConfig();
+    }
+    
+    updateStats();
+    renderPatients();
+    renderPendingRequests();
+    switchTab('citas');
     }
 
     function switchTab(tabName) {

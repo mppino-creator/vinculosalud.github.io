@@ -2150,6 +2150,7 @@
     </div>
 </div>
 
+
 <!-- Modal de Configuración de Logo (MEJORADO) -->
 <div class="modal" id="logoModal">
     <div class="modal-content" style="max-width: 600px;">
@@ -2166,13 +2167,14 @@
             <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewLogo(this)">
         </div>
         
-        <div class="form-group">
-            <label>Texto del Logo (se muestra si no hay imagen)</label>
-            <input type="text" id="logoText" value="Vínculo Salud" class="form-control">
-        </div>
-        
         <div id="currentLogoPreview" style="margin:20px 0; text-align:center;">
             <img id="logoPreview" src="" style="max-width:200px; max-height:80px; border-radius:8px; display:none;">
+        </div>
+        
+        <div class="form-group">
+            <label>Texto del Logo (siempre visible)</label>
+            <input type="text" id="logoText" value="Vínculo Salud" class="form-control">
+            <small style="color:var(--text-light);">Este texto siempre se mostrará junto al logo</small>
         </div>
         
         <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-bottom:10px;" onclick="saveLogo()">
@@ -2948,26 +2950,72 @@
     // FUNCIONES DE LOGO (MEJORADAS)
     // ============================================
 
-    function cargarLogo() {
-        db.ref('LogoImage').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                logoImage = data;
-                if (logoImage.url) {
-                    document.getElementById('headerLogo').src = logoImage.url;
-                    document.getElementById('headerLogo').style.display = 'inline-block';
-                    document.getElementById('headerLogoText').style.display = 'none';
-                } else {
-                    document.getElementById('headerLogo').style.display = 'none';
-                    document.getElementById('headerLogoText').style.display = 'inline-block';
-                    document.getElementById('headerLogoText').innerText = logoImage.text || 'Vínculo Salud';
-                }
+    // ============================================
+// FUNCIONES DE LOGO (AMBOS SIEMPRE VISIBLES)
+// ============================================
+
+function cargarLogo() {
+    db.ref('LogoImage').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            logoImage = data;
+            // Siempre mostrar ambos: logo y texto
+            if (logoImage.url) {
+                document.getElementById('headerLogo').src = logoImage.url;
+                document.getElementById('headerLogo').style.display = 'inline-block';
             } else {
                 document.getElementById('headerLogo').style.display = 'none';
-                document.getElementById('headerLogoText').style.display = 'inline-block';
             }
-        });
+            // El texto siempre visible
+            document.getElementById('headerLogoText').style.display = 'inline-block';
+            document.getElementById('headerLogoText').innerText = logoImage.text || 'Vínculo Salud';
+        } else {
+            // Si no hay datos, solo texto
+            document.getElementById('headerLogo').style.display = 'none';
+            document.getElementById('headerLogoText').style.display = 'inline-block';
+            document.getElementById('headerLogoText').innerText = 'Vínculo Salud';
+        }
+    });
+}
+
+function saveLogo() {
+    logoImage.text = document.getElementById('logoText').value || 'Vínculo Salud';
+    
+    if (tempLogoData) {
+        logoImage.url = tempLogoData;
     }
+    
+    db.ref('LogoImage').set(logoImage);
+    
+    // Siempre mostrar ambos
+    if (logoImage.url) {
+        document.getElementById('headerLogo').src = logoImage.url;
+        document.getElementById('headerLogo').style.display = 'inline-block';
+    } else {
+        document.getElementById('headerLogo').style.display = 'none';
+    }
+    // Texto siempre visible
+    document.getElementById('headerLogoText').style.display = 'inline-block';
+    document.getElementById('headerLogoText').innerText = logoImage.text;
+    
+    closeLogoModal();
+    showToast('Logo guardado correctamente', 'success');
+}
+
+function removeLogo() {
+    if (confirm('¿Eliminar el logo?')) {
+        logoImage = { url: '', text: document.getElementById('logoText').value || 'Vínculo Salud' };
+        db.ref('LogoImage').set(logoImage);
+        
+        // Solo texto visible
+        document.getElementById('headerLogo').style.display = 'none';
+        document.getElementById('headerLogoText').style.display = 'inline-block';
+        document.getElementById('headerLogoText').innerText = logoImage.text;
+        
+        closeLogoModal();
+        showToast('Logo eliminado', 'success');
+    }
+}
 
     function showLogoModal() {
         document.getElementById('logoModal').style.display = 'flex';

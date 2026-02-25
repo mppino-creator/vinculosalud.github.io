@@ -2888,7 +2888,7 @@
     let tempImageData = null;
     let tempBackgroundImageData = null;
     let tempLogoData = null;
-    let tempQrData = null; // 🔵 NUEVO: Variable para QR
+    let tempQrData = null;
     let selectedPatientForTherapist = null;
     const EDIT_HOURS = 24;
 
@@ -3026,86 +3026,82 @@
     }
 
     // ============================================
-// FUNCIÓN DE CORREO REAL CON SENDGRID
-// ============================================
+    // FUNCIÓN DE CORREO REAL CON SENDGRID
+    // ============================================
 
-function sendEmailNotification(to, subject, message) {
-    // Configuración de SendGrid
-    const sendGridApiKey = 'TU_API_KEY_DE_SENDGRID'; // ← REEMPLAZA ESTO CON TU API KEY
-    
-    // Mostrar indicador de envío
-    showToast('Enviando correo...', 'info', 2000);
-    
-    fetch('https://api.sendgrid.com/v3/mail/send', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${sendGridApiKey}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            personalizations: [{
-                to: [{ email: to }],
-                subject: subject
-            }],
-            from: {
-                email: 'notificaciones@vinculosalud.cl', // ← CAMBIA POR TU CORREO VERIFICADO
-                name: 'Vínculo Salud'
+    function sendEmailNotification(to, subject, message) {
+        // Configuración de SendGrid
+        const sendGridApiKey = 'TU_API_KEY_DE_SENDGRID';
+        
+        // Mostrar indicador de envío
+        showToast('Enviando correo...', 'info', 2000);
+        
+        fetch('https://api.sendgrid.com/v3/mail/send', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sendGridApiKey}`,
+                'Content-Type': 'application/json'
             },
-            content: [{
-                type: 'text/plain',
-                value: message
-            }],
-            // Configuración de seguimiento (opcional, mejora la entrega)
-            tracking_settings: {
-                click_tracking: { enable: true },
-                open_tracking: { enable: true }
+            body: JSON.stringify({
+                personalizations: [{
+                    to: [{ email: to }],
+                    subject: subject
+                }],
+                from: {
+                    email: 'notificaciones@vinculosalud.cl',
+                    name: 'Vínculo Salud'
+                },
+                content: [{
+                    type: 'text/plain',
+                    value: message
+                }],
+                tracking_settings: {
+                    click_tracking: { enable: true },
+                    open_tracking: { enable: true }
+                }
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log(`✅ Correo enviado exitosamente a ${to}`);
+                showToast(`📧 Correo enviado a ${to}`, 'success');
+                
+                const emailContent = `Correo enviado a ${to}: "${subject}"`;
+                document.getElementById('emailContent').innerText = emailContent;
+                document.getElementById('emailSimulation').style.display = 'block';
+            } else {
+                console.error('❌ Error en el envío:', response.status, response.statusText);
+                showToast('Error al enviar correo. Verifica la consola.', 'error');
+                
+                const emailContent = `[FALLO EN ENVÍO] Correo a ${to}: "${subject}"`;
+                document.getElementById('emailContent').innerText = emailContent;
+                document.getElementById('emailSimulation').style.display = 'block';
             }
         })
-    })
-    .then(response => {
-        if (response.ok) {
-            console.log(`✅ Correo enviado exitosamente a ${to}`);
-            showToast(`📧 Correo enviado a ${to}`, 'success');
+        .catch(error => {
+            console.error('❌ Error de red al enviar correo:', error);
+            showToast('Error de conexión al enviar correo', 'error');
             
-            // También mostrar en la simulación para referencia visual
-            const emailContent = `Correo enviado a ${to}: "${subject}"`;
+            const emailContent = `[ERROR DE RED] Correo a ${to}: "${subject}"`;
             document.getElementById('emailContent').innerText = emailContent;
             document.getElementById('emailSimulation').style.display = 'block';
-        } else {
-            console.error('❌ Error en el envío:', response.status, response.statusText);
-            showToast('Error al enviar correo. Verifica la consola.', 'error');
-            
-            // Fallback: mostrar simulación para no interrumpir el flujo
-            const emailContent = `[FALLO EN ENVÍO] Correo a ${to}: "${subject}"`;
-            document.getElementById('emailContent').innerText = emailContent;
-            document.getElementById('emailSimulation').style.display = 'block';
-        }
-    })
-    .catch(error => {
-        console.error('❌ Error de red al enviar correo:', error);
-        showToast('Error de conexión al enviar correo', 'error');
+        });
+    }
+
+    // ============================================
+    // FUNCIONES DE CORREO (MANTIENEN LA MISMA LÓGICA)
+    // ============================================
+
+    function sendAppointmentEmails(appointment, isReminder = false) {
+        const patientEmail = appointment.patientEmail;
+        const psych = staff.find(s => s.id == appointment.psychId);
+        const psychEmail = psych?.email || '';
         
-        // Fallback: mostrar simulación
-        const emailContent = `[ERROR DE RED] Correo a ${to}: "${subject}"`;
-        document.getElementById('emailContent').innerText = emailContent;
-        document.getElementById('emailSimulation').style.display = 'block';
-    });
-}
-
-// ============================================
-// FUNCIONES DE CORREO (MANTIENEN LA MISMA LÓGICA)
-// ============================================
-
-function sendAppointmentEmails(appointment, isReminder = false) {
-    const patientEmail = appointment.patientEmail;
-    const psych = staff.find(s => s.id == appointment.psychId);
-    const psychEmail = psych?.email || '';
-    
-    let subject, message;
-    
-    if (isReminder) {
-        subject = `Recordatorio: Cita con ${appointment.psych} - Mañana`;
-        message = `
+        let subject, message;
+        
+        if (isReminder) {
+            subject = `Recordatorio: Cita con ${appointment.psych} - Mañana`;
+            message = `
 Hola ${appointment.patient},
 
 Te recordamos que tienes una cita MAÑANA con ${appointment.psych}.
@@ -3120,9 +3116,9 @@ Por favor, confirma tu asistencia.
 
 Vínculo Salud
         `;
-    } else {
-        subject = `Confirmación de cita - Vínculo Salud`;
-        message = `
+        } else {
+            subject = `Confirmación de cita - Vínculo Salud`;
+            message = `
 Hola ${appointment.patient},
 
 Tu cita ha sido confirmada con ${appointment.psych}.
@@ -3140,17 +3136,15 @@ Si necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de
 
 Vínculo Salud
         `;
-    }
-    
-    // Enviar al paciente
-    if (patientEmail) {
-        sendEmailNotification(patientEmail, subject, message);
-    }
-    
-    // Enviar al terapeuta (solo para citas nuevas, no recordatorios)
-    if (!isReminder && psychEmail) {
-        const psychSubject = `Nueva cita confirmada - ${appointment.patient}`;
-        const psychMessage = `
+        }
+        
+        if (patientEmail) {
+            sendEmailNotification(patientEmail, subject, message);
+        }
+        
+        if (!isReminder && psychEmail) {
+            const psychSubject = `Nueva cita confirmada - ${appointment.patient}`;
+            const psychMessage = `
 Hola ${appointment.psych},
 
 Se ha confirmado una nueva cita.
@@ -3167,19 +3161,18 @@ ${appointment.boxName ? `📍 Box: ${appointment.boxName}` : ''}
 
 Vínculo Salud
         `;
-        sendEmailNotification(psychEmail, psychSubject, psychMessage);
+            sendEmailNotification(psychEmail, psychSubject, psychMessage);
+        }
     }
-}
 
-function sendRequestEmail(request) {
-    const patientEmail = request.patientEmail;
-    const psych = staff.find(s => s.id == request.psychId);
-    const psychEmail = psych?.email || '';
-    
-    // Correo al paciente
-    if (patientEmail) {
-        const patientSubject = `Solicitud de cita recibida - Vínculo Salud`;
-        const patientMessage = `
+    function sendRequestEmail(request) {
+        const patientEmail = request.patientEmail;
+        const psych = staff.find(s => s.id == request.psychId);
+        const psychEmail = psych?.email || '';
+        
+        if (patientEmail) {
+            const patientSubject = `Solicitud de cita recibida - Vínculo Salud`;
+            const patientMessage = `
 Hola ${request.patient},
 
 Hemos recibido tu solicitud de cita con ${request.psych}.
@@ -3195,13 +3188,12 @@ Para consultas, puedes contactarnos directamente.
 
 Vínculo Salud
         `;
-        sendEmailNotification(patientEmail, patientSubject, patientMessage);
-    }
-    
-    // Correo al terapeuta
-    if (psychEmail) {
-        const psychSubject = `Nueva solicitud de cita - ${request.patient}`;
-        const psychMessage = `
+            sendEmailNotification(patientEmail, patientSubject, patientMessage);
+        }
+        
+        if (psychEmail) {
+            const psychSubject = `Nueva solicitud de cita - ${request.patient}`;
+            const psychMessage = `
 Hola ${request.psych},
 
 Has recibido una nueva solicitud de cita.
@@ -3219,17 +3211,17 @@ Por favor, ingresa al sistema para confirmar o reprogramar esta cita.
 
 Vínculo Salud
         `;
-        sendEmailNotification(psychEmail, psychSubject, psychMessage);
+            sendEmailNotification(psychEmail, psychSubject, psychMessage);
+        }
     }
-}
 
-function sendConfirmationEmail(request, appointment) {
-    const patientEmail = request.patientEmail;
-    const psych = staff.find(s => s.id == appointment.psychId);
-    
-    if (patientEmail) {
-        const subject = `Cita confirmada - Vínculo Salud`;
-        const message = `
+    function sendConfirmationEmail(request, appointment) {
+        const patientEmail = request.patientEmail;
+        const psych = staff.find(s => s.id == appointment.psychId);
+        
+        if (patientEmail) {
+            const subject = `Cita confirmada - Vínculo Salud`;
+            const message = `
 Hola ${request.patient},
 
 Tu solicitud de cita ha sido confirmada.
@@ -3245,14 +3237,14 @@ Por favor, llega 10 minutos antes de tu hora agendada.
 
 Vínculo Salud
         `;
-        sendEmailNotification(patientEmail, subject, message);
+            sendEmailNotification(patientEmail, subject, message);
+        }
     }
-}
 
-function sendCancellationEmail(appointment) {
-    if (appointment?.patientEmail) {
-        const subject = 'Cita cancelada - Vínculo Salud';
-        const message = `
+    function sendCancellationEmail(appointment) {
+        if (appointment?.patientEmail) {
+            const subject = 'Cita cancelada - Vínculo Salud';
+            const message = `
 Hola ${appointment.patient},
 
 Tu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.
@@ -3263,9 +3255,9 @@ Si necesitas reagendar, contáctanos.
 
 Vínculo Salud
         `;
-        sendEmailNotification(appointment.patientEmail, subject, message);
+            sendEmailNotification(appointment.patientEmail, subject, message);
+        }
     }
-}
 
     // ============================================
     // FUNCIONES DE FONDO
@@ -3574,7 +3566,7 @@ Vínculo Salud
                             sessionDuration: item.sessionDuration || 50,
                             breakBetween: item.breakBetween || 10,
                             availability: item.availability || {},
-                            paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' } // 🔵 NUEVO
+                            paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
                         };
                     } else {
                         return { 
@@ -3596,7 +3588,7 @@ Vínculo Salud
                             sessionDuration: item.sessionDuration || 50,
                             breakBetween: item.breakBetween || 10,
                             availability: item.availability || {},
-                            paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' } // 🔵 NUEVO
+                            paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
                         };
                     }
                 });
@@ -4017,6 +4009,17 @@ Vínculo Salud
         const type = document.getElementById('appointmentType').value;
         
         if (type === 'online' && date && time) {
+            // Verificar si la fecha/hora ya pasó
+            const selectedDateTime = new Date(date + 'T' + time);
+            const now = new Date();
+            
+            if (selectedDateTime < now) {
+                document.getElementById('onlineAvailabilityMsg').style.display = 'block';
+                document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-exclamation-circle"></i> No puedes seleccionar una hora que ya pasó.';
+                document.getElementById('onlineAvailabilityMsg').style.background = '#fff3cd';
+                return false;
+            }
+            
             const existingAppointment = appointments.find(a => 
                 a.psychId == selectedPsych.id && 
                 a.date === date && 
@@ -4029,10 +4032,13 @@ Vínculo Salud
             if (isAvailable) {
                 document.getElementById('onlineAvailabilityMsg').style.display = 'block';
                 document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-check-circle"></i> Horario disponible para reserva inmediata.';
+                document.getElementById('onlineAvailabilityMsg').style.background = '#e6f7e6';
+                return true;
             } else {
                 document.getElementById('onlineAvailabilityMsg').style.display = 'block';
                 document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-exclamation-circle"></i> Horario no disponible. Por favor selecciona otro.';
                 document.getElementById('onlineAvailabilityMsg').style.background = '#fff3cd';
+                return false;
             }
         }
     }
@@ -4094,6 +4100,17 @@ Vínculo Salud
             return;
         }
 
+        // Validar que la hora no haya pasado
+        const selectedDateTime = new Date(date + 'T' + time);
+        const now = new Date();
+        
+        if (selectedDateTime < now) {
+            showToast('No puedes agendar una hora que ya pasó', 'error');
+            bookBtn.innerHTML = 'SOLICITAR CITA';
+            bookBtn.disabled = false;
+            return;
+        }
+
         // Verificar disponibilidad para online
         if (type === 'online') {
             const existingAppointment = appointments.find(a => 
@@ -4139,7 +4156,7 @@ Vínculo Salud
             const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
             const deposit = Math.round(price * 0.5);
             
-            // 🔵 NUEVO: Mostrar link de pago después de crear la cita/solicitud
+            // Mostrar link de pago después de crear la cita/solicitud
             const paymentContainer = document.getElementById('paymentLinkContainer');
             let paymentLink = '';
             
@@ -5578,7 +5595,7 @@ Vínculo Salud
         document.getElementById('addBankEmail').value = '';
         document.getElementById('addPhotoPreview').style.display = 'none';
         tempImageData = null;
-        tempQrData = null; // Reset QR temp data
+        tempQrData = null;
     }
 
     function closeAddStaffModal() {
@@ -5632,7 +5649,6 @@ Vínculo Salud
         const bankRut = document.getElementById('addBankRut')?.value || '';
         const bankEmail = document.getElementById('addBankEmail')?.value || '';
         
-        // 🔵 NUEVO: Obtener links de pago
         const paymentLinkOnline = document.getElementById('addPaymentLinkOnline')?.value || '';
         const paymentLinkPresencial = document.getElementById('addPaymentLinkPresencial')?.value || '';
         
@@ -5714,7 +5730,6 @@ Vínculo Salud
         document.getElementById('editBankRut').value = bank.rut || '';
         document.getElementById('editBankEmail').value = bank.email || '';
         
-        // 🔵 NUEVO: Cargar links de pago
         document.getElementById('editPaymentLinkOnline').value = therapist.paymentLinks?.online || '';
         document.getElementById('editPaymentLinkPresencial').value = therapist.paymentLinks?.presencial || '';
         if (therapist.paymentLinks?.qrCode) {
@@ -5767,7 +5782,6 @@ Vínculo Salud
             email: document.getElementById('editBankEmail').value
         };
 
-        // 🔵 NUEVO: Guardar links de pago
         therapist.paymentLinks = {
             online: document.getElementById('editPaymentLinkOnline').value,
             presencial: document.getElementById('editPaymentLinkPresencial').value,
@@ -6118,7 +6132,6 @@ Vínculo Salud
         }
     }
 
-    // 🔵 NUEVO: Función para previsualizar QR en edición
     function previewQrImage(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -6131,7 +6144,6 @@ Vínculo Salud
         }
     }
 
-    // 🔵 NUEVO: Función para previsualizar QR al añadir
     function previewAddQrImage(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();

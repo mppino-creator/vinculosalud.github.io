@@ -195,7 +195,7 @@
             padding: 0 15px;
         }
 
-        /* Navigation - AHORA CON LOGO */
+        /* Navigation - AHORA CON LOGO PARAMETRIZABLE */
         header.nav-container {
             padding: 15px 0;
             position: sticky;
@@ -234,6 +234,19 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .logo-text-input {
+            font-size: 1.5rem;
+            font-weight: 900;
+            border: none;
+            background: transparent;
+            color: var(--azul-medico);
+            border-bottom: 2px solid var(--azul-medico);
+            padding: 2px 5px;
+            width: auto;
+            min-width: 150px;
         }
 
         @media (max-width: 480px) {
@@ -1608,7 +1621,7 @@
                 <input type="email" id="editBankEmail">
             </div>
             
-            <!-- 🔵 NUEVO: Links de Pago y QR -->
+            <!-- Links de Pago y QR -->
             <div class="form-group" style="grid-column:1/-1;">
                 <h4 style="margin:15px 0; color: var(--azul-medico);">🔗 Links de Pago (SumUp)</h4>
             </div>
@@ -1616,20 +1629,20 @@
             <div class="form-group">
                 <label>Link de pago ONLINE</label>
                 <input type="url" id="editPaymentLinkOnline" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
-                <small style="color:var(--text-light);">Ej: https://pay.sumup.com/b2c/Q133Z3BA</small>
+                <small style="color:var(--text-light);">Para pagos online con tarjeta</small>
             </div>
             
             <div class="form-group">
                 <label>Link de pago PRESENCIAL</label>
                 <input type="url" id="editPaymentLinkPresencial" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
-                <small style="color:var(--text-light);">Ej: https://pay.sumup.com/b2c/Q14AXQSS</small>
+                <small style="color:var(--text-light);">Para pagos presenciales con QR</small>
             </div>
             
             <div class="form-group">
-                <label>QR de pago (opcional)</label>
+                <label>QR de pago (para presencial)</label>
                 <div class="file-upload" onclick="document.getElementById('editQrInput').click()">
                     <i class="fa fa-qrcode"></i>
-                    <p>Haz clic para subir imagen del QR</p>
+                    <p>Haz clic para subir imagen del QR (para pagos presenciales)</p>
                 </div>
                 <input type="file" id="editQrInput" accept="image/*" style="display:none;" onchange="previewQrImage(this)">
                 <img id="editQrPreview" class="image-preview" src="" style="display:none; width:150px; height:150px; border-radius:10px; margin-top:10px;">
@@ -1725,7 +1738,7 @@
     </div>
 </div>
 
-<!-- Modal de Configuración de Disponibilidad -->
+<!-- Modal de Configuración de Disponibilidad (mejorado) -->
 <div class="modal" id="availabilityModal">
     <div class="modal-content" style="max-width: 900px;">
         <button class="modal-close" onclick="closeAvailabilityModal()">&times;</button>
@@ -1737,7 +1750,7 @@
             <div class="range-row" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:15px;">
                 <div class="form-group">
                     <label>Duración (minutos)</label>
-                    <input type="number" id="sessionDuration" value="50" min="15" step="5">
+                    <input type="number" id="sessionDuration" value="45" min="15" step="5">
                 </div>
                 
                 <div class="form-group">
@@ -1784,6 +1797,24 @@
                 <div class="weekday" onclick="toggleWeekday('Sab')">Sábado</div>
                 <div class="weekday" onclick="toggleWeekday('Dom')">Domingo</div>
             </div>
+        </div>
+        
+        <!-- Bloque de anulación de rango de horas -->
+        <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin:20px 0;">
+            <h4 style="margin-bottom:15px; color: var(--azul-oscuro);">🚫 Anular Rango de Horas</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <div class="form-group">
+                    <label>Desde hora</label>
+                    <input type="time" id="blockStartTime" value="12:00">
+                </div>
+                <div class="form-group">
+                    <label>Hasta hora</label>
+                    <input type="time" id="blockEndTime" value="14:00">
+                </div>
+            </div>
+            <button class="btn-staff" style="background:var(--rojo-alerta); margin-top:10px;" onclick="blockTimeRange()">
+                <i class="fa fa-ban"></i> Anular este rango
+            </button>
         </div>
         
         <h3 style="margin-bottom: 15px; color: var(--azul-oscuro);">Horarios Generados</h3>
@@ -1980,7 +2011,7 @@
                 <input type="email" id="addBankEmail">
             </div>
             
-            <!-- 🔵 NUEVO: Links de Pago y QR -->
+            <!-- Links de Pago y QR -->
             <div class="form-group" style="grid-column:1/-1;">
                 <h4 style="margin:15px 0; color: var(--azul-medico);">🔗 Links de Pago (SumUp)</h4>
             </div>
@@ -1988,20 +2019,20 @@
             <div class="form-group">
                 <label>Link de pago ONLINE</label>
                 <input type="url" id="addPaymentLinkOnline" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
-                <small style="color:var(--text-light);">Ej: https://pay.sumup.com/b2c/Q133Z3BA</small>
+                <small style="color:var(--text-light);">Para pagos online con tarjeta</small>
             </div>
             
             <div class="form-group">
                 <label>Link de pago PRESENCIAL</label>
                 <input type="url" id="addPaymentLinkPresencial" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
-                <small style="color:var(--text-light);">Ej: https://pay.sumup.com/b2c/Q14AXQSS</small>
+                <small style="color:var(--text-light);">Para pagos presenciales con QR</small>
             </div>
             
             <div class="form-group">
-                <label>QR de pago (opcional)</label>
+                <label>QR de pago (para presencial)</label>
                 <div class="file-upload" onclick="document.getElementById('addQrInput').click()">
                     <i class="fa fa-qrcode"></i>
-                    <p>Haz clic para subir imagen del QR</p>
+                    <p>Haz clic para subir imagen del QR (para pagos presenciales)</p>
                 </div>
                 <input type="file" id="addQrInput" accept="image/*" style="display:none;" onchange="previewAddQrImage(this)">
                 <img id="addQrPreview" class="image-preview" src="" style="display:none; width:150px; height:150px; border-radius:10px; margin-top:10px;">
@@ -2120,14 +2151,20 @@
     </div>
 </div>
 
-<!-- Modal de Configuración de Logo (NUEVO) -->
+<!-- Modal de Configuración de Logo (MEJORADO) -->
 <div class="modal" id="logoModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closeLogoModal()">&times;</button>
         <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">🖼️ Logo del Sitio</h2>
         
         <div class="form-group">
-            <label>Logo</label>
+            <label>Texto del Logo (si no hay imagen)</label>
+            <input type="text" id="logoText" value="Vínculo Salud" class="form-control">
+            <small style="color:var(--text-light);">Este texto se muestra cuando no hay logo</small>
+        </div>
+        
+        <div class="form-group">
+            <label>Logo (imagen)</label>
             <div class="file-upload" onclick="document.getElementById('logoInput').click()">
                 <i class="fa fa-cloud-upload-alt"></i>
                 <p>Haz clic para seleccionar el logo</p>
@@ -2245,7 +2282,9 @@
                     </div>
                     <div class="form-group">
                         <label>Hora *</label>
-                        <input type="time" id="custTime">
+                        <select id="custTime" onchange="checkOnlineAvailability()">
+                            <option value="">Selecciona una hora</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -2281,13 +2320,8 @@
                 </div>
                 
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <span style="color:white;">Seña (50%)</span>
-                    <span id="bookingDeposit" style="color:var(--naranja-aviso);">$0</span>
-                </div>
-                
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
                     <span style="color:white;">Duración</span>
-                    <span id="bookingDuration" style="color:white;">50 minutos</span>
+                    <span id="bookingDuration" style="color:white;">45 minutos</span>
                 </div>
                 
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
@@ -2295,19 +2329,10 @@
                     <span id="bookingType" style="color:white;">Online</span>
                 </div>
                 
-                <div style="margin:20px 0;">
-                    <label style="color:white; margin-bottom:10px; display:block;">Método de Pago</label>
-                    <select id="paymentMethod" style="width:100%; padding:12px; border-radius:10px;" onchange="showPaymentDetails()">
-                        <option value="">Selecciona método</option>
-                    </select>
-                </div>
-                
-                <div id="paymentDetails" style="display:none; margin:20px 0; padding:15px; background:rgba(255,255,255,0.1); border-radius:12px;"></div>
-                
                 <div style="margin:15px 0;">
                     <label style="display:flex; align-items:center; gap:10px; color:white; font-size:0.9rem;">
                         <input type="checkbox" id="acceptPolicy">
-                        <span>Acepto la política de cancelación y el pago del 50% como seña</span>
+                        <span>Acepto la política de cancelación</span>
                     </label>
                 </div>
                 
@@ -2321,7 +2346,7 @@
             </div>
         </div>
         
-        <!-- 🔵 NUEVO: Contenedor para links de pago -->
+        <!-- Contenedor para links de pago -->
         <div id="paymentLinkContainer" style="grid-column:1/-1; margin-top:20px; display:none;"></div>
         
         <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;">
@@ -2454,6 +2479,7 @@
                             <th>Precios</th>
                             <th>WhatsApp</th>
                             <th>Instagram</th>
+                            <th>Links Pago</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -2876,7 +2902,8 @@
         opacity: 10
     };
     let logoImage = {
-        url: ''
+        url: '',
+        text: 'Vínculo Salud'
     };
     let selectedPsych = null;
     let currentUser = null;
@@ -2915,17 +2942,23 @@
     }
 
     // ============================================
-    // FUNCIONES DE LOGO
+    // FUNCIONES DE LOGO (MEJORADAS)
     // ============================================
 
     function cargarLogo() {
         db.ref('LogoImage').on('value', (snapshot) => {
             const data = snapshot.val();
-            if (data && data.url) {
+            if (data) {
                 logoImage = data;
-                document.getElementById('headerLogo').src = data.url;
-                document.getElementById('headerLogo').style.display = 'inline-block';
-                document.getElementById('headerLogoText').style.display = 'none';
+                if (logoImage.url) {
+                    document.getElementById('headerLogo').src = logoImage.url;
+                    document.getElementById('headerLogo').style.display = 'inline-block';
+                    document.getElementById('headerLogoText').style.display = 'none';
+                } else {
+                    document.getElementById('headerLogo').style.display = 'none';
+                    document.getElementById('headerLogoText').style.display = 'inline-block';
+                    document.getElementById('headerLogoText').innerText = logoImage.text || 'Vínculo Salud';
+                }
             } else {
                 document.getElementById('headerLogo').style.display = 'none';
                 document.getElementById('headerLogoText').style.display = 'inline-block';
@@ -2935,6 +2968,7 @@
 
     function showLogoModal() {
         document.getElementById('logoModal').style.display = 'flex';
+        document.getElementById('logoText').value = logoImage.text || 'Vínculo Salud';
         if (logoImage.url) {
             document.getElementById('logoPreview').src = logoImage.url;
             document.getElementById('logoPreview').style.display = 'block';
@@ -2959,26 +2993,36 @@
     }
 
     function saveLogo() {
+        logoImage.text = document.getElementById('logoText').value || 'Vínculo Salud';
+        
         if (tempLogoData) {
             logoImage.url = tempLogoData;
-            db.ref('LogoImage').set(logoImage);
-            
+        }
+        
+        db.ref('LogoImage').set(logoImage);
+        
+        if (logoImage.url) {
             document.getElementById('headerLogo').src = logoImage.url;
             document.getElementById('headerLogo').style.display = 'inline-block';
             document.getElementById('headerLogoText').style.display = 'none';
-            
-            closeLogoModal();
-            showToast('Logo guardado correctamente', 'success');
+        } else {
+            document.getElementById('headerLogo').style.display = 'none';
+            document.getElementById('headerLogoText').style.display = 'inline-block';
+            document.getElementById('headerLogoText').innerText = logoImage.text;
         }
+        
+        closeLogoModal();
+        showToast('Logo guardado correctamente', 'success');
     }
 
     function removeLogo() {
         if (confirm('¿Eliminar el logo?')) {
-            logoImage = { url: '' };
+            logoImage = { url: '', text: document.getElementById('logoText').value || 'Vínculo Salud' };
             db.ref('LogoImage').set(logoImage);
             
             document.getElementById('headerLogo').style.display = 'none';
             document.getElementById('headerLogoText').style.display = 'inline-block';
+            document.getElementById('headerLogoText').innerText = logoImage.text;
             
             closeLogoModal();
             showToast('Logo eliminado', 'success');
@@ -3026,66 +3070,21 @@
     }
 
     // ============================================
-    // FUNCIÓN DE CORREO REAL CON SENDGRID
+    // FUNCIÓN DE CORREO (CORREGIDA)
     // ============================================
 
     function sendEmailNotification(to, subject, message) {
-        // Configuración de SendGrid
-        const sendGridApiKey = 'TU_API_KEY_DE_SENDGRID';
+        // Simulación de envío de correo (para evitar errores)
+        console.log(`📧 Simulación de correo a: ${to}`);
+        console.log(`📧 Asunto: ${subject}`);
+        console.log(`📧 Mensaje: ${message}`);
         
-        // Mostrar indicador de envío
-        showToast('Enviando correo...', 'info', 2000);
+        // Mostrar simulación
+        showToast(`Correo simulado enviado a ${to}`, 'success');
         
-        fetch('https://api.sendgrid.com/v3/mail/send', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${sendGridApiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                personalizations: [{
-                    to: [{ email: to }],
-                    subject: subject
-                }],
-                from: {
-                    email: 'notificaciones@vinculosalud.cl',
-                    name: 'Vínculo Salud'
-                },
-                content: [{
-                    type: 'text/plain',
-                    value: message
-                }],
-                tracking_settings: {
-                    click_tracking: { enable: true },
-                    open_tracking: { enable: true }
-                }
-            })
-        })
-        .then(response => {
-            if (response.ok) {
-                console.log(`✅ Correo enviado exitosamente a ${to}`);
-                showToast(`📧 Correo enviado a ${to}`, 'success');
-                
-                const emailContent = `Correo enviado a ${to}: "${subject}"`;
-                document.getElementById('emailContent').innerText = emailContent;
-                document.getElementById('emailSimulation').style.display = 'block';
-            } else {
-                console.error('❌ Error en el envío:', response.status, response.statusText);
-                showToast('Error al enviar correo. Verifica la consola.', 'error');
-                
-                const emailContent = `[FALLO EN ENVÍO] Correo a ${to}: "${subject}"`;
-                document.getElementById('emailContent').innerText = emailContent;
-                document.getElementById('emailSimulation').style.display = 'block';
-            }
-        })
-        .catch(error => {
-            console.error('❌ Error de red al enviar correo:', error);
-            showToast('Error de conexión al enviar correo', 'error');
-            
-            const emailContent = `[ERROR DE RED] Correo a ${to}: "${subject}"`;
-            document.getElementById('emailContent').innerText = emailContent;
-            document.getElementById('emailSimulation').style.display = 'block';
-        });
+        const emailContent = `Correo enviado a ${to}: "${subject}"`;
+        document.getElementById('emailContent').innerText = emailContent;
+        document.getElementById('emailSimulation').style.display = 'block';
     }
 
     // ============================================
@@ -3130,9 +3129,8 @@ ${appointment.boxName ? `📍 Box: ${appointment.boxName}` : ''}
 📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}
 
 💳 Método de pago: ${appointment.paymentMethod === 'transfer' ? 'Transferencia bancaria' : appointment.paymentMethod === 'cash' ? 'Efectivo' : appointment.paymentMethod === 'mercadopago' ? 'Mercado Pago' : appointment.paymentMethod === 'webpay' ? 'Webpay' : 'Tarjeta'}
-💰 Seña pagada (50%): $${appointment.depositAmount?.toLocaleString()}
 
-Si necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de anticipación. Recuerda que la seña no es reembolsable en caso de inasistencia.
+Si necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de anticipación.
 
 Vínculo Salud
         `;
@@ -3156,7 +3154,6 @@ Teléfono: ${appointment.patientPhone}
 ⏰ Hora: ${appointment.time}
 💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}
 ${appointment.boxName ? `📍 Box: ${appointment.boxName}` : ''}
-💰 Seña pagada: $${appointment.depositAmount?.toLocaleString()}
 📝 Notas: ${appointment.msg || 'Sin observaciones'}
 
 Vínculo Salud
@@ -3180,7 +3177,6 @@ Hemos recibido tu solicitud de cita con ${request.psych}.
 📅 Fecha solicitada: ${request.preferredDate}
 ⏰ Hora solicitada: ${request.preferredTime}
 💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}
-💰 Seña requerida: $${request.depositAmount?.toLocaleString()} (50% del valor)
 
 El profesional revisará tu solicitud y te confirmará la hora exacta a la brevedad.
 
@@ -3204,7 +3200,6 @@ Teléfono: ${request.patientPhone}
 📅 Fecha solicitada: ${request.preferredDate}
 ⏰ Hora solicitada: ${request.preferredTime}
 💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}
-💰 Seña: $${request.depositAmount?.toLocaleString()}
 📝 Motivo: ${request.msg || 'No especificado'}
 
 Por favor, ingresa al sistema para confirmar o reprogramar esta cita.
@@ -3231,7 +3226,6 @@ Tu solicitud de cita ha sido confirmada.
 💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}
 ${appointment.boxName ? `📍 Box: ${appointment.boxName}` : ''}
 📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}
-💰 Seña pagada: $${appointment.depositAmount?.toLocaleString()}
 
 Por favor, llega 10 minutos antes de tu hora agendada.
 
@@ -3248,8 +3242,6 @@ Vínculo Salud
 Hola ${appointment.patient},
 
 Tu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.
-
-💰 La seña del 50% ($${appointment.depositAmount?.toLocaleString()}) será retenida como compensación por el tiempo reservado, según la política de cancelación.
 
 Si necesitas reagendar, contáctanos.
 
@@ -3563,7 +3555,7 @@ Vínculo Salud
                             phone: item.phone || '',
                             bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
                             paymentMethods: item.paymentMethods || globalPaymentMethods,
-                            sessionDuration: item.sessionDuration || 50,
+                            sessionDuration: item.sessionDuration || 45,
                             breakBetween: item.breakBetween || 10,
                             availability: item.availability || {},
                             paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
@@ -3585,7 +3577,7 @@ Vínculo Salud
                             phone: item.phone || '',
                             bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
                             paymentMethods: item.paymentMethods || globalPaymentMethods,
-                            sessionDuration: item.sessionDuration || 50,
+                            sessionDuration: item.sessionDuration || 45,
                             breakBetween: item.breakBetween || 10,
                             availability: item.availability || {},
                             paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
@@ -3593,75 +3585,11 @@ Vínculo Salud
                     }
                 });
             } else {
-                staff = [
-                    { 
-                        id: 1, 
-                        name: 'Psic. Alison Gutiérrez', 
-                        spec: ['Terapia Cognitiva', 'Ansiedad', 'Depresión'], 
-                        priceOnline: 45000,
-                        pricePresencial: 50000,
-                        usuario: 'alison',
-                        pass: 'alison2026',
-                        email: 'alison@vinculosalud.cl',
-                        img: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=500',
-                        whatsapp: '+56987654321',
-                        instagram: 'alison.psicologa',
-                        stars: 5,
-                        address: 'Av. Providencia 1234, Santiago',
-                        phone: '+56 9 8765 4321',
-                        bankDetails: { bank: 'Banco Estado', accountType: 'corriente', accountNumber: '12345678', rut: '12.345.678-9', email: 'alison@bancocl' },
-                        paymentMethods: globalPaymentMethods,
-                        sessionDuration: 50,
-                        breakBetween: 10,
-                        availability: {},
-                        paymentLinks: { online: 'https://pay.sumup.com/b2c/Q133Z3BA', presencial: 'https://pay.sumup.com/b2c/Q14AXQSS', qrCode: '' }
-                    },
-                    { 
-                        id: 2, 
-                        name: 'Dr. Julián Sossa', 
-                        spec: ['Psiquiatría', 'Trastornos del ánimo'], 
-                        priceOnline: 65000,
-                        pricePresencial: 70000,
-                        usuario: 'julian',
-                        pass: 'julian2026',
-                        email: 'julian@vinculosalud.cl',
-                        img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=500',
-                        whatsapp: '+56976543210',
-                        instagram: 'dr.julianpsiquiatra',
-                        stars: 5,
-                        address: 'Av. Las Condes 7890, Las Condes',
-                        phone: '+56 9 7654 3210',
-                        bankDetails: { bank: 'Banco de Chile', accountType: 'corriente', accountNumber: '87654321', rut: '23.456.789-0', email: 'julian@bancocl' },
-                        paymentMethods: globalPaymentMethods,
-                        sessionDuration: 50,
-                        breakBetween: 15,
-                        availability: {},
-                        paymentLinks: { online: '', presencial: '', qrCode: '' }
-                    },
-                    { 
-                        id: 3, 
-                        name: 'Dra. Martina Luz', 
-                        spec: ['Mindfulness', 'Estrés', 'Yoga Terapéutico'], 
-                        priceOnline: 40000,
-                        pricePresencial: 45000,
-                        usuario: 'martina',
-                        pass: 'martina2026',
-                        email: 'martina@vinculosalud.cl',
-                        img: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500',
-                        whatsapp: '+56965432109',
-                        instagram: 'martina.bienestar',
-                        stars: 4,
-                        address: 'Av. Vitacura 4567, Vitacura',
-                        phone: '+56 9 6543 2109',
-                        bankDetails: { bank: 'Banco Santander', accountType: 'vista', accountNumber: '56781234', rut: '34.567.890-1', email: 'martina@bancocl' },
-                        paymentMethods: globalPaymentMethods,
-                        sessionDuration: 45,
-                        breakBetween: 15,
-                        availability: {},
-                        paymentLinks: { online: '', presencial: '', qrCode: '' }
-                    }
-                ];
+                // SIN PROFESIONALES POR DEFECTO, SOLO ADMIN
+                staff = [];
             }
+            
+            // Agregar administrador
             staff.push({
                 id: 9999,
                 name: 'Administrador',
@@ -3680,11 +3608,12 @@ Vínculo Salud
                 bankDetails: {},
                 isHiddenAdmin: true,
                 paymentMethods: {},
-                sessionDuration: 0,
-                breakBetween: 0,
+                sessionDuration: 45,
+                breakBetween: 10,
                 availability: {},
                 paymentLinks: { online: '', presencial: '', qrCode: '' }
             });
+            
             filterProfessionals();
             if (currentUser?.role === 'admin') renderStaffTable();
         });
@@ -3694,11 +3623,7 @@ Vínculo Salud
             if (data) {
                 boxes = Object.keys(data).map(key => ({ id: key, ...data[key] }));
             } else {
-                boxes = [
-                    { id: 1, name: 'BOX A', location: 'Piso 1 - Sector A', startTime: '09:00', endTime: '20:00', days: [1,2,3,4,5], description: 'Box principal con camilla', active: true },
-                    { id: 2, name: 'BOX B', location: 'Piso 1 - Sector B', startTime: '09:00', endTime: '20:00', days: [1,2,3,4,5], description: 'Box con vista al exterior', active: true },
-                    { id: 3, name: 'BOX C', location: 'Piso 2', startTime: '14:00', endTime: '22:00', days: [1,2,3,4,5,6], description: 'Box para atenciones vespertinas', active: true }
-                ];
+                boxes = [];
             }
             if (currentUser?.role === 'admin') renderBoxesTable();
             if (currentUser?.role === 'psych') renderBoxOccupancy();
@@ -3942,14 +3867,16 @@ Vínculo Salud
         
         document.getElementById('custDate').min = today;
         document.getElementById('custDate').value = today;
-        document.getElementById('custTime').value = '10:00';
+        
+        // Cargar duración de sesión
+        document.getElementById('bookingDuration').innerText = (selectedPsych.sessionDuration || 45) + ' minutos';
         
         loadPaymentMethods();
         updateBookingDetails();
         document.getElementById('emailSimulation').style.display = 'none';
         
         // Verificar disponibilidad inicial
-        checkOnlineAvailability();
+        updateAvailableTimes();
     }
 
     function loadPaymentMethods() {
@@ -3986,21 +3913,56 @@ Vínculo Salud
             const bank = selectedPsych.bankDetails;
             detailsDiv.style.display = 'block';
             detailsDiv.innerHTML = `
-                <h4 style="margin-bottom:10px;">Datos para Transferencia (50% seña)</h4>
+                <h4 style="margin-bottom:10px;">Datos para Transferencia</h4>
                 <p><strong>Banco:</strong> ${bank.bank || 'No especificado'}</p>
                 <p><strong>Cuenta:</strong> ${bank.accountType || ''} ${bank.accountNumber || ''}</p>
                 <p><strong>RUT:</strong> ${bank.rut || ''}</p>
                 <p><strong>Email:</strong> ${bank.email || ''}</p>
             `;
-        } else if (method === 'mercadopago' || method === 'webpay') {
-            detailsDiv.style.display = 'block';
-            detailsDiv.innerHTML = `
-                <h4 style="margin-bottom:10px;">Pago Online (50% seña)</h4>
-                <p>Serás redirigido a la pasarela de pago al confirmar la cita.</p>
-            `;
         } else {
             detailsDiv.style.display = 'none';
         }
+    }
+
+    function updateAvailableTimes() {
+        const date = document.getElementById('custDate').value;
+        const type = document.getElementById('appointmentType').value;
+        const timeSelect = document.getElementById('custTime');
+        
+        if (!date || !selectedPsych) return;
+        
+        // Limpiar opciones
+        timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
+        
+        // Obtener slots disponibles
+        const availableSlots = selectedPsych.availability?.[date] || [];
+        const bookedTimes = appointments
+            .filter(a => a.psychId == selectedPsych.id && a.date === date)
+            .map(a => a.time);
+        
+        // Filtrar slots no reservados y no pasados
+        const now = new Date();
+        const availableTimes = availableSlots
+            .filter(slot => !bookedTimes.includes(slot.time))
+            .filter(slot => {
+                const slotDateTime = new Date(date + 'T' + slot.time);
+                return slotDateTime > now;
+            })
+            .sort((a, b) => a.time.localeCompare(b.time));
+        
+        if (availableTimes.length === 0) {
+            timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+            return;
+        }
+        
+        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+        availableTimes.forEach(slot => {
+            const option = document.createElement('option');
+            option.value = slot.time;
+            option.textContent = slot.time + (slot.isOvercupo ? ' (Sobrecupo)' : '');
+            if (slot.isOvercupo) option.style.color = '#f59e0b';
+            timeSelect.appendChild(option);
+        });
     }
 
     function checkOnlineAvailability() {
@@ -4046,10 +4008,8 @@ Vínculo Salud
     function updateBookingDetails() {
         const type = document.getElementById('appointmentType').value;
         const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
-        const deposit = Math.round(price * 0.5);
         
         document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
-        document.getElementById('bookingDeposit').innerText = `$${deposit.toLocaleString()}`;
         document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial';
         
         const warning = document.getElementById('presencialWarning');
@@ -4063,6 +4023,9 @@ Vínculo Salud
             onlineMsg.style.display = 'block';
             checkOnlineAvailability();
         }
+        
+        // Actualizar horarios disponibles
+        updateAvailableTimes();
     }
 
     function searchPatientByRutBooking() {
@@ -4106,8 +4069,6 @@ Vínculo Salud
         
         if (selectedDateTime < now) {
             showToast('No puedes agendar una hora que ya pasó', 'error');
-            bookBtn.innerHTML = 'SOLICITAR CITA';
-            bookBtn.disabled = false;
             return;
         }
 
@@ -4154,16 +4115,17 @@ Vínculo Salud
             }
             
             const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
-            const deposit = Math.round(price * 0.5);
             
             // Mostrar link de pago después de crear la cita/solicitud
             const paymentContainer = document.getElementById('paymentLinkContainer');
             let paymentLink = '';
+            let qrCode = '';
             
             if (type === 'online' && selectedPsych.paymentLinks?.online) {
                 paymentLink = selectedPsych.paymentLinks.online;
             } else if (type === 'presencial' && selectedPsych.paymentLinks?.presencial) {
                 paymentLink = selectedPsych.paymentLinks.presencial;
+                qrCode = selectedPsych.paymentLinks?.qrCode || '';
             }
             
             // Personalizar link con datos del paciente
@@ -4174,11 +4136,11 @@ Vínculo Salud
             
             if (paymentContainer) {
                 let qrHtml = '';
-                if (selectedPsych.paymentLinks?.qrCode) {
+                if (qrCode) {
                     qrHtml = `
                         <div style="text-align: center; margin: 20px 0;">
-                            <p style="font-weight:600; margin-bottom:10px;">📱 Escanea para pagar:</p>
-                            <img src="${selectedPsych.paymentLinks.qrCode}" 
+                            <p style="font-weight:600; margin-bottom:10px;">📱 Escanea para pagar (presencial):</p>
+                            <img src="${qrCode}" 
                                  style="width: 200px; height: 200px; border-radius: 12px; border: 3px solid var(--azul-medico); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                         </div>
                     `;
@@ -4186,9 +4148,8 @@ Vínculo Salud
                 
                 paymentContainer.innerHTML = `
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center;">
-                        <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 Pago requerido</h4>
-                        <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${deposit.toLocaleString()}</p>
-                        <p style="margin-bottom:20px; opacity:0.9;">(50% de seña para confirmar la cita)</p>
+                        <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 ${type === 'online' ? 'Pago online' : 'Pago presencial'}</h4>
+                        <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${price.toLocaleString()}</p>
                         
                         ${qrHtml}
                         
@@ -4226,19 +4187,17 @@ Vínculo Salud
                     boxId: null,
                     boxName: null,
                     price: price,
-                    depositPaid: true,
-                    depositAmount: deposit,
                     paymentMethod: paymentMethod,
-                    paymentStatus: 'pagado',
+                    paymentStatus: paymentLink ? 'pendiente' : 'pagado',
                     msg: msg,
-                    status: 'confirmada',
+                    status: paymentLink ? 'pendiente' : 'confirmada',
                     createdAt: new Date().toISOString(),
                     editableUntil: new Date(Date.now() + EDIT_HOURS * 60 * 60 * 1000).toISOString()
                 };
                 
                 appointments.push(appointment);
                 sendAppointmentEmails(appointment);
-                showToast('¡Cita confirmada! Revisa tu email', 'success');
+                showToast(paymentLink ? '¡Cita creada! Realiza el pago para confirmar' : '¡Cita confirmada!', 'success');
             } else {
                 // Solicitud presencial
                 const request = {
@@ -4256,7 +4215,6 @@ Vínculo Salud
                     boxId: null,
                     boxName: null,
                     paymentMethod: paymentMethod,
-                    depositAmount: deposit,
                     msg: msg,
                     status: 'pendiente',
                     createdAt: new Date().toLocaleString()
@@ -4367,23 +4325,28 @@ Vínculo Salud
 
         timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
         
+        // Filtrar slots no pasados
+        const now = new Date();
         availableSlots.forEach(slot => {
             if (!bookedTimes.includes(slot.time)) {
-                const option = document.createElement('option');
-                option.value = slot.time;
-                option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
-                if (slot.isOvercupo) option.style.color = '#f59e0b';
-                
-                if (type === 'presencial') {
-                    const availableBoxes = getAvailableBoxes(date, slot.time);
-                    if (availableBoxes.length === 0) {
-                        option.disabled = true;
-                        option.textContent += ' (sin boxes disponibles)';
-                        option.style.color = 'var(--text-light)';
+                const slotDateTime = new Date(date + 'T' + slot.time);
+                if (slotDateTime > now) {
+                    const option = document.createElement('option');
+                    option.value = slot.time;
+                    option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
+                    if (slot.isOvercupo) option.style.color = '#f59e0b';
+                    
+                    if (type === 'presencial') {
+                        const availableBoxes = getAvailableBoxes(date, slot.time);
+                        if (availableBoxes.length === 0) {
+                            option.disabled = true;
+                            option.textContent += ' (sin boxes disponibles)';
+                            option.style.color = 'var(--text-light)';
+                        }
                     }
+                    
+                    timeSelect.appendChild(option);
                 }
-                
-                timeSelect.appendChild(option);
             }
         });
 
@@ -4482,7 +4445,6 @@ Vínculo Salud
 
         setTimeout(() => {
             const price = type === 'online' ? currentUser.data.priceOnline : currentUser.data.pricePresencial;
-            const deposit = Math.round(price * 0.5);
             const box = type === 'presencial' ? boxes.find(b => b.id == selectedTherapistBoxId) : null;
             
             const appointment = {
@@ -4500,8 +4462,6 @@ Vínculo Salud
                 boxId: type === 'presencial' ? selectedTherapistBoxId : null,
                 boxName: box ? box.name : null,
                 price: price,
-                depositPaid: true,
-                depositAmount: deposit,
                 paymentMethod: paymentMethod,
                 paymentStatus: 'pagado',
                 msg: msg,
@@ -4943,8 +4903,8 @@ Vínculo Salud
             const canEdit = currentUser.role === 'admin' || 
                            (currentUser.role === 'psych' && new Date() < new Date(a.editableUntil));
             
-            let paymentStatusText = 'Pagado (seña 50%)';
-            let paymentStatusColor = 'var(--verde-exito)';
+            let paymentStatusText = a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
+            let paymentStatusColor = a.paymentStatus === 'pagado' ? 'var(--verde-exito)' : 'var(--naranja-aviso)';
             
             tb.innerHTML += `
                 <tr>
@@ -4964,6 +4924,11 @@ Vínculo Salud
                         ${(currentUser.role === 'admin' || canEdit) ? `
                             <button onclick="cancelAppointment(${a.id})" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
                                 <i class="fa fa-times"></i>
+                            </button>
+                        ` : ''}
+                        ${a.paymentStatus === 'pendiente' && currentUser.role === 'admin' ? `
+                            <button onclick="markAsPaid(${a.id})" class="btn-icon" style="background:var(--verde-exito); color:white;">
+                                <i class="fa fa-check"></i>
                             </button>
                         ` : ''}
                     </td>
@@ -4998,7 +4963,7 @@ Vínculo Salud
             const patientApps = appointments.filter(a => a.patientId == p.id).sort((a, b) => new Date(b.date) - new Date(a.date));
             const nextAppt = patientApps.find(a => new Date(a.date + 'T' + a.time) > new Date());
             const totalSessions = patientApps.length;
-            const totalPaid = patientApps.reduce((sum, a) => sum + a.price, 0);
+            const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
             const totalAmount = patientApps.reduce((sum, a) => sum + a.price, 0);
             
             const recentApps = patientApps.slice(0, 3);
@@ -5015,7 +4980,8 @@ Vínculo Salud
                         ${p.phone ? `<span><i class="fa fa-phone"></i> ${p.phone}</span>` : ''}
                     </div>
                     <div style="display:flex; gap:15px; margin-top:10px; font-size:0.8rem;">
-                        <span><i class="fa fa-credit-card"></i> Total Pagado: $${totalPaid.toLocaleString()}</span>
+                        <span><i class="fa fa-credit-card"></i> Pagado: $${totalPaid.toLocaleString()}</span>
+                        <span><i class="fa fa-clock"></i> Total: $${totalAmount.toLocaleString()}</span>
                     </div>
                     ${nextAppt ? `
                         <div style="background:#e6f7e6; padding:8px; border-radius:8px; margin-top:10px;">
@@ -5076,7 +5042,7 @@ Vínculo Salud
         
         if (patientApps.length > 0) {
             const totalSessions = patientApps.length;
-            const totalPaid = patientApps.reduce((sum, a) => sum + a.price, 0);
+            const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
             const onlineSessions = patientApps.filter(a => a.type === 'online').length;
             const presencialSessions = patientApps.filter(a => a.type === 'presencial').length;
             
@@ -5087,7 +5053,7 @@ Vínculo Salud
                 </div>
                 <div class="stat-card">
                     <div class="number">$${totalPaid.toLocaleString()}</div>
-                    <div class="label">Total Pagado</div>
+                    <div class="label">Pagado</div>
                 </div>
                 <div class="stat-card">
                     <div class="number">${onlineSessions}/${presencialSessions}</div>
@@ -5103,6 +5069,9 @@ Vínculo Salud
                     <span class="history-type">${a.type === 'online' ? 'Online' : 'Presencial'}</span>
                     ${a.boxName ? `<span class="history-box">${a.boxName}</span>` : ''}
                     <span class="history-amount">$${a.price.toLocaleString()}</span>
+                    <span style="color:${a.paymentStatus === 'pagado' ? 'var(--verde-exito)' : 'var(--naranja-aviso)'}">
+                        ${a.paymentStatus === 'pagado' ? '✓' : '⏳'}
+                    </span>
                 </div>
             `).join('');
             historyContainer.style.display = 'block';
@@ -5236,6 +5205,7 @@ Vínculo Salud
                             <th>Tipo</th>
                             <th>Box</th>
                             <th>Valor</th>
+                            <th>Estado</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -5252,6 +5222,7 @@ Vínculo Salud
                     <td>${a.type === 'online' ? 'Online' : 'Presencial'}</td>
                     <td>${a.boxName || '—'}</td>
                     <td>$${a.price.toLocaleString()}</td>
+                    <td>${a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td>
                 </tr>
             `;
         });
@@ -5261,7 +5232,7 @@ Vínculo Salud
                 </table>
                 
                 <div class="total">
-                    Total Pagado: $${total.toLocaleString()}
+                    Total: $${total.toLocaleString()}
                 </div>
             </body>
             </html>
@@ -5274,7 +5245,7 @@ Vínculo Salud
     }
 
     // ============================================
-    // FUNCIONES DE DISPONIBILIDAD
+    // FUNCIONES DE DISPONIBILIDAD (MEJORADAS)
     // ============================================
 
     function showAvailabilityModal() {
@@ -5288,7 +5259,7 @@ Vínculo Salud
         document.getElementById('rangeEndDate').value = nextWeek.toISOString().split('T')[0];
         
         if (currentUser.data) {
-            document.getElementById('sessionDuration').value = currentUser.data.sessionDuration || 50;
+            document.getElementById('sessionDuration').value = currentUser.data.sessionDuration || 45;
             document.getElementById('breakBetween').value = currentUser.data.breakBetween || 10;
         }
         
@@ -5367,6 +5338,24 @@ Vínculo Salud
             generatedSlots.push({ time: time, isOvercupo: false });
         }
         renderGeneratedSlots();
+    }
+
+    function blockTimeRange() {
+        const startTime = document.getElementById('blockStartTime').value;
+        const endTime = document.getElementById('blockEndTime').value;
+        
+        if (!startTime || !endTime) {
+            showToast('Selecciona hora de inicio y fin', 'error');
+            return;
+        }
+        
+        // Filtrar slots que estén en el rango a bloquear
+        generatedSlots = generatedSlots.filter(slot => {
+            return slot.time < startTime || slot.time >= endTime;
+        });
+        
+        renderGeneratedSlots();
+        showToast('Rango de horas eliminado', 'success');
     }
 
     function applyGeneratedSlots() {
@@ -5619,6 +5608,10 @@ Vínculo Salud
                 <td>${p.whatsapp || '—'}</td>
                 <td>${p.instagram || '—'}</td>
                 <td>
+                    ${p.paymentLinks?.online ? '✅ Online' : '❌ Online'}<br>
+                    ${p.paymentLinks?.presencial ? '✅ Presencial' : '❌ Presencial'}
+                </td>
+                <td>
                     <button onclick="editTherapist('${p.id}')" class="btn-icon" style="background:var(--azul-medico); color:white;">
                         <i class="fa fa-edit"></i>
                     </button>
@@ -5685,7 +5678,7 @@ Vínculo Salud
             },
             paymentMethods: { ...globalPaymentMethods },
             stars: 5,
-            sessionDuration: 50,
+            sessionDuration: 45,
             breakBetween: 10,
             availability: {},
             paymentLinks: {
@@ -5828,7 +5821,7 @@ Vínculo Salud
     }
 
     function cancelAppointment(id) {
-        if (confirm('¿Cancelar esta cita? La seña del 50% será retenida como compensación.')) {
+        if (confirm('¿Cancelar esta cita?')) {
             const appointment = appointments.find(a => a.id == id);
             appointments = appointments.filter(a => a.id != id);
             save();
@@ -5838,7 +5831,6 @@ Vínculo Salud
                 const message = `
                     Hola ${appointment.patient},\n\n
                     Tu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.\n\n
-                    La seña del 50% ($${appointment.depositAmount?.toLocaleString()}) será retenida como compensación por el tiempo reservado.\n\n
                     Si necesitas reagendar, contáctanos.\n\n
                     Vínculo Salud
                 `;
@@ -5846,6 +5838,15 @@ Vínculo Salud
             }
             
             showToast('Cita cancelada', 'success');
+        }
+    }
+
+    function markAsPaid(id) {
+        const appointment = appointments.find(a => a.id == id);
+        if (appointment) {
+            appointment.paymentStatus = 'pagado';
+            save();
+            showToast('Pago marcado como recibido', 'success');
         }
     }
 
@@ -5941,11 +5942,6 @@ Vínculo Salud
                             <span style="color:var(--text-light); margin-left:5px;">(${messages.filter(m => m.therapistId == p.id).length})</span>
                         </div>
                         <div class="price-box">
-                            <div class="price-details">
-                                <small><i class="fa fa-video"></i> Online: $${p.priceOnline.toLocaleString()}</small>
-                                <small><i class="fa fa-building"></i> Presencial: $${p.pricePresencial.toLocaleString()}</small>
-                                <small><i class="fa fa-clock"></i> Seña 50%</small>
-                            </div>
                             <button class="btn-book" onclick="event.stopPropagation(); openBooking(${p.id})">
                                 Agendar
                             </button>
@@ -6163,17 +6159,18 @@ Vínculo Salud
     cargarDatosIniciales();
 
     document.getElementById('custDate').addEventListener('change', function() {
+        updateAvailableTimes();
         checkOnlineAvailability();
         updateBookingDetails();
     });
 
     document.getElementById('custTime').addEventListener('change', function() {
         checkOnlineAvailability();
-        updateBookingDetails();
     });
 
     document.getElementById('appointmentType').addEventListener('change', function() {
         updateBookingDetails();
+        updateAvailableTimes();
     });
 
     document.getElementById('therapistTime').addEventListener('change', function() {

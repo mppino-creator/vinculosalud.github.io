@@ -1830,7 +1830,7 @@
     </div>
 </div>
 
-<!-- Modal de Gestión de Boxes -->
+<!-- Modal de Gestión de Box -->
 <div class="modal" id="boxModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeBoxModal()">&times;</button>
@@ -2307,6 +2307,15 @@
                     <textarea id="custMsg" rows="4" placeholder="Cuéntanos brevemente el motivo de tu consulta..."></textarea>
                 </div>
                 
+                <div class="form-group">
+                    <label>Método de Pago *</label>
+                    <select id="paymentMethod" onchange="showPaymentDetails()">
+                        <option value="">Selecciona método</option>
+                    </select>
+                </div>
+                
+                <div id="paymentDetails" class="bank-details" style="display:none;"></div>
+                
                 <div class="alert-info" style="background:#e8f4fd; padding:15px; border-radius:12px; margin-top:20px;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
                     <strong>Política de Cancelación:</strong> En caso de no asistir a la cita, se retendrá el valor de la sesión como compensación por el tiempo reservado.
@@ -2397,7 +2406,7 @@
             <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
             <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
             <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
-            <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
+            <div class="tab" id="boxTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
             <div class="tab" id="agendarTab" style="display:none;" onclick="switchTab('agendar')">Agendar Cita</div>
         </div>
 
@@ -2867,21 +2876,6 @@
     // VARIABLES GLOBALES
     // ============================================
 
-    function showToast(message, type = 'success', duration = 3000) {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
-            <i class="fa ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-            <span>${message}</span>
-        `;
-        container.appendChild(toast);
-        setTimeout(() => {
-            toast.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        }, duration);
-    }
-
     let staff = [];
     let patients = [];
     let appointments = [];
@@ -2924,6 +2918,21 @@
     let dataLoaded = false;
     const EDIT_HOURS = 24;
 
+    function showToast(message, type = 'success', duration = 3000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <i class="fa ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
     function getPublicStaff() {
         return staff.filter(s => s.spec && s.spec.length > 0 && !s.isHiddenAdmin);
     }
@@ -2950,72 +2959,26 @@
     // FUNCIONES DE LOGO (MEJORADAS)
     // ============================================
 
-    // ============================================
-// FUNCIONES DE LOGO (AMBOS SIEMPRE VISIBLES)
-// ============================================
-
-function cargarLogo() {
-    db.ref('LogoImage').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            logoImage = data;
-            // Siempre mostrar ambos: logo y texto
-            if (logoImage.url) {
-                document.getElementById('headerLogo').src = logoImage.url;
-                document.getElementById('headerLogo').style.display = 'inline-block';
+    function cargarLogo() {
+        db.ref('LogoImage').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                logoImage = data;
+                if (logoImage.url) {
+                    document.getElementById('headerLogo').src = logoImage.url;
+                    document.getElementById('headerLogo').style.display = 'inline-block';
+                } else {
+                    document.getElementById('headerLogo').style.display = 'none';
+                }
+                document.getElementById('headerLogoText').style.display = 'inline-block';
+                document.getElementById('headerLogoText').innerText = logoImage.text || 'Vínculo Salud';
             } else {
                 document.getElementById('headerLogo').style.display = 'none';
+                document.getElementById('headerLogoText').style.display = 'inline-block';
+                document.getElementById('headerLogoText').innerText = 'Vínculo Salud';
             }
-            // El texto siempre visible
-            document.getElementById('headerLogoText').style.display = 'inline-block';
-            document.getElementById('headerLogoText').innerText = logoImage.text || 'Vínculo Salud';
-        } else {
-            // Si no hay datos, solo texto
-            document.getElementById('headerLogo').style.display = 'none';
-            document.getElementById('headerLogoText').style.display = 'inline-block';
-            document.getElementById('headerLogoText').innerText = 'Vínculo Salud';
-        }
-    });
-}
-
-function saveLogo() {
-    logoImage.text = document.getElementById('logoText').value || 'Vínculo Salud';
-    
-    if (tempLogoData) {
-        logoImage.url = tempLogoData;
+        });
     }
-    
-    db.ref('LogoImage').set(logoImage);
-    
-    // Siempre mostrar ambos
-    if (logoImage.url) {
-        document.getElementById('headerLogo').src = logoImage.url;
-        document.getElementById('headerLogo').style.display = 'inline-block';
-    } else {
-        document.getElementById('headerLogo').style.display = 'none';
-    }
-    // Texto siempre visible
-    document.getElementById('headerLogoText').style.display = 'inline-block';
-    document.getElementById('headerLogoText').innerText = logoImage.text;
-    
-    closeLogoModal();
-    showToast('Logo guardado correctamente', 'success');
-}
-
-function removeLogo() {
-    if (confirm('¿Eliminar el logo?')) {
-        logoImage = { url: '', text: document.getElementById('logoText').value || 'Vínculo Salud' };
-        db.ref('LogoImage').set(logoImage);
-        
-        // Solo texto visible
-        document.getElementById('headerLogo').style.display = 'none';
-        document.getElementById('headerLogoText').style.display = 'inline-block';
-        document.getElementById('headerLogoText').innerText = logoImage.text;
-        
-        closeLogoModal();
-        showToast('Logo eliminado', 'success');
-    }
-}
 
     function showLogoModal() {
         document.getElementById('logoModal').style.display = 'flex';
@@ -3048,8 +3011,6 @@ function removeLogo() {
         
         if (tempLogoData) {
             logoImage.url = tempLogoData;
-        } else {
-            logoImage.url = '';
         }
         
         db.ref('LogoImage').set(logoImage);
@@ -3057,12 +3018,11 @@ function removeLogo() {
         if (logoImage.url) {
             document.getElementById('headerLogo').src = logoImage.url;
             document.getElementById('headerLogo').style.display = 'inline-block';
-            document.getElementById('headerLogoText').style.display = 'none';
         } else {
             document.getElementById('headerLogo').style.display = 'none';
-            document.getElementById('headerLogoText').style.display = 'inline-block';
-            document.getElementById('headerLogoText').innerText = logoImage.text;
         }
+        document.getElementById('headerLogoText').style.display = 'inline-block';
+        document.getElementById('headerLogoText').innerText = logoImage.text;
         
         closeLogoModal();
         showToast('Logo guardado correctamente', 'success');
@@ -3584,7 +3544,6 @@ Vínculo Salud
     // ============================================
     
     function cargarDatosIniciales() {
-        // Mostrar un indicador de carga
         document.getElementById('publicGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Cargando profesionales...</p></div>';
         
         db.ref('Staff').once('value', (snapshot) => {
@@ -3592,59 +3551,32 @@ Vínculo Salud
             if (data) {
                 staff = Object.keys(data).map(key => {
                     const item = data[key];
-                    
-                    if (item.name && item.pass && !item.usuario && !item.user) {
-                        return {
-                            id: key,
-                            name: item.name,
-                            usuario: item.name.split(' ')[0] || item.name,
-                            pass: item.pass,
-                            email: item.email || '',
-                            spec: item.spec || ['Profesional'],
-                            priceOnline: item.priceOnline || 0,
-                            pricePresencial: item.pricePresencial || 0,
-                            img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-                            whatsapp: item.whatsapp || '',
-                            instagram: item.instagram || '',
-                            stars: item.stars || 5,
-                            address: item.address || '',
-                            phone: item.phone || '',
-                            bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
-                            paymentMethods: item.paymentMethods || globalPaymentMethods,
-                            sessionDuration: item.sessionDuration || 45,
-                            breakBetween: item.breakBetween || 10,
-                            availability: item.availability || {},
-                            paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
-                        };
-                    } else {
-                        return { 
-                            id: key, 
-                            ...item,
-                            usuario: item.usuario || item.user || '',
-                            email: item.email || '',
-                            spec: item.spec || ['Profesional'],
-                            priceOnline: item.priceOnline || 0,
-                            pricePresencial: item.pricePresencial || 0,
-                            img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-                            whatsapp: item.whatsapp || '',
-                            instagram: item.instagram || '',
-                            stars: item.stars || 5,
-                            address: item.address || '',
-                            phone: item.phone || '',
-                            bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
-                            paymentMethods: item.paymentMethods || globalPaymentMethods,
-                            sessionDuration: item.sessionDuration || 45,
-                            breakBetween: item.breakBetween || 10,
-                            availability: item.availability || {},
-                            paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
-                        };
-                    }
+                    return { 
+                        id: key, 
+                        ...item,
+                        usuario: item.usuario || item.user || '',
+                        email: item.email || '',
+                        spec: item.spec || ['Profesional'],
+                        priceOnline: item.priceOnline || 0,
+                        pricePresencial: item.pricePresencial || 0,
+                        img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+                        whatsapp: item.whatsapp || '',
+                        instagram: item.instagram || '',
+                        stars: item.stars || 5,
+                        address: item.address || '',
+                        phone: item.phone || '',
+                        bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
+                        paymentMethods: item.paymentMethods || globalPaymentMethods,
+                        sessionDuration: item.sessionDuration || 45,
+                        breakBetween: item.breakBetween || 10,
+                        availability: item.availability || {},
+                        paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
+                    };
                 });
             } else {
                 staff = [];
             }
             
-            // Agregar administrador
             staff.push({
                 id: 9999,
                 name: 'Administrador',
@@ -3672,7 +3604,6 @@ Vínculo Salud
             filterProfessionals();
             if (currentUser?.role === 'admin') renderStaffTable();
             
-            // Marcar datos cargados
             dataLoaded = true;
         });
         
@@ -3683,7 +3614,7 @@ Vínculo Salud
             } else {
                 boxes = [];
             }
-            if (currentUser?.role === 'admin') renderBoxesTable();
+            if (currentUser?.role === 'admin') renderBoxTable();
             if (currentUser?.role === 'psych') renderBoxOccupancy();
         });
         
@@ -3795,7 +3726,7 @@ Vínculo Salud
             if (currentUser.role === 'admin') {
                 renderStaffTable();
                 renderMessagesTable();
-                renderBoxesTable();
+                renderBoxTable();
             }
             if (currentUser.role === 'psych') {
                 renderPatients();
@@ -3808,981 +3739,6 @@ Vínculo Salud
         filterProfessionals();
         renderMessages();
         updateMarquee();
-    }
-
-    // ============================================
-    // FUNCIONES DE SOLICITUDES
-    // ============================================
-
-    function renderPendingRequests() {
-        const tb = document.getElementById('pendingRequestsTable');
-        if (!tb) return;
-
-        let requestsToShow = [];
-        if (currentUser.role === 'admin') {
-            requestsToShow = pendingRequests;
-        } else if (currentUser.role === 'psych') {
-            requestsToShow = pendingRequests.filter(r => r.psychId == currentUser.data.id);
-        }
-
-        if (requestsToShow.length === 0) {
-            tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes pendientes</td></tr>';
-            return;
-        }
-
-        tb.innerHTML = requestsToShow.reverse().map(r => `
-            <tr>
-                <td>${r.createdAt || '—'}</td>
-                <td><strong>${r.patient}</strong><br><small>${r.patientRut}</small></td>
-                <td>${r.psych}</td>
-                <td>${r.preferredDate}</td>
-                <td>${r.preferredTime}</td>
-                <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>${r.boxName || '—'}</td>
-                <td>${r.msg || '—'}</td>
-                <td>
-                    <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--verde-exito); color:white;">
-                        <i class="fa fa-check"></i> Confirmar
-                    </button>
-                    <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
-                        <i class="fa fa-times"></i> Rechazar
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    function showConfirmRequestModal(requestId) {
-        const request = pendingRequests.find(r => r.id == requestId);
-        if (!request) return;
-
-        selectedPatientForTherapist = patients.find(p => p.id == request.patientId);
-        document.getElementById('therapistRut').value = selectedPatientForTherapist?.rut || '';
-        document.getElementById('patientInfoName').innerText = selectedPatientForTherapist?.name || '';
-        document.getElementById('patientInfoEmail').innerText = selectedPatientForTherapist?.email || '';
-        document.getElementById('patientInfoPhone').innerText = selectedPatientForTherapist?.phone || '';
-        document.getElementById('patientInfo').style.display = 'block';
-        document.getElementById('therapistPatientName').innerText = selectedPatientForTherapist?.name || '';
-        document.getElementById('therapistAppointmentType').value = request.type;
-        document.getElementById('therapistDate').value = request.preferredDate;
-        document.getElementById('therapistMsg').value = request.msg;
-        document.getElementById('therapistPaymentMethod').value = 'transfer';
-        
-        if (request.boxId) {
-            selectedTherapistBoxId = request.boxId;
-        }
-
-        window.currentRequestId = requestId;
-
-        updateTherapistBookingDetails();
-        setTimeout(() => {
-            updateTherapistAvailableSlots();
-            document.getElementById('therapistTime').value = request.preferredTime;
-            document.getElementById('therapistTimeDisplay').innerText = request.preferredTime;
-            if (request.boxId) {
-                updateTherapistBoxSelector(request.preferredDate, request.preferredTime);
-            }
-        }, 500);
-
-        switchTab('agendar');
-    }
-
-    function rejectRequest(requestId) {
-        if (confirm('¿Rechazar esta solicitud? Se notificará al paciente.')) {
-            const request = pendingRequests.find(r => r.id == requestId);
-            pendingRequests = pendingRequests.filter(r => r.id != requestId);
-            
-            if (request?.patientEmail) {
-                const subject = 'Solicitud de cita no confirmada - Vínculo Salud';
-                const message = `
-                    Hola ${request.patient},\n\n
-                    Lamentamos informarte que no ha sido posible confirmar tu solicitud de cita con ${request.psych} para el ${request.preferredDate} a las ${request.preferredTime}.\n\n
-                    Por favor, contacta directamente con el profesional para acordar una nueva fecha.\n\n
-                    Vínculo Salud
-                `;
-                sendEmailNotification(request.patientEmail, subject, message);
-            }
-            
-            save();
-            showToast('Solicitud rechazada', 'success');
-        }
-    }
-
-    // ============================================
-    // FUNCIONES DE RESERVA (PACIENTES)
-    // ============================================
-
-    function openBooking(id) {
-        selectedPsych = staff.find(p => p.id == id);
-        selectedBoxId = null;
-        
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('clientView').style.display = 'none';
-        document.getElementById('bookingPanel').style.display = 'block';
-        document.getElementById('psychName').innerText = selectedPsych.name;
-        document.getElementById('psychSelectedName').innerText = selectedPsych.name;
-        document.getElementById('psychSelectedSpec').innerText = Array.isArray(selectedPsych.spec) ? selectedPsych.spec.join(' · ') : selectedPsych.spec;
-        
-        document.getElementById('custDate').min = today;
-        document.getElementById('custDate').value = today;
-        
-        // Cargar duración de sesión
-        document.getElementById('bookingDuration').innerText = (selectedPsych.sessionDuration || 45) + ' minutos';
-        
-        loadPaymentMethods();
-        updateBookingDetails();
-        document.getElementById('emailSimulation').style.display = 'none';
-        
-        // Verificar disponibilidad inicial
-        updateAvailableTimes();
-    }
-
-    function loadPaymentMethods() {
-        const select = document.getElementById('paymentMethod');
-        select.innerHTML = '<option value="">Selecciona método</option>';
-        
-        const methods = selectedPsych.paymentMethods || globalPaymentMethods;
-        
-        if (methods.transfer) {
-            select.innerHTML += '<option value="transfer">Transferencia Bancaria</option>';
-        }
-        if (methods.cardPresencial) {
-            select.innerHTML += '<option value="card-presencial">Tarjeta (en consulta)</option>';
-        }
-        if (methods.cardOnline) {
-            select.innerHTML += '<option value="card-online">Tarjeta (pago online)</option>';
-        }
-        if (methods.cash) {
-            select.innerHTML += '<option value="cash">Efectivo (en consulta)</option>';
-        }
-        if (methods.mercadopago) {
-            select.innerHTML += '<option value="mercadopago">Mercado Pago</option>';
-        }
-        if (methods.webpay) {
-            select.innerHTML += '<option value="webpay">Webpay</option>';
-        }
-    }
-
-    function showPaymentDetails() {
-        const method = document.getElementById('paymentMethod').value;
-        const detailsDiv = document.getElementById('paymentDetails');
-        
-        if (method === 'transfer' && selectedPsych.bankDetails) {
-            const bank = selectedPsych.bankDetails;
-            detailsDiv.style.display = 'block';
-            detailsDiv.innerHTML = `
-                <h4 style="margin-bottom:10px;">Datos para Transferencia</h4>
-                <p><strong>Banco:</strong> ${bank.bank || 'No especificado'}</p>
-                <p><strong>Cuenta:</strong> ${bank.accountType || ''} ${bank.accountNumber || ''}</p>
-                <p><strong>RUT:</strong> ${bank.rut || ''}</p>
-                <p><strong>Email:</strong> ${bank.email || ''}</p>
-            `;
-        } else {
-            detailsDiv.style.display = 'none';
-        }
-    }
-
-    function updateAvailableTimes() {
-        const date = document.getElementById('custDate').value;
-        const type = document.getElementById('appointmentType').value;
-        const timeSelect = document.getElementById('custTime');
-        
-        if (!date || !selectedPsych) return;
-        
-        // Limpiar opciones
-        timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
-        
-        if (type === 'presencial') {
-            timeSelect.innerHTML = '<option value="">Selecciona un día (la hora se coordinará)</option>';
-            return;
-        }
-        
-        // Obtener slots disponibles
-        const availableSlots = selectedPsych.availability?.[date] || [];
-        const bookedTimes = appointments
-            .filter(a => a.psychId == selectedPsych.id && a.date === date)
-            .map(a => a.time);
-        
-        // Filtrar slots no reservados y no pasados
-        const now = new Date();
-        const availableTimes = availableSlots
-            .filter(slot => !bookedTimes.includes(slot.time))
-            .filter(slot => {
-                const slotDateTime = new Date(date + 'T' + slot.time);
-                return slotDateTime > now;
-            })
-            .sort((a, b) => a.time.localeCompare(b.time));
-        
-        if (availableTimes.length === 0) {
-            timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
-            return;
-        }
-        
-        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
-        availableTimes.forEach(slot => {
-            const option = document.createElement('option');
-            option.value = slot.time;
-            option.textContent = slot.time + (slot.isOvercupo ? ' (Sobrecupo)' : '');
-            if (slot.isOvercupo) option.style.color = '#f59e0b';
-            timeSelect.appendChild(option);
-        });
-    }
-
-    function checkOnlineAvailability() {
-        const date = document.getElementById('custDate').value;
-        const time = document.getElementById('custTime').value;
-        const type = document.getElementById('appointmentType').value;
-        
-        if (type === 'presencial') {
-            document.getElementById('onlineAvailabilityMsg').style.display = 'none';
-            return true;
-        }
-        
-        if (type === 'online' && date && time) {
-            // Verificar si la fecha/hora ya pasó
-            const selectedDateTime = new Date(date + 'T' + time);
-            const now = new Date();
-            
-            if (selectedDateTime < now) {
-                document.getElementById('onlineAvailabilityMsg').style.display = 'block';
-                document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-exclamation-circle"></i> No puedes seleccionar una hora que ya pasó.';
-                document.getElementById('onlineAvailabilityMsg').style.background = '#fff3cd';
-                return false;
-            }
-            
-            const existingAppointment = appointments.find(a => 
-                a.psychId == selectedPsych.id && 
-                a.date === date && 
-                a.time === time
-            );
-            
-            const isAvailable = !existingAppointment && 
-                selectedPsych.availability?.[date]?.some(s => s.time === time);
-            
-            if (isAvailable) {
-                document.getElementById('onlineAvailabilityMsg').style.display = 'block';
-                document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-check-circle"></i> Horario disponible para reserva inmediata.';
-                document.getElementById('onlineAvailabilityMsg').style.background = '#e6f7e6';
-                return true;
-            } else {
-                document.getElementById('onlineAvailabilityMsg').style.display = 'block';
-                document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-exclamation-circle"></i> Horario no disponible. Por favor selecciona otro.';
-                document.getElementById('onlineAvailabilityMsg').style.background = '#fff3cd';
-                return false;
-            }
-        }
-    }
-
-    function updateBookingDetails() {
-        const type = document.getElementById('appointmentType').value;
-        const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
-        
-        document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
-        document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial';
-        
-        const warning = document.getElementById('presencialWarning');
-        const onlineMsg = document.getElementById('onlineAvailabilityMsg');
-        
-        if (type === 'presencial') {
-            warning.style.display = 'block';
-            onlineMsg.style.display = 'none';
-        } else {
-            warning.style.display = 'none';
-            onlineMsg.style.display = 'block';
-        }
-        
-        // Actualizar horarios disponibles
-        updateAvailableTimes();
-    }
-
-    function searchPatientByRutBooking() {
-        const rut = document.getElementById('custRut').value;
-        if (!rut) return;
-
-        const patient = patients.find(p => p.rut === rut);
-        if (patient) {
-            document.getElementById('custName').value = patient.name || '';
-            document.getElementById('custEmail').value = patient.email || '';
-            document.getElementById('custPhone').value = patient.phone || '';
-            showToast('Datos del paciente cargados', 'success');
-        }
-    }
-
-    function executeBooking() {
-        const rut = document.getElementById('custRut').value;
-        const name = document.getElementById('custName').value;
-        const email = document.getElementById('custEmail').value;
-        const phone = document.getElementById('custPhone').value;
-        const date = document.getElementById('custDate').value;
-        const time = document.getElementById('custTime').value;
-        const type = document.getElementById('appointmentType').value;
-        const paymentMethod = document.getElementById('paymentMethod').value;
-        const msg = document.getElementById('custMsg').value;
-        const acceptPolicy = document.getElementById('acceptPolicy').checked;
-        
-        if (!rut || !name || !email || !date || !paymentMethod) {
-            showToast('Completa todos los campos obligatorios (RUT, nombre, email, fecha y método de pago)', 'error');
-            return;
-        }
-
-        if (type === 'online' && !time) {
-            showToast('Para atención online debes seleccionar una hora', 'error');
-            return;
-        }
-
-        if (!acceptPolicy) {
-            showToast('Debes aceptar la política de cancelación', 'error');
-            return;
-        }
-
-        // Validar que la hora no haya pasado (solo para online)
-        if (type === 'online') {
-            const selectedDateTime = new Date(date + 'T' + time);
-            const now = new Date();
-            
-            if (selectedDateTime < now) {
-                showToast('No puedes agendar una hora que ya pasó', 'error');
-                return;
-            }
-        }
-
-        // Verificar disponibilidad para online
-        if (type === 'online') {
-            const existingAppointment = appointments.find(a => 
-                a.psychId == selectedPsych.id && 
-                a.date === date && 
-                a.time === time
-            );
-
-            if (existingAppointment) {
-                showToast('El profesional ya tiene una cita agendada en este horario', 'error');
-                return;
-            }
-
-            const isAvailable = selectedPsych.availability?.[date]?.some(s => s.time === time);
-            if (!isAvailable) {
-                showToast('Horario no disponible', 'error');
-                return;
-            }
-        }
-
-        const bookBtn = document.getElementById('bookBtn');
-        bookBtn.innerHTML = '<span class="spinner"></span> Procesando...';
-        bookBtn.disabled = true;
-
-        setTimeout(() => {
-            let patient = patients.find(p => p.rut === rut);
-            if (!patient) {
-                patient = {
-                    id: Date.now(),
-                    rut: rut,
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    birthdate: '',
-                    notes: '',
-                    psychId: selectedPsych.id,
-                    createdAt: new Date().toISOString(),
-                    appointments: []
-                };
-                patients.push(patient);
-            }
-            
-            const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
-            
-            // Mostrar link de pago después de crear la cita/solicitud
-            const paymentContainer = document.getElementById('paymentLinkContainer');
-            let paymentLink = '';
-            let qrCode = '';
-            
-            if (type === 'online' && selectedPsych.paymentLinks?.online) {
-                paymentLink = selectedPsych.paymentLinks.online;
-            } else if (type === 'presencial' && selectedPsych.paymentLinks?.presencial) {
-                paymentLink = selectedPsych.paymentLinks.presencial;
-                qrCode = selectedPsych.paymentLinks?.qrCode || '';
-            }
-            
-            // Personalizar link con datos del paciente
-            if (paymentLink) {
-                const separator = paymentLink.includes('?') ? '&' : '?';
-                paymentLink = `${paymentLink}${separator}description=Atención ${type} - ${encodeURIComponent(name)}&customer_email=${encodeURIComponent(email)}&customer_name=${encodeURIComponent(name)}`;
-            }
-            
-            if (paymentContainer) {
-                let qrHtml = '';
-                if (qrCode) {
-                    qrHtml = `
-                        <div style="text-align: center; margin: 20px 0;">
-                            <p style="font-weight:600; margin-bottom:10px;">📱 Escanea para pagar (presencial):</p>
-                            <img src="${qrCode}" 
-                                 style="width: 200px; height: 200px; border-radius: 12px; border: 3px solid var(--azul-medico); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                        </div>
-                    `;
-                }
-                
-                paymentContainer.innerHTML = `
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center;">
-                        <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 ${type === 'online' ? 'Pago online' : 'Pago presencial'}</h4>
-                        <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${price.toLocaleString()}</p>
-                        
-                        ${qrHtml}
-                        
-                        ${paymentLink ? `
-                            <a href="${paymentLink}" target="_blank" class="btn-staff" style="background: var(--verde-exito); text-decoration: none; padding: 15px 40px; font-size:1.2rem; margin-top:15px; display:inline-block;">
-                                <i class="fab fa-cc-visa"></i> Pagar con Tarjeta
-                            </a>
-                            <p style="margin-top:15px; font-size:0.9rem; opacity:0.8;">
-                                <i class="fas fa-lock"></i> Pago seguro procesado por SumUp
-                            </p>
-                        ` : ''}
-                        
-                        <p style="margin-top:20px; font-size:0.8rem; background: rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
-                            ⏰ Una vez realizado el pago, la cita se confirmará automáticamente y recibirás un email.
-                        </p>
-                    </div>
-                `;
-                paymentContainer.style.display = 'block';
-            }
-            
-            if (type === 'online') {
-                // Reserva online directa
-                const appointment = {
-                    id: Date.now(),
-                    patientId: patient.id,
-                    patient: name,
-                    patientRut: rut,
-                    patientEmail: email,
-                    patientPhone: phone,
-                    psych: selectedPsych.name,
-                    psychId: selectedPsych.id,
-                    date: date,
-                    time: time,
-                    type: type,
-                    boxId: null,
-                    boxName: null,
-                    price: price,
-                    paymentMethod: paymentMethod,
-                    paymentStatus: paymentLink ? 'pendiente' : 'pagado',
-                    msg: msg,
-                    status: paymentLink ? 'pendiente' : 'confirmada',
-                    createdAt: new Date().toISOString(),
-                    editableUntil: new Date(Date.now() + EDIT_HOURS * 60 * 60 * 1000).toISOString()
-                };
-                
-                appointments.push(appointment);
-                sendAppointmentEmails(appointment);
-                showToast(paymentLink ? '¡Cita creada! Realiza el pago para confirmar' : '¡Cita confirmada!', 'success');
-            } else {
-                // Solicitud presencial
-                const request = {
-                    id: Date.now(),
-                    patientId: patient.id,
-                    patient: name,
-                    patientRut: rut,
-                    patientEmail: email,
-                    patientPhone: phone,
-                    psych: selectedPsych.name,
-                    psychId: selectedPsych.id,
-                    preferredDate: date,
-                    preferredTime: 'A coordinar',
-                    type: type,
-                    boxId: null,
-                    boxName: null,
-                    paymentMethod: paymentMethod,
-                    msg: msg,
-                    status: 'pendiente',
-                    createdAt: new Date().toLocaleString()
-                };
-                
-                pendingRequests.push(request);
-                sendRequestEmail(request);
-                showToast('¡Solicitud enviada! El profesional te confirmará la hora', 'success');
-            }
-            
-            save();
-            
-            bookBtn.innerHTML = 'SOLICITAR CITA';
-            bookBtn.disabled = false;
-        }, 1500);
-    }
-
-    // ============================================
-    // FUNCIONES DE RESERVA (TERAPEUTAS)
-    // ============================================
-
-    function showTherapistBookingModal() {
-        selectedTherapistBoxId = null;
-        selectedPatientForTherapist = null;
-        window.currentRequestId = null;
-        
-        document.getElementById('therapistRut').value = '';
-        document.getElementById('patientInfo').style.display = 'none';
-        document.getElementById('therapistAppointmentType').value = 'online';
-        document.getElementById('therapistDate').value = '';
-        document.getElementById('therapistTime').innerHTML = '<option value="">Selecciona una fecha</option>';
-        document.getElementById('therapistMsg').value = '';
-        document.getElementById('therapistPaymentMethod').value = 'transfer';
-        document.getElementById('therapistPsychName').innerText = currentUser.data.name;
-        document.getElementById('therapistPatientName').innerText = '—';
-        document.getElementById('therapistDateDisplay').innerText = '—';
-        document.getElementById('therapistTimeDisplay').innerText = '—';
-        document.getElementById('therapistTypeDisplay').innerText = 'Online';
-        document.getElementById('therapistPrice').innerText = '$0';
-        document.getElementById('therapistBoxDisplay').style.display = 'none';
-        document.getElementById('therapistBoxField').style.display = 'none';
-        
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('therapistDate').min = today;
-        
-        switchTab('agendar');
-    }
-
-    function searchPatientByRutTherapist() {
-        const rut = document.getElementById('therapistRut').value;
-        if (!rut) return;
-
-        const patient = patients.find(p => p.rut === rut);
-        if (patient) {
-            selectedPatientForTherapist = patient;
-            document.getElementById('patientInfoName').innerText = patient.name || '';
-            document.getElementById('patientInfoEmail').innerText = patient.email || '';
-            document.getElementById('patientInfoPhone').innerText = patient.phone || '';
-            document.getElementById('patientInfo').style.display = 'block';
-            document.getElementById('therapistPatientName').innerText = patient.name;
-            showToast('Paciente encontrado', 'success');
-        } else {
-            if (confirm('Paciente no encontrado. ¿Desea crearlo?')) {
-                document.getElementById('patientRut').value = rut;
-                document.getElementById('patientName').value = '';
-                document.getElementById('patientEmail').value = '';
-                document.getElementById('patientPhone').value = '';
-                document.getElementById('patientModalTitle').innerText = 'Nuevo Paciente';
-                document.getElementById('patientHistoryContainer').style.display = 'none';
-                document.getElementById('patientStatsContainer').style.display = 'none';
-                document.getElementById('patientModal').style.display = 'flex';
-            }
-        }
-    }
-
-    function updateTherapistBookingDetails() {
-        const type = document.getElementById('therapistAppointmentType').value;
-        const price = type === 'online' ? currentUser.data.priceOnline : currentUser.data.pricePresencial;
-        document.getElementById('therapistPrice').innerText = `$${price.toLocaleString()}`;
-        document.getElementById('therapistTypeDisplay').innerText = type === 'online' ? 'Online' : 'Presencial';
-        
-        if (type === 'presencial') {
-            document.getElementById('therapistBoxField').style.display = 'block';
-            updateTherapistAvailableSlots();
-        } else {
-            document.getElementById('therapistBoxField').style.display = 'none';
-            document.getElementById('therapistBoxDisplay').style.display = 'none';
-            updateTherapistAvailableSlots();
-        }
-    }
-
-    function updateTherapistAvailableSlots() {
-        const date = document.getElementById('therapistDate').value;
-        const timeSelect = document.getElementById('therapistTime');
-        const type = document.getElementById('therapistAppointmentType').value;
-        
-        if (!date || !currentUser) return;
-
-        const bookedTimes = appointments
-            .filter(a => a.psychId == currentUser.data.id && a.date === date)
-            .map(a => a.time);
-
-        const availableSlots = currentUser.data.availability?.[date] || [];
-
-        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
-        
-        // Filtrar slots no pasados
-        const now = new Date();
-        availableSlots.forEach(slot => {
-            if (!bookedTimes.includes(slot.time)) {
-                const slotDateTime = new Date(date + 'T' + slot.time);
-                if (slotDateTime > now) {
-                    const option = document.createElement('option');
-                    option.value = slot.time;
-                    option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
-                    if (slot.isOvercupo) option.style.color = '#f59e0b';
-                    
-                    if (type === 'presencial') {
-                        const availableBoxes = getAvailableBoxes(date, slot.time);
-                        if (availableBoxes.length === 0) {
-                            option.disabled = true;
-                            option.textContent += ' (sin boxes disponibles)';
-                            option.style.color = 'var(--text-light)';
-                        }
-                    }
-                    
-                    timeSelect.appendChild(option);
-                }
-            }
-        });
-
-        if (timeSelect.children.length === 1) {
-            timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
-        }
-
-        const time = document.getElementById('therapistTime').value;
-        if (time) {
-            document.getElementById('therapistTimeDisplay').innerText = time;
-            updateTherapistBoxSelector(date, time);
-        }
-    }
-
-    function updateTherapistBoxSelector(date, time) {
-        const boxSelector = document.getElementById('therapistBoxSelector');
-        const boxAvailabilityMsg = document.getElementById('therapistBoxAvailabilityMsg');
-        
-        if (!date || !time) {
-            boxSelector.innerHTML = '';
-            boxAvailabilityMsg.innerHTML = 'Selecciona fecha y horario primero';
-            return;
-        }
-
-        const availableBoxes = getAvailableBoxes(date, time);
-        
-        if (availableBoxes.length === 0) {
-            boxSelector.innerHTML = '';
-            boxAvailabilityMsg.innerHTML = 'No hay boxes disponibles para este horario';
-            document.getElementById('therapistBoxDisplay').style.display = 'none';
-            selectedTherapistBoxId = null;
-            return;
-        }
-
-        boxSelector.innerHTML = availableBoxes.map(box => `
-            <div class="box-option ${selectedTherapistBoxId == box.id ? 'selected' : ''}" 
-                 onclick="selectTherapistBox(${box.id})"
-                 title="${box.description || ''}">
-                📦 ${box.name} ${box.location ? `- ${box.location}` : ''}
-            </div>
-        `).join('');
-
-        boxAvailabilityMsg.innerHTML = `${availableBoxes.length} box(es) disponible(s)`;
-    }
-
-    function selectTherapistBox(boxId) {
-        selectedTherapistBoxId = boxId;
-        const box = boxes.find(b => b.id == boxId);
-        
-        document.querySelectorAll('#therapistBoxSelector .box-option').forEach(opt => opt.classList.remove('selected'));
-        event.target.classList.add('selected');
-        
-        if (box) {
-            document.getElementById('therapistBoxName').innerText = `${box.name} ${box.location ? `(${box.location})` : ''}`;
-            document.getElementById('therapistBoxDisplay').style.display = 'flex';
-        }
-    }
-
-    function executeTherapistBooking() {
-        if (!selectedPatientForTherapist) {
-            showToast('Debes buscar y seleccionar un paciente', 'error');
-            return;
-        }
-
-        const date = document.getElementById('therapistDate').value;
-        const time = document.getElementById('therapistTime').value;
-        const type = document.getElementById('therapistAppointmentType').value;
-        const paymentMethod = document.getElementById('therapistPaymentMethod').value;
-        const msg = document.getElementById('therapistMsg').value;
-        
-        if (!date || !time) {
-            showToast('Selecciona fecha y horario', 'error');
-            return;
-        }
-
-        // Verificar si ya tiene una cita a la misma hora
-        const existingAppointment = appointments.find(a => 
-            a.psychId == currentUser.data.id && 
-            a.date === date && 
-            a.time === time
-        );
-
-        if (existingAppointment) {
-            showToast('Ya tienes una cita agendada en este horario', 'error');
-            return;
-        }
-
-        if (type === 'presencial' && !selectedTherapistBoxId) {
-            showToast('Debes seleccionar un box para atención presencial', 'error');
-            return;
-        }
-
-        const bookBtn = document.getElementById('therapistBookBtn');
-        bookBtn.innerHTML = '<span class="spinner"></span> Procesando...';
-        bookBtn.disabled = true;
-
-        setTimeout(() => {
-            const price = type === 'online' ? currentUser.data.priceOnline : currentUser.data.pricePresencial;
-            const box = type === 'presencial' ? boxes.find(b => b.id == selectedTherapistBoxId) : null;
-            
-            const appointment = {
-                id: Date.now(),
-                patientId: selectedPatientForTherapist.id,
-                patient: selectedPatientForTherapist.name,
-                patientRut: selectedPatientForTherapist.rut,
-                patientEmail: selectedPatientForTherapist.email,
-                patientPhone: selectedPatientForTherapist.phone,
-                psych: currentUser.data.name,
-                psychId: currentUser.data.id,
-                date: date,
-                time: time,
-                type: type,
-                boxId: type === 'presencial' ? selectedTherapistBoxId : null,
-                boxName: box ? box.name : null,
-                price: price,
-                paymentMethod: paymentMethod,
-                paymentStatus: 'pagado',
-                msg: msg,
-                status: 'confirmada',
-                createdAt: new Date().toISOString(),
-                editableUntil: new Date(Date.now() + EDIT_HOURS * 60 * 60 * 1000).toISOString(),
-                createdBy: currentUser.data.name
-            };
-            
-            appointments.push(appointment);
-            
-            selectedPatientForTherapist.appointments = selectedPatientForTherapist.appointments || [];
-            selectedPatientForTherapist.appointments.push(appointment.id);
-            
-            if (window.currentRequestId) {
-                pendingRequests = pendingRequests.filter(r => r.id != window.currentRequestId);
-                const request = pendingRequests.find(r => r.id == window.currentRequestId);
-                if (request) {
-                    sendConfirmationEmail(request, appointment);
-                }
-                window.currentRequestId = null;
-            } else {
-                sendAppointmentEmails(appointment);
-            }
-            
-            save();
-            
-            showToast(`Cita confirmada con ${selectedPatientForTherapist.name}`, 'success');
-            
-            bookBtn.innerHTML = 'Confirmar Cita';
-            bookBtn.disabled = false;
-            
-            document.getElementById('therapistRut').value = '';
-            document.getElementById('patientInfo').style.display = 'none';
-            document.getElementById('therapistDate').value = '';
-            document.getElementById('therapistTime').innerHTML = '<option value="">Selecciona una fecha</option>';
-            document.getElementById('therapistMsg').value = '';
-            document.getElementById('therapistPatientName').innerText = '—';
-            document.getElementById('therapistDateDisplay').innerText = '—';
-            document.getElementById('therapistTimeDisplay').innerText = '—';
-            document.getElementById('therapistBoxDisplay').style.display = 'none';
-            selectedPatientForTherapist = null;
-            selectedTherapistBoxId = null;
-            
-            renderBoxOccupancy();
-            switchTab('citas');
-        }, 1500);
-    }
-
-    // ============================================
-    // FUNCIONES DE BOXES
-    // ============================================
-
-    function renderBoxOccupancy() {
-        const container = document.getElementById('boxOccupancy');
-        if (!container) return;
-
-        const today = new Date().toISOString().split('T')[0];
-        const todayAppointments = appointments.filter(a => a.date === today && a.type === 'presencial' && a.status === 'confirmada');
-        
-        if (todayAppointments.length === 0) {
-            container.innerHTML = '<p style="text-align:center; padding:20px;">No hay boxes ocupados hoy</p>';
-            return;
-        }
-
-        const sortedApps = todayAppointments.sort((a, b) => a.time.localeCompare(b.time));
-        
-        container.innerHTML = sortedApps.map(a => {
-            const box = boxes.find(b => b.id == a.boxId);
-            return `
-                <div class="schedule-item">
-                    <span class="schedule-time">${a.time}</span>
-                    <span class="schedule-professional"><strong>${a.psych}</strong> - ${a.patient}</span>
-                    <span class="schedule-box">${box ? box.name : 'Box no asignado'}</span>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function showBoxModal() {
-        document.getElementById('boxModal').style.display = 'flex';
-        document.getElementById('boxName').value = '';
-        document.getElementById('boxLocation').value = '';
-        document.getElementById('boxStartTime').value = '09:00';
-        document.getElementById('boxEndTime').value = '20:00';
-        document.getElementById('boxDescription').value = '';
-        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
-        [1,2,3,4,5].forEach(d => {
-            const cb = document.querySelector(`.box-day[value="${d}"]`);
-            if (cb) cb.checked = true;
-        });
-        document.getElementById('saveBoxBtn').onclick = saveBox;
-    }
-
-    function closeBoxModal() {
-        document.getElementById('boxModal').style.display = 'none';
-    }
-
-    function saveBox() {
-        const name = document.getElementById('boxName').value;
-        const location = document.getElementById('boxLocation').value;
-        const startTime = document.getElementById('boxStartTime').value;
-        const endTime = document.getElementById('boxEndTime').value;
-        const description = document.getElementById('boxDescription').value;
-        const days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
-
-        if (!name || !startTime || !endTime || days.length === 0) {
-            showToast('Nombre, horario y días son obligatorios', 'error');
-            return;
-        }
-
-        const newBox = {
-            id: Date.now(),
-            name: name,
-            location: location,
-            startTime: startTime,
-            endTime: endTime,
-            days: days,
-            description: description,
-            active: true
-        };
-
-        boxes.push(newBox);
-        save();
-        closeBoxModal();
-        renderBoxesTable();
-        showToast('Box guardado correctamente', 'success');
-    }
-
-    function renderBoxesTable() {
-        const tbModal = document.getElementById('boxTableBody');
-        const tbDashboard = document.getElementById('boxTableBodyDashboard');
-        
-        const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
-        
-        const rows = boxes.map(b => {
-            const daysStr = b.days.map(d => dayNames[d]).join(', ');
-            return `
-                <tr>
-                    <td><strong>${b.name}</strong></td>
-                    <td>${b.location || '—'}</td>
-                    <td>${b.startTime} - ${b.endTime}</td>
-                    <td>${daysStr}</td>
-                    <td><span class="badge" style="background:${b.active ? 'var(--verde-exito)' : 'var(--text-light)'}; color:white;">${b.active ? 'Activo' : 'Inactivo'}</span></td>
-                    <td>
-                        <button onclick="editBox(${b.id})" class="btn-icon" style="background:var(--azul-medico); color:white;">
-                            <i class="fa fa-edit"></i>
-                        </button>
-                        <button onclick="toggleBoxStatus(${b.id})" class="btn-icon" style="background:var(--naranja-aviso); color:white;">
-                            <i class="fa ${b.active ? 'fa-ban' : 'fa-check'}"></i>
-                        </button>
-                        <button onclick="deleteBox(${b.id})" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        if (tbModal) tbModal.innerHTML = rows;
-        if (tbDashboard) tbDashboard.innerHTML = rows;
-    }
-
-    function editBox(id) {
-        const box = boxes.find(b => b.id == id);
-        if (!box) return;
-
-        document.getElementById('boxName').value = box.name;
-        document.getElementById('boxLocation').value = box.location || '';
-        document.getElementById('boxStartTime').value = box.startTime;
-        document.getElementById('boxEndTime').value = box.endTime;
-        document.getElementById('boxDescription').value = box.description || '';
-        
-        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
-        box.days.forEach(d => {
-            const cb = document.querySelector(`.box-day[value="${d}"]`);
-            if (cb) cb.checked = true;
-        });
-
-        document.getElementById('saveBoxBtn').onclick = () => updateBox(id);
-        document.getElementById('boxModal').style.display = 'flex';
-    }
-
-    function updateBox(id) {
-        const box = boxes.find(b => b.id == id);
-        if (!box) return;
-
-        box.name = document.getElementById('boxName').value;
-        box.location = document.getElementById('boxLocation').value;
-        box.startTime = document.getElementById('boxStartTime').value;
-        box.endTime = document.getElementById('boxEndTime').value;
-        box.description = document.getElementById('boxDescription').value;
-        box.days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
-
-        save();
-        closeBoxModal();
-        renderBoxesTable();
-        showToast('Box actualizado', 'success');
-    }
-
-    function toggleBoxStatus(id) {
-        const box = boxes.find(b => b.id == id);
-        if (box) {
-            box.active = !box.active;
-            save();
-            renderBoxesTable();
-            showToast(`Box ${box.active ? 'activado' : 'desactivado'}`, 'success');
-        }
-    }
-
-    function deleteBox(id) {
-        if (confirm('¿Eliminar este box? Las citas asociadas quedarán sin box asignado.')) {
-            boxes = boxes.filter(b => b.id != id);
-            appointments.forEach(a => {
-                if (a.boxId == id) a.boxId = null;
-            });
-            save();
-            renderBoxesTable();
-            showToast('Box eliminado', 'success');
-        }
-    }
-
-    function getAvailableBoxes(date, time) {
-        if (!date || !time) return [];
-        
-        const selectedDate = new Date(date);
-        const dayOfWeek = selectedDate.getDay();
-        
-        return boxes.filter(box => {
-            if (!box.active) return false;
-            if (!box.days.includes(dayOfWeek)) return false;
-            
-            const [boxStartHour, boxStartMin] = box.startTime.split(':').map(Number);
-            const [boxEndHour, boxEndMin] = box.endTime.split(':').map(Number);
-            const [appHour, appMin] = time.split(':').map(Number);
-            
-            const boxStartMinutes = boxStartHour * 60 + boxStartMin;
-            const boxEndMinutes = boxEndHour * 60 + boxEndMin;
-            const appMinutes = appHour * 60 + appMin;
-            
-            if (appMinutes < boxStartMinutes || appMinutes >= boxEndMinutes) return false;
-            
-            const boxOccupied = appointments.some(a => 
-                a.boxId == box.id && 
-                a.date === date && 
-                a.time === time &&
-                a.status === 'confirmada'
-            );
-            
-            return !boxOccupied;
-        });
     }
 
     // ============================================
@@ -4886,14 +3842,14 @@ Vínculo Salud
         document.getElementById('psychTab').style.display = isPsych ? 'block' : 'none';
         document.getElementById('configTab').style.display = isPsych ? 'block' : 'none';
         document.getElementById('messagesTab').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('boxesTab').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('boxTab').style.display = isAdmin ? 'block' : 'none';
         document.getElementById('agendarTab').style.display = isPsych ? 'block' : 'none';
         
         if (isAdmin) {
             document.getElementById('dashTitle').innerText = "Panel Administrador";
             renderStaffTable();
             renderMessagesTable();
-            renderBoxesTable();
+            renderBoxTable();
             updatePaymentMethodsInfo();
         } else {
             document.getElementById('dashTitle').innerText = `Panel de ${currentUser.data.name}`;
@@ -4912,7 +3868,6 @@ Vínculo Salud
         const tabs = document.querySelectorAll('.tab');
         tabs.forEach(t => t.classList.remove('active'));
         
-        // Buscar el tab por el texto y activarlo
         tabs.forEach(t => {
             if (t.textContent.trim().toLowerCase().includes(tabName.toLowerCase()) || 
                 (tabName === 'citas' && t.textContent.trim() === 'Citas') ||
@@ -4934,13 +3889,15 @@ Vínculo Salud
         });
         
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+        let tabId = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+        if (tabName === 'boxes') tabId = 'tabBoxes';
+        document.getElementById(tabId).classList.add('active');
         
         if (tabName === 'pacientes') renderPatients();
         if (tabName === 'disponibilidad' && currentUser.role === 'psych') loadTimeSlots();
         if (tabName === 'configuracion' && currentUser.role === 'psych') loadMyConfig();
         if (tabName === 'mensajes' && currentUser.role === 'admin') renderMessagesTable();
-        if (tabName === 'boxes' && currentUser.role === 'admin') renderBoxesTable();
+        if (tabName === 'boxes' && currentUser.role === 'admin') renderBoxTable();
         if (tabName === 'boxes' && currentUser.role === 'psych') renderBoxOccupancy();
         if (tabName === 'solicitudes') renderPendingRequests();
     }
@@ -5341,13 +4298,12 @@ Vínculo Salud
     }
 
     function toggleWeekday(day) {
-        const element = event.target;
         if (selectedWeekdays.includes(day)) {
             selectedWeekdays = selectedWeekdays.filter(d => d !== day);
-            element.classList.remove('selected');
+            event.target.classList.remove('selected');
         } else {
             selectedWeekdays.push(day);
-            element.classList.add('selected');
+            event.target.classList.add('selected');
         }
     }
 
@@ -5419,7 +4375,6 @@ Vínculo Salud
             return;
         }
         
-        // Filtrar slots que estén en el rango a bloquear
         generatedSlots = generatedSlots.filter(slot => {
             return slot.time < startTime || slot.time >= endTime;
         });
@@ -5601,8 +4556,8 @@ Vínculo Salud
         
         const psych = currentUser.data;
         
-        psych.priceOnline = parseInt(document.getElementById('myPriceOnline').value);
-        psych.pricePresencial = parseInt(document.getElementById('myPricePresencial').value);
+        psych.priceOnline = parseInt(document.getElementById('myPriceOnline').value) || 0;
+        psych.pricePresencial = parseInt(document.getElementById('myPricePresencial').value) || 0;
         psych.whatsapp = document.getElementById('myWhatsapp').value;
         psych.instagram = document.getElementById('myInstagram').value;
         
@@ -5674,7 +4629,7 @@ Vínculo Salud
                 <td>${p.email || '—'}</td>
                 <td>${specs.substring(0, 30)}...</td>
                 <td>${p.usuario || p.name || '—'}</td>
-                <td>$${p.priceOnline}/$${p.pricePresencial}</td>
+                <td>$${p.priceOnline || 0}/$${p.pricePresencial || 0}</td>
                 <td>${p.whatsapp || '—'}</td>
                 <td>${p.instagram || '—'}</td>
                 <td>
@@ -6019,6 +4974,966 @@ Vínculo Salud
         const psychMessages = messages.filter(m => m.therapistId == psychId);
         if (psychMessages.length === 0) return 0;
         return psychMessages.reduce((sum, m) => sum + m.rating, 0) / psychMessages.length;
+    }
+
+    // ============================================
+    // FUNCIONES DE SOLICITUDES
+    // ============================================
+
+    function renderPendingRequests() {
+        const tb = document.getElementById('pendingRequestsTable');
+        if (!tb) return;
+
+        let requestsToShow = [];
+        if (currentUser.role === 'admin') {
+            requestsToShow = pendingRequests;
+        } else if (currentUser.role === 'psych') {
+            requestsToShow = pendingRequests.filter(r => r.psychId == currentUser.data.id);
+        }
+
+        if (requestsToShow.length === 0) {
+            tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes pendientes</td></tr>';
+            return;
+        }
+
+        tb.innerHTML = requestsToShow.reverse().map(r => `
+            <tr>
+                <td>${r.createdAt || '—'}</td>
+                <td><strong>${r.patient}</strong><br><small>${r.patientRut}</small></td>
+                <td>${r.psych}</td>
+                <td>${r.preferredDate}</td>
+                <td>${r.preferredTime}</td>
+                <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+                <td>${r.boxName || '—'}</td>
+                <td>${r.msg || '—'}</td>
+                <td>
+                    <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--verde-exito); color:white;">
+                        <i class="fa fa-check"></i> Confirmar
+                    </button>
+                    <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
+                        <i class="fa fa-times"></i> Rechazar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function showConfirmRequestModal(requestId) {
+        const request = pendingRequests.find(r => r.id == requestId);
+        if (!request) return;
+
+        selectedPatientForTherapist = patients.find(p => p.id == request.patientId);
+        document.getElementById('therapistRut').value = selectedPatientForTherapist?.rut || '';
+        document.getElementById('patientInfoName').innerText = selectedPatientForTherapist?.name || '';
+        document.getElementById('patientInfoEmail').innerText = selectedPatientForTherapist?.email || '';
+        document.getElementById('patientInfoPhone').innerText = selectedPatientForTherapist?.phone || '';
+        document.getElementById('patientInfo').style.display = 'block';
+        document.getElementById('therapistPatientName').innerText = selectedPatientForTherapist?.name || '';
+        document.getElementById('therapistAppointmentType').value = request.type;
+        document.getElementById('therapistDate').value = request.preferredDate;
+        document.getElementById('therapistMsg').value = request.msg;
+        document.getElementById('therapistPaymentMethod').value = 'transfer';
+        
+        if (request.boxId) {
+            selectedTherapistBoxId = request.boxId;
+        }
+
+        window.currentRequestId = requestId;
+
+        updateTherapistBookingDetails();
+        setTimeout(() => {
+            updateTherapistAvailableSlots();
+            document.getElementById('therapistTime').value = request.preferredTime;
+            document.getElementById('therapistTimeDisplay').innerText = request.preferredTime;
+            if (request.boxId) {
+                updateTherapistBoxSelector(request.preferredDate, request.preferredTime);
+            }
+        }, 500);
+
+        switchTab('agendar');
+    }
+
+    function rejectRequest(requestId) {
+        if (confirm('¿Rechazar esta solicitud? Se notificará al paciente.')) {
+            const request = pendingRequests.find(r => r.id == requestId);
+            pendingRequests = pendingRequests.filter(r => r.id != requestId);
+            
+            if (request?.patientEmail) {
+                const subject = 'Solicitud de cita no confirmada - Vínculo Salud';
+                const message = `
+                    Hola ${request.patient},\n\n
+                    Lamentamos informarte que no ha sido posible confirmar tu solicitud de cita con ${request.psych} para el ${request.preferredDate} a las ${request.preferredTime}.\n\n
+                    Por favor, contacta directamente con el profesional para acordar una nueva fecha.\n\n
+                    Vínculo Salud
+                `;
+                sendEmailNotification(request.patientEmail, subject, message);
+            }
+            
+            save();
+            showToast('Solicitud rechazada', 'success');
+        }
+    }
+
+    // ============================================
+    // FUNCIONES DE RESERVA (PACIENTES)
+    // ============================================
+
+    function openBooking(id) {
+        selectedPsych = staff.find(p => p.id == id);
+        selectedBoxId = null;
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('clientView').style.display = 'none';
+        document.getElementById('bookingPanel').style.display = 'block';
+        document.getElementById('psychName').innerText = selectedPsych.name;
+        document.getElementById('psychSelectedName').innerText = selectedPsych.name;
+        document.getElementById('psychSelectedSpec').innerText = Array.isArray(selectedPsych.spec) ? selectedPsych.spec.join(' · ') : selectedPsych.spec;
+        
+        document.getElementById('custDate').min = today;
+        document.getElementById('custDate').value = today;
+        
+        document.getElementById('bookingDuration').innerText = (selectedPsych.sessionDuration || 45) + ' minutos';
+        
+        loadPaymentMethods();
+        updateBookingDetails();
+        document.getElementById('emailSimulation').style.display = 'none';
+        
+        updateAvailableTimes();
+    }
+
+    function loadPaymentMethods() {
+        const select = document.getElementById('paymentMethod');
+        select.innerHTML = '<option value="">Selecciona método</option>';
+        
+        const methods = selectedPsych.paymentMethods || globalPaymentMethods;
+        
+        if (methods.transfer) {
+            select.innerHTML += '<option value="transfer">Transferencia Bancaria</option>';
+        }
+        if (methods.cardPresencial) {
+            select.innerHTML += '<option value="card-presencial">Tarjeta (en consulta)</option>';
+        }
+        if (methods.cardOnline) {
+            select.innerHTML += '<option value="card-online">Tarjeta (pago online)</option>';
+        }
+        if (methods.cash) {
+            select.innerHTML += '<option value="cash">Efectivo (en consulta)</option>';
+        }
+        if (methods.mercadopago) {
+            select.innerHTML += '<option value="mercadopago">Mercado Pago</option>';
+        }
+        if (methods.webpay) {
+            select.innerHTML += '<option value="webpay">Webpay</option>';
+        }
+    }
+
+    function showPaymentDetails() {
+        const method = document.getElementById('paymentMethod').value;
+        const detailsDiv = document.getElementById('paymentDetails');
+        
+        if (method === 'transfer' && selectedPsych.bankDetails) {
+            const bank = selectedPsych.bankDetails;
+            detailsDiv.style.display = 'block';
+            detailsDiv.innerHTML = `
+                <h4 style="margin-bottom:10px;">Datos para Transferencia</h4>
+                <p><strong>Banco:</strong> ${bank.bank || 'No especificado'}</p>
+                <p><strong>Cuenta:</strong> ${bank.accountType || ''} ${bank.accountNumber || ''}</p>
+                <p><strong>RUT:</strong> ${bank.rut || ''}</p>
+                <p><strong>Email:</strong> ${bank.email || ''}</p>
+            `;
+        } else {
+            detailsDiv.style.display = 'none';
+        }
+    }
+
+    function updateAvailableTimes() {
+        const date = document.getElementById('custDate').value;
+        const type = document.getElementById('appointmentType').value;
+        const timeSelect = document.getElementById('custTime');
+        
+        if (!date || !selectedPsych) return;
+        
+        timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
+        
+        if (type === 'presencial') {
+            timeSelect.innerHTML = '<option value="">Selecciona un día (la hora se coordinará)</option>';
+            return;
+        }
+        
+        const availableSlots = selectedPsych.availability?.[date] || [];
+        const bookedTimes = appointments
+            .filter(a => a.psychId == selectedPsych.id && a.date === date)
+            .map(a => a.time);
+        
+        const now = new Date();
+        const availableTimes = availableSlots
+            .filter(slot => !bookedTimes.includes(slot.time))
+            .filter(slot => {
+                const slotDateTime = new Date(date + 'T' + slot.time);
+                return slotDateTime > now;
+            })
+            .sort((a, b) => a.time.localeCompare(b.time));
+        
+        if (availableTimes.length === 0) {
+            timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+            return;
+        }
+        
+        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+        availableTimes.forEach(slot => {
+            const option = document.createElement('option');
+            option.value = slot.time;
+            option.textContent = slot.time + (slot.isOvercupo ? ' (Sobrecupo)' : '');
+            if (slot.isOvercupo) option.style.color = '#f59e0b';
+            timeSelect.appendChild(option);
+        });
+    }
+
+    function checkOnlineAvailability() {
+        const date = document.getElementById('custDate').value;
+        const time = document.getElementById('custTime').value;
+        const type = document.getElementById('appointmentType').value;
+        
+        if (type === 'presencial') {
+            document.getElementById('onlineAvailabilityMsg').style.display = 'none';
+            return true;
+        }
+        
+        if (type === 'online' && date && time) {
+            const selectedDateTime = new Date(date + 'T' + time);
+            const now = new Date();
+            
+            if (selectedDateTime < now) {
+                document.getElementById('onlineAvailabilityMsg').style.display = 'block';
+                document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-exclamation-circle"></i> No puedes seleccionar una hora que ya pasó.';
+                document.getElementById('onlineAvailabilityMsg').style.background = '#fff3cd';
+                return false;
+            }
+            
+            const existingAppointment = appointments.find(a => 
+                a.psychId == selectedPsych.id && 
+                a.date === date && 
+                a.time === time
+            );
+            
+            const isAvailable = !existingAppointment && 
+                selectedPsych.availability?.[date]?.some(s => s.time === time);
+            
+            if (isAvailable) {
+                document.getElementById('onlineAvailabilityMsg').style.display = 'block';
+                document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-check-circle"></i> Horario disponible para reserva inmediata.';
+                document.getElementById('onlineAvailabilityMsg').style.background = '#e6f7e6';
+                return true;
+            } else {
+                document.getElementById('onlineAvailabilityMsg').style.display = 'block';
+                document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-exclamation-circle"></i> Horario no disponible. Por favor selecciona otro.';
+                document.getElementById('onlineAvailabilityMsg').style.background = '#fff3cd';
+                return false;
+            }
+        }
+    }
+
+    function updateBookingDetails() {
+        const type = document.getElementById('appointmentType').value;
+        const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
+        
+        document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
+        document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial';
+        
+        const warning = document.getElementById('presencialWarning');
+        const onlineMsg = document.getElementById('onlineAvailabilityMsg');
+        
+        if (type === 'presencial') {
+            warning.style.display = 'block';
+            onlineMsg.style.display = 'none';
+        } else {
+            warning.style.display = 'none';
+            onlineMsg.style.display = 'block';
+        }
+        
+        updateAvailableTimes();
+    }
+
+    function searchPatientByRutBooking() {
+        const rut = document.getElementById('custRut').value;
+        if (!rut) return;
+
+        const patient = patients.find(p => p.rut === rut);
+        if (patient) {
+            document.getElementById('custName').value = patient.name || '';
+            document.getElementById('custEmail').value = patient.email || '';
+            document.getElementById('custPhone').value = patient.phone || '';
+            showToast('Datos del paciente cargados', 'success');
+        }
+    }
+
+    function executeBooking() {
+        const rut = document.getElementById('custRut').value;
+        const name = document.getElementById('custName').value;
+        const email = document.getElementById('custEmail').value;
+        const phone = document.getElementById('custPhone').value;
+        const date = document.getElementById('custDate').value;
+        const time = document.getElementById('custTime').value;
+        const type = document.getElementById('appointmentType').value;
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const msg = document.getElementById('custMsg').value;
+        const acceptPolicy = document.getElementById('acceptPolicy').checked;
+        
+        if (!rut || !name || !email || !date || !paymentMethod) {
+            showToast('Completa todos los campos obligatorios (RUT, nombre, email, fecha y método de pago)', 'error');
+            return;
+        }
+
+        if (type === 'online' && !time) {
+            showToast('Para atención online debes seleccionar una hora', 'error');
+            return;
+        }
+
+        if (!acceptPolicy) {
+            showToast('Debes aceptar la política de cancelación', 'error');
+            return;
+        }
+
+        if (type === 'online') {
+            const selectedDateTime = new Date(date + 'T' + time);
+            const now = new Date();
+            
+            if (selectedDateTime < now) {
+                showToast('No puedes agendar una hora que ya pasó', 'error');
+                return;
+            }
+        }
+
+        if (type === 'online') {
+            const existingAppointment = appointments.find(a => 
+                a.psychId == selectedPsych.id && 
+                a.date === date && 
+                a.time === time
+            );
+
+            if (existingAppointment) {
+                showToast('El profesional ya tiene una cita agendada en este horario', 'error');
+                return;
+            }
+
+            const isAvailable = selectedPsych.availability?.[date]?.some(s => s.time === time);
+            if (!isAvailable) {
+                showToast('Horario no disponible', 'error');
+                return;
+            }
+        }
+
+        const bookBtn = document.getElementById('bookBtn');
+        bookBtn.innerHTML = '<span class="spinner"></span> Procesando...';
+        bookBtn.disabled = true;
+
+        setTimeout(() => {
+            let patient = patients.find(p => p.rut === rut);
+            if (!patient) {
+                patient = {
+                    id: Date.now(),
+                    rut: rut,
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    birthdate: '',
+                    notes: '',
+                    psychId: selectedPsych.id,
+                    createdAt: new Date().toISOString(),
+                    appointments: []
+                };
+                patients.push(patient);
+            }
+            
+            const price = type === 'online' ? selectedPsych.priceOnline : selectedPsych.pricePresencial;
+            
+            const paymentContainer = document.getElementById('paymentLinkContainer');
+            let paymentLink = '';
+            let qrCode = '';
+            
+            if (type === 'online' && selectedPsych.paymentLinks?.online) {
+                paymentLink = selectedPsych.paymentLinks.online;
+            } else if (type === 'presencial' && selectedPsych.paymentLinks?.presencial) {
+                paymentLink = selectedPsych.paymentLinks.presencial;
+                qrCode = selectedPsych.paymentLinks?.qrCode || '';
+            }
+            
+            if (paymentLink) {
+                const separator = paymentLink.includes('?') ? '&' : '?';
+                paymentLink = `${paymentLink}${separator}description=Atención ${type} - ${encodeURIComponent(name)}&customer_email=${encodeURIComponent(email)}&customer_name=${encodeURIComponent(name)}`;
+            }
+            
+            if (paymentContainer) {
+                let qrHtml = '';
+                if (qrCode) {
+                    qrHtml = `
+                        <div style="text-align: center; margin: 20px 0;">
+                            <p style="font-weight:600; margin-bottom:10px;">📱 Escanea para pagar (presencial):</p>
+                            <img src="${qrCode}" 
+                                 style="width: 200px; height: 200px; border-radius: 12px; border: 3px solid var(--azul-medico); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        </div>
+                    `;
+                }
+                
+                paymentContainer.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center;">
+                        <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 ${type === 'online' ? 'Pago online' : 'Pago presencial'}</h4>
+                        <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${price.toLocaleString()}</p>
+                        
+                        ${qrHtml}
+                        
+                        ${paymentLink ? `
+                            <a href="${paymentLink}" target="_blank" class="btn-staff" style="background: var(--verde-exito); text-decoration: none; padding: 15px 40px; font-size:1.2rem; margin-top:15px; display:inline-block;">
+                                <i class="fab fa-cc-visa"></i> Pagar con Tarjeta
+                            </a>
+                            <p style="margin-top:15px; font-size:0.9rem; opacity:0.8;">
+                                <i class="fas fa-lock"></i> Pago seguro procesado por SumUp
+                            </p>
+                        ` : ''}
+                        
+                        <p style="margin-top:20px; font-size:0.8rem; background: rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                            ⏰ Una vez realizado el pago, la cita se confirmará automáticamente y recibirás un email.
+                        </p>
+                    </div>
+                `;
+                paymentContainer.style.display = 'block';
+            }
+            
+            if (type === 'online') {
+                const appointment = {
+                    id: Date.now(),
+                    patientId: patient.id,
+                    patient: name,
+                    patientRut: rut,
+                    patientEmail: email,
+                    patientPhone: phone,
+                    psych: selectedPsych.name,
+                    psychId: selectedPsych.id,
+                    date: date,
+                    time: time,
+                    type: type,
+                    boxId: null,
+                    boxName: null,
+                    price: price,
+                    paymentMethod: paymentMethod,
+                    paymentStatus: paymentLink ? 'pendiente' : 'pagado',
+                    msg: msg,
+                    status: paymentLink ? 'pendiente' : 'confirmada',
+                    createdAt: new Date().toISOString(),
+                    editableUntil: new Date(Date.now() + EDIT_HOURS * 60 * 60 * 1000).toISOString()
+                };
+                
+                appointments.push(appointment);
+                sendAppointmentEmails(appointment);
+                showToast(paymentLink ? '¡Cita creada! Realiza el pago para confirmar' : '¡Cita confirmada!', 'success');
+            } else {
+                const request = {
+                    id: Date.now(),
+                    patientId: patient.id,
+                    patient: name,
+                    patientRut: rut,
+                    patientEmail: email,
+                    patientPhone: phone,
+                    psych: selectedPsych.name,
+                    psychId: selectedPsych.id,
+                    preferredDate: date,
+                    preferredTime: 'A coordinar',
+                    type: type,
+                    boxId: null,
+                    boxName: null,
+                    paymentMethod: paymentMethod,
+                    msg: msg,
+                    status: 'pendiente',
+                    createdAt: new Date().toLocaleString()
+                };
+                
+                pendingRequests.push(request);
+                sendRequestEmail(request);
+                showToast('¡Solicitud enviada! El profesional te confirmará la hora', 'success');
+            }
+            
+            save();
+            
+            bookBtn.innerHTML = 'SOLICITAR CITA';
+            bookBtn.disabled = false;
+        }, 1500);
+    }
+
+    // ============================================
+    // FUNCIONES DE RESERVA (TERAPEUTAS)
+    // ============================================
+
+    function showTherapistBookingModal() {
+        selectedTherapistBoxId = null;
+        selectedPatientForTherapist = null;
+        window.currentRequestId = null;
+        
+        document.getElementById('therapistRut').value = '';
+        document.getElementById('patientInfo').style.display = 'none';
+        document.getElementById('therapistAppointmentType').value = 'online';
+        document.getElementById('therapistDate').value = '';
+        document.getElementById('therapistTime').innerHTML = '<option value="">Selecciona una fecha</option>';
+        document.getElementById('therapistMsg').value = '';
+        document.getElementById('therapistPaymentMethod').value = 'transfer';
+        document.getElementById('therapistPsychName').innerText = currentUser.data.name;
+        document.getElementById('therapistPatientName').innerText = '—';
+        document.getElementById('therapistDateDisplay').innerText = '—';
+        document.getElementById('therapistTimeDisplay').innerText = '—';
+        document.getElementById('therapistTypeDisplay').innerText = 'Online';
+        document.getElementById('therapistPrice').innerText = '$0';
+        document.getElementById('therapistBoxDisplay').style.display = 'none';
+        document.getElementById('therapistBoxField').style.display = 'none';
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('therapistDate').min = today;
+        
+        switchTab('agendar');
+    }
+
+    function searchPatientByRutTherapist() {
+        const rut = document.getElementById('therapistRut').value;
+        if (!rut) return;
+
+        const patient = patients.find(p => p.rut === rut);
+        if (patient) {
+            selectedPatientForTherapist = patient;
+            document.getElementById('patientInfoName').innerText = patient.name || '';
+            document.getElementById('patientInfoEmail').innerText = patient.email || '';
+            document.getElementById('patientInfoPhone').innerText = patient.phone || '';
+            document.getElementById('patientInfo').style.display = 'block';
+            document.getElementById('therapistPatientName').innerText = patient.name;
+            showToast('Paciente encontrado', 'success');
+        } else {
+            if (confirm('Paciente no encontrado. ¿Desea crearlo?')) {
+                document.getElementById('patientRut').value = rut;
+                document.getElementById('patientName').value = '';
+                document.getElementById('patientEmail').value = '';
+                document.getElementById('patientPhone').value = '';
+                document.getElementById('patientModalTitle').innerText = 'Nuevo Paciente';
+                document.getElementById('patientHistoryContainer').style.display = 'none';
+                document.getElementById('patientStatsContainer').style.display = 'none';
+                document.getElementById('patientModal').style.display = 'flex';
+            }
+        }
+    }
+
+    function updateTherapistBookingDetails() {
+        const type = document.getElementById('therapistAppointmentType').value;
+        const price = type === 'online' ? currentUser.data.priceOnline : currentUser.data.pricePresencial;
+        document.getElementById('therapistPrice').innerText = `$${price.toLocaleString()}`;
+        document.getElementById('therapistTypeDisplay').innerText = type === 'online' ? 'Online' : 'Presencial';
+        
+        if (type === 'presencial') {
+            document.getElementById('therapistBoxField').style.display = 'block';
+            updateTherapistAvailableSlots();
+        } else {
+            document.getElementById('therapistBoxField').style.display = 'none';
+            document.getElementById('therapistBoxDisplay').style.display = 'none';
+            updateTherapistAvailableSlots();
+        }
+    }
+
+    function updateTherapistAvailableSlots() {
+        const date = document.getElementById('therapistDate').value;
+        const timeSelect = document.getElementById('therapistTime');
+        const type = document.getElementById('therapistAppointmentType').value;
+        
+        if (!date || !currentUser) return;
+
+        const bookedTimes = appointments
+            .filter(a => a.psychId == currentUser.data.id && a.date === date)
+            .map(a => a.time);
+
+        const availableSlots = currentUser.data.availability?.[date] || [];
+
+        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
+        
+        const now = new Date();
+        availableSlots.forEach(slot => {
+            if (!bookedTimes.includes(slot.time)) {
+                const slotDateTime = new Date(date + 'T' + slot.time);
+                if (slotDateTime > now) {
+                    const option = document.createElement('option');
+                    option.value = slot.time;
+                    option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
+                    if (slot.isOvercupo) option.style.color = '#f59e0b';
+                    
+                    if (type === 'presencial') {
+                        const availableBoxes = getAvailableBoxes(date, slot.time);
+                        if (availableBoxes.length === 0) {
+                            option.disabled = true;
+                            option.textContent += ' (sin boxes disponibles)';
+                            option.style.color = 'var(--text-light)';
+                        }
+                    }
+                    
+                    timeSelect.appendChild(option);
+                }
+            }
+        });
+
+        if (timeSelect.children.length === 1) {
+            timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+        }
+
+        const time = document.getElementById('therapistTime').value;
+        if (time) {
+            document.getElementById('therapistTimeDisplay').innerText = time;
+            updateTherapistBoxSelector(date, time);
+        }
+    }
+
+    function updateTherapistBoxSelector(date, time) {
+        const boxSelector = document.getElementById('therapistBoxSelector');
+        const boxAvailabilityMsg = document.getElementById('therapistBoxAvailabilityMsg');
+        
+        if (!date || !time) {
+            boxSelector.innerHTML = '';
+            boxAvailabilityMsg.innerHTML = 'Selecciona fecha y horario primero';
+            return;
+        }
+
+        const availableBoxes = getAvailableBoxes(date, time);
+        
+        if (availableBoxes.length === 0) {
+            boxSelector.innerHTML = '';
+            boxAvailabilityMsg.innerHTML = 'No hay boxes disponibles para este horario';
+            document.getElementById('therapistBoxDisplay').style.display = 'none';
+            selectedTherapistBoxId = null;
+            return;
+        }
+
+        boxSelector.innerHTML = availableBoxes.map(box => `
+            <div class="box-option ${selectedTherapistBoxId == box.id ? 'selected' : ''}" 
+                 onclick="selectTherapistBox(${box.id})"
+                 title="${box.description || ''}">
+                📦 ${box.name} ${box.location ? `- ${box.location}` : ''}
+            </div>
+        `).join('');
+
+        boxAvailabilityMsg.innerHTML = `${availableBoxes.length} box(es) disponible(s)`;
+    }
+
+    function selectTherapistBox(boxId) {
+        selectedTherapistBoxId = boxId;
+        const box = boxes.find(b => b.id == boxId);
+        
+        document.querySelectorAll('#therapistBoxSelector .box-option').forEach(opt => opt.classList.remove('selected'));
+        event.target.classList.add('selected');
+        
+        if (box) {
+            document.getElementById('therapistBoxName').innerText = `${box.name} ${box.location ? `(${box.location})` : ''}`;
+            document.getElementById('therapistBoxDisplay').style.display = 'flex';
+        }
+    }
+
+    function executeTherapistBooking() {
+        if (!selectedPatientForTherapist) {
+            showToast('Debes buscar y seleccionar un paciente', 'error');
+            return;
+        }
+
+        const date = document.getElementById('therapistDate').value;
+        const time = document.getElementById('therapistTime').value;
+        const type = document.getElementById('therapistAppointmentType').value;
+        const paymentMethod = document.getElementById('therapistPaymentMethod').value;
+        const msg = document.getElementById('therapistMsg').value;
+        
+        if (!date || !time) {
+            showToast('Selecciona fecha y horario', 'error');
+            return;
+        }
+
+        const existingAppointment = appointments.find(a => 
+            a.psychId == currentUser.data.id && 
+            a.date === date && 
+            a.time === time
+        );
+
+        if (existingAppointment) {
+            showToast('Ya tienes una cita agendada en este horario', 'error');
+            return;
+        }
+
+        if (type === 'presencial' && !selectedTherapistBoxId) {
+            showToast('Debes seleccionar un box para atención presencial', 'error');
+            return;
+        }
+
+        const bookBtn = document.getElementById('therapistBookBtn');
+        bookBtn.innerHTML = '<span class="spinner"></span> Procesando...';
+        bookBtn.disabled = true;
+
+        setTimeout(() => {
+            const price = type === 'online' ? currentUser.data.priceOnline : currentUser.data.pricePresencial;
+            const box = type === 'presencial' ? boxes.find(b => b.id == selectedTherapistBoxId) : null;
+            
+            const appointment = {
+                id: Date.now(),
+                patientId: selectedPatientForTherapist.id,
+                patient: selectedPatientForTherapist.name,
+                patientRut: selectedPatientForTherapist.rut,
+                patientEmail: selectedPatientForTherapist.email,
+                patientPhone: selectedPatientForTherapist.phone,
+                psych: currentUser.data.name,
+                psychId: currentUser.data.id,
+                date: date,
+                time: time,
+                type: type,
+                boxId: type === 'presencial' ? selectedTherapistBoxId : null,
+                boxName: box ? box.name : null,
+                price: price,
+                paymentMethod: paymentMethod,
+                paymentStatus: 'pagado',
+                msg: msg,
+                status: 'confirmada',
+                createdAt: new Date().toISOString(),
+                editableUntil: new Date(Date.now() + EDIT_HOURS * 60 * 60 * 1000).toISOString(),
+                createdBy: currentUser.data.name
+            };
+            
+            appointments.push(appointment);
+            
+            selectedPatientForTherapist.appointments = selectedPatientForTherapist.appointments || [];
+            selectedPatientForTherapist.appointments.push(appointment.id);
+            
+            if (window.currentRequestId) {
+                pendingRequests = pendingRequests.filter(r => r.id != window.currentRequestId);
+                const request = pendingRequests.find(r => r.id == window.currentRequestId);
+                if (request) {
+                    sendConfirmationEmail(request, appointment);
+                }
+                window.currentRequestId = null;
+            } else {
+                sendAppointmentEmails(appointment);
+            }
+            
+            save();
+            
+            showToast(`Cita confirmada con ${selectedPatientForTherapist.name}`, 'success');
+            
+            bookBtn.innerHTML = 'Confirmar Cita';
+            bookBtn.disabled = false;
+            
+            document.getElementById('therapistRut').value = '';
+            document.getElementById('patientInfo').style.display = 'none';
+            document.getElementById('therapistDate').value = '';
+            document.getElementById('therapistTime').innerHTML = '<option value="">Selecciona una fecha</option>';
+            document.getElementById('therapistMsg').value = '';
+            document.getElementById('therapistPatientName').innerText = '—';
+            document.getElementById('therapistDateDisplay').innerText = '—';
+            document.getElementById('therapistTimeDisplay').innerText = '—';
+            document.getElementById('therapistBoxDisplay').style.display = 'none';
+            selectedPatientForTherapist = null;
+            selectedTherapistBoxId = null;
+            
+            renderBoxOccupancy();
+            switchTab('citas');
+        }, 1500);
+    }
+
+    // ============================================
+    // FUNCIONES DE BOXES
+    // ============================================
+
+    function renderBoxOccupancy() {
+        const container = document.getElementById('boxOccupancy');
+        if (!container) return;
+
+        const today = new Date().toISOString().split('T')[0];
+        const todayAppointments = appointments.filter(a => a.date === today && a.type === 'presencial' && a.status === 'confirmada');
+        
+        if (todayAppointments.length === 0) {
+            container.innerHTML = '<p style="text-align:center; padding:20px;">No hay boxes ocupados hoy</p>';
+            return;
+        }
+
+        const sortedApps = todayAppointments.sort((a, b) => a.time.localeCompare(b.time));
+        
+        container.innerHTML = sortedApps.map(a => {
+            const box = boxes.find(b => b.id == a.boxId);
+            return `
+                <div class="schedule-item">
+                    <span class="schedule-time">${a.time}</span>
+                    <span class="schedule-professional"><strong>${a.psych}</strong> - ${a.patient}</span>
+                    <span class="schedule-box">${box ? box.name : 'Box no asignado'}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function showBoxModal() {
+        document.getElementById('boxModal').style.display = 'flex';
+        document.getElementById('boxName').value = '';
+        document.getElementById('boxLocation').value = '';
+        document.getElementById('boxStartTime').value = '09:00';
+        document.getElementById('boxEndTime').value = '20:00';
+        document.getElementById('boxDescription').value = '';
+        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
+        [1,2,3,4,5].forEach(d => {
+            const cb = document.querySelector(`.box-day[value="${d}"]`);
+            if (cb) cb.checked = true;
+        });
+        document.getElementById('saveBoxBtn').onclick = saveBox;
+    }
+
+    function closeBoxModal() {
+        document.getElementById('boxModal').style.display = 'none';
+    }
+
+    function saveBox() {
+        const name = document.getElementById('boxName').value;
+        const location = document.getElementById('boxLocation').value;
+        const startTime = document.getElementById('boxStartTime').value;
+        const endTime = document.getElementById('boxEndTime').value;
+        const description = document.getElementById('boxDescription').value;
+        const days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
+
+        if (!name || !startTime || !endTime || days.length === 0) {
+            showToast('Nombre, horario y días son obligatorios', 'error');
+            return;
+        }
+
+        const newBox = {
+            id: Date.now(),
+            name: name,
+            location: location,
+            startTime: startTime,
+            endTime: endTime,
+            days: days,
+            description: description,
+            active: true
+        };
+
+        boxes.push(newBox);
+        save();
+        closeBoxModal();
+        renderBoxTable();
+        showToast('Box guardado correctamente', 'success');
+    }
+
+    function renderBoxTable() {
+        const tbModal = document.getElementById('boxTableBody');
+        const tbDashboard = document.getElementById('boxTableBodyDashboard');
+        
+        const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+        
+        const rows = boxes.map(b => {
+            const daysStr = b.days.map(d => dayNames[d]).join(', ');
+            return `
+                <tr>
+                    <td><strong>${b.name}</strong></td>
+                    <td>${b.location || '—'}</td>
+                    <td>${b.startTime} - ${b.endTime}</td>
+                    <td>${daysStr}</td>
+                    <td><span class="badge" style="background:${b.active ? 'var(--verde-exito)' : 'var(--text-light)'}; color:white;">${b.active ? 'Activo' : 'Inactivo'}</span></td>
+                    <td>
+                        <button onclick="editBox(${b.id})" class="btn-icon" style="background:var(--azul-medico); color:white;">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button onclick="toggleBoxStatus(${b.id})" class="btn-icon" style="background:var(--naranja-aviso); color:white;">
+                            <i class="fa ${b.active ? 'fa-ban' : 'fa-check'}"></i>
+                        </button>
+                        <button onclick="deleteBox(${b.id})" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        if (tbModal) tbModal.innerHTML = rows;
+        if (tbDashboard) tbDashboard.innerHTML = rows;
+    }
+
+    function editBox(id) {
+        const box = boxes.find(b => b.id == id);
+        if (!box) return;
+
+        document.getElementById('boxName').value = box.name;
+        document.getElementById('boxLocation').value = box.location || '';
+        document.getElementById('boxStartTime').value = box.startTime;
+        document.getElementById('boxEndTime').value = box.endTime;
+        document.getElementById('boxDescription').value = box.description || '';
+        
+        document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
+        box.days.forEach(d => {
+            const cb = document.querySelector(`.box-day[value="${d}"]`);
+            if (cb) cb.checked = true;
+        });
+
+        document.getElementById('saveBoxBtn').onclick = () => updateBox(id);
+        document.getElementById('boxModal').style.display = 'flex';
+    }
+
+    function updateBox(id) {
+        const box = boxes.find(b => b.id == id);
+        if (!box) return;
+
+        box.name = document.getElementById('boxName').value;
+        box.location = document.getElementById('boxLocation').value;
+        box.startTime = document.getElementById('boxStartTime').value;
+        box.endTime = document.getElementById('boxEndTime').value;
+        box.description = document.getElementById('boxDescription').value;
+        box.days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
+
+        save();
+        closeBoxModal();
+        renderBoxTable();
+        showToast('Box actualizado', 'success');
+    }
+
+    function toggleBoxStatus(id) {
+        const box = boxes.find(b => b.id == id);
+        if (box) {
+            box.active = !box.active;
+            save();
+            renderBoxTable();
+            showToast(`Box ${box.active ? 'activado' : 'desactivado'}`, 'success');
+        }
+    }
+
+    function deleteBox(id) {
+        if (confirm('¿Eliminar este box? Las citas asociadas quedarán sin box asignado.')) {
+            boxes = boxes.filter(b => b.id != id);
+            appointments.forEach(a => {
+                if (a.boxId == id) a.boxId = null;
+            });
+            save();
+            renderBoxTable();
+            showToast('Box eliminado', 'success');
+        }
+    }
+
+    function getAvailableBoxes(date, time) {
+        if (!date || !time) return [];
+        
+        const selectedDate = new Date(date);
+        const dayOfWeek = selectedDate.getDay();
+        
+        return boxes.filter(box => {
+            if (!box.active) return false;
+            if (!box.days.includes(dayOfWeek)) return false;
+            
+            const [boxStartHour, boxStartMin] = box.startTime.split(':').map(Number);
+            const [boxEndHour, boxEndMin] = box.endTime.split(':').map(Number);
+            const [appHour, appMin] = time.split(':').map(Number);
+            
+            const boxStartMinutes = boxStartHour * 60 + boxStartMin;
+            const boxEndMinutes = boxEndHour * 60 + boxEndMin;
+            const appMinutes = appHour * 60 + appMin;
+            
+            if (appMinutes < boxStartMinutes || appMinutes >= boxEndMinutes) return false;
+            
+            const boxOccupied = appointments.some(a => 
+                a.boxId == box.id && 
+                a.date === date && 
+                a.time === time &&
+                a.status === 'confirmada'
+            );
+            
+            return !boxOccupied;
+        });
     }
 
     // ============================================

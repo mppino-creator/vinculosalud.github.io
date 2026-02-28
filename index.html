@@ -2989,22 +2989,21 @@
     // ============================================
 
     function sendEmailNotification(to, subject, message) {
-        console.log(`📧 Simulación de correo a: ${to}`);
-        console.log(`📧 Asunto: ${subject}`);
-        console.log(`📧 Mensaje: ${message}`);
-        
-        // Mostrar en la interfaz (opcional)
-        const emailDiv = document.getElementById('emailSimulation');
-        if (emailDiv) {
-            emailDiv.innerHTML = `<strong>📧 Correo enviado a ${to}</strong><br>Asunto: ${subject}<br>${message.substring(0, 100)}...`;
-            emailDiv.style.display = 'block';
-            setTimeout(() => { emailDiv.style.display = 'none'; }, 5000);
-        }
-        
-        showToast(`Correo simulado enviado a ${to}`, 'success');
-        return true;
+    console.log(`📧 Simulación de correo a: ${to}`);
+    console.log(`📧 Asunto: ${subject}`);
+    console.log(`📧 Mensaje: ${message}`);
+    
+    // Mostrar en la interfaz (opcional)
+    const emailDiv = document.getElementById('emailSimulation');
+    if (emailDiv) {
+        emailDiv.innerHTML = `<strong>📧 Correo enviado a ${to}</strong><br>Asunto: ${subject}<br>${message.substring(0, 100)}...`;
+        emailDiv.style.display = 'block';
+        setTimeout(() => { emailDiv.style.display = 'none'; }, 5000);
     }
-
+    
+    showToast(`Correo simulado enviado a ${to}`, 'success');
+    return true;
+}
     // ============================================
     // FUNCIONES DE CORREO
     // ============================================

@@ -1,10 +1,12 @@
 // js/modules/auth.js
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
-
-// ============================================
-// FUNCIONES DE LOGIN Y DASHBOARD
-// ============================================
+import { renderStaffTable } from './profesionales.js';
+import { renderMessagesTable } from './mensajes.js';
+import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
+import { updatePaymentMethodsInfo, loadMyConfig } from './personalizacion.js';
+import { renderPatients } from './pacientes.js';
+import { renderPendingRequests } from './citas.js';
 
 export function showLoginModal() {
     document.getElementById('loginModal').style.display = 'flex';
@@ -22,7 +24,7 @@ export function processLogin() {
     const user = document.getElementById('loginUser').value;
     const pass = document.getElementById('loginPass').value;
     const btn = document.getElementById('loginBtn');
-    
+
     if (!user || !pass) {
         showToast('Ingresa usuario y contraseña', 'error');
         return;
@@ -34,59 +36,47 @@ export function processLogin() {
     // Admin por defecto
     if (user === "Admin" && pass === "Nina2026") {
         console.log("✅ Acceso Admin concedido");
-        
         const adminUser = {
-            id: '9999',
+            id: 9999,
             name: 'Administrador',
             spec: ['ADMIN_HIDDEN'],
             usuario: 'Admin',
             pass: 'Nina2026',
             isHiddenAdmin: true
         };
-        
-        state.currentUser = { role: 'admin', data: adminUser };
-        localStorage.setItem('vinculoCurrentUser', JSON.stringify(state.currentUser));
-        
+        state.setCurrentUser({ role: 'admin', data: adminUser });
         closeLoginModal();
         showDashboard();
         showToast('Acceso administrador concedido', 'success');
-        
         btn.innerHTML = 'Ingresar al Panel';
         btn.disabled = false;
         return;
     }
 
-    // Buscar en staff
     const foundUser = state.staff.find(s => 
         (s.usuario === user || s.name === user) && s.pass === pass
     );
-    
+
     if (foundUser) {
         console.log("✅ Acceso profesional concedido:", foundUser.name);
-        
         if (foundUser.spec && foundUser.spec.includes('ADMIN_HIDDEN') || foundUser.isHiddenAdmin) {
-            state.currentUser = { role: 'admin', data: foundUser };
+            state.setCurrentUser({ role: 'admin', data: foundUser });
         } else {
-            state.currentUser = { role: 'psych', data: foundUser };
+            state.setCurrentUser({ role: 'psych', data: foundUser });
         }
-        
-        localStorage.setItem('vinculoCurrentUser', JSON.stringify(state.currentUser));
-        
         closeLoginModal();
         showDashboard();
         showToast(`Bienvenido ${foundUser.name}`, 'success');
-    } else { 
+    } else {
         console.log("❌ Login fallido para:", user);
         showToast('Usuario o contraseña incorrectos', 'error');
     }
-    
     btn.innerHTML = 'Ingresar al Panel';
     btn.disabled = false;
 }
 
 export function logout() {
-    localStorage.removeItem('vinculoCurrentUser');
-    state.currentUser = null;
+    state.setCurrentUser(null);
     location.reload();
 }
 
@@ -94,10 +84,10 @@ export function showDashboard() {
     document.getElementById('clientView').style.display = 'none';
     document.getElementById('bookingPanel').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
-    
+
     const isAdmin = state.currentUser.role === 'admin';
     const isPsych = state.currentUser.role === 'psych';
-    
+
     document.getElementById('adminTabProfesionales').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabEspecialidades').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabPagos').style.display = isAdmin ? 'block' : 'none';
@@ -109,30 +99,29 @@ export function showDashboard() {
     document.getElementById('messagesTab').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('boxesTab').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('agendarTab').style.display = isPsych ? 'block' : 'none';
-    
+
     if (isAdmin) {
         document.getElementById('dashTitle').innerText = "Panel Administrador";
-        import('./profesionales.js').then(mod => mod.renderStaffTable());
-        import('./mensajes.js').then(mod => mod.renderMessagesTable());
-        import('./boxes.js').then(mod => mod.renderBoxesTable());
-        import('./personalizacion.js').then(mod => mod.updatePaymentMethodsInfo());
+        renderStaffTable();
+        renderMessagesTable();
+        renderBoxesTable();
+        updatePaymentMethodsInfo();
     } else {
         document.getElementById('dashTitle').innerText = `Panel de ${state.currentUser.data.name}`;
         document.getElementById('availDate').min = new Date().toISOString().split('T')[0];
-        import('./personalizacion.js').then(mod => mod.loadMyConfig());
-        import('./boxes.js').then(mod => mod.renderBoxOccupancy());
+        loadMyConfig();
+        renderBoxOccupancy();
     }
-    
+
     updateStats();
-    import('./pacientes.js').then(mod => mod.renderPatients());
-    import('./citas.js').then(mod => mod.renderPendingRequests());
+    renderPatients();
+    renderPendingRequests();
     switchTab('citas');
 }
 
 export function switchTab(tabName) {
     const tabs = document.querySelectorAll('.tab');
     tabs.forEach(t => t.classList.remove('active'));
-    
     tabs.forEach(t => {
         if (t.textContent.trim().toLowerCase().includes(tabName.toLowerCase()) || 
             (tabName === 'citas' && t.textContent.trim() === 'Citas') ||
@@ -152,40 +141,36 @@ export function switchTab(tabName) {
             t.classList.add('active');
         }
     });
-    
+
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    const tabId = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
-    const element = document.getElementById(tabId);
-    if (element) element.classList.add('active');
-    
-    if (tabName === 'pacientes') {
-        import('./pacientes.js').then(mod => mod.renderPatients());
-    }
+    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+
+    if (tabName === 'pacientes') renderPatients();
     if (tabName === 'disponibilidad' && state.currentUser?.role === 'psych') {
         import('./disponibilidad.js').then(mod => mod.loadTimeSlots());
     }
     if (tabName === 'configuracion' && state.currentUser?.role === 'psych') {
-        import('./personalizacion.js').then(mod => mod.loadMyConfig());
+        loadMyConfig();
     }
     if (tabName === 'mensajes' && state.currentUser?.role === 'admin') {
-        import('./mensajes.js').then(mod => mod.renderMessagesTable());
+        renderMessagesTable();
     }
     if (tabName === 'boxes' && state.currentUser?.role === 'admin') {
-        import('./boxes.js').then(mod => mod.renderBoxesTable());
+        renderBoxesTable();
     }
     if (tabName === 'boxes' && state.currentUser?.role === 'psych') {
-        import('./boxes.js').then(mod => mod.renderBoxOccupancy());
+        renderBoxOccupancy();
     }
     if (tabName === 'solicitudes') {
-        import('./citas.js').then(mod => mod.renderPendingRequests());
+        renderPendingRequests();
     }
 }
 
-function updateStats() {
+export function updateStats() {
     const myApps = state.currentUser.role === 'admin' ? state.appointments : state.appointments.filter(a => a.psychId == state.currentUser.data.id);
     const myPatients = state.currentUser.role === 'admin' ? state.patients : state.patients.filter(p => p.psychId == state.currentUser.data.id);
     const totalIncome = myApps.reduce((s, a) => s + a.price, 0);
-    
+
     document.getElementById('statIncome').innerText = `$${totalIncome.toLocaleString()}`;
     document.getElementById('statCitas').innerText = myApps.length;
     document.getElementById('statPatients').innerText = myPatients.length;
@@ -195,9 +180,9 @@ function updateStats() {
 function renderAppointmentsTable(apps) {
     const tb = document.getElementById('tableBody');
     tb.innerHTML = "";
-    
+
     const confirmedApps = apps.filter(a => a.status === 'confirmada');
-    
+
     if (confirmedApps.length === 0) {
         tb.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">No hay citas confirmadas</td></tr>';
         return;
@@ -208,10 +193,10 @@ function renderAppointmentsTable(apps) {
         const isPast = appDate < new Date();
         const canEdit = state.currentUser.role === 'admin' || 
                        (state.currentUser.role === 'psych' && new Date() < new Date(a.editableUntil));
-        
+
         let paymentStatusText = a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
         let paymentStatusColor = a.paymentStatus === 'pagado' ? 'var(--verde-exito)' : 'var(--naranja-aviso)';
-        
+
         tb.innerHTML += `
             <tr>
                 <td><strong>${a.patient}</strong><br><small>${a.patientRut || ''}</small></td>
@@ -242,14 +227,3 @@ function renderAppointmentsTable(apps) {
         `;
     });
 }
-
-// Funciones de edición de citas (se llaman desde el HTML)
-window.editAppointment = (id) => {
-    import('./citas.js').then(mod => mod.editAppointment(id));
-};
-window.cancelAppointment = (id) => {
-    import('./citas.js').then(mod => mod.cancelAppointment(id));
-};
-window.markAsPaid = (id) => {
-    import('./citas.js').then(mod => mod.markAsPaid(id));
-};

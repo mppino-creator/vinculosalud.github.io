@@ -3,15 +3,13 @@ import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
 import { renderMessages, updateMarquee } from './mensajes.js';
-
-console.log("✅ publico.js cargado");
-
-// ============================================
-// FUNCIONES DE FILTRADO Y VISTA PÚBLICA
-// ============================================
+import { cargarEspecialidades, cargarMetodosPago, cargarFondo, cargarTextos, cargarLogo } from './personalizacion.js';
+import { renderStaffTable } from './profesionales.js';
+import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
+import { renderPatients } from './pacientes.js';
+import { renderPendingRequests } from './citas.js';
 
 export function filterProfessionals() {
-    console.log("🔍 filterProfessionals ejecutado");
     const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
     const availabilityFilter = document.getElementById('availabilityFilter')?.value || '';
@@ -20,13 +18,13 @@ export function filterProfessionals() {
         const specs = Array.isArray(p.spec) ? p.spec.join(' ') : p.spec;
         const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
                              specs.toLowerCase().includes(searchTerm);
-        
+
         let matchesSpecialty = true;
         if (specialtyTerm) {
             const pSpecs = Array.isArray(p.spec) ? p.spec : [p.spec];
             matchesSpecialty = pSpecs.some(s => s.toLowerCase().includes(specialtyTerm.toLowerCase()));
         }
-        
+
         let matchesAvailability = true;
         if (availabilityFilter === 'available') {
             const today = new Date().toISOString().split('T')[0];
@@ -45,17 +43,12 @@ export function filterProfessionals() {
     });
 
     filtered.sort((a, b) => a.name.localeCompare(b.name));
-    console.log(`🔍 Se encontraron ${filtered.length} profesionales después del filtro`);
     renderProfessionals(filtered);
 }
 
 export function renderProfessionals(professionals) {
-    console.log("🎨 renderProfessionals ejecutado con", professionals.length, "profesionales");
     const grid = document.getElementById('publicGrid');
-    if (!grid) {
-        console.error("❌ No se encontró el elemento publicGrid");
-        return;
-    }
+    if (!grid) return;
 
     if (professionals.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">No se encontraron profesionales</div>';
@@ -68,11 +61,11 @@ export function renderProfessionals(professionals) {
         const avgRating = getAverageRating(p.id);
         const ratingDisplay = avgRating > 0 ? avgRating.toFixed(1) : p.stars;
         const specialties = Array.isArray(p.spec) ? p.spec.join(' · ') : p.spec;
-        
+
         const whatsappMessage = encodeURIComponent('Hola buenas tardes, necesito una hora para atención psicológica. ¿Podría ayudarme?');
         const whatsappUrl = p.whatsapp ? `https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${whatsappMessage}` : '#';
         const instagramUrl = p.instagram ? `https://instagram.com/${p.instagram.replace('@', '')}` : '#';
-        
+
         return `
             <div class="therapist-card">
                 <div class="img-container">
@@ -108,7 +101,6 @@ export function renderProfessionals(professionals) {
             </div>
         `;
     }).join('');
-    console.log("✅ renderProfessionals completado");
 }
 
 function getAverageRating(psychId) {
@@ -117,29 +109,17 @@ function getAverageRating(psychId) {
     return psychMessages.reduce((sum, m) => sum + m.rating, 0) / psychMessages.length;
 }
 
-// ============================================
-// CARGA INICIAL DE DATOS
-// ============================================
-
 export function cargarDatosIniciales() {
-    console.log("🚀 cargarDatosIniciales ejecutado");
     const grid = document.getElementById('publicGrid');
     if (grid) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Cargando profesionales...</p></div>';
-    } else {
-        console.error("❌ No se encontró publicGrid en cargarDatosIniciales");
     }
-    
-    console.log("📡 Solicitando datos de Staff a Firebase...");
+
     db.ref('Staff').once('value', (snapshot) => {
-        console.log("📥 Respuesta de Staff recibida");
         const data = snapshot.val();
-        console.log("📊 Datos de Staff:", data ? "hay datos" : "no hay datos");
-        
         if (data) {
-            state.staff = Object.keys(data).map(key => {
+            state.setStaff(Object.keys(data).map(key => {
                 const item = data[key];
-                
                 if (item.name && item.pass && !item.usuario && !item.user) {
                     return {
                         id: key,
@@ -186,14 +166,14 @@ export function cargarDatosIniciales() {
                         paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
                     };
                 }
-            });
+            }));
         } else {
-            state.staff = [];
+            state.setStaff([]);
         }
-        
+
         // Agregar administrador
         state.staff.push({
-            id: '9999',
+            id: 9999,
             name: 'Administrador',
             spec: ['ADMIN_HIDDEN'],
             priceOnline: 0,
@@ -215,97 +195,78 @@ export function cargarDatosIniciales() {
             availability: {},
             paymentLinks: { online: '', presencial: '', qrCode: '' }
         });
-        
-        console.log(`👥 staff cargado: ${state.staff.length} profesionales`);
+
         filterProfessionals();
-        
-        if (state.currentUser?.role === 'admin') {
-            import('./profesionales.js').then(mod => mod.renderStaffTable()).catch(e => console.error("Error importando profesionales:", e));
-        }
-        
-        state.dataLoaded = true;
-    }).catch(error => {
-        console.error("❌ Error al cargar Staff:", error);
-        showToast("Error al cargar profesionales", "error");
+        if (state.currentUser?.role === 'admin') renderStaffTable();
+        state.setDataLoaded(true);
     });
-    
-    // El resto de llamadas (Boxes, Patients, etc.) pueden seguir igual
+
     db.ref('Boxes').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            state.boxes = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            state.setBoxes(Object.keys(data).map(key => ({ id: key, ...data[key] })));
         } else {
-            state.boxes = [];
+            state.setBoxes([]);
         }
-        if (state.currentUser?.role === 'admin') {
-            import('./boxes.js').then(mod => mod.renderBoxesTable()).catch(e => console.error("Error importando boxes:", e));
-        }
-        if (state.currentUser?.role === 'psych') {
-            import('./boxes.js').then(mod => mod.renderBoxOccupancy()).catch(e => console.error("Error importando boxes psych:", e));
-        }
-    }).catch(error => console.error("❌ Error al cargar Boxes:", error));
-    
+        if (state.currentUser?.role === 'admin') renderBoxesTable();
+        if (state.currentUser?.role === 'psych') renderBoxOccupancy();
+    });
+
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            state.patients = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            state.setPatients(Object.keys(data).map(key => ({ id: key, ...data[key] })));
         } else {
-            state.patients = [];
+            state.setPatients([]);
         }
-        if (state.currentUser) {
-            import('./pacientes.js').then(mod => mod.renderPatients()).catch(e => console.error("Error importando pacientes:", e));
-        }
-    }).catch(error => console.error("❌ Error al cargar Patients:", error));
-    
+        if (state.currentUser) renderPatients();
+    });
+
     db.ref('Appointments').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            state.appointments = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            state.setAppointments(Object.keys(data).map(key => ({ id: key, ...data[key] })));
         } else {
-            state.appointments = [];
+            state.setAppointments([]);
         }
         if (state.currentUser) {
-            import('./auth.js').then(mod => mod.updateStats()).catch(e => console.error("Error importando auth:", e));
-            import('./citas.js').then(mod => mod.renderPendingRequests()).catch(e => console.error("Error importando citas:", e));
+            import('./auth.js').then(mod => mod.updateStats());
+            renderPendingRequests();
         }
-        if (state.currentUser?.role === 'psych') {
-            import('./boxes.js').then(mod => mod.renderBoxOccupancy()).catch(e => console.error("Error importando boxes psych:", e));
-        }
-    }).catch(error => console.error("❌ Error al cargar Appointments:", error));
-    
+        if (state.currentUser?.role === 'psych') renderBoxOccupancy();
+    });
+
     db.ref('PendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            state.pendingRequests = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            state.setPendingRequests(Object.keys(data).map(key => ({ id: key, ...data[key] })));
         } else {
-            state.pendingRequests = [];
+            state.setPendingRequests([]);
         }
-        if (state.currentUser) {
-            import('./citas.js').then(mod => mod.renderPendingRequests()).catch(e => console.error("Error importando citas:", e));
-        }
-    }).catch(error => console.error("❌ Error al cargar PendingRequests:", error));
-    
+        if (state.currentUser) renderPendingRequests();
+    });
+
     db.ref('Messages').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            state.messages = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            state.setMessages(Object.keys(data).map(key => ({ id: key, ...data[key] })));
         } else {
-            state.messages = [
-                { id: '1', name: 'Carolina Méndez', email: '', whatsapp: '', therapistId: 1, therapistName: 'Psic. Alison Gutiérrez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad. Muy recomendada.', date: '2024-02-15' },
-                { id: '2', name: 'Roberto Campos', email: 'roberto@email.com', whatsapp: '+56912345678', therapistId: null, therapistName: null, rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: '2024-02-16' },
-                { id: '3', name: 'María José', email: '', whatsapp: '', therapistId: 2, therapistName: 'Dr. Julián Sossa', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: '2024-02-17' }
-            ];
+            state.setMessages([
+                { id: 1, name: 'Carolina Méndez', email: '', whatsapp: '', therapistId: 1, therapistName: 'Psic. Alison Gutiérrez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad. Muy recomendada.', date: '2024-02-15' },
+                { id: 2, name: 'Roberto Campos', email: 'roberto@email.com', whatsapp: '+56912345678', therapistId: null, therapistName: null, rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: '2024-02-16' },
+                { id: 3, name: 'María José', email: '', whatsapp: '', therapistId: 2, therapistName: 'Dr. Julián Sossa', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: '2024-02-17' }
+            ]);
         }
         renderMessages();
         updateMarquee();
         if (state.currentUser?.role === 'admin') {
-            import('./mensajes.js').then(mod => mod.renderMessagesTable()).catch(e => console.error("Error importando mensajes:", e));
+            import('./mensajes.js').then(mod => mod.renderMessagesTable());
         }
-    }).catch(error => console.error("❌ Error al cargar Messages:", error));
+    });
 
-    import('./personalizacion.js').then(mod => mod.cargarEspecialidades()).catch(e => console.error("Error cargando especialidades:", e));
-    import('./personalizacion.js').then(mod => mod.cargarMetodosPago()).catch(e => console.error("Error cargando métodos de pago:", e));
-    import('./personalizacion.js').then(mod => mod.cargarFondo()).catch(e => console.error("Error cargando fondo:", e));
-    import('./personalizacion.js').then(mod => mod.cargarTextos()).catch(e => console.error("Error cargando textos:", e));
-    import('./personalizacion.js').then(mod => mod.cargarLogo()).catch(e => console.error("Error cargando logo:", e));
+    cargarEspecialidades();
+    cargarMetodosPago();
+    cargarFondo();
+    cargarTextos();
+    cargarLogo();
 }

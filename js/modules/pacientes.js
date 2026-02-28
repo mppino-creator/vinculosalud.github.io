@@ -1,22 +1,17 @@
 // js/modules/pacientes.js
-import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, validarRut, formatRut } from './utils.js';
-
-// ============================================
-// FUNCIONES DE PACIENTES
-// ============================================
 
 export function renderPatients() {
     const container = document.getElementById('patientsList');
     if (!container) return;
 
     const searchTerm = document.getElementById('patientSearch')?.value.toLowerCase() || '';
-    
+
     let filteredPatients = state.currentUser?.role === 'admin' 
         ? state.patients 
         : state.patients.filter(p => p.psychId == state.currentUser?.data?.id);
-    
+
     filteredPatients = filteredPatients.filter(p => 
         p.name.toLowerCase().includes(searchTerm) || 
         p.email.toLowerCase().includes(searchTerm) ||
@@ -35,9 +30,8 @@ export function renderPatients() {
         const totalSessions = patientApps.length;
         const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
         const totalAmount = patientApps.reduce((sum, a) => sum + a.price, 0);
-        
         const recentApps = patientApps.slice(0, 3);
-        
+
         return `
             <div class="patient-card" onclick="viewPatientDetails(${p.id})">
                 <div class="patient-header">
@@ -95,7 +89,7 @@ export function showNewPatientModal() {
 export function viewPatientDetails(id) {
     const patient = state.patients.find(p => p.id == id);
     if (!patient) return;
-    
+
     document.getElementById('editPatientId').value = patient.id;
     document.getElementById('patientRut').value = patient.rut || '';
     document.getElementById('patientName').value = patient.name || '';
@@ -104,19 +98,19 @@ export function viewPatientDetails(id) {
     document.getElementById('patientBirthdate').value = patient.birthdate || '';
     document.getElementById('patientNotes').value = patient.notes || '';
     document.getElementById('patientModalTitle').innerText = 'Editar Paciente';
-    
+
     const patientApps = state.appointments.filter(a => a.patientId == patient.id)
         .sort((a, b) => new Date(b.date) - new Date(a.date));
     const historyContainer = document.getElementById('patientHistoryContainer');
     const historyList = document.getElementById('patientHistoryList');
     const statsContainer = document.getElementById('patientStatsContainer');
-    
+
     if (patientApps.length > 0) {
         const totalSessions = patientApps.length;
         const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
         const onlineSessions = patientApps.filter(a => a.type === 'online').length;
         const presencialSessions = patientApps.filter(a => a.type === 'presencial').length;
-        
+
         statsContainer.innerHTML = `
             <div class="stat-card">
                 <div class="number">${totalSessions}</div>
@@ -132,7 +126,7 @@ export function viewPatientDetails(id) {
             </div>
         `;
         statsContainer.style.display = 'grid';
-        
+
         historyList.innerHTML = patientApps.map(a => `
             <div class="history-item">
                 <span class="history-date">${a.date} ${a.time}</span>
@@ -150,7 +144,7 @@ export function viewPatientDetails(id) {
         statsContainer.style.display = 'none';
         historyContainer.style.display = 'none';
     }
-    
+
     document.getElementById('patientModal').style.display = 'flex';
 }
 
@@ -217,13 +211,13 @@ export function savePatient() {
             }
         } else {
             state.patients.push({
-                id: String(Date.now()),
-                rut: rut,
-                name: name,
-                email: email,
-                phone: phone,
-                birthdate: birthdate,
-                notes: notes,
+                id: Date.now(),
+                rut,
+                name,
+                email,
+                phone,
+                birthdate,
+                notes,
                 psychId: state.currentUser?.role === 'psych' ? state.currentUser.data.id : null,
                 createdAt: new Date().toISOString(),
                 appointments: []
@@ -233,13 +227,12 @@ export function savePatient() {
 
     import('./main.js').then(main => main.save());
     closePatientModal();
-    
+
     if (document.getElementById('tabAgendar')?.classList.contains('active')) {
         document.getElementById('therapistRut').value = rut;
-        // Llamar a función de búsqueda en el módulo de citas (se manejará en citas.js)
         import('./citas.js').then(citas => citas.searchPatientByRutTherapist());
     }
-    
+
     showToast('Paciente guardado', 'success');
 }
 
@@ -247,10 +240,10 @@ export function printPatientSummary() {
     const patientId = document.getElementById('editPatientId').value;
     const patient = state.patients.find(p => p.id == patientId);
     if (!patient) return;
-    
+
     const patientApps = state.appointments.filter(a => a.patientId == patientId)
         .sort((a, b) => new Date(b.date) - new Date(a.date));
-    
+
     let summaryHtml = `
         <html>
         <head>
@@ -288,7 +281,7 @@ export function printPatientSummary() {
                 </thead>
                 <tbody>
     `;
-    
+
     let total = 0;
     patientApps.forEach(a => {
         total += a.price;
@@ -304,7 +297,7 @@ export function printPatientSummary() {
             </tr>
         `;
     });
-    
+
     summaryHtml += `
                 </tbody>
             </table>
@@ -315,7 +308,7 @@ export function printPatientSummary() {
         </body>
         </html>
     `;
-    
+
     const printWindow = window.open('', '_blank');
     printWindow.document.write(summaryHtml);
     printWindow.document.close();

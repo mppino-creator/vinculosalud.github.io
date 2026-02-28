@@ -3,10 +3,6 @@ import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast } from './utils.js';
 
-// ============================================
-// FUNCIONES DE ADMIN PARA PROFESIONALES
-// ============================================
-
 export function showAddStaffModal() {
     document.getElementById('addStaffModal').style.display = 'flex';
     document.getElementById('addName').value = '';
@@ -26,8 +22,8 @@ export function showAddStaffModal() {
     document.getElementById('addBankRut').value = '';
     document.getElementById('addBankEmail').value = '';
     document.getElementById('addPhotoPreview').style.display = 'none';
-    state.tempImageData = null;
-    state.tempQrData = null;
+    state.setTempImageData(null);
+    state.setTempQrData(null);
 }
 
 export function closeAddStaffModal() {
@@ -84,10 +80,9 @@ export function addStaff() {
     const accountNumber = document.getElementById('addAccountNumber')?.value || '';
     const bankRut = document.getElementById('addBankRut')?.value || '';
     const bankEmail = document.getElementById('addBankEmail')?.value || '';
-    
     const paymentLinkOnline = document.getElementById('addPaymentLinkOnline')?.value || '';
     const paymentLinkPresencial = document.getElementById('addPaymentLinkPresencial')?.value || '';
-    
+
     if (!name || !email || selectedSpecs.length === 0 || !priceOnline || !pricePresencial || !usuario || !pass) {
         showToast('Completa todos los campos obligatorios', 'error');
         return;
@@ -99,36 +94,26 @@ export function addStaff() {
     }
 
     state.staff.push({
-        id: String(Date.now()),
-        name: name,
-        email: email,
+        id: Date.now(),
+        name,
+        email,
         spec: selectedSpecs,
         priceOnline: parseInt(priceOnline),
         pricePresencial: parseInt(pricePresencial),
-        usuario: usuario,
-        pass: pass,
-        whatsapp: whatsapp,
-        instagram: instagram,
+        usuario,
+        pass,
+        whatsapp,
+        instagram,
         img: state.tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-        address: address,
-        phone: phone,
-        bankDetails: {
-            bank: bank,
-            accountType: accountType,
-            accountNumber: accountNumber,
-            rut: bankRut,
-            email: bankEmail
-        },
+        address,
+        phone,
+        bankDetails: { bank, accountType, accountNumber, rut: bankRut, email: bankEmail },
         paymentMethods: { ...state.globalPaymentMethods },
         stars: 5,
         sessionDuration: 45,
         breakBetween: 10,
         availability: {},
-        paymentLinks: {
-            online: paymentLinkOnline,
-            presencial: paymentLinkPresencial,
-            qrCode: state.tempQrData || ''
-        }
+        paymentLinks: { online: paymentLinkOnline, presencial: paymentLinkPresencial, qrCode: state.tempQrData || '' }
     });
 
     import('./main.js').then(main => main.save());
@@ -139,17 +124,17 @@ export function addStaff() {
 export function editTherapist(id) {
     const therapist = state.staff.find(s => s.id == id);
     if (!therapist) return;
-    
+
     document.getElementById('editTherapistId').value = therapist.id;
     document.getElementById('editName').value = therapist.name || '';
     document.getElementById('editEmail').value = therapist.email || '';
-    
+
     const editSpecSelect = document.getElementById('editSpec');
     const therapistSpecs = Array.isArray(therapist.spec) ? therapist.spec : [therapist.spec];
     Array.from(editSpecSelect.options).forEach(opt => {
         opt.selected = therapistSpecs.includes(opt.value);
     });
-    
+
     document.getElementById('editUser').value = therapist.usuario || '';
     document.getElementById('editPass').value = '';
     document.getElementById('editWhatsapp').value = therapist.whatsapp || '';
@@ -158,14 +143,14 @@ export function editTherapist(id) {
     document.getElementById('editPhone').value = therapist.phone || '';
     document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
     document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
-    
+
     const bank = therapist.bankDetails || {};
     document.getElementById('editBank').value = bank.bank || '';
     document.getElementById('editAccountType').value = bank.accountType || 'corriente';
     document.getElementById('editAccountNumber').value = bank.accountNumber || '';
     document.getElementById('editBankRut').value = bank.rut || '';
     document.getElementById('editBankEmail').value = bank.email || '';
-    
+
     document.getElementById('editPaymentLinkOnline').value = therapist.paymentLinks?.online || '';
     document.getElementById('editPaymentLinkPresencial').value = therapist.paymentLinks?.presencial || '';
     if (therapist.paymentLinks?.qrCode) {
@@ -174,16 +159,16 @@ export function editTherapist(id) {
     } else {
         document.getElementById('editQrPreview').style.display = 'none';
     }
-    
+
     if (therapist.img) {
         document.getElementById('editPhotoPreview').src = therapist.img;
         document.getElementById('editPhotoPreview').style.display = 'block';
     } else {
         document.getElementById('editPhotoPreview').style.display = 'none';
     }
-    
-    state.tempImageData = null;
-    state.tempQrData = null;
+
+    state.setTempImageData(null);
+    state.setTempQrData(null);
     document.getElementById('editTherapistModal').style.display = 'flex';
 }
 
@@ -198,10 +183,10 @@ export function updateTherapist() {
 
     therapist.name = document.getElementById('editName').value;
     therapist.email = document.getElementById('editEmail').value;
-    
+
     const editSpecSelect = document.getElementById('editSpec');
     therapist.spec = Array.from(editSpecSelect.selectedOptions).map(opt => opt.value);
-    
+
     therapist.usuario = document.getElementById('editUser').value;
     therapist.whatsapp = document.getElementById('editWhatsapp').value;
     therapist.instagram = document.getElementById('editInstagram').value;
@@ -209,7 +194,7 @@ export function updateTherapist() {
     therapist.phone = document.getElementById('editPhone').value;
     therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
     therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
-    
+
     therapist.bankDetails = {
         bank: document.getElementById('editBank').value,
         accountType: document.getElementById('editAccountType').value,
@@ -243,11 +228,10 @@ export function deleteStaff(id) {
         showToast('No se puede eliminar al admin', 'error');
         return;
     }
-    
     if (confirm('¿Eliminar profesional y todos sus datos?')) {
-        state.appointments = state.appointments.filter(a => a.psychId != id);
-        state.patients = state.patients.filter(p => p.psychId != id);
-        state.staff = state.staff.filter(s => s.id != id);
+        state.setAppointments(state.appointments.filter(a => a.psychId != id));
+        state.setPatients(state.patients.filter(p => p.psychId != id));
+        state.setStaff(state.staff.filter(s => s.id != id));
         import('./main.js').then(main => main.save());
         showToast('Profesional eliminado', 'success');
     }

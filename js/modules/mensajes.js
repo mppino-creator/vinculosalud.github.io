@@ -20,17 +20,14 @@ function loadTherapistsForMessage() {
     const select = document.getElementById('messageTherapist');
     if (!select) return;
     select.innerHTML = '<option value="">Mensaje general para todos</option>';
-    getPublicStaff().forEach(t => {
+    const publicStaff = state.staff.filter(s => s.spec && s.spec.length > 0 && !s.isHiddenAdmin);
+    publicStaff.forEach(t => {
         select.innerHTML += `<option value="${t.id}">${t.name}</option>`;
     });
 }
 
-function getPublicStaff() {
-    return state.staff.filter(s => s.spec && s.spec.length > 0 && !s.isHiddenAdmin);
-}
-
 export function setRating(rating) {
-    state.currentRating = rating;
+    state.setCurrentRating(rating);
     document.getElementById('messageRating').value = rating;
     for (let i = 1; i <= 5; i++) {
         const star = document.getElementById(`star${i}`);
@@ -60,20 +57,19 @@ export function saveMessage() {
     }
 
     const newMessage = {
-        id: String(Date.now()),
-        name: name,
-        email: email,
-        whatsapp: whatsapp,
-        therapistId: therapistId ? therapistId : null,
-        therapistName: therapistName,
+        id: Date.now(),
+        name,
+        email,
+        whatsapp,
+        therapistId: therapistId || null,
+        therapistName,
         rating: parseInt(rating),
-        text: text,
+        text,
         date: new Date().toISOString().split('T')[0]
     };
 
     state.messages.push(newMessage);
-    // Guardar en Firebase (llamada a save, se implementará después)
-    // Por ahora solo actualizamos la vista
+    import('./main.js').then(main => main.save());
     renderMessages();
     updateMarquee();
     closeMessageModal();
@@ -85,7 +81,7 @@ export function renderMessages() {
     if (!container) return;
 
     const recentMessages = [...state.messages].reverse().slice(0, 6);
-    
+
     if (recentMessages.length === 0) {
         container.innerHTML = '<p style="text-align:center;">No hay mensajes aún. ¡Sé el primero en dejar tu experiencia!</p>';
         return;
@@ -132,7 +128,8 @@ export function renderMessagesTable() {
 
 export function deleteMessage(id) {
     if (confirm('¿Eliminar este mensaje?')) {
-        state.messages = state.messages.filter(m => m.id != id);
+        state.setMessages(state.messages.filter(m => m.id != id));
+        import('./main.js').then(main => main.save());
         renderMessagesTable();
         renderMessages();
         updateMarquee();
@@ -145,7 +142,7 @@ export function updateMarquee() {
     if (!marquee) return;
 
     const allMessages = [...state.messages, ...state.messages, ...state.messages].slice(0, 15);
-    
+
     if (allMessages.length === 0) {
         marquee.innerHTML = '<div class="marquee-item">Comparte tu experiencia</div>';
         return;

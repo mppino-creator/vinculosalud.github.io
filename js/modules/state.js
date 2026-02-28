@@ -37,7 +37,7 @@ export let selectedPatientForTherapist = null;
 export let dataLoaded = false;
 export const EDIT_HOURS = 24;
 
-// Funciones para actualizar las variables (si es necesario)
+// Funciones para actualizar las variables (cuando sea necesario)
 export function setStaff(newStaff) { staff = newStaff; }
 export function setPatients(newPatients) { patients = newPatients; }
 export function setAppointments(newApps) { appointments = newApps; }

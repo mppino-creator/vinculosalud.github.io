@@ -10,7 +10,7 @@
     <!-- Estilos externos -->
     <link rel="stylesheet" href="css/estilos.css">
     
-    <!-- 🔥 FIREBASE SDK (carga tradicional, aún necesario para importaciones en módulos) -->
+    <!-- 🔥 FIREBASE SDK (carga tradicional, necesario para importaciones en módulos) -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 </head>
@@ -747,13 +747,14 @@
             <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewLogo(this)">
         </div>
         
-        <div class="form-group">
-            <label>Texto del Logo (se muestra si no hay imagen)</label>
-            <input type="text" id="logoText" value="Vínculo Salud" class="form-control">
-        </div>
-        
         <div id="currentLogoPreview" style="margin:20px 0; text-align:center;">
             <img id="logoPreview" src="" style="max-width:200px; max-height:80px; border-radius:8px; display:none;">
+        </div>
+        
+        <div class="form-group">
+            <label>Texto del Logo (siempre visible)</label>
+            <input type="text" id="logoText" value="Vínculo Salud" class="form-control">
+            <small style="color:var(--text-light);">Este texto siempre se mostrará junto al logo</small>
         </div>
         
         <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-bottom:10px;" onclick="saveLogo()">
@@ -932,7 +933,10 @@
         <!-- Contenedor para links de pago -->
         <div id="paymentLinkContainer" style="grid-column:1/-1; margin-top:20px; display:none;"></div>
         
-        <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;"></div>
+        <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;">
+            <strong>📧 CORREO ENVIADO</strong><br>
+            <span id="emailContent"></span>
+        </div>
     </div>
 
     <!-- Panel de Dashboard (para staff) -->
@@ -1425,9 +1429,90 @@
 <!-- JavaScript modular: punto de entrada -->
 <script type="module" src="js/main.js"></script>
 
-<!-- Si deseas mantener el código legacy como respaldo, puedes comentar la línea anterior y descomentar esta:
-<script src="js/legacy/app.js"></script>
--->
+<!-- Funciones de vista previa de imágenes (se mantienen aquí porque usan onclick directamente) -->
+<script>
+    // Funciones de previsualización de imágenes (se llaman desde los onclick)
+    window.previewAddImage = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('addPhotoPreview').src = e.target.result;
+                document.getElementById('addPhotoPreview').style.display = 'block';
+                window.tempImageData = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
 
+    window.previewEditImage = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editPhotoPreview').src = e.target.result;
+                document.getElementById('editPhotoPreview').style.display = 'block';
+                window.tempImageData = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.previewQrImage = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editQrPreview').src = e.target.result;
+                document.getElementById('editQrPreview').style.display = 'block';
+                window.tempQrData = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.previewAddQrImage = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('addQrPreview').src = e.target.result;
+                document.getElementById('addQrPreview').style.display = 'block';
+                window.tempQrData = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.previewLogo = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('logoPreview').src = e.target.result;
+                document.getElementById('logoPreview').style.display = 'block';
+                window.tempLogoData = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.previewBackgroundImage = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('backgroundPreview').src = e.target.result;
+                document.getElementById('backgroundPreview').style.display = 'block';
+                window.tempBackgroundImageData = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.updateBackgroundOpacity = function() {
+        const opacity = document.getElementById('backgroundOpacity').value;
+        document.getElementById('opacityValue').innerText = opacity + '%';
+        // La función real se maneja en personalizacion.js, pero dejamos este stub para que no de error
+    };
+
+    window.closePanels = function() {
+        location.reload();
+    };
+</script>
 </body>
 </html>

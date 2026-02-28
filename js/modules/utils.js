@@ -54,7 +54,7 @@ export function getPublicStaff() {
     return state.staff.filter(s => s.spec && s.spec.length > 0 && !s.isHiddenAdmin);
 }
 
-// Simulación de correo
+// Simulación de correo (puedes reemplazar con envío real)
 export function sendEmailNotification(to, subject, message) {
     console.log(`📧 Simulación de correo a: ${to}`);
     console.log(`📧 Asunto: ${subject}`);

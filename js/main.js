@@ -12,7 +12,55 @@ import * as mensajes from './modules/mensajes.js';
 import * as personalizacion from './modules/personalizacion.js';
 import * as publico from './modules/publico.js';
 
-// Exponer funciones globalmente para los onclick del HTML
+// ============================================
+// FUNCIÓN PARA GUARDAR EN FIREBASE (OPTIMIZADA)
+// ============================================
+export function save() {
+    const updates = {};
+    
+    updates['/Staff'] = state.staff.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
+    updates['/Boxes'] = state.boxes.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
+    updates['/Patients'] = state.patients.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
+    updates['/Appointments'] = state.appointments.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
+    updates['/PendingRequests'] = state.pendingRequests.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
+    updates['/Messages'] = state.messages.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
+    
+    db.ref().update(updates)
+        .then(() => console.log('Datos guardados correctamente'))
+        .catch(err => console.error('Error al guardar:', err));
+    
+    // Guardar especialidades por separado (usa set)
+    const specialtiesObj = {};
+    state.specialties.forEach(item => {
+        specialtiesObj[item.id] = { name: item.name };
+    });
+    db.ref('Specialties').set(specialtiesObj);
+    
+    if (state.currentUser) {
+        auth.updateStats();
+        citas.renderPendingRequests();
+        if (state.currentUser.role === 'admin') {
+            profesionales.renderStaffTable();
+            mensajes.renderMessagesTable();
+            boxes.renderBoxesTable();
+        }
+        if (state.currentUser.role === 'psych') {
+            pacientes.renderPatients();
+            boxes.renderBoxOccupancy();
+            if (document.getElementById('tabDisponibilidad')?.classList.contains('active')) {
+                disponibilidad.loadTimeSlots();
+            }
+        }
+    }
+    publico.filterProfessionals();
+    mensajes.renderMessages();
+    mensajes.updateMarquee();
+}
+
+// ============================================
+// EXPONER FUNCIONES GLOBALES PARA LOS onclick DEL HTML
+// ============================================
+
 window.showLoginModal = auth.showLoginModal;
 window.closeLoginModal = auth.closeLoginModal;
 window.processLogin = auth.processLogin;
@@ -90,12 +138,13 @@ window.saveMyConfig = personalizacion.saveMyConfig;
 
 window.filterProfessionals = publico.filterProfessionals;
 
-// Utilidades
 window.formatRut = utils.formatRut;
 window.validarRut = utils.validarRut;
 window.showToast = utils.showToast;
 
-// Iniciar la aplicación
+// ============================================
+// INICIALIZAR LA APLICACIÓN
+// ============================================
 publico.cargarDatosIniciales();
 
 // Recuperar sesión guardada (si existe)

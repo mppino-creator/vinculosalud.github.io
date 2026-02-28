@@ -353,6 +353,11 @@ export function saveMyConfig() {
     const staffIndex = state.staff.findIndex(s => s.id == psych.id);
     if (staffIndex !== -1) state.staff[staffIndex] = psych;
     
-    import('./main.js').then(main => main.save());
+    if (typeof window.save === 'function') {
+    window.save();
+} else {
+    console.warn("save no está definida globalmente");
+    // Opcional: implementar una versión simple aquí
+}
     showToast('Configuración guardada', 'success');
 }

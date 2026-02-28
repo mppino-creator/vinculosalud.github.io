@@ -1,7 +1,6 @@
 // js/modules/auth.js
-import { db } from '../config/firebase.js';
 import * as state from './state.js';
-import { showToast } from './utils.js';
+import { showToast, getPublicStaff } from './utils.js';
 
 // ============================================
 // FUNCIONES DE LOGIN Y DASHBOARD
@@ -113,7 +112,6 @@ export function showDashboard() {
     
     if (isAdmin) {
         document.getElementById('dashTitle').innerText = "Panel Administrador";
-        // Estas funciones deben venir de otros módulos
         import('./profesionales.js').then(mod => mod.renderStaffTable());
         import('./mensajes.js').then(mod => mod.renderMessagesTable());
         import('./boxes.js').then(mod => mod.renderBoxesTable());
@@ -121,7 +119,6 @@ export function showDashboard() {
     } else {
         document.getElementById('dashTitle').innerText = `Panel de ${state.currentUser.data.name}`;
         document.getElementById('availDate').min = new Date().toISOString().split('T')[0];
-        // Cargar configuración personal y ocupación de boxes
         import('./personalizacion.js').then(mod => mod.loadMyConfig());
         import('./boxes.js').then(mod => mod.renderBoxOccupancy());
     }
@@ -136,7 +133,6 @@ export function switchTab(tabName) {
     const tabs = document.querySelectorAll('.tab');
     tabs.forEach(t => t.classList.remove('active'));
     
-    // Buscar el tab por el texto y activarlo
     tabs.forEach(t => {
         if (t.textContent.trim().toLowerCase().includes(tabName.toLowerCase()) || 
             (tabName === 'citas' && t.textContent.trim() === 'Citas') ||
@@ -162,7 +158,6 @@ export function switchTab(tabName) {
     const element = document.getElementById(tabId);
     if (element) element.classList.add('active');
     
-    // Cargar contenido según la pestaña
     if (tabName === 'pacientes') {
         import('./pacientes.js').then(mod => mod.renderPatients());
     }
@@ -248,9 +243,7 @@ function renderAppointmentsTable(apps) {
     });
 }
 
-// Nota: Las funciones editAppointment, cancelAppointment, markAsPaid deberían estar en citas.js
-// Las importaremos dinámicamente cuando se llamen desde el HTML, pero por ahora las dejamos aquí
-// para que el código sea autocontenido. Luego las moveremos.
+// Funciones de edición de citas (se llaman desde el HTML)
 window.editAppointment = (id) => {
     import('./citas.js').then(mod => mod.editAppointment(id));
 };

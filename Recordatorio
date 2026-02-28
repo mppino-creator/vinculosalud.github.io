@@ -1,0 +1,106 @@
+Claro, aquí tienes un resumen completo y estructurado del proyecto **Vínculo Salud**. Puedes copiarlo y pegarlo al inicio de una nueva conversación para que yo (el asistente) recuerde todo el contexto sin necesidad de explicaciones adicionales.
+
+---
+
+## 📋 **PROYECTO: VÍNCULO SALUD – CONTEXTO GENERAL**
+
+### 1. Descripción
+Plataforma web para la reserva de citas con psicólogos. Incluye una **vista pública** para pacientes (filtros, tarjetas de profesionales, mensajes) y un **panel de gestión privado** con dos roles:
+- **Administrador**: gestión de profesionales, especialidades, métodos de pago, imagen de fondo, textos, logo, boxes y mensajes.
+- **Psicólogo**: gestión de disponibilidad (días y horas), configuración personal (precios, datos bancarios, métodos de pago), agenda de citas y solicitudes pendientes.
+
+### 2. Tecnologías utilizadas
+- **HTML5**, **CSS3**, **JavaScript** (vanilla, con módulos ES6).
+- **Firebase Realtime Database** (base de datos en la nube).
+- **Font Awesome** para iconos.
+- **Google Fonts (Inter)**.
+- **LocalStorage** para persistencia de sesión.
+
+### 3. Estructura actual del proyecto (modular)
+```
+vinculosalud.github.io/
+│
+├── index.html                     # Página principal (estructura HTML)
+├── css/
+│   └── estilos.css                # Todos los estilos (separados)
+├── js/
+│   ├── config/
+│   │   └── firebase.js            # Inicialización de Firebase (versión compat)
+│   ├── modules/
+│   │   ├── state.js               # Variables globales compartidas
+│   │   ├── utils.js               # Utilidades (toast, rut, email, getPublicStaff)
+│   │   ├── auth.js                # Login, logout, dashboard, tabs
+│   │   ├── pacientes.js           # Gestión de pacientes (CRUD, historial)
+│   │   ├── profesionales.js       # Gestión de profesionales (solo admin)
+│   │   ├── citas.js                # Reservas, solicitudes, agenda (mínimo)
+│   │   ├── disponibilidad.js       # Configuración de horarios (slots, sobrecupo)
+│   │   ├── boxes.js                # Gestión de boxes y ocupación
+│   │   ├── mensajes.js             # Testimonios y marquee
+│   │   ├── personalizacion.js      # Logo, fondo, textos, métodos de pago
+│   │   └── publico.js              # Filtros y vista pública (carga inicial)
+│   ├── main.js                      # Punto de entrada (importa módulos, expone globales y función save)
+│   └── legacy/                       # Código antiguo de respaldo (opcional)
+│       └── app.js
+├── CNAME                             # Dominio personalizado: vinculosalud.cl
+└── README.md                         # Descripción del proyecto
+```
+
+### 4. Funcionalidades implementadas (resumen)
+
+#### Vista pública (pacientes)
+- Listado de profesionales con filtros (búsqueda, especialidad, disponibilidad).
+- Tarjetas con foto, especialidades, valoración, enlaces a WhatsApp/Instagram.
+- Sección de mensajes/testimonios con calificación.
+- Formulario de solicitud de cita (online o presencial) con validación de RUT y disponibilidad.
+
+#### Panel de gestión (staff)
+- **Login** con credenciales fijas (`Admin` / `Nina2026` para admin; los psicólogos se crean desde el panel).
+- **Dashboard** con pestañas: Citas, Solicitudes Pendientes, Pacientes, Profesionales (admin), Especialidades (admin), Métodos de Pago (admin), Fondo (admin), Textos (admin), Logo (admin), Disponibilidad (psicólogo), Mi Configuración (psicólogo), Mensajes (admin), Boxes (admin), Agendar Cita (psicólogo).
+- **Gestión de profesionales** (admin): alta, edición, eliminación, con campos detallados (precios, datos bancarios, links de pago, QR).
+- **Gestión de pacientes**: CRUD completo, historial de atenciones, resumen imprimible.
+- **Gestión de boxes**: creación, edición, activación/desactivación, visualización de ocupación diaria.
+- **Gestión de disponibilidad** (psicólogo): generación automática de slots, sobrecupo, anulación de rangos, aplicación por fechas.
+- **Personalización** (admin): logo, fondo, textos de portada, métodos de pago globales.
+- **Mensajes/testimonios**: publicación desde la vista pública, moderación desde el panel.
+
+### 5. Características técnicas destacadas
+- **IDs como strings** (`String(Date.now())`) para compatibilidad con Firebase.
+- **Validación de RUT chileno** en formularios de paciente.
+- **Simulación de envío de correos electrónicos** (solo console.log y mensaje en pantalla) – sin API keys expuestas.
+- **Guardado optimizado** en Firebase usando `update()` para evitar sobrescrituras masivas (función `save()` en `main.js`).
+- **Gestión de boxes** con verificación de disponibilidad horaria (cruce con citas existentes).
+- **Configuración avanzada de disponibilidad** (duración de sesión, descanso entre sesiones, generación de slots, sobrecupo).
+- **Persistencia de sesión** mediante `localStorage`.
+
+### 6. Estado de la modularización
+| Módulo               | Estado                                    |
+|----------------------|-------------------------------------------|
+| `firebase.js`        | ✅ Completado (versión compat)            |
+| `state.js`           | ✅ Completado (variables y setters)       |
+| `utils.js`           | ✅ Completado (toast, rut, email, etc.)   |
+| `auth.js`            | ✅ Completado (login, dashboard, tabs)    |
+| `pacientes.js`       | ✅ Completado (CRUD, historial)           |
+| `profesionales.js`   | ✅ Completado (gestión de staff)          |
+| `citas.js`           | ⚠️ Versión mínima (solo para no romper)   |
+| `disponibilidad.js`  | ✅ Completado (slots, sobrecupo)          |
+| `boxes.js`           | ✅ Completado (gestión y ocupación)       |
+| `mensajes.js`        | ✅ Completado (publicación y moderación)  |
+| `personalizacion.js` | ✅ Completado (logo, fondo, textos, etc.) |
+| `publico.js`         | ✅ Completado (filtros y carga inicial)   |
+| `main.js`            | ✅ Completado (punto de entrada y `save`) |
+
+### 7. Historial de cambios relevantes
+1. **Seguridad**: Se eliminó una API key de SendGrid del historial de Git (commit `5ba5639` eliminado mediante rebase).
+2. **Modularización**: Se separó el CSS en `css/estilos.css` y el JavaScript en módulos ES6.
+3. **Corrección de estructura**: Se movió `app.js` a `js/modules/` y se eliminaron carpetas duplicadas.
+4. **Estado actual**: La aplicación funciona sin errores en la consola del navegador (con el código legacy comentado y usando `main.js`).
+
+### 8. Instrucciones para retomar el proyecto en una nueva conversación
+- **Iniciar nueva conversación** y pegar este resumen al principio.
+- Si se desea seguir desarrollando, indicar qué funcionalidad se quiere añadir o qué error se quiere corregir.
+- Si se necesita el código completo de algún archivo, solicitarlo específicamente (por ejemplo: "dame el código actualizado de `citas.js`").
+- Si hay errores en la consola, copiarlos y pegarlos para diagnosticar.
+
+---
+
+Con este resumen, cualquier conversación futura puede continuar desde donde lo dejamos. ¡Quedo atento a tus indicaciones!

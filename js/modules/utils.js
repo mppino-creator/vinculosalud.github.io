@@ -1,9 +1,10 @@
 // js/modules/utils.js
 import * as state from './state.js';
 
-// Función de toast
+// Toast
 export function showToast(message, type = 'success', duration = 3000) {
     const container = document.getElementById('toastContainer');
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `

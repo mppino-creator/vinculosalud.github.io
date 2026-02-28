@@ -3,12 +3,6 @@ import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
 import { renderMessages, updateMarquee } from './mensajes.js';
-// Nota: Algunas funciones como renderMessages, updateMarquee están en mensajes.js
-// Las importamos directamente para usarlas aquí.
-
-// ============================================
-// FUNCIONES DE FILTRADO Y VISTA PÚBLICA
-// ============================================
 
 export function filterProfessionals() {
     const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
@@ -110,12 +104,7 @@ function getAverageRating(psychId) {
     return psychMessages.reduce((sum, m) => sum + m.rating, 0) / psychMessages.length;
 }
 
-// ============================================
-// CARGA INICIAL DE DATOS
-// ============================================
-
 export function cargarDatosIniciales() {
-    // Mostrar un indicador de carga
     document.getElementById('publicGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Cargando profesionales...</p></div>';
     
     db.ref('Staff').once('value', (snapshot) => {
@@ -123,7 +112,6 @@ export function cargarDatosIniciales() {
         if (data) {
             state.staff = Object.keys(data).map(key => {
                 const item = data[key];
-                
                 if (item.name && item.pass && !item.usuario && !item.user) {
                     return {
                         id: key,
@@ -175,7 +163,6 @@ export function cargarDatosIniciales() {
             state.staff = [];
         }
         
-        // Agregar administrador
         state.staff.push({
             id: '9999',
             name: 'Administrador',
@@ -274,8 +261,8 @@ export function cargarDatosIniciales() {
                 { id: '3', name: 'María José', email: '', whatsapp: '', therapistId: 2, therapistName: 'Dr. Julián Sossa', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: '2024-02-17' }
             ];
         }
-        renderMessages();      // función de mensajes.js
-        updateMarquee();       // función de mensajes.js
+        renderMessages();
+        updateMarquee();
         if (state.currentUser?.role === 'admin') {
             import('./mensajes.js').then(mod => mod.renderMessagesTable());
         }

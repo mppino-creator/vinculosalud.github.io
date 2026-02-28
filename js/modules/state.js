@@ -1,5 +1,5 @@
 // js/modules/state.js
-// Variables globales compartidas entre módulos
+// Variables globales compartidas entre todos los módulos
 
 export let staff = [];
 export let patients = [];
@@ -37,7 +37,7 @@ export let selectedPatientForTherapist = null;
 export let dataLoaded = false;
 export const EDIT_HOURS = 24;
 
-// Funciones para actualizar variables (cuando sea necesario)
+// Funciones para actualizar las variables (si es necesario)
 export function setStaff(newStaff) { staff = newStaff; }
 export function setPatients(newPatients) { patients = newPatients; }
 export function setAppointments(newApps) { appointments = newApps; }
@@ -50,5 +50,15 @@ export function setGlobalPaymentMethods(newMethods) { globalPaymentMethods = new
 export function setBackgroundImage(newImg) { backgroundImage = newImg; }
 export function setLogoImage(newLogo) { logoImage = newLogo; }
 export function setCurrentUser(user) { currentUser = user; }
+export function setSelectedPsych(psych) { selectedPsych = psych; }
+export function setCurrentRating(rating) { currentRating = rating; }
+export function setGeneratedSlots(slots) { generatedSlots = slots; }
+export function setSelectedWeekdays(days) { selectedWeekdays = days; }
+export function setSelectedBoxId(id) { selectedBoxId = id; }
+export function setSelectedTherapistBoxId(id) { selectedTherapistBoxId = id; }
+export function setTempImageData(data) { tempImageData = data; }
+export function setTempBackgroundImageData(data) { tempBackgroundImageData = data; }
+export function setTempLogoData(data) { tempLogoData = data; }
+export function setTempQrData(data) { tempQrData = data; }
+export function setSelectedPatientForTherapist(patient) { selectedPatientForTherapist = patient; }
 export function setDataLoaded(loaded) { dataLoaded = loaded; }
-// ... se pueden agregar más según necesidad

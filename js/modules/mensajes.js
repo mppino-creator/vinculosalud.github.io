@@ -1,11 +1,6 @@
 // js/modules/mensajes.js
-import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast } from './utils.js';
-
-// ============================================
-// FUNCIONES DE MENSAJES (TESTIMONIOS)
-// ============================================
 
 export function showMessageModal() {
     document.getElementById('messageModal').style.display = 'flex';
@@ -23,6 +18,7 @@ export function closeMessageModal() {
 
 function loadTherapistsForMessage() {
     const select = document.getElementById('messageTherapist');
+    if (!select) return;
     select.innerHTML = '<option value="">Mensaje general para todos</option>';
     getPublicStaff().forEach(t => {
         select.innerHTML += `<option value="${t.id}">${t.name}</option>`;
@@ -76,8 +72,10 @@ export function saveMessage() {
     };
 
     state.messages.push(newMessage);
-    // Guardar en Firebase
-    import('./main.js').then(main => main.save());
+    // Guardar en Firebase (llamada a save, se implementará después)
+    // Por ahora solo actualizamos la vista
+    renderMessages();
+    updateMarquee();
     closeMessageModal();
     showToast('¡Gracias por tu mensaje!', 'success');
 }
@@ -88,6 +86,11 @@ export function renderMessages() {
 
     const recentMessages = [...state.messages].reverse().slice(0, 6);
     
+    if (recentMessages.length === 0) {
+        container.innerHTML = '<p style="text-align:center;">No hay mensajes aún. ¡Sé el primero en dejar tu experiencia!</p>';
+        return;
+    }
+
     container.innerHTML = recentMessages.map(m => `
         <div class="message-card">
             <div class="message-header">
@@ -119,7 +122,7 @@ export function renderMessagesTable() {
                 ${m.whatsapp ? `<i class="fab fa-whatsapp"></i>` : ''}
             </td>
             <td>
-                <button onclick="deleteMessage(${m.id})" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
+                <button onclick="deleteMessage('${m.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
                     <i class="fa fa-trash"></i>
                 </button>
             </td>
@@ -130,8 +133,9 @@ export function renderMessagesTable() {
 export function deleteMessage(id) {
     if (confirm('¿Eliminar este mensaje?')) {
         state.messages = state.messages.filter(m => m.id != id);
-        import('./main.js').then(main => main.save());
         renderMessagesTable();
+        renderMessages();
+        updateMarquee();
         showToast('Mensaje eliminado', 'success');
     }
 }
@@ -142,6 +146,11 @@ export function updateMarquee() {
 
     const allMessages = [...state.messages, ...state.messages, ...state.messages].slice(0, 15);
     
+    if (allMessages.length === 0) {
+        marquee.innerHTML = '<div class="marquee-item">Comparte tu experiencia</div>';
+        return;
+    }
+
     marquee.innerHTML = allMessages.map(m => `
         <div class="marquee-item">
             <i class="fa fa-quote-right"></i>

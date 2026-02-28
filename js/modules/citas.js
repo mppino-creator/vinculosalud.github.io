@@ -1,8 +1,8 @@
 // js/modules/citas.js
+import { getAvailableBoxes } from './boxes.js';
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, validarRut, sendEmailNotification } from './utils.js';
-import { getAvailableBoxes } from './boxes.js';
 
 export function openBooking(id) {
     state.setSelectedPsych(state.staff.find(p => p.id == id));

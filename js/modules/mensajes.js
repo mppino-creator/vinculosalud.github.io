@@ -1,0 +1,152 @@
+// js/modules/mensajes.js
+import { db } from '../config/firebase.js';
+import * as state from './state.js';
+import { showToast } from './utils.js';
+
+// ============================================
+// FUNCIONES DE MENSAJES (TESTIMONIOS)
+// ============================================
+
+export function showMessageModal() {
+    document.getElementById('messageModal').style.display = 'flex';
+    loadTherapistsForMessage();
+    setRating(5);
+}
+
+export function closeMessageModal() {
+    document.getElementById('messageModal').style.display = 'none';
+    document.getElementById('messageName').value = '';
+    document.getElementById('messageEmail').value = '';
+    document.getElementById('messageWhatsapp').value = '';
+    document.getElementById('messageText').value = '';
+}
+
+function loadTherapistsForMessage() {
+    const select = document.getElementById('messageTherapist');
+    select.innerHTML = '<option value="">Mensaje general para todos</option>';
+    getPublicStaff().forEach(t => {
+        select.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+    });
+}
+
+function getPublicStaff() {
+    return state.staff.filter(s => s.spec && s.spec.length > 0 && !s.isHiddenAdmin);
+}
+
+export function setRating(rating) {
+    state.currentRating = rating;
+    document.getElementById('messageRating').value = rating;
+    for (let i = 1; i <= 5; i++) {
+        const star = document.getElementById(`star${i}`);
+        if (star) {
+            star.textContent = i <= rating ? '★' : '☆';
+        }
+    }
+}
+
+export function saveMessage() {
+    const name = document.getElementById('messageName').value;
+    const email = document.getElementById('messageEmail').value;
+    const whatsapp = document.getElementById('messageWhatsapp').value;
+    const therapistId = document.getElementById('messageTherapist').value;
+    const rating = document.getElementById('messageRating').value;
+    const text = document.getElementById('messageText').value;
+
+    if (!name || !text) {
+        showToast('Nombre y mensaje son obligatorios', 'error');
+        return;
+    }
+
+    let therapistName = null;
+    if (therapistId) {
+        const therapist = state.staff.find(s => s.id == therapistId);
+        therapistName = therapist ? therapist.name : null;
+    }
+
+    const newMessage = {
+        id: String(Date.now()),
+        name: name,
+        email: email,
+        whatsapp: whatsapp,
+        therapistId: therapistId ? therapistId : null,
+        therapistName: therapistName,
+        rating: parseInt(rating),
+        text: text,
+        date: new Date().toISOString().split('T')[0]
+    };
+
+    state.messages.push(newMessage);
+    // Guardar en Firebase
+    import('./main.js').then(main => main.save());
+    closeMessageModal();
+    showToast('¡Gracias por tu mensaje!', 'success');
+}
+
+export function renderMessages() {
+    const container = document.getElementById('messagesGrid');
+    if (!container) return;
+
+    const recentMessages = [...state.messages].reverse().slice(0, 6);
+    
+    container.innerHTML = recentMessages.map(m => `
+        <div class="message-card">
+            <div class="message-header">
+                <span class="message-author">${m.name}</span>
+                <span class="message-rating">${'★'.repeat(m.rating)}${'☆'.repeat(5-m.rating)}</span>
+            </div>
+            <div class="message-text">${m.text}</div>
+            <div class="message-footer">
+                <span><i class="fa fa-calendar"></i> ${m.date}</span>
+                ${m.therapistName ? `<span><i class="fa fa-user-md"></i> ${m.therapistName}</span>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+export function renderMessagesTable() {
+    const tb = document.getElementById('messagesTableBody');
+    if (!tb) return;
+
+    tb.innerHTML = [...state.messages].reverse().map(m => `
+        <tr>
+            <td>${m.date}</td>
+            <td>${m.name}</td>
+            <td>${m.therapistName || 'General'}</td>
+            <td>${'★'.repeat(m.rating)}</td>
+            <td>${m.text.substring(0, 50)}${m.text.length > 50 ? '...' : ''}</td>
+            <td>
+                ${m.email ? `<i class="fa fa-envelope"></i> ` : ''}
+                ${m.whatsapp ? `<i class="fab fa-whatsapp"></i>` : ''}
+            </td>
+            <td>
+                <button onclick="deleteMessage(${m.id})" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+export function deleteMessage(id) {
+    if (confirm('¿Eliminar este mensaje?')) {
+        state.messages = state.messages.filter(m => m.id != id);
+        import('./main.js').then(main => main.save());
+        renderMessagesTable();
+        showToast('Mensaje eliminado', 'success');
+    }
+}
+
+export function updateMarquee() {
+    const marquee = document.getElementById('marqueeContent');
+    if (!marquee) return;
+
+    const allMessages = [...state.messages, ...state.messages, ...state.messages].slice(0, 15);
+    
+    marquee.innerHTML = allMessages.map(m => `
+        <div class="marquee-item">
+            <i class="fa fa-quote-right"></i>
+            <span>${m.name}: "${m.text.substring(0, 40)}${m.text.length > 40 ? '...' : ''}"</span>
+            <span class="stars">${'★'.repeat(m.rating)}</span>
+        </div>
+    `).join('');
+}

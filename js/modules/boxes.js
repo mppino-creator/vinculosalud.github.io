@@ -1,232 +1,205 @@
-// js/modules/disponibilidad.js
+// js/modules/boxes.js
+import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast } from './utils.js';
 
-export function showAvailabilityModal() {
-    document.getElementById('availabilityModal').style.display = 'flex';
+export function renderBoxOccupancy() {
+    const container = document.getElementById('boxOccupancy');
+    if (!container) return;
 
-    const today = new Date();
-    const nextWeek = new Date();
-    nextWeek.setDate(today.getDate() + 7);
+    const today = new Date().toISOString().split('T')[0];
+    const todayAppointments = state.appointments.filter(a => a.date === today && a.type === 'presencial' && a.status === 'confirmada');
 
-    document.getElementById('rangeStartDate').value = today.toISOString().split('T')[0];
-    document.getElementById('rangeEndDate').value = nextWeek.toISOString().split('T')[0];
-
-    if (state.currentUser?.data) {
-        document.getElementById('sessionDuration').value = state.currentUser.data.sessionDuration || 45;
-        document.getElementById('breakBetween').value = state.currentUser.data.breakBetween || 10;
-    }
-
-    generateTimeSlots();
-}
-
-export function closeAvailabilityModal() {
-    document.getElementById('availabilityModal').style.display = 'none';
-}
-
-export function toggleWeekday(day) {
-    const element = event.target;
-    if (state.selectedWeekdays.includes(day)) {
-        state.setSelectedWeekdays(state.selectedWeekdays.filter(d => d !== day));
-        element.classList.remove('selected');
-    } else {
-        state.setSelectedWeekdays([...state.selectedWeekdays, day]);
-        element.classList.add('selected');
-    }
-}
-
-export function generateTimeSlots() {
-    const start = document.getElementById('startTime').value;
-    const end = document.getElementById('endTime').value;
-    const duration = parseInt(document.getElementById('sessionDuration').value);
-    const breakTime = parseInt(document.getElementById('breakBetween').value);
-
-    if (!start || !end) {
-        showToast('Define horario de inicio y fin', 'error');
+    if (todayAppointments.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding:20px;">No hay boxes ocupados hoy</p>';
         return;
     }
 
-    const [startHour, startMin] = start.split(':').map(Number);
-    const [endHour, endMin] = end.split(':').map(Number);
+    const sortedApps = todayAppointments.sort((a, b) => a.time.localeCompare(b.time));
 
-    let currentMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-    const slotDuration = duration + breakTime;
-
-    const slots = [];
-    while (currentMinutes + duration <= endMinutes) {
-        const hour = Math.floor(currentMinutes / 60);
-        const minute = currentMinutes % 60;
-        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push({ time: timeStr, isOvercupo: false });
-        currentMinutes += slotDuration;
-    }
-    state.setGeneratedSlots(slots);
-    renderGeneratedSlots();
+    container.innerHTML = sortedApps.map(a => {
+        const box = state.boxes.find(b => b.id == a.boxId);
+        return `
+            <div class="schedule-item">
+                <span class="schedule-time">${a.time}</span>
+                <span class="schedule-professional"><strong>${a.psych}</strong> - ${a.patient}</span>
+                <span class="schedule-box">${box ? box.name : 'Box no asignado'}</span>
+            </div>
+        `;
+    }).join('');
 }
 
-function renderGeneratedSlots() {
-    const container = document.getElementById('generatedTimeSlots');
-    container.innerHTML = '';
-    state.generatedSlots.forEach(slot => {
-        const slotDiv = document.createElement('div');
-        slotDiv.className = `time-slot selected`;
-        slotDiv.textContent = slot.time;
-        slotDiv.onclick = () => toggleGeneratedSlot(slot.time);
-        container.appendChild(slotDiv);
+export function showBoxModal() {
+    document.getElementById('boxModal').style.display = 'flex';
+    document.getElementById('boxName').value = '';
+    document.getElementById('boxLocation').value = '';
+    document.getElementById('boxStartTime').value = '09:00';
+    document.getElementById('boxEndTime').value = '20:00';
+    document.getElementById('boxDescription').value = '';
+    document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
+    [1,2,3,4,5].forEach(d => {
+        const cb = document.querySelector(`.box-day[value="${d}"]`);
+        if (cb) cb.checked = true;
     });
+    document.getElementById('saveBoxBtn').onclick = saveBox;
 }
 
-function toggleGeneratedSlot(time) {
-    const index = state.generatedSlots.findIndex(s => s.time === time);
-    if (index !== -1) {
-        const slots = [...state.generatedSlots];
-        slots.splice(index, 1);
-        state.setGeneratedSlots(slots);
-    } else {
-        state.setGeneratedSlots([...state.generatedSlots, { time, isOvercupo: false }]);
-    }
-    renderGeneratedSlots();
+export function closeBoxModal() {
+    document.getElementById('boxModal').style.display = 'none';
 }
 
-export function blockTimeRange() {
-    const startTime = document.getElementById('blockStartTime').value;
-    const endTime = document.getElementById('blockEndTime').value;
+export function saveBox() {
+    const name = document.getElementById('boxName').value;
+    const location = document.getElementById('boxLocation').value;
+    const startTime = document.getElementById('boxStartTime').value;
+    const endTime = document.getElementById('boxEndTime').value;
+    const description = document.getElementById('boxDescription').value;
+    const days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
 
-    if (!startTime || !endTime) {
-        showToast('Selecciona hora de inicio y fin', 'error');
+    if (!name || !startTime || !endTime || days.length === 0) {
+        showToast('Nombre, horario y días son obligatorios', 'error');
         return;
     }
 
-    const slots = state.generatedSlots.filter(slot => slot.time < startTime || slot.time >= endTime);
-    state.setGeneratedSlots(slots);
-    renderGeneratedSlots();
-    showToast('Rango de horas eliminado', 'success');
+    const newBox = {
+        id: Date.now(),
+        name,
+        location,
+        startTime,
+        endTime,
+        days,
+        description,
+        active: true
+    };
+
+    state.boxes.push(newBox);
+    import('./main.js').then(main => main.save());
+    closeBoxModal();
+    renderBoxesTable();
+    showToast('Box guardado correctamente', 'success');
 }
 
-export function applyGeneratedSlots() {
-    const startDate = new Date(document.getElementById('rangeStartDate').value);
-    const endDate = new Date(document.getElementById('rangeEndDate').value);
+export function renderBoxesTable() {
+    const tbModal = document.getElementById('boxTableBody');
+    const tbDashboard = document.getElementById('boxTableBodyDashboard');
 
-    if (!startDate || !endDate) {
-        showToast('Selecciona rango de fechas', 'error');
-        return;
-    }
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
 
-    const weekdayMap = { 'Lun': 1, 'Mar': 2, 'Mie': 3, 'Jue': 4, 'Vie': 5, 'Sab': 6, 'Dom': 0 };
-    const selectedDayNumbers = state.selectedWeekdays.map(d => weekdayMap[d]);
+    const rows = state.boxes.map(b => {
+        const daysStr = b.days.map(d => dayNames[d]).join(', ');
+        return `
+            <tr>
+                <td><strong>${b.name}</strong></td>
+                <td>${b.location || '—'}</td>
+                <td>${b.startTime} - ${b.endTime}</td>
+                <td>${daysStr}</td>
+                <td><span class="badge" style="background:${b.active ? 'var(--verde-exito)' : 'var(--text-light)'}; color:white;">${b.active ? 'Activo' : 'Inactivo'}</span></td>
+                <td>
+                    <button onclick="editBox(${b.id})" class="btn-icon" style="background:var(--azul-medico); color:white;">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button onclick="toggleBoxStatus(${b.id})" class="btn-icon" style="background:var(--naranja-aviso); color:white;">
+                        <i class="fa ${b.active ? 'fa-ban' : 'fa-check'}"></i>
+                    </button>
+                    <button onclick="deleteBox(${b.id})" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 
-    if (!state.currentUser.data.availability) state.currentUser.data.availability = {};
+    if (tbModal) tbModal.innerHTML = rows;
+    if (tbDashboard) tbDashboard.innerHTML = rows;
+}
 
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split('T')[0];
-        const dayOfWeek = d.getDay();
+export function editBox(id) {
+    const box = state.boxes.find(b => b.id == id);
+    if (!box) return;
 
-        if (selectedDayNumbers.includes(dayOfWeek)) {
-            if (!state.currentUser.data.availability[dateStr]) state.currentUser.data.availability[dateStr] = [];
+    document.getElementById('boxName').value = box.name;
+    document.getElementById('boxLocation').value = box.location || '';
+    document.getElementById('boxStartTime').value = box.startTime;
+    document.getElementById('boxEndTime').value = box.endTime;
+    document.getElementById('boxDescription').value = box.description || '';
 
-            state.generatedSlots.forEach(slot => {
-                if (!state.currentUser.data.availability[dateStr].some(s => s.time === slot.time)) {
-                    state.currentUser.data.availability[dateStr].push(slot);
-                }
-            });
-        }
-    }
+    document.querySelectorAll('.box-day').forEach(cb => cb.checked = false);
+    box.days.forEach(d => {
+        const cb = document.querySelector(`.box-day[value="${d}"]`);
+        if (cb) cb.checked = true;
+    });
 
-    const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
-    if (staffIndex !== -1) state.staff[staffIndex].availability = state.currentUser.data.availability;
+    document.getElementById('saveBoxBtn').onclick = () => updateBox(id);
+    document.getElementById('boxModal').style.display = 'flex';
+}
+
+export function updateBox(id) {
+    const box = state.boxes.find(b => b.id == id);
+    if (!box) return;
+
+    box.name = document.getElementById('boxName').value;
+    box.location = document.getElementById('boxLocation').value;
+    box.startTime = document.getElementById('boxStartTime').value;
+    box.endTime = document.getElementById('boxEndTime').value;
+    box.description = document.getElementById('boxDescription').value;
+    box.days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
 
     import('./main.js').then(main => main.save());
-    closeAvailabilityModal();
-    loadTimeSlots();
-    showToast('Horarios aplicados', 'success');
+    closeBoxModal();
+    renderBoxesTable();
+    showToast('Box actualizado', 'success');
 }
 
-export function clearAllSlots() {
-    if (confirm('¿Eliminar toda la disponibilidad?')) {
-        state.currentUser.data.availability = {};
-        const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
-        if (staffIndex !== -1) state.staff[staffIndex].availability = {};
+export function toggleBoxStatus(id) {
+    const box = state.boxes.find(b => b.id == id);
+    if (box) {
+        box.active = !box.active;
         import('./main.js').then(main => main.save());
-        closeAvailabilityModal();
-        showToast('Disponibilidad eliminada', 'success');
+        renderBoxesTable();
+        showToast(`Box ${box.active ? 'activado' : 'desactivado'}`, 'success');
     }
 }
 
-export function loadTimeSlots() {
-    const date = document.getElementById('availDate').value;
-    if (!date || !state.currentUser?.data) return;
+export function deleteBox(id) {
+    if (confirm('¿Eliminar este box? Las citas asociadas quedarán sin box asignado.')) {
+        state.setBoxes(state.boxes.filter(b => b.id != id));
+        state.appointments.forEach(a => {
+            if (a.boxId == id) a.boxId = null;
+        });
+        import('./main.js').then(main => main.save());
+        renderBoxesTable();
+        showToast('Box eliminado', 'success');
+    }
+}
 
-    const container = document.getElementById('timeSlotsContainer');
-    const currentAvailability = state.currentUser.data.availability || {};
-    const selectedSlots = currentAvailability[date] || [];
-    const showOvercupo = document.getElementById('showOvercupo')?.checked || false;
+// ✅ FUNCIÓN EXPORTADA - esta es la clave para solucionar el error
+export function getAvailableBoxes(date, time) {
+    if (!date || !time) return [];
 
-    container.innerHTML = '';
+    const selectedDate = new Date(date);
+    const dayOfWeek = selectedDate.getDay();
 
-    selectedSlots.forEach(slot => {
-        if (!slot.isOvercupo || showOvercupo) {
-            const isBooked = state.appointments.some(a => 
-                a.psychId == state.currentUser.data.id && 
-                a.date === date && 
-                a.time === slot.time
-            );
+    return state.boxes.filter(box => {
+        if (!box.active) return false;
+        if (!box.days.includes(dayOfWeek)) return false;
 
-            const slotDiv = document.createElement('div');
-            slotDiv.className = `time-slot ${slot.isOvercupo ? 'overcupo' : ''} ${isBooked ? 'booked' : ''}`;
-            slotDiv.textContent = slot.time + (slot.isOvercupo ? ' (Sobrecupo)' : '');
+        const [boxStartHour, boxStartMin] = box.startTime.split(':').map(Number);
+        const [boxEndHour, boxEndMin] = box.endTime.split(':').map(Number);
+        const [appHour, appMin] = time.split(':').map(Number);
 
-            if (!isBooked) {
-                slotDiv.onclick = () => toggleTimeSlot(slot.time, slot.isOvercupo);
-            }
+        const boxStartMinutes = boxStartHour * 60 + boxStartMin;
+        const boxEndMinutes = boxEndHour * 60 + boxEndMin;
+        const appMinutes = appHour * 60 + appMin;
 
-            container.appendChild(slotDiv);
-        }
+        if (appMinutes < boxStartMinutes || appMinutes >= boxEndMinutes) return false;
+
+        const boxOccupied = state.appointments.some(a => 
+            a.boxId == box.id && 
+            a.date === date && 
+            a.time === time &&
+            a.status === 'confirmada'
+        );
+
+        return !boxOccupied;
     });
-}
-
-function toggleTimeSlot(time, isOvercupo = false) {
-    if (!state.currentUser?.data) return;
-
-    const date = document.getElementById('availDate').value;
-    if (!date) {
-        showToast('Selecciona una fecha', 'warning');
-        return;
-    }
-
-    if (!state.currentUser.data.availability) state.currentUser.data.availability = {};
-    if (!state.currentUser.data.availability[date]) state.currentUser.data.availability[date] = [];
-
-    const index = state.currentUser.data.availability[date].findIndex(s => s.time === time);
-    if (index === -1) {
-        state.currentUser.data.availability[date].push({ time, isOvercupo });
-    } else {
-        state.currentUser.data.availability[date].splice(index, 1);
-    }
-
-    const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
-    if (staffIndex !== -1) state.staff[staffIndex].availability = state.currentUser.data.availability;
-
-    loadTimeSlots();
-}
-
-export function addOvercupo() {
-    const date = document.getElementById('availDate').value;
-    if (!date) {
-        showToast('Selecciona una fecha', 'error');
-        return;
-    }
-
-    const time = prompt('Ingresa horario para sobrecupo (HH:MM):');
-    if (time && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
-        toggleTimeSlot(time, true);
-        showToast('Sobrecupo agregado', 'success');
-    } else if (time) {
-        showToast('Formato inválido', 'error');
-    }
-}
-
-export function saveAvailability() {
-    import('./main.js').then(main => main.save());
-    showToast('Disponibilidad guardada', 'success');
 }

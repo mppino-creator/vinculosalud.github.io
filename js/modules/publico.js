@@ -4,6 +4,10 @@ import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
 import { renderMessages, updateMarquee } from './mensajes.js';
 
+// ============================================
+// FUNCIONES DE FILTRADO Y VISTA PÚBLICA
+// ============================================
+
 export function filterProfessionals() {
     const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
@@ -104,7 +108,12 @@ function getAverageRating(psychId) {
     return psychMessages.reduce((sum, m) => sum + m.rating, 0) / psychMessages.length;
 }
 
+// ============================================
+// CARGA INICIAL DE DATOS
+// ============================================
+
 export function cargarDatosIniciales() {
+    // Mostrar un indicador de carga
     document.getElementById('publicGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Cargando profesionales...</p></div>';
     
     db.ref('Staff').once('value', (snapshot) => {
@@ -112,6 +121,7 @@ export function cargarDatosIniciales() {
         if (data) {
             state.staff = Object.keys(data).map(key => {
                 const item = data[key];
+                
                 if (item.name && item.pass && !item.usuario && !item.user) {
                     return {
                         id: key,
@@ -163,6 +173,7 @@ export function cargarDatosIniciales() {
             state.staff = [];
         }
         
+        // Agregar administrador
         state.staff.push({
             id: '9999',
             name: 'Administrador',
@@ -193,6 +204,9 @@ export function cargarDatosIniciales() {
         }
         
         state.dataLoaded = true;
+    }).catch(error => {
+        console.error("Error al cargar Staff:", error);
+        showToast("Error al cargar profesionales", "error");
     });
     
     db.ref('Boxes').on('value', (snapshot) => {
@@ -208,7 +222,7 @@ export function cargarDatosIniciales() {
         if (state.currentUser?.role === 'psych') {
             import('./boxes.js').then(mod => mod.renderBoxOccupancy());
         }
-    });
+    }).catch(error => console.error("Error al cargar Boxes:", error));
     
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -220,7 +234,7 @@ export function cargarDatosIniciales() {
         if (state.currentUser) {
             import('./pacientes.js').then(mod => mod.renderPatients());
         }
-    });
+    }).catch(error => console.error("Error al cargar Patients:", error));
     
     db.ref('Appointments').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -236,7 +250,7 @@ export function cargarDatosIniciales() {
         if (state.currentUser?.role === 'psych') {
             import('./boxes.js').then(mod => mod.renderBoxOccupancy());
         }
-    });
+    }).catch(error => console.error("Error al cargar Appointments:", error));
     
     db.ref('PendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -248,7 +262,7 @@ export function cargarDatosIniciales() {
         if (state.currentUser) {
             import('./citas.js').then(mod => mod.renderPendingRequests());
         }
-    });
+    }).catch(error => console.error("Error al cargar PendingRequests:", error));
     
     db.ref('Messages').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -266,11 +280,11 @@ export function cargarDatosIniciales() {
         if (state.currentUser?.role === 'admin') {
             import('./mensajes.js').then(mod => mod.renderMessagesTable());
         }
-    });
+    }).catch(error => console.error("Error al cargar Messages:", error));
 
-    import('./personalizacion.js').then(mod => mod.cargarEspecialidades());
-    import('./personalizacion.js').then(mod => mod.cargarMetodosPago());
-    import('./personalizacion.js').then(mod => mod.cargarFondo());
-    import('./personalizacion.js').then(mod => mod.cargarTextos());
-    import('./personalizacion.js').then(mod => mod.cargarLogo());
+    import('./personalizacion.js').then(mod => mod.cargarEspecialidades()).catch(e => console.error("Error cargando especialidades:", e));
+    import('./personalizacion.js').then(mod => mod.cargarMetodosPago()).catch(e => console.error("Error cargando métodos de pago:", e));
+    import('./personalizacion.js').then(mod => mod.cargarFondo()).catch(e => console.error("Error cargando fondo:", e));
+    import('./personalizacion.js').then(mod => mod.cargarTextos()).catch(e => console.error("Error cargando textos:", e));
+    import('./personalizacion.js').then(mod => mod.cargarLogo()).catch(e => console.error("Error cargando logo:", e));
 }

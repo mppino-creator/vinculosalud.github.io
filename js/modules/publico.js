@@ -4,11 +4,14 @@ import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
 import { renderMessages, updateMarquee } from './mensajes.js';
 
+console.log("✅ publico.js cargado");
+
 // ============================================
 // FUNCIONES DE FILTRADO Y VISTA PÚBLICA
 // ============================================
 
 export function filterProfessionals() {
+    console.log("🔍 filterProfessionals ejecutado");
     const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
     const availabilityFilter = document.getElementById('availabilityFilter')?.value || '';
@@ -42,12 +45,17 @@ export function filterProfessionals() {
     });
 
     filtered.sort((a, b) => a.name.localeCompare(b.name));
+    console.log(`🔍 Se encontraron ${filtered.length} profesionales después del filtro`);
     renderProfessionals(filtered);
 }
 
 export function renderProfessionals(professionals) {
+    console.log("🎨 renderProfessionals ejecutado con", professionals.length, "profesionales");
     const grid = document.getElementById('publicGrid');
-    if (!grid) return;
+    if (!grid) {
+        console.error("❌ No se encontró el elemento publicGrid");
+        return;
+    }
 
     if (professionals.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">No se encontraron profesionales</div>';
@@ -100,6 +108,7 @@ export function renderProfessionals(professionals) {
             </div>
         `;
     }).join('');
+    console.log("✅ renderProfessionals completado");
 }
 
 function getAverageRating(psychId) {
@@ -113,11 +122,20 @@ function getAverageRating(psychId) {
 // ============================================
 
 export function cargarDatosIniciales() {
-    // Mostrar un indicador de carga
-    document.getElementById('publicGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Cargando profesionales...</p></div>';
+    console.log("🚀 cargarDatosIniciales ejecutado");
+    const grid = document.getElementById('publicGrid');
+    if (grid) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Cargando profesionales...</p></div>';
+    } else {
+        console.error("❌ No se encontró publicGrid en cargarDatosIniciales");
+    }
     
+    console.log("📡 Solicitando datos de Staff a Firebase...");
     db.ref('Staff').once('value', (snapshot) => {
+        console.log("📥 Respuesta de Staff recibida");
         const data = snapshot.val();
+        console.log("📊 Datos de Staff:", data ? "hay datos" : "no hay datos");
+        
         if (data) {
             state.staff = Object.keys(data).map(key => {
                 const item = data[key];
@@ -198,17 +216,20 @@ export function cargarDatosIniciales() {
             paymentLinks: { online: '', presencial: '', qrCode: '' }
         });
         
+        console.log(`👥 staff cargado: ${state.staff.length} profesionales`);
         filterProfessionals();
+        
         if (state.currentUser?.role === 'admin') {
-            import('./profesionales.js').then(mod => mod.renderStaffTable());
+            import('./profesionales.js').then(mod => mod.renderStaffTable()).catch(e => console.error("Error importando profesionales:", e));
         }
         
         state.dataLoaded = true;
     }).catch(error => {
-        console.error("Error al cargar Staff:", error);
+        console.error("❌ Error al cargar Staff:", error);
         showToast("Error al cargar profesionales", "error");
     });
     
+    // El resto de llamadas (Boxes, Patients, etc.) pueden seguir igual
     db.ref('Boxes').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -217,12 +238,12 @@ export function cargarDatosIniciales() {
             state.boxes = [];
         }
         if (state.currentUser?.role === 'admin') {
-            import('./boxes.js').then(mod => mod.renderBoxesTable());
+            import('./boxes.js').then(mod => mod.renderBoxesTable()).catch(e => console.error("Error importando boxes:", e));
         }
         if (state.currentUser?.role === 'psych') {
-            import('./boxes.js').then(mod => mod.renderBoxOccupancy());
+            import('./boxes.js').then(mod => mod.renderBoxOccupancy()).catch(e => console.error("Error importando boxes psych:", e));
         }
-    }).catch(error => console.error("Error al cargar Boxes:", error));
+    }).catch(error => console.error("❌ Error al cargar Boxes:", error));
     
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -232,9 +253,9 @@ export function cargarDatosIniciales() {
             state.patients = [];
         }
         if (state.currentUser) {
-            import('./pacientes.js').then(mod => mod.renderPatients());
+            import('./pacientes.js').then(mod => mod.renderPatients()).catch(e => console.error("Error importando pacientes:", e));
         }
-    }).catch(error => console.error("Error al cargar Patients:", error));
+    }).catch(error => console.error("❌ Error al cargar Patients:", error));
     
     db.ref('Appointments').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -244,13 +265,13 @@ export function cargarDatosIniciales() {
             state.appointments = [];
         }
         if (state.currentUser) {
-            import('./auth.js').then(mod => mod.updateStats());
-            import('./citas.js').then(mod => mod.renderPendingRequests());
+            import('./auth.js').then(mod => mod.updateStats()).catch(e => console.error("Error importando auth:", e));
+            import('./citas.js').then(mod => mod.renderPendingRequests()).catch(e => console.error("Error importando citas:", e));
         }
         if (state.currentUser?.role === 'psych') {
-            import('./boxes.js').then(mod => mod.renderBoxOccupancy());
+            import('./boxes.js').then(mod => mod.renderBoxOccupancy()).catch(e => console.error("Error importando boxes psych:", e));
         }
-    }).catch(error => console.error("Error al cargar Appointments:", error));
+    }).catch(error => console.error("❌ Error al cargar Appointments:", error));
     
     db.ref('PendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -260,9 +281,9 @@ export function cargarDatosIniciales() {
             state.pendingRequests = [];
         }
         if (state.currentUser) {
-            import('./citas.js').then(mod => mod.renderPendingRequests());
+            import('./citas.js').then(mod => mod.renderPendingRequests()).catch(e => console.error("Error importando citas:", e));
         }
-    }).catch(error => console.error("Error al cargar PendingRequests:", error));
+    }).catch(error => console.error("❌ Error al cargar PendingRequests:", error));
     
     db.ref('Messages').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -278,9 +299,9 @@ export function cargarDatosIniciales() {
         renderMessages();
         updateMarquee();
         if (state.currentUser?.role === 'admin') {
-            import('./mensajes.js').then(mod => mod.renderMessagesTable());
+            import('./mensajes.js').then(mod => mod.renderMessagesTable()).catch(e => console.error("Error importando mensajes:", e));
         }
-    }).catch(error => console.error("Error al cargar Messages:", error));
+    }).catch(error => console.error("❌ Error al cargar Messages:", error));
 
     import('./personalizacion.js').then(mod => mod.cargarEspecialidades()).catch(e => console.error("Error cargando especialidades:", e));
     import('./personalizacion.js').then(mod => mod.cargarMetodosPago()).catch(e => console.error("Error cargando métodos de pago:", e));

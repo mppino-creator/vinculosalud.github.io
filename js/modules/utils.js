@@ -2,19 +2,24 @@
 import * as state from './state.js';
 
 // ============================================
-// CONFIGURACIÓN DE EMAILJS
+// CONFIGURACIÓN DE EMAILJS (TUS DATOS REALES)
 // ============================================
 const EMAILJS_SERVICE_ID = 'vinculo_salud';
-const EMAILJS_TEMPLATE_ID = 'template_abc123'; // ← PON EL NUEVO ID
+const EMAILJS_TEMPLATE_ID = 'template_0cl1i1h'; // ← NUEVO TEMPLATE ID
 const EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
 
 // ============================================
-// FUNCIÓN PARA ENVIAR EMAILS (VERSIÓN DEFINITIVA)
+// FUNCIÓN PARA ENVIAR EMAILS CON EMAILJS (VERSIÓN DEFINITIVA)
 // ============================================
 export async function sendEmailNotification(to, subject, message, tipo = 'general') {
-  console.log(`📧 Enviando email a: ${to}`);
+  console.log(`📧 Enviando email a: ${to} (${tipo})`);
   
   try {
+    // Verificar que emailjs esté disponible
+    if (typeof emailjs === 'undefined') {
+      throw new Error('EmailJS no está cargado. Verifica que el script esté en index.html');
+    }
+    
     // Limpiar el mensaje de caracteres problemáticos
     const mensajeLimpio = (message || 'Sin observaciones')
       .replace(/[<>]/g, '')        // Eliminar < y >
@@ -23,6 +28,7 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
       .replace(/\s+/g, ' ')         // Múltiples espacios a uno
       .trim();
 
+    // Preparar parámetros
     const templateParams = {
       to_email: to,
       patient_name: to.split('@')[0] || 'Paciente',
@@ -34,8 +40,9 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
       message: mensajeLimpio
     };
 
-    console.log('📤 Enviando:', templateParams);
+    console.log('📤 Enviando con EmailJS...', templateParams);
 
+    // Enviar usando EmailJS
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
@@ -43,26 +50,28 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
       EMAILJS_USER_ID
     );
 
-    console.log('✅ Email enviado:', response);
+    console.log('✅ Email enviado correctamente:', response);
     
-    // Mostrar en interfaz
+    // Mostrar en la interfaz
     const emailDiv = document.getElementById('emailSimulation');
     if (emailDiv) {
-      emailDiv.innerHTML = `<strong>📧 Email enviado a ${to}</strong>`;
+      emailDiv.innerHTML = `<strong>📧 Email enviado a ${to}</strong><br>${subject}`;
       emailDiv.style.display = 'block';
-      setTimeout(() => emailDiv.style.display = 'none', 5000);
+      setTimeout(() => { emailDiv.style.display = 'none'; }, 5000);
     }
     
     return true;
     
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('❌ Error enviando email:', error);
+    // Mostrar más detalles si existen
+    if (error.text) console.error('Texto del error:', error.text);
     return false;
   }
 }
 
 // ============================================
-// RESTO DE FUNCIONES (sin cambios)
+// RESTO DE FUNCIONES (formatRut, validarRut, showToast, getPublicStaff)
 // ============================================
 export function formatRut(input) {
   let value = input.value.replace(/[^0-9kK]/g, '');

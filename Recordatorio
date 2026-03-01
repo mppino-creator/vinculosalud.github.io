@@ -154,7 +154,7 @@ if (method === 'card-online' || method === 'card-presencial') {
 ### 4. `js/modules/utils.js` (fragmento clave - EmailJS)
 ```javascript
 const EMAILJS_SERVICE_ID = 'vinculo_salud';
-const EMAILJS_TEMPLATE_ID = 'template_dhhwp7d';
+const EMAILJS_TEMPLATE_ID = 'template_0cl1i1h';
 const EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
 
 export async function sendEmailNotification(to, subject, message, tipo = 'general') {

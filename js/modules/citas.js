@@ -543,13 +543,6 @@ export function executeBooking() {
     }, 1500);
 }
 
-// Función para enviar emails de solicitud (ya no se usa directamente, pero la mantenemos por si acaso)
-function sendRequestEmail(request) {
-    // Esta función ya no se usa porque los emails se envían directamente en executeBooking
-    // La dejamos para no romper código existente
-    console.log("📧 Función sendRequestEmail reemplazada por envío directo en executeBooking");
-}
-
 // ============================================
 // FUNCIONES PARA EL PANEL DEL PROFESIONAL
 // ============================================

@@ -73,15 +73,70 @@ export function setHeroTexts(newTexts) { heroTexts = newTexts; }
 export function setGlobalPaymentMethods(newMethods) { globalPaymentMethods = newMethods; }
 export function setBackgroundImage(newImg) { backgroundImage = newImg; }
 export function setLogoImage(newLogo) { logoImage = newLogo; }
+
+// ============================================
+// FUNCIÓN setCurrentUser CORREGIDA (con manejo de errores de localStorage)
+// ============================================
 export function setCurrentUser(user) { 
     currentUser = user; 
-    // Guardar en localStorage para persistencia
+    
+    // Guardar en localStorage con manejo de errores
     if (user) {
-        localStorage.setItem('vinculoCurrentUser', JSON.stringify(user));
+        try {
+            // Limitar los datos guardados (solo lo esencial para no llenar localStorage)
+            const userToStore = {
+                role: user.role,
+                data: {
+                    id: user.data.id,
+                    name: user.data.name,
+                    email: user.data.email,
+                    isAdmin: user.data.isAdmin || false,
+                    usuario: user.data.usuario || '',
+                    // No guardar datos grandes como availability, paymentLinks, etc.
+                }
+            };
+            
+            // Intentar guardar
+            localStorage.setItem('vinculoCurrentUser', JSON.stringify(userToStore));
+            console.log('✅ Usuario guardado en localStorage');
+        } catch (e) {
+            if (e.name === 'QuotaExceededError') {
+                console.warn('⚠️ localStorage lleno, limpiando espacio...');
+                
+                // Limpiar SOLO items de Vínculo Salud (no afecta otras páginas)
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('vinculo')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                console.log(`✅ Eliminados ${keysToRemove.length} items de Vínculo Salud del localStorage`);
+                
+                // Reintentar guardar
+                try {
+                    localStorage.setItem('vinculoCurrentUser', JSON.stringify(userToStore));
+                    console.log('✅ Usuario guardado después de limpiar');
+                } catch (err) {
+                    console.error('❌ No se pudo guardar en localStorage incluso después de limpiar');
+                    // El usuario sigue existiendo en memoria, solo no se persiste
+                }
+            } else {
+                console.error('❌ Error guardando en localStorage:', e);
+            }
+        }
     } else {
-        localStorage.removeItem('vinculoCurrentUser');
+        // Eliminar usuario de localStorage al hacer logout
+        try {
+            localStorage.removeItem('vinculoCurrentUser');
+        } catch (e) {
+            console.warn('⚠️ Error al eliminar de localStorage:', e);
+        }
     }
 }
+
 export function setSelectedPsych(psych) { selectedPsych = psych; }
 export function setCurrentRating(rating) { currentRating = rating; }
 export function setGeneratedSlots(slots) { generatedSlots = slots; }
@@ -247,7 +302,12 @@ export function resetAllState() {
         }
     };
     
-    localStorage.removeItem('vinculoCurrentUser');
+    // Limpiar localStorage
+    try {
+        localStorage.removeItem('vinculoCurrentUser');
+    } catch (e) {
+        console.warn('Error al limpiar localStorage:', e);
+    }
 }
 
 // Función para obtener un resumen del estado (útil para debugging)
@@ -366,5 +426,19 @@ if (typeof window !== 'undefined') {
     window.estado = function() {
         console.table(state.getStateSummary());
         return state.getStateSummary();
+    };
+    
+    // Función para limpiar localStorage manualmente si es necesario
+    window.limpiarStorage = function() {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('vinculo')) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log(`✅ Eliminados ${keysToRemove.length} items de Vínculo Salud`);
+        return keysToRemove.length;
     };
 }

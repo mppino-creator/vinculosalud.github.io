@@ -18,7 +18,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     
-    <!-- EmailJS SDK - AGREGADO -->
+    <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
        (function() {
@@ -808,10 +808,406 @@
         </div>
     </div>
 
-    <!-- Panel de Dashboard -->
+    <!-- Panel de Dashboard COMPLETO -->
     <div id="dashboard" class="panel">
-        <!-- ... contenido del dashboard (se mantiene igual) ... -->
-        <!-- Por brevedad no repito todo el dashboard, pero debe estar completo como en tu archivo -->
+        <div class="dashboard-header">
+            <div>
+                <h2 id="dashTitle">Panel de Gestión</h2>
+                <p id="dashSubtitle">Bienvenido al sistema</p>
+            </div>
+            <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="logout()">Cerrar Sesión</button>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-item">
+                <p>Ingresos del Mes</p>
+                <h4 id="statIncome">$0</h4>
+            </div>
+            <div class="stat-item">
+                <p>Total Citas</p>
+                <h4 id="statCitas">0</h4>
+            </div>
+            <div class="stat-item">
+                <p>Pacientes Activos</p>
+                <h4 id="statPatients">0</h4>
+            </div>
+        </div>
+
+        <div class="tabs" id="dashboardTabs">
+            <div class="tab active" onclick="switchTab('citas')">Citas</div>
+            <div class="tab" onclick="switchTab('solicitudes')">Solicitudes Pendientes</div>
+            <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
+            <div class="tab" id="adminTabProfesionales" style="display:none;" onclick="switchTab('profesionales')">Profesionales</div>
+            <div class="tab" id="adminTabEspecialidades" style="display:none;" onclick="switchTab('especialidades')">Especialidades</div>
+            <div class="tab" id="adminTabPagos" style="display:none;" onclick="switchTab('pagos')">Métodos de Pago</div>
+            <div class="tab" id="adminTabFondo" style="display:none;" onclick="switchTab('fondo')">Fondo</div>
+            <div class="tab" id="adminTabTextos" style="display:none;" onclick="switchTab('textos')">Textos</div>
+            <div class="tab" id="adminTabLogo" style="display:none;" onclick="switchTab('logo')">Logo</div>
+            <div class="tab" id="adminTabReinicio" style="display:none;" onclick="switchTab('reinicio')">🔄 Reinicio</div>
+            <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
+            <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
+            <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
+            <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
+            <div class="tab" id="agendarTab" style="display:none;" onclick="switchTab('agendar')">Agendar Cita</div>
+        </div>
+
+        <!-- Contenido de las pestañas -->
+        <div id="tabCitas" class="tab-content active">
+            <h3>Citas Confirmadas</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Paciente</th><th>Especialista</th><th>Fecha / Hora</th><th>Tipo</th><th>Box</th><th>Pago</th><th>Estado</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tabSolicitudes" class="tab-content">
+            <h3>Solicitudes Pendientes</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha Solicitud</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Box</th><th>Motivo</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingRequestsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tabPacientes" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3>Pacientes</h3>
+                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showNewPatientModal()">
+                    <i class="fa fa-plus"></i> Nuevo Paciente
+                </button>
+            </div>
+            <input type="text" class="filter-input" id="patientSearch" placeholder="Buscar paciente..." oninput="renderPatients()" style="width:100%; margin-bottom:15px;">
+            <div id="patientsList"></div>
+        </div>
+
+        <div id="tabProfesionales" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Profesionales</h3>
+                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showAddStaffModal()">
+                    <i class="fa fa-plus"></i> Nuevo Profesional
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Links Pago</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tabEspecialidades" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Especialidades</h3>
+                <button class="btn-staff" style="background:var(--azul-medico)" onclick="showSpecialtiesModal()">
+                    <i class="fa fa-gear"></i> Administrar
+                </button>
+            </div>
+            <div id="allSpecialtiesList" class="specialties-container"></div>
+        </div>
+
+        <div id="tabPagos" class="tab-content">
+            <h3>Métodos de Pago</h3>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showPaymentMethodsModal()">
+                Configurar Métodos de Pago
+            </button>
+            <div id="globalPaymentMethodsInfo" class="bank-details"></div>
+        </div>
+
+        <div id="tabFondo" class="tab-content">
+            <h3>Imagen de Fondo</h3>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showBackgroundImageModal()">
+                Configurar Fondo
+            </button>
+        </div>
+
+        <div id="tabTextos" class="tab-content">
+            <h3>Textos de Portada</h3>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showTextsModal()">
+                Editar Textos
+            </button>
+        </div>
+
+        <div id="tabLogo" class="tab-content">
+            <h3>Logo del Sitio</h3>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showLogoModal()">
+                Configurar Logo
+            </button>
+        </div>
+
+        <div id="tabReinicio" class="tab-content">
+            <h3 style="color: var(--rojo-alerta); margin-bottom: 20px;">⚠️ Panel de Reinicio - Solo Administrador</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div class="reinicio-card">
+                    <h4>🧑 Pacientes <span class="total-badge" id="totalPacientes">0</span></h4>
+                    <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%; margin-bottom: 10px;" onclick="eliminarTodosLosPacientes()">
+                        <i class="fa fa-trash"></i> Eliminar TODOS los pacientes
+                    </button>
+                    <button class="btn-staff" style="background: var(--naranja-aviso); width: 100%;" onclick="eliminarPacientesPrueba()">
+                        <i class="fa fa-eraser"></i> Eliminar solo pacientes de prueba
+                    </button>
+                </div>
+                <div class="reinicio-card">
+                    <h4>💬 Mensajes <span class="total-badge" id="totalMensajes">0</span></h4>
+                    <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%; margin-bottom: 10px;" onclick="eliminarTodosLosMensajes()">
+                        <i class="fa fa-trash"></i> Eliminar TODOS los mensajes
+                    </button>
+                    <button class="btn-staff" style="background: var(--naranja-aviso); width: 100%;" onclick="restaurarMensajesIniciales()">
+                        <i class="fa fa-refresh"></i> Restaurar mensajes iniciales
+                    </button>
+                </div>
+                <div class="reinicio-card">
+                    <h4>📅 Citas <span class="total-badge" id="totalCitas">0</span></h4>
+                    <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%; margin-bottom: 10px;" onclick="eliminarTodasLasCitas()">
+                        <i class="fa fa-trash"></i> Eliminar TODAS las citas
+                    </button>
+                    <button class="btn-staff" style="background: var(--naranja-aviso); width: 100%;" onclick="eliminarCitasPrueba()">
+                        <i class="fa fa-eraser"></i> Eliminar citas de prueba
+                    </button>
+                </div>
+                <div class="reinicio-card warning" style="grid-column: 1/-1;">
+                    <h4 style="color: var(--rojo-alerta);">🔥 Reinicio Completo del Sistema</h4>
+                    <p style="margin-bottom: 15px;">Esto eliminará TODOS los pacientes, mensajes, citas y solicitudes. Los profesionales se mantienen.</p>
+                    <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%;" onclick="reinicioCompleto()">
+                        <i class="fa fa-exclamation-triangle"></i> REINICIAR TODO EL SISTEMA
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tabDisponibilidad" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Disponibilidad</h3>
+                <button class="btn-staff" style="background:var(--azul-medico)" onclick="showAvailabilityModal()">
+                    Configuración Avanzada
+                </button>
+            </div>
+            <div class="form-group">
+                <label>Seleccionar Fecha</label>
+                <input type="date" id="availDate" onchange="loadTimeSlots()">
+            </div>
+            <div style="display:flex; justify-content:space-between; margin:20px 0;">
+                <h4>Horarios Disponibles</h4>
+                <label><input type="checkbox" id="showOvercupo" onchange="loadTimeSlots()"> Mostrar sobrecupo</label>
+            </div>
+            <div class="time-slots" id="timeSlotsContainer"></div>
+            <div style="display:flex; gap:15px; margin-top:20px;">
+                <button class="btn-staff" style="background:var(--verde-exito);" onclick="saveAvailability()">Guardar</button>
+                <button class="btn-staff" style="background:var(--naranja-aviso);" onclick="addOvercupo()">+ Sobrecupo</button>
+            </div>
+        </div>
+
+        <div id="tabConfiguracion" class="tab-content">
+            <h3>Mi Configuración</h3>
+            <div style="background:#f8fafc; padding:25px; border-radius:20px;">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="myName" disabled style="background:#f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="myEmail" disabled style="background:#f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label>Especialidades</label>
+                    <div id="mySpecialties" class="specialties-container"></div>
+                </div>
+                <h4 style="margin:25px 0 15px;">Precios</h4>
+                <div class="form-group">
+                    <label>Precio Online ($)</label>
+                    <input type="number" id="myPriceOnline">
+                </div>
+                <div class="form-group">
+                    <label>Precio Presencial ($)</label>
+                    <input type="number" id="myPricePresencial">
+                </div>
+                <h4 style="margin:25px 0 15px;">Redes Sociales</h4>
+                <div class="form-group">
+                    <label>WhatsApp</label>
+                    <input type="text" id="myWhatsapp">
+                </div>
+                <div class="form-group">
+                    <label>Instagram</label>
+                    <input type="text" id="myInstagram">
+                </div>
+                <h4 style="margin:25px 0 15px;">Datos Bancarios</h4>
+                <div class="form-group">
+                    <label>Banco</label>
+                    <input type="text" id="myBank">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Cuenta</label>
+                    <select id="myAccountType">
+                        <option value="corriente">Corriente</option>
+                        <option value="vista">Vista</option>
+                        <option value="ahorro">Ahorro</option>
+                        <option value="rut">RUT</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Número de Cuenta</label>
+                    <input type="text" id="myAccountNumber">
+                </div>
+                <div class="form-group">
+                    <label>RUT</label>
+                    <input type="text" id="myBankRut">
+                </div>
+                <div class="form-group">
+                    <label>Email transferencias</label>
+                    <input type="email" id="myBankEmail">
+                </div>
+                <h4 style="margin:25px 0 15px;">Métodos de Pago Aceptados</h4>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myTransfer" checked> <label>Transferencia</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myCardPresencial" checked> <label>Tarjeta presencial</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myCardOnline"> <label>Tarjeta online</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myCash" checked> <label>Efectivo</label>
+                </div>
+                <button class="btn-staff" style="background:var(--verde-exito); margin-top:20px;" onclick="saveMyConfig()">Guardar</button>
+            </div>
+        </div>
+
+        <div id="tabMensajes" class="tab-content">
+            <h3>Mensajes</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messagesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tabBoxes" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Boxes</h3>
+                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showBoxModal()">
+                    <i class="fa fa-plus"></i> Nuevo Box
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th><th>Ubicación</th><th>Horario</th><th>Días</th><th>Estado</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boxTableBodyDashboard"></tbody>
+                </table>
+            </div>
+            <div class="box-schedule" style="margin-top:30px;">
+                <h3 style="margin-bottom:15px;">📋 Ocupación de Boxes - Hoy</h3>
+                <div id="boxOccupancy"></div>
+            </div>
+        </div>
+
+        <div id="tabAgendar" class="tab-content">
+            <div class="dashboard-header">
+                <h2>Agendar Cita para Paciente</h2>
+                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showTherapistBookingModal()">
+                    <i class="fa fa-calendar-plus"></i> Nueva Cita
+                </button>
+            </div>
+            <div class="booking-grid">
+                <div>
+                    <h3>Buscar Paciente</h3><br>
+                    <div class="form-group">
+                        <label>RUT del Paciente</label>
+                        <input type="text" id="therapistRut" oninput="formatRut(this)" onblur="searchPatientByRutTherapist()">
+                    </div>
+                    <div id="patientInfo" style="display:none; background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:20px;">
+                        <h4>Datos del Paciente</h4>
+                        <p><strong>Nombre:</strong> <span id="patientInfoName"></span></p>
+                        <p><strong>Email:</strong> <span id="patientInfoEmail"></span></p>
+                        <p><strong>Teléfono:</strong> <span id="patientInfoPhone"></span></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Atención *</label>
+                        <select id="therapistAppointmentType" onchange="updateTherapistBookingDetails()">
+                            <option value="online">Online</option>
+                            <option value="presencial">Presencial</option>
+                        </select>
+                    </div>
+                    <div id="therapistBoxField" style="display:none;" class="address-input">
+                        <label>Seleccionar Box *</label>
+                        <div id="therapistBoxSelector" class="box-selector"></div>
+                        <p id="therapistBoxAvailabilityMsg" style="margin-top:10px; font-size:0.85rem; color:var(--text-light);"></p>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <div class="form-group">
+                            <label>Fecha *</label>
+                            <input type="date" id="therapistDate" onchange="updateTherapistAvailableSlots()">
+                        </div>
+                        <div class="form-group">
+                            <label>Hora *</label>
+                            <select id="therapistTime" onchange="updateTherapistBookingDetails()">
+                                <option value="">Selecciona una fecha</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notas</label>
+                        <textarea id="therapistMsg" rows="3"></textarea>
+                    </div>
+                    <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-top:15px;" onclick="executeTherapistBooking()" id="therapistBookBtn">
+                        Confirmar Cita
+                    </button>
+                </div>
+                <div class="glass" style="padding:30px; background: var(--azul-oscuro); color:white;">
+                    <h3 style="color:white;">Resumen de Cita</h3>
+                    <p id="therapistPsychName" style="font-size:1.2rem; margin-bottom:5px; color:white;"></p>
+                    <div style="display:flex; justify-content:space-between; margin-top:20px;">
+                        <span>Paciente</span> <span id="therapistPatientName">—</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Fecha</span> <span id="therapistDateDisplay">—</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Hora</span> <span id="therapistTimeDisplay">—</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Tipo</span> <span id="therapistTypeDisplay">Online</span>
+                    </div>
+                    <div id="therapistBoxDisplay" style="display:none; justify-content:space-between;">
+                        <span>Box</span> <span id="therapistBoxName"></span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Valor</span> <span id="therapistPrice">$0</span>
+                    </div>
+                    <div style="margin:20px 0;">
+                        <label style="color:white;">Método de Pago</label>
+                        <select id="therapistPaymentMethod" style="width:100%; padding:12px;">
+                            <option value="transfer">Transferencia</option>
+                            <option value="cash">Efectivo</option>
+                            <option value="card">Tarjeta</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -901,16 +1297,72 @@
         location.reload();
     };
 </script>
+
+<!-- Detectar dashboard desde URL -->
 <script>
     // Detectar si debemos mostrar el dashboard
-    if (window.location.hash === '#dashboard') {
-        // Pequeña pausa para asegurar que todo cargó
+    const urlParams = new URLSearchParams(window.location.search);
+    const dashboard = urlParams.get('dashboard');
+    
+    if (dashboard) {
+        // Ocultar vista pública
+        document.getElementById('clientView').style.display = 'none';
+        document.getElementById('bookingPanel').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        
+        if (dashboard === 'admin') {
+            document.getElementById('dashTitle').innerText = "Panel Administrador";
+            // Mostrar tabs de admin
+            const adminTabs = [
+                'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
+                'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
+                'messagesTab', 'boxesTab'
+            ];
+            adminTabs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'block';
+            });
+            
+            // Ocultar tabs de psicólogo
+            ['psychTab', 'configTab', 'agendarTab'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+        } else {
+            document.getElementById('dashTitle').innerText = "Panel de Psicólogo";
+            // Mostrar tabs de psicólogo
+            ['psychTab', 'configTab', 'agendarTab'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'block';
+            });
+            
+            // Ocultar tabs de admin
+            const adminTabs = [
+                'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
+                'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
+                'messagesTab', 'boxesTab'
+            ];
+            adminTabs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+        }
+        
+        // Activar pestaña de citas
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        const citasTab = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.trim() === 'Citas');
+        if (citasTab) citasTab.classList.add('active');
+        
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        const tabCitas = document.getElementById('tabCitas');
+        if (tabCitas) tabCitas.classList.add('active');
+        
+        // Limpiar URL
         setTimeout(() => {
-            if (typeof initDashboard === 'function') {
-                initDashboard();
-            }
-        }, 1000);
+            window.history.replaceState({}, document.title, '/');
+        }, 500);
     }
 </script>
+
 </body>
 </html>

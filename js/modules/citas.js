@@ -81,7 +81,7 @@ function loadPaymentMethods() {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR LINK DE PAGO INMEDIATAMENTE
+// FUNCIÓN PARA MOSTRAR LINK DE PAGO O DATOS BANCARIOS
 // ============================================
 export function showPaymentDetails() {
     const method = document.getElementById('paymentMethod')?.value;
@@ -97,7 +97,7 @@ export function showPaymentDetails() {
     // Si no hay método seleccionado, salir
     if (!method) return;
     
-    // Si es transferencia, mostrar datos bancarios
+    // CASO 1: TRANSFERENCIA BANCARIA - Mostrar datos bancarios
     if (method === 'transfer' && state.selectedPsych.bankDetails) {
         const bank = state.selectedPsych.bankDetails;
         detailsDiv.style.display = 'block';
@@ -114,8 +114,8 @@ export function showPaymentDetails() {
         `;
     }
     
-    // Si es pago con tarjeta, mostrar link de pago INMEDIATAMENTE
-    if (method === 'card-online' || method === 'card-presencial') {
+    // CASO 2: TARJETA (PAGO ONLINE) - Mostrar link de pago SumUp
+    if (method === 'card-online') {
         let paymentLink = '';
         let qrCode = '';
         
@@ -149,20 +149,20 @@ export function showPaymentDetails() {
 
             paymentContainer.innerHTML = `
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center; margin-top:20px;">
-                    <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 Pago con Tarjeta</h4>
+                    <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 Pago con Tarjeta Online</h4>
                     <p style="font-size: 1.2rem; margin-bottom:10px;">Atención: ${type === 'online' ? 'Online' : 'Presencial'}</p>
                     <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${price.toLocaleString()}</p>
                     
                     ${qrHtml}
                     
                     <a href="${personalizedLink}" target="_blank" class="btn-staff" style="background: var(--verde-exito); text-decoration: none; padding: 15px 40px; font-size:1.2rem; margin-top:15px; display:inline-block;">
-                        <i class="fab fa-cc-visa"></i> Pagar con Tarjeta
+                        <i class="fab fa-cc-visa"></i> Pagar con Tarjeta Ahora
                     </a>
                     <p style="margin-top:15px; font-size:0.9rem; opacity:0.8;">
                         <i class="fas fa-lock"></i> Pago seguro procesado por SumUp
                     </p>
                     <p style="margin-top:20px; font-size:0.8rem; background: rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
-                        ⏰ Una vez realizado el pago, la cita se confirmará automáticamente y recibirás un email.
+                        ⏰ Una vez realizado el pago, la cita se confirmará automáticamente.
                     </p>
                 </div>
             `;
@@ -171,12 +171,43 @@ export function showPaymentDetails() {
             paymentContainer.innerHTML = `
                 <div style="background: #fff3cd; padding: 20px; border-radius: 12px; color: #856404; margin-top:20px;">
                     <i class="fa fa-exclamation-triangle"></i>
-                    <strong>El profesional no ha configurado el link de pago.</strong>
+                    <strong>El profesional no ha configurado el link de pago online.</strong>
                     <p style="margin-top:10px;">Por favor, contacta directamente al profesional para coordinar el pago.</p>
                 </div>
             `;
             paymentContainer.style.display = 'block';
         }
+    }
+    
+    // CASO 3: TARJETA (EN CONSULTA PRESENCIAL) - NO mostrar link de pago
+    if (method === 'card-presencial') {
+        detailsDiv.style.display = 'block';
+        detailsDiv.innerHTML = `
+            <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; color: var(--azul-oscuro);">
+                <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i>
+                <strong>Pago en consulta presencial</strong>
+                <p style="margin-top:10px; font-size:0.9rem;">
+                    El pago se realizará directamente en el consultorio el día de tu cita. 
+                    Puedes pagar con tarjeta de crédito/débito o efectivo.
+                </p>
+            </div>
+        `;
+        detailsDiv.style.display = 'block';
+    }
+    
+    // CASO 4: EFECTIVO
+    if (method === 'cash') {
+        detailsDiv.style.display = 'block';
+        detailsDiv.innerHTML = `
+            <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; color: var(--azul-oscuro);">
+                <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i>
+                <strong>Pago en efectivo</strong>
+                <p style="margin-top:10px; font-size:0.9rem;">
+                    El pago se realizará en efectivo en el consultorio el día de tu cita.
+                </p>
+            </div>
+        `;
+        detailsDiv.style.display = 'block';
     }
 }
 
@@ -338,11 +369,13 @@ export function executeBooking() {
         return;
     }
 
-    // Para pago con tarjeta, verificar que haya link configurado
-    if ((paymentMethod === 'card-online' || paymentMethod === 'card-presencial') && 
-        !state.selectedPsych.paymentLinks?.online && !state.selectedPsych.paymentLinks?.presencial) {
-        showToast('El profesional no tiene configurado el pago con tarjeta', 'error');
-        return;
+    // Validaciones específicas por método de pago
+    if (paymentMethod === 'card-online') {
+        // Para pago con tarjeta online, verificar que haya link configurado
+        if (!state.selectedPsych.paymentLinks?.online && !state.selectedPsych.paymentLinks?.presencial) {
+            showToast('El profesional no tiene configurado el pago con tarjeta online', 'error');
+            return;
+        }
     }
 
     // Para online: requiere hora y validaciones adicionales
@@ -424,9 +457,9 @@ export function executeBooking() {
                 boxName: null,
                 price,
                 paymentMethod,
-                paymentStatus: paymentMethod === 'card-online' || paymentMethod === 'card-presencial' ? 'pendiente' : 'pagado',
+                paymentStatus: paymentMethod === 'card-online' ? 'pendiente' : 'pagado',
                 msg,
-                status: paymentMethod === 'card-online' || paymentMethod === 'card-presencial' ? 'pendiente' : 'confirmada',
+                status: paymentMethod === 'card-online' ? 'pendiente' : 'confirmada',
                 createdAt: new Date().toISOString(),
                 editableUntil: new Date(Date.now() + state.EDIT_HOURS * 60 * 60 * 1000).toISOString()
             };
@@ -441,7 +474,7 @@ export function executeBooking() {
                 'confirmacion_online'
             );
             
-            if (paymentMethod === 'card-online' || paymentMethod === 'card-presencial') {
+            if (paymentMethod === 'card-online') {
                 showToast('✅ Solicitud creada. Realiza el pago con el link de arriba para confirmar tu cita.', 'success');
             } else {
                 showToast('✅ Cita confirmada. Recibirás un email con los detalles.', 'success');
@@ -471,14 +504,25 @@ export function executeBooking() {
             state.pendingRequests.push(request);
             
             // Enviar email de solicitud con los datos reales
+            let mensajeEmail = '';
+            if (paymentMethod === 'card-online') {
+                mensajeEmail = `Hola ${name},\n\nHemos recibido tu solicitud de cita presencial con ${state.selectedPsych.name} para el día ${date}.\n\nPara confirmar tu cita, realiza el pago con el link de arriba.\n\nVínculo Salud`;
+            } else if (paymentMethod === 'card-presencial') {
+                mensajeEmail = `Hola ${name},\n\nHemos recibido tu solicitud de cita presencial con ${state.selectedPsych.name} para el día ${date}.\n\nEl pago se realizará en el consultorio el día de tu cita.\n\nEl profesional te confirmará la hora a la brevedad.\n\nVínculo Salud`;
+            } else if (paymentMethod === 'transfer') {
+                mensajeEmail = `Hola ${name},\n\nHemos recibido tu solicitud de cita presencial con ${state.selectedPsych.name} para el día ${date}.\n\nPara confirmar tu cita, realiza la transferencia a la cuenta indicada y envía el comprobante.\n\nEl profesional te confirmará la hora a la brevedad.\n\nVínculo Salud`;
+            } else {
+                mensajeEmail = `Hola ${name},\n\nHemos recibido tu solicitud de cita presencial con ${state.selectedPsych.name} para el día ${date}.\n\nEl pago se realizará en efectivo en el consultorio.\n\nEl profesional te confirmará la hora a la brevedad.\n\nVínculo Salud`;
+            }
+            
             sendEmailNotification(
                 email,
                 'Solicitud de cita recibida - Vínculo Salud',
-                `Hola ${name},\n\nHemos recibido tu solicitud de cita presencial con ${state.selectedPsych.name} para el día ${date}.\n\nEl profesional te confirmará la hora a la brevedad.\n\nVínculo Salud`,
+                mensajeEmail,
                 'solicitud_presencial'
             );
             
-            if (paymentMethod === 'card-online' || paymentMethod === 'card-presencial') {
+            if (paymentMethod === 'card-online') {
                 showToast('✅ Solicitud creada. Realiza el pago con el link de arriba para confirmar tu cita.', 'success');
             } else {
                 showToast('✅ Solicitud enviada. El profesional te confirmará la hora.', 'success');
@@ -541,7 +585,7 @@ export function renderPendingRequests() {
                     <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--verde-exito); color:white;">
                         <i class="fa fa-check"></i> Confirmar
                     </button>
-                ` : r.paymentMethod === 'card-online' || r.paymentMethod === 'card-presencial' || r.paymentMethod === 'transfer' ? `
+                ` : r.paymentMethod === 'card-online' || r.paymentMethod === 'transfer' ? `
                     <span class="badge" style="background:var(--naranja-aviso);">Esperando pago</span>
                 ` : ''}
                 <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">

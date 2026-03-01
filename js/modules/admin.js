@@ -6,7 +6,7 @@ import { showToast } from './utils.js';
 // FUNCIONES DE REINICIO PARA ADMIN
 // ============================================
 
-// Actualizar contadores en la interfaz (DEFINIDA UNA SOLA VEZ)
+// Actualizar contadores en la interfaz
 export function actualizarContadoresReinicio() {
     const totalPacientes = document.getElementById('totalPacientes');
     const totalMensajes = document.getElementById('totalMensajes');
@@ -19,9 +19,7 @@ export function actualizarContadoresReinicio() {
     if (totalMensajes) totalMensajes.innerText = state.messages.length;
     if (totalCitas) totalCitas.innerText = state.appointments.length;
     
-    // ============================================
-    // NUEVO: Contadores de fichas clínicas
-    // ============================================
+    // Contadores de fichas clínicas
     if (totalFichas) totalFichas.innerText = state.fichasIngreso.length;
     if (totalSesiones) totalSesiones.innerText = state.sesiones.length;
     if (totalInformes) totalInformes.innerText = state.informes.length;
@@ -46,8 +44,11 @@ export function getEstadisticasGlobales() {
     const sesionesPorMes = {};
     state.sesiones.forEach(s => {
         if (s.fechaAtencion) {
-            const mes = s.fechaAtencion.substring(0, 7); // YYYY-MM
-            sesionesPorMes[mes] = (sesionesPorMes[mes] || 0) + 1;
+            const [dia, mes, año] = s.fechaAtencion.split('-');
+            if (año && mes) {
+                const key = `${año}-${mes}`;
+                sesionesPorMes[key] = (sesionesPorMes[key] || 0) + 1;
+            }
         }
     });
     
@@ -69,8 +70,11 @@ export function getEstadisticasGlobales() {
         .filter(a => a.paymentStatus === 'pagado')
         .forEach(a => {
             if (a.date) {
-                const mes = a.date.substring(0, 7);
-                ingresosPorMes[mes] = (ingresosPorMes[mes] || 0) + (a.price || 0);
+                const [año, mes] = a.date.split('-');
+                if (año && mes) {
+                    const key = `${año}-${mes}`;
+                    ingresosPorMes[key] = (ingresosPorMes[key] || 0) + (a.price || 0);
+                }
             }
         });
     
@@ -82,17 +86,42 @@ export function getEstadisticasGlobales() {
         if (patient) profesionalesActivos.add(patient.psychId);
     });
     
+    // Rangos de edad
+    const rangosEdad = {
+        '0-18': 0,
+        '19-30': 0,
+        '31-45': 0,
+        '46-60': 0,
+        '61+': 0,
+        'sin especificar': 0
+    };
+
+    state.patients.forEach(p => {
+        if (!p.birthdate) {
+            rangosEdad['sin especificar']++;
+            return;
+        }
+        const edad = calcularEdad(p.birthdate);
+        if (edad <= 18) rangosEdad['0-18']++;
+        else if (edad <= 30) rangosEdad['19-30']++;
+        else if (edad <= 45) rangosEdad['31-45']++;
+        else if (edad <= 60) rangosEdad['46-60']++;
+        else rangosEdad['61+']++;
+    });
+    
     return {
         pacientes: {
             total: totalPacientes,
             conFicha: pacientesConFicha,
             sinFicha: pacientesSinFicha,
+            rangosEdad,
             porcentajeConFicha: totalPacientes > 0 ? ((pacientesConFicha / totalPacientes) * 100).toFixed(1) : 0
         },
         fichasClinicas: {
             fichasIngreso: state.fichasIngreso.length,
             sesiones: totalSesiones,
             informes: totalInformes,
+            sesionesPorMes,
             informesPorTipo
         },
         citas: {
@@ -111,6 +140,23 @@ export function getEstadisticasGlobales() {
             activos: profesionalesActivos.size
         }
     };
+}
+
+/**
+ * Calcula la edad a partir de fecha de nacimiento
+ */
+function calcularEdad(birthdate) {
+    if (!birthdate) return 0;
+    const hoy = new Date();
+    const nacimiento = new Date(birthdate);
+    if (isNaN(nacimiento.getTime())) return 0;
+    
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
+    return edad;
 }
 
 // ============================================
@@ -172,8 +218,7 @@ export function eliminarTodosLosInformes() {
 }
 
 /**
- * Eliminar todas las fichas clínicas de un paciente específico
- * @param {string|number} patientId - ID del paciente
+ * Eliminar fichas de un paciente específico
  */
 export function eliminarFichasDePaciente(patientId) {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
@@ -185,13 +230,8 @@ export function eliminarFichasDePaciente(patientId) {
     if (!patient) return;
     
     if (confirm(`⚠️ ¿Eliminar TODAS las fichas clínicas de ${patient.name}?`)) {
-        // Eliminar fichas de ingreso
         state.setFichasIngreso(state.fichasIngreso.filter(f => f.patientId != patientId));
-        
-        // Eliminar sesiones
         state.setSesiones(state.sesiones.filter(s => s.patientId != patientId));
-        
-        // Eliminar informes
         state.setInformes(state.informes.filter(i => i.patientId != patientId));
         
         import('../main.js').then(main => main.save());
@@ -288,10 +328,6 @@ export function importarFichas() {
     input.click();
 }
 
-// ============================================
-// FUNCIONES DE LIMPIEZA SELECTIVA
-// ============================================
-
 /**
  * Limpiar fichas huérfanas (sin paciente asociado)
  */
@@ -324,10 +360,10 @@ export function limpiarFichasHuerfanas() {
 }
 
 // ============================================
-// FUNCIONES DE REINICIO EXISTENTES (MEJORADAS)
+// FUNCIONES DE REINICIO (ASIGNADAS A WINDOW)
 // ============================================
 
-// Eliminar todos los pacientes (ahora también elimina sus fichas)
+// Eliminar todos los pacientes
 window.eliminarTodosLosPacientes = function() {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
         showToast('Solo administradores pueden hacer esto', 'error');
@@ -342,13 +378,9 @@ window.eliminarTodosLosPacientes = function() {
             return;
         }
         
-        // Obtener IDs de pacientes a eliminar
         const patientIds = new Set(pacientesAEliminar.map(p => p.id));
         
-        // Eliminar pacientes
         state.setPatients(state.patients.filter(p => p.isHiddenAdmin));
-        
-        // Eliminar sus fichas clínicas
         state.setFichasIngreso(state.fichasIngreso.filter(f => !patientIds.has(f.patientId)));
         state.setSesiones(state.sesiones.filter(s => !patientIds.has(s.patientId)));
         state.setInformes(state.informes.filter(i => !patientIds.has(i.patientId)));
@@ -359,7 +391,96 @@ window.eliminarTodosLosPacientes = function() {
     }
 };
 
-// Reinicio completo del sistema (ahora incluye fichas clínicas)
+// Eliminar solo pacientes de prueba
+window.eliminarPacientesPrueba = function() {
+    if (!state.currentUser || state.currentUser.role !== 'admin') return;
+    
+    if (confirm('¿Eliminar pacientes de prueba?')) {
+        const pacientesPrueba = state.patients.filter(p => 
+            p.email?.includes('test') || 
+            p.email?.includes('prueba') || 
+            p.name?.includes('Test') || 
+            p.name?.includes('Prueba') ||
+            p.rut === '11111111-1'
+        );
+        
+        const patientIds = new Set(pacientesPrueba.map(p => p.id));
+        
+        state.setPatients(state.patients.filter(p => !pacientesPrueba.includes(p)));
+        state.setFichasIngreso(state.fichasIngreso.filter(f => !patientIds.has(f.patientId)));
+        state.setSesiones(state.sesiones.filter(s => !patientIds.has(s.patientId)));
+        state.setInformes(state.informes.filter(i => !patientIds.has(i.patientId)));
+        
+        import('../main.js').then(main => main.save());
+        showToast(`✅ ${pacientesPrueba.length} pacientes de prueba y sus fichas eliminados`, 'success');
+        actualizarContadoresReinicio();
+    }
+};
+
+// Eliminar todos los mensajes
+window.eliminarTodosLosMensajes = function() {
+    if (!state.currentUser || state.currentUser.role !== 'admin') return;
+    
+    if (confirm('⚠️ ¿Eliminar TODOS los mensajes?')) {
+        const mensajesAEliminar = state.messages.length;
+        state.setMessages([]);
+        import('../main.js').then(main => main.save());
+        showToast(`✅ ${mensajesAEliminar} mensajes eliminados`, 'success');
+        actualizarContadoresReinicio();
+    }
+};
+
+// Restaurar mensajes iniciales
+window.restaurarMensajesIniciales = function() {
+    if (!state.currentUser || state.currentUser.role !== 'admin') return;
+    
+    const mensajesIniciales = [
+        { id: Date.now() + 1, name: 'Carolina Méndez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad. Muy recomendada.', date: new Date().toISOString().split('T')[0] },
+        { id: Date.now() + 2, name: 'Roberto Campos', rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: new Date().toISOString().split('T')[0] },
+        { id: Date.now() + 3, name: 'María José', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: new Date().toISOString().split('T')[0] }
+    ];
+    
+    state.setMessages(mensajesIniciales);
+    import('../main.js').then(main => main.save());
+    showToast('✅ Mensajes iniciales restaurados', 'success');
+    actualizarContadoresReinicio();
+};
+
+// Eliminar todas las citas
+window.eliminarTodasLasCitas = function() {
+    if (!state.currentUser || state.currentUser.role !== 'admin') return;
+    
+    if (confirm('⚠️ ¿Eliminar TODAS las citas?')) {
+        const citasAEliminar = state.appointments.length;
+        state.setAppointments([]);
+        state.setPendingRequests([]);
+        import('../main.js').then(main => main.save());
+        showToast(`✅ ${citasAEliminar} citas eliminadas`, 'success');
+        actualizarContadoresReinicio();
+    }
+};
+
+// Eliminar citas de prueba
+window.eliminarCitasPrueba = function() {
+    if (!state.currentUser || state.currentUser.role !== 'admin') return;
+    
+    if (confirm('¿Eliminar citas de prueba?')) {
+        const fechaLimite = new Date();
+        fechaLimite.setDate(fechaLimite.getDate() - 30);
+        
+        const citasPrueba = state.appointments.filter(a => {
+            const fechaCita = new Date(a.date);
+            return fechaCita < fechaLimite || a.patient?.includes('Test') || a.patient?.includes('Prueba');
+        });
+        
+        state.setAppointments(state.appointments.filter(a => !citasPrueba.includes(a)));
+        import('../main.js').then(main => main.save());
+        showToast(`✅ ${citasPrueba.length} citas de prueba eliminadas`, 'success');
+        actualizarContadoresReinicio();
+    }
+};
+
+// Reinicio completo del sistema
 window.reinicioCompleto = function() {
     if (!state.currentUser || state.currentUser.role !== 'admin') return;
     
@@ -369,10 +490,6 @@ window.reinicioCompleto = function() {
             state.setMessages([]);
             state.setAppointments([]);
             state.setPendingRequests([]);
-            
-            // ============================================
-            // NUEVO: Limpiar fichas clínicas
-            // ============================================
             state.setFichasIngreso([]);
             state.setSesiones([]);
             state.setInformes([]);
@@ -385,12 +502,9 @@ window.reinicioCompleto = function() {
 };
 
 // ============================================
-// FUNCIONES DE PANEL DE ADMINISTRACIÓN
+// FUNCIÓN PARA RENDERIZAR PANEL DE ADMIN
 // ============================================
 
-/**
- * Renderizar panel de administración con estadísticas de fichas
- */
 export function renderAdminPanel() {
     const container = document.getElementById('adminPanelStats');
     if (!container) return;
@@ -398,79 +512,38 @@ export function renderAdminPanel() {
     const stats = getEstadisticasGlobales();
     
     container.innerHTML = `
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:20px; margin-bottom:30px;">
-            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div style="font-size:36px; font-weight:bold; color:white;">${stats.pacientes.total}</div>
-                <div style="color:rgba(255,255,255,0.9);">Pacientes</div>
-                <div style="font-size:14px; color:rgba(255,255,255,0.7);">${stats.pacientes.conFicha} con ficha</div>
-            </div>
+        <div style="padding:20px;">
+            <h2 style="margin-bottom:20px;">📊 Panel de Administración</h2>
             
-            <div class="stat-card" style="background: linear-gradient(135deg, #f6b023 0%, #f98d39 100%);">
-                <div style="font-size:36px; font-weight:bold; color:white;">${stats.fichasClinicas.fichasIngreso}</div>
-                <div style="color:rgba(255,255,255,0.9);">Fichas de Ingreso</div>
-            </div>
-            
-            <div class="stat-card" style="background: linear-gradient(135deg, #34c759 0%, #30b0c0 100%);">
-                <div style="font-size:36px; font-weight:bold; color:white;">${stats.fichasClinicas.sesiones}</div>
-                <div style="color:rgba(255,255,255,0.9);">Sesiones Registradas</div>
-            </div>
-            
-            <div class="stat-card" style="background: linear-gradient(135deg, #ff3b30 0%, #ff6b6b 100%);">
-                <div style="font-size:36px; font-weight:bold; color:white;">${stats.fichasClinicas.informes}</div>
-                <div style="color:rgba(255,255,255,0.9);">Informes</div>
-            </div>
-        </div>
-        
-        <div style="background:white; border-radius:12px; padding:20px; margin-bottom:20px;">
-            <h3 style="margin:0 0 15px 0;">📊 Estadísticas Detalladas</h3>
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                <div>
-                    <h4>Pacientes</h4>
-                    <p>• Con ficha de ingreso: ${stats.pacientes.conFicha} (${stats.pacientes.porcentajeConFicha}%)</p>
-                    <p>• Sin ficha: ${stats.pacientes.sinFicha}</p>
-                    
-                    <h4 style="margin-top:20px;">Informes</h4>
-                    <p>• Psicodiagnóstico: ${stats.fichasClinicas.informesPorTipo.psicodiagnostico}</p>
-                    <p>• Cierre: ${stats.fichasClinicas.informesPorTipo.cierre}</p>
+            <!-- Tarjetas resumen -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:30px;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div style="font-size:32px; font-weight:bold; color:white;">${stats.pacientes.total}</div>
+                    <div style="color:rgba(255,255,255,0.9);">Pacientes</div>
+                    <div style="font-size:12px; color:rgba(255,255,255,0.7);">${stats.pacientes.conFicha} con ficha</div>
                 </div>
                 
-                <div>
-                    <h4>Citas</h4>
-                    <p>• Pagadas: ${stats.citas.pagadas}</p>
-                    <p>• Pendientes: ${stats.citas.pendientes}</p>
-                    <p>• Rechazadas: ${stats.citas.rechazadas}</p>
-                    
-                    <h4 style="margin-top:20px;">Financiero</h4>
-                    <p>• Ingresos totales: $${stats.financiero.ingresosTotales.toLocaleString()}</p>
-                    <p>• Promedio por cita: $${stats.financiero.promedioPorCita.toLocaleString()}</p>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f6b023 0%, #f98d39 100%);">
+                    <div style="font-size:32px; font-weight:bold; color:white;">${stats.fichasClinicas.fichasIngreso}</div>
+                    <div style="color:rgba(255,255,255,0.9);">Fichas de Ingreso</div>
+                </div>
+                
+                <div class="stat-card" style="background: linear-gradient(135deg, #34c759 0%, #30b0c0 100%);">
+                    <div style="font-size:32px; font-weight:bold; color:white;">${stats.fichasClinicas.sesiones}</div>
+                    <div style="color:rgba(255,255,255,0.9);">Sesiones Registradas</div>
+                </div>
+                
+                <div class="stat-card" style="background: linear-gradient(135deg, #ff3b30 0%, #ff6b6b 100%);">
+                    <div style="font-size:32px; font-weight:bold; color:white;">${stats.fichasClinicas.informes}</div>
+                    <div style="color:rgba(255,255,255,0.9);">Informes</div>
                 </div>
             </div>
-        </div>
-        
-        <div style="display:flex; gap:15px; flex-wrap:wrap;">
-            <button class="btn-staff" onclick="exportarTodasLasFichas()" style="background:var(--azul-apple);">
-                <i class="fa fa-download"></i> Exportar Todo
-            </button>
-            <button class="btn-staff" onclick="importarFichas()" style="background:var(--verde-exito);">
-                <i class="fa fa-upload"></i> Importar
-            </button>
-            <button class="btn-staff" onclick="limpiarFichasHuerfanas()" style="background:var(--naranja-aviso);">
-                <i class="fa fa-eraser"></i> Limpiar Huérfanas
-            </button>
-        </div>
-        
-        <div style="margin-top:30px; background:#fef5f5; border-radius:12px; padding:20px; border:1px solid #ffcdd2;">
-            <h4 style="color:var(--rojo-alerta); margin:0 0 15px 0;">⚠️ Zona de Peligro</h4>
-            <div style="display:flex; gap:15px; flex-wrap:wrap;">
-                <button class="btn-staff" onclick="eliminarTodasLasFichasIngreso()" style="background:var(--rojo-alerta);">
-                    <i class="fa fa-trash"></i> Eliminar Fichas Ingreso
-                </button>
-                <button class="btn-staff" onclick="eliminarTodasLasSesiones()" style="background:var(--rojo-alerta);">
-                    <i class="fa fa-trash"></i> Eliminar Sesiones
-                </button>
-                <button class="btn-staff" onclick="eliminarTodosLosInformes()" style="background:var(--rojo-alerta);">
-                    <i class="fa fa-trash"></i> Eliminar Informes
+            
+            <!-- Botón para ver estadísticas completas -->
+            <div style="margin-top:30px; text-align:center;">
+                <button class="btn-staff" onclick="switchTab('estadisticas')" 
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding:15px 30px; font-size:16px;">
+                    <i class="fa fa-chart-line"></i> Ver Estadísticas Completas
                 </button>
             </div>
         </div>
@@ -493,4 +566,4 @@ if (typeof window !== 'undefined') {
     window.renderAdminPanel = renderAdminPanel;
 }
 
-console.log('✅ admin.js cargado con funciones de fichas clínicas');
+console.log('✅ admin.js cargado con estadísticas integradas');

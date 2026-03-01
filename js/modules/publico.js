@@ -171,7 +171,7 @@ export function cargarDatosIniciales() {
             state.setStaff([]);
         }
 
-        // Agregar administrador
+        // Agregar administrador con isAdmin = true
         state.staff.push({
             id: 9999,
             name: 'Administrador',
@@ -189,6 +189,7 @@ export function cargarDatosIniciales() {
             phone: '',
             bankDetails: {},
             isHiddenAdmin: true,
+            isAdmin: true, // ← CAMPO CRUCIAL AGREGADO
             paymentMethods: {},
             sessionDuration: 45,
             breakBetween: 10,

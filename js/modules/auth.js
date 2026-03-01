@@ -8,6 +8,10 @@ import { updatePaymentMethodsInfo, loadMyConfig } from './personalizacion.js';
 import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
+// ============================================
+// FUNCIONES DE LOGIN CON FIREBASE AUTH
+// ============================================
+
 export function showLoginModal() {
     document.getElementById('loginModal').style.display = 'flex';
     document.getElementById('loginUser').value = '';
@@ -33,52 +37,94 @@ export function processLogin() {
     btn.innerHTML = '<span class="spinner"></span> Verificando...';
     btn.disabled = true;
 
-    // Admin por defecto
-    if (user === "Admin" && pass === "Nina2026") {
-        console.log("✅ Acceso Admin concedido");
-        const adminUser = {
-            id: 9999,
-            name: 'Administrador',
-            spec: ['ADMIN_HIDDEN'],
-            usuario: 'Admin',
-            pass: 'Nina2026',
-            isHiddenAdmin: true
-        };
-        state.setCurrentUser({ role: 'admin', data: adminUser });
-        closeLoginModal();
-        showDashboard();
-        showToast('Acceso administrador concedido', 'success');
+    // Buscar el usuario en STAFF (para saber si es admin o psicólogo)
+    const foundUser = state.staff.find(s => 
+        (s.usuario === user || s.name === user) && s.pass === pass
+    );
+
+    if (!foundUser) {
+        showToast('Usuario o contraseña incorrectos', 'error');
         btn.innerHTML = 'Ingresar al Panel';
         btn.disabled = false;
         return;
     }
 
-    const foundUser = state.staff.find(s => 
-        (s.usuario === user || s.name === user) && s.pass === pass
-    );
-
-    if (foundUser) {
-        console.log("✅ Acceso profesional concedido:", foundUser.name);
-        if (foundUser.spec && foundUser.spec.includes('ADMIN_HIDDEN') || foundUser.isHiddenAdmin) {
-            state.setCurrentUser({ role: 'admin', data: foundUser });
-        } else {
-            state.setCurrentUser({ role: 'psych', data: foundUser });
-        }
-        closeLoginModal();
-        showDashboard();
-        showToast(`Bienvenido ${foundUser.name}`, 'success');
-    } else {
-        console.log("❌ Login fallido para:", user);
-        showToast('Usuario o contraseña incorrectos', 'error');
-    }
-    btn.innerHTML = 'Ingresar al Panel';
-    btn.disabled = false;
+    // Iniciar sesión en Firebase Auth con email/contraseña
+    // Nota: Firebase Auth requiere email, así que usamos el email del profesional
+    const email = foundUser.email || `${user}@vinculosalud.cl`;
+    
+    firebase.auth().signInWithEmailAndPassword(email, pass)
+        .then((userCredential) => {
+            // Usuario autenticado correctamente
+            const firebaseUser = userCredential.user;
+            console.log("✅ Autenticación exitosa en Firebase:", firebaseUser.uid);
+            
+            // Configurar el usuario en el estado de la app
+            if (foundUser.spec && foundUser.spec.includes('ADMIN_HIDDEN') || foundUser.isHiddenAdmin) {
+                state.setCurrentUser({ role: 'admin', data: foundUser });
+            } else {
+                state.setCurrentUser({ role: 'psych', data: foundUser });
+            }
+            
+            closeLoginModal();
+            showDashboard();
+            showToast(`Bienvenido ${foundUser.name}`, 'success');
+        })
+        .catch((error) => {
+            // Si el usuario no existe en Firebase Auth, lo creamos automáticamente
+            if (error.code === 'auth/user-not-found') {
+                // Crear usuario en Firebase Auth
+                firebase.auth().createUserWithEmailAndPassword(email, pass)
+                    .then((userCredential) => {
+                        console.log("✅ Usuario creado en Firebase Auth:", userCredential.user.uid);
+                        
+                        // Iniciar sesión nuevamente
+                        return firebase.auth().signInWithEmailAndPassword(email, pass);
+                    })
+                    .then(() => {
+                        // Configurar el usuario en el estado de la app
+                        if (foundUser.spec && foundUser.spec.includes('ADMIN_HIDDEN') || foundUser.isHiddenAdmin) {
+                            state.setCurrentUser({ role: 'admin', data: foundUser });
+                        } else {
+                            state.setCurrentUser({ role: 'psych', data: foundUser });
+                        }
+                        
+                        closeLoginModal();
+                        showDashboard();
+                        showToast(`Bienvenido ${foundUser.name}`, 'success');
+                    })
+                    .catch((createError) => {
+                        console.error("❌ Error al crear usuario:", createError);
+                        showToast('Error al crear usuario en Firebase', 'error');
+                    });
+            } else {
+                console.error("❌ Error de autenticación:", error);
+                showToast('Error de autenticación', 'error');
+            }
+        })
+        .finally(() => {
+            btn.innerHTML = 'Ingresar al Panel';
+            btn.disabled = false;
+        });
 }
 
 export function logout() {
-    state.setCurrentUser(null);
-    location.reload();
+    firebase.auth().signOut()
+        .then(() => {
+            console.log("✅ Sesión cerrada");
+            state.setCurrentUser(null);
+            location.reload();
+        })
+        .catch((error) => {
+            console.error("❌ Error al cerrar sesión:", error);
+            state.setCurrentUser(null);
+            location.reload();
+        });
 }
+
+// ============================================
+// FUNCIONES DEL DASHBOARD (se mantienen igual)
+// ============================================
 
 export function showDashboard() {
     document.getElementById('clientView').style.display = 'none';
@@ -88,14 +134,13 @@ export function showDashboard() {
     const isAdmin = state.currentUser.role === 'admin';
     const isPsych = state.currentUser.role === 'psych';
 
-    // Mostrar/ocultar pestañas según el rol
     document.getElementById('adminTabProfesionales').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabEspecialidades').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabPagos').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabFondo').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabTextos').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabLogo').style.display = isAdmin ? 'block' : 'none';
-    document.getElementById('adminTabReinicio').style.display = isAdmin ? 'block' : 'none'; // NUEVA PESTAÑA
+    document.getElementById('adminTabReinicio').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('psychTab').style.display = isPsych ? 'block' : 'none';
     document.getElementById('configTab').style.display = isPsych ? 'block' : 'none';
     document.getElementById('messagesTab').style.display = isAdmin ? 'block' : 'none';
@@ -109,7 +154,6 @@ export function showDashboard() {
         renderBoxesTable();
         updatePaymentMethodsInfo();
         
-        // Actualizar contadores de la pestaña de reinicio
         setTimeout(() => {
             import('./admin.js').then(mod => {
                 if (mod.actualizarContadoresReinicio) {
@@ -134,7 +178,6 @@ export function switchTab(tabName) {
     const tabs = document.querySelectorAll('.tab');
     tabs.forEach(t => t.classList.remove('active'));
     
-    // Buscar el tab por el texto y activarlo
     tabs.forEach(t => {
         const text = t.textContent.trim();
         if (text.toLowerCase().includes(tabName.toLowerCase()) || 
@@ -162,7 +205,6 @@ export function switchTab(tabName) {
     const element = document.getElementById(tabId);
     if (element) element.classList.add('active');
 
-    // Acciones específicas por pestaña
     if (tabName === 'pacientes') renderPatients();
     if (tabName === 'disponibilidad' && state.currentUser?.role === 'psych') {
         import('./disponibilidad.js').then(mod => mod.loadTimeSlots());
@@ -183,7 +225,6 @@ export function switchTab(tabName) {
         renderPendingRequests();
     }
     if (tabName === 'reinicio' && state.currentUser?.role === 'admin') {
-        // Actualizar contadores al entrar a la pestaña de reinicio
         import('./admin.js').then(mod => {
             if (mod.actualizarContadoresReinicio) {
                 mod.actualizarContadoresReinicio();

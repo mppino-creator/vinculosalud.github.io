@@ -1363,6 +1363,125 @@
         }, 500);
     }
 </script>
+<!-- Script para cargar funciones globales -->
+<script type="module">
+    // Exponer todas las funciones necesarias globalmente
+    import { renderStaffTable } from './js/modules/profesionales.js';
+    import { renderMessagesTable } from './js/modules/mensajes.js';
+    import { renderBoxesTable, renderBoxOccupancy } from './js/modules/boxes.js';
+    import { updatePaymentMethodsInfo, loadMyConfig } from './js/modules/personalizacion.js';
+    import { renderPatients } from './js/modules/pacientes.js';
+    import { renderPendingRequests } from './js/modules/citas.js';
+    import { actualizarContadoresReinicio } from './js/modules/admin.js';
+    import { cargarDashboard } from './js/modules/auth.js';
+    import * as citas from './js/modules/citas.js';
+    import * as mensajes from './js/modules/mensajes.js';
+    import * as pacientes from './js/modules/pacientes.js';
+    import * as profesionales from './js/modules/profesionales.js';
+    import * as boxes from './js/modules/boxes.js';
+    import * as disponibilidad from './js/modules/disponibilidad.js';
+    import * as personalizacion from './js/modules/personalizacion.js';
 
+    // Exponer funciones de citas
+    window.openBooking = citas.openBooking;
+    window.updateBookingDetails = citas.updateBookingDetails;
+    window.updateAvailableTimes = citas.updateAvailableTimes;
+    window.searchPatientByRutBooking = citas.searchPatientByRutBooking;
+    window.checkOnlineAvailability = citas.checkOnlineAvailability;
+    window.executeBooking = citas.executeBooking;
+    window.showPaymentDetails = citas.showPaymentDetails;
+    window.renderPendingRequests = renderPendingRequests;
+    window.showConfirmRequestModal = citas.showConfirmRequestModal;
+    window.rejectRequest = citas.rejectRequest;
+    window.editAppointment = citas.editAppointment;
+    window.cancelAppointment = citas.cancelAppointment;
+    window.markAsPaid = citas.markAsPaid;
+    window.showTherapistBookingModal = citas.showTherapistBookingModal;
+    window.searchPatientByRutTherapist = citas.searchPatientByRutTherapist;
+    window.updateTherapistBookingDetails = citas.updateTherapistBookingDetails;
+    window.executeTherapistBooking = citas.executeTherapistBooking;
+
+    // Exponer funciones de mensajes
+    window.showMessageModal = mensajes.showMessageModal;
+    window.closeMessageModal = mensajes.closeMessageModal;
+    window.setRating = mensajes.setRating;
+    window.saveMessage = mensajes.saveMessage;
+    window.deleteMessage = mensajes.deleteMessage;
+
+    // Exponer funciones de pacientes
+    window.showNewPatientModal = pacientes.showNewPatientModal;
+    window.closePatientModal = pacientes.closePatientModal;
+    window.savePatient = pacientes.savePatient;
+    window.printPatientSummary = pacientes.printPatientSummary;
+    window.searchPatientByRut = pacientes.searchPatientByRut;
+    window.viewPatientDetails = pacientes.viewPatientDetails;
+    window.renderPatients = renderPatients;
+
+    // Exponer funciones de profesionales
+    window.showAddStaffModal = profesionales.showAddStaffModal;
+    window.closeAddStaffModal = profesionales.closeAddStaffModal;
+    window.addStaff = profesionales.addStaff;
+    window.editTherapist = profesionales.editTherapist;
+    window.closeEditTherapistModal = profesionales.closeEditTherapistModal;
+    window.updateTherapist = profesionales.updateTherapist;
+    window.deleteStaff = profesionales.deleteStaff;
+    window.renderStaffTable = renderStaffTable;
+
+    // Exponer funciones de boxes
+    window.showBoxModal = boxes.showBoxModal;
+    window.closeBoxModal = boxes.closeBoxModal;
+    window.saveBox = boxes.saveBox;
+    window.editBox = boxes.editBox;
+    window.toggleBoxStatus = boxes.toggleBoxStatus;
+    window.deleteBox = boxes.deleteBox;
+    window.renderBoxesTable = renderBoxesTable;
+    window.renderBoxOccupancy = renderBoxOccupancy;
+
+    // Exponer funciones de disponibilidad
+    window.showAvailabilityModal = disponibilidad.showAvailabilityModal;
+    window.closeAvailabilityModal = disponibilidad.closeAvailabilityModal;
+    window.generateTimeSlots = disponibilidad.generateTimeSlots;
+    window.toggleWeekday = disponibilidad.toggleWeekday;
+    window.blockTimeRange = disponibilidad.blockTimeRange;
+    window.applyGeneratedSlots = disponibilidad.applyGeneratedSlots;
+    window.clearAllSlots = disponibilidad.clearAllSlots;
+    window.saveAvailability = disponibilidad.saveAvailability;
+    window.loadTimeSlots = disponibilidad.loadTimeSlots;
+    window.addOvercupo = disponibilidad.addOvercupo;
+
+    // Exponer funciones de personalización
+    window.showLogoModal = personalizacion.showLogoModal;
+    window.closeLogoModal = personalizacion.closeLogoModal;
+    window.saveLogo = personalizacion.saveLogo;
+    window.removeLogo = personalizacion.removeLogo;
+    window.showTextsModal = personalizacion.showTextsModal;
+    window.closeTextsModal = personalizacion.closeTextsModal;
+    window.saveHeroTexts = personalizacion.saveHeroTexts;
+    window.showBackgroundImageModal = personalizacion.showBackgroundImageModal;
+    window.closeBackgroundImageModal = personalizacion.closeBackgroundImageModal;
+    window.saveBackgroundImage = personalizacion.saveBackgroundImage;
+    window.removeBackgroundImage = personalizacion.removeBackgroundImage;
+    window.showPaymentMethodsModal = personalizacion.showPaymentMethodsModal;
+    window.closePaymentMethodsModal = personalizacion.closePaymentMethodsModal;
+    window.saveGlobalPaymentMethods = personalizacion.saveGlobalPaymentMethods;
+    window.updatePaymentMethodsInfo = updatePaymentMethodsInfo;
+    window.loadMyConfig = loadMyConfig;
+    window.saveMyConfig = personalizacion.saveMyConfig;
+    window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
+    window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
+    window.addSpecialty = personalizacion.addSpecialty;
+    window.deleteSpecialty = personalizacion.deleteSpecialty;
+
+    // Exponer funciones de admin
+    window.eliminarTodosLosPacientes = profesionales.eliminarTodosLosPacientes;
+    window.eliminarPacientesPrueba = profesionales.eliminarPacientesPrueba;
+    window.eliminarTodosLosMensajes = mensajes.eliminarTodosLosMensajes;
+    window.restaurarMensajesIniciales = mensajes.restaurarMensajesIniciales;
+    window.eliminarTodasLasCitas = citas.eliminarTodasLasCitas;
+    window.eliminarCitasPrueba = citas.eliminarCitasPrueba;
+    window.reinicioCompleto = profesionales.reinicioCompleto;
+
+    console.log('✅ Todas las funciones cargadas globalmente');
+</script>
 </body>
 </html>

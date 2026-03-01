@@ -6,6 +6,17 @@ import { showToast } from './utils.js';
 // FUNCIONES DE REINICIO PARA ADMIN
 // ============================================
 
+// Actualizar contadores en la interfaz (DEFINIDA UNA SOLA VEZ)
+export function actualizarContadoresReinicio() {
+    const totalPacientes = document.getElementById('totalPacientes');
+    const totalMensajes = document.getElementById('totalMensajes');
+    const totalCitas = document.getElementById('totalCitas');
+    
+    if (totalPacientes) totalPacientes.innerText = state.patients.filter(p => !p.isHiddenAdmin).length;
+    if (totalMensajes) totalMensajes.innerText = state.messages.length;
+    if (totalCitas) totalCitas.innerText = state.appointments.length;
+}
+
 // Eliminar todos los pacientes
 window.eliminarTodosLosPacientes = function() {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
@@ -28,7 +39,7 @@ window.eliminarTodosLosPacientes = function() {
     }
 };
 
-// Eliminar solo pacientes de prueba (los que tienen correo @ejemplo.com o nombres de prueba)
+// Eliminar solo pacientes de prueba
 window.eliminarPacientesPrueba = function() {
     if (!state.currentUser || state.currentUser.role !== 'admin') return;
     
@@ -61,7 +72,7 @@ window.eliminarTodosLosMensajes = function() {
     }
 };
 
-// Restaurar mensajes iniciales (los 3 de ejemplo)
+// Restaurar mensajes iniciales
 window.restaurarMensajesIniciales = function() {
     if (!state.currentUser || state.currentUser.role !== 'admin') return;
     
@@ -128,14 +139,3 @@ window.reinicioCompleto = function() {
         }
     }
 };
-
-// Actualizar contadores en la interfaz
-export function actualizarContadoresReinicio() {
-    const totalPacientes = document.getElementById('totalPacientes');
-    const totalMensajes = document.getElementById('totalMensajes');
-    const totalCitas = document.getElementById('totalCitas');
-    
-    if (totalPacientes) totalPacientes.innerText = state.patients.filter(p => !p.isHiddenAdmin).length;
-    if (totalMensajes) totalMensajes.innerText = state.messages.length;
-    if (totalCitas) totalCitas.innerText = state.appointments.length;
-}

@@ -1299,67 +1299,104 @@
 </script>
 
 <!-- Detectar dashboard desde URL -->
-<script>
+<script type="module">
+    // Importar funciones necesarias
+    import { renderStaffTable } from './js/modules/profesionales.js';
+    import { renderMessagesTable } from './js/modules/mensajes.js';
+    import { renderBoxesTable, renderBoxOccupancy } from './js/modules/boxes.js';
+    import { updatePaymentMethodsInfo, loadMyConfig } from './js/modules/personalizacion.js';
+    import { renderPatients } from './js/modules/pacientes.js';
+    import { renderPendingRequests } from './js/modules/citas.js';
+    import { actualizarContadoresReinicio } from './js/modules/admin.js';
+    import * as state from './js/modules/state.js';
+
     // Detectar si debemos mostrar el dashboard
     const urlParams = new URLSearchParams(window.location.search);
     const dashboard = urlParams.get('dashboard');
     
     if (dashboard) {
-        // Ocultar vista pública
-        document.getElementById('clientView').style.display = 'none';
-        document.getElementById('bookingPanel').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
+        console.log('🔄 Cargando dashboard como:', dashboard);
         
-        if (dashboard === 'admin') {
-            document.getElementById('dashTitle').innerText = "Panel Administrador";
-            // Mostrar tabs de admin
-            const adminTabs = [
-                'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
-                'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
-                'messagesTab', 'boxesTab'
-            ];
-            adminTabs.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'block';
-            });
-            
-            // Ocultar tabs de psicólogo
-            ['psychTab', 'configTab', 'agendarTab'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-        } else {
-            document.getElementById('dashTitle').innerText = "Panel de Psicólogo";
-            // Mostrar tabs de psicólogo
-            ['psychTab', 'configTab', 'agendarTab'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'block';
-            });
-            
-            // Ocultar tabs de admin
-            const adminTabs = [
-                'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
-                'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
-                'messagesTab', 'boxesTab'
-            ];
-            adminTabs.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-        }
-        
-        // Activar pestaña de citas
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        const citasTab = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.trim() === 'Citas');
-        if (citasTab) citasTab.classList.add('active');
-        
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        const tabCitas = document.getElementById('tabCitas');
-        if (tabCitas) tabCitas.classList.add('active');
-        
-        // Limpiar URL
+        // Pequeña pausa para asegurar que el DOM cargó
         setTimeout(() => {
-            window.history.replaceState({}, document.title, '/');
+            // Ocultar vista pública
+            const clientView = document.getElementById('clientView');
+            const bookingPanel = document.getElementById('bookingPanel');
+            const dashboardEl = document.getElementById('dashboard');
+            
+            if (clientView) clientView.style.display = 'none';
+            if (bookingPanel) bookingPanel.style.display = 'none';
+            if (dashboardEl) dashboardEl.style.display = 'block';
+            
+            const isAdmin = dashboard === 'admin';
+            const isPsych = dashboard === 'psych';
+            
+            // Título
+            const dashTitle = document.getElementById('dashTitle');
+            if (dashTitle) {
+                dashTitle.innerText = isAdmin ? "Panel Administrador" : "Panel de Psicólogo";
+            }
+            
+            // Mostrar/ocultar tabs según el rol
+            const adminTabs = [
+                'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
+                'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
+                'messagesTab', 'boxesTab'
+            ];
+            adminTabs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = isAdmin ? 'block' : 'none';
+            });
+            
+            const psychTabs = ['psychTab', 'configTab', 'agendarTab'];
+            psychTabs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = isPsych ? 'block' : 'none';
+            });
+            
+            // Activar pestaña de citas
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const citasTab = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.trim() === 'Citas');
+            if (citasTab) citasTab.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const tabCitas = document.getElementById('tabCitas');
+            if (tabCitas) tabCitas.classList.add('active');
+            
+            // Cargar datos según el rol
+            console.log('📊 Cargando datos...');
+            
+            try {
+                if (isAdmin) {
+                    // Cargar datos de admin
+                    if (typeof renderStaffTable === 'function') renderStaffTable();
+                    if (typeof renderMessagesTable === 'function') renderMessagesTable();
+                    if (typeof renderBoxesTable === 'function') renderBoxesTable();
+                    if (typeof updatePaymentMethodsInfo === 'function') updatePaymentMethodsInfo();
+                    if (typeof actualizarContadoresReinicio === 'function') actualizarContadoresReinicio();
+                } else {
+                    // Cargar datos de psicólogo
+                    const availDate = document.getElementById('availDate');
+                    if (availDate) availDate.min = new Date().toISOString().split('T')[0];
+                    
+                    if (typeof loadMyConfig === 'function') loadMyConfig();
+                    if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
+                }
+                
+                // Datos comunes
+                if (typeof renderPatients === 'function') renderPatients();
+                if (typeof renderPendingRequests === 'function') renderPendingRequests();
+                
+                console.log('✅ Datos cargados correctamente');
+            } catch (error) {
+                console.error('❌ Error cargando datos:', error);
+            }
+            
+            // Limpiar URL
+            setTimeout(() => {
+                window.history.replaceState({}, document.title, '/');
+            }, 500);
+            
         }, 500);
     }
 </script>

@@ -51,7 +51,7 @@ export async function guardarFichaIngreso(patientId, data) {
       showToast('Ficha de ingreso guardada', 'success');
     }
     
-    return { success: true };
+    return { success: true, id: data.id || newRef?.key };
   } catch (error) {
     console.error('Error guardando ficha ingreso:', error);
     showToast('Error al guardar la ficha', 'error');
@@ -135,7 +135,7 @@ export async function obtenerSesionesDePaciente(patientId) {
 }
 
 // ============================================
-// CARGAR DATOS INICIALES (CORREGIDO)
+// CARGAR DATOS INICIALES
 // ============================================
 
 export async function cargarTodasLasFichas() {
@@ -166,7 +166,164 @@ export async function cargarTodasLasFichas() {
 }
 
 // ============================================
-// EXPORTAR FUNCIONES
+// NUEVA FUNCIÓN: Mostrar formulario para crear ficha de ingreso
+// ============================================
+
+/**
+ * Muestra un modal con el formulario para crear una ficha de ingreso.
+ * @param {string} patientId - ID del paciente.
+ */
+export function mostrarFormularioFichaIngreso(patientId) {
+    // Verificar permisos
+    if (!puedeEditarFichas(patientId)) {
+        showToast('No tienes permisos para crear una ficha', 'error');
+        return;
+    }
+
+    const patient = state.patients.find(p => p.id == patientId);
+    if (!patient) {
+        showToast('Paciente no encontrado', 'error');
+        return;
+    }
+
+    // Crear el modal si no existe
+    let modal = document.getElementById('modalFichaIngreso');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalFichaIngreso';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                <button class="modal-close" onclick="document.getElementById('modalFichaIngreso').style.display='none'">&times;</button>
+                <h2>Crear Ficha de Ingreso</h2>
+                <form id="formFichaIngreso">
+                    <input type="hidden" id="fichaPatientId" value="${patientId}">
+                    
+                    <div class="form-group">
+                        <label>Motivo de Consulta *</label>
+                        <textarea id="motivoConsulta" rows="3" required></textarea>
+                    </div>
+                    
+                    <h4 style="margin:15px 0 5px;">Sintomatología</h4>
+                    <div class="form-group">
+                        <label>Fecha de Inicio</label>
+                        <input type="date" id="fechaInicio">
+                    </div>
+                    <div class="form-group">
+                        <label>Progresión</label>
+                        <textarea id="progresion" rows="2" placeholder="¿Cómo ha evolucionado?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Tratamientos Previos</label>
+                        <textarea id="tratamientosPrevios" rows="2" placeholder="¿Ha recibido tratamiento antes?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Medicamentos</label>
+                        <textarea id="medicamentos" rows="2" placeholder="¿Toma algún medicamento?"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Composición Familiar</label>
+                        <textarea id="composicionFamiliar" rows="3" placeholder="Describe la composición de su familia"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Otros Antecedentes</label>
+                        <textarea id="otrosAntecedentes" rows="3" placeholder="Otros antecedentes relevantes"></textarea>
+                    </div>
+                    
+                    <div style="display:flex; gap:15px; margin-top:20px;">
+                        <button type="button" class="btn-staff" onclick="window.fichasClinicas.guardarFichaIngresoDesdeFormulario()" style="background:var(--verde-exito); flex:1;">
+                            Guardar Ficha
+                        </button>
+                        <button type="button" class="btn-staff" onclick="document.getElementById('modalFichaIngreso').style.display='none'" style="background:var(--text-light); flex:0.5;">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    } else {
+        // Si ya existe, solo actualizar el patientId y limpiar campos
+        document.getElementById('fichaPatientId').value = patientId;
+        document.getElementById('motivoConsulta').value = '';
+        document.getElementById('fechaInicio').value = '';
+        document.getElementById('progresion').value = '';
+        document.getElementById('tratamientosPrevios').value = '';
+        document.getElementById('medicamentos').value = '';
+        document.getElementById('composicionFamiliar').value = '';
+        document.getElementById('otrosAntecedentes').value = '';
+    }
+
+    modal.style.display = 'flex';
+}
+
+/**
+ * Guarda la ficha de ingreso desde el formulario modal.
+ */
+export async function guardarFichaIngresoDesdeFormulario() {
+    const patientId = document.getElementById('fichaPatientId')?.value;
+    if (!patientId) {
+        showToast('Error: ID de paciente no encontrado', 'error');
+        return;
+    }
+
+    const motivoConsulta = document.getElementById('motivoConsulta')?.value;
+    if (!motivoConsulta) {
+        showToast('El motivo de consulta es obligatorio', 'error');
+        return;
+    }
+
+    const data = {
+        motivoConsulta: motivoConsulta,
+        sintomatologia: {
+            fechaInicio: document.getElementById('fechaInicio')?.value || '',
+            progresion: document.getElementById('progresion')?.value || '',
+            tratamientosPrevios: document.getElementById('tratamientosPrevios')?.value || '',
+            medicamentos: document.getElementById('medicamentos')?.value || ''
+        },
+        composicionFamiliar: document.getElementById('composicionFamiliar')?.value || '',
+        otrosAntecedentes: document.getElementById('otrosAntecedentes')?.value || ''
+    };
+
+    try {
+        await guardarFichaIngreso(patientId, data);
+        // Cerrar el modal
+        const modal = document.getElementById('modalFichaIngreso');
+        if (modal) modal.style.display = 'none';
+        
+        // Recargar la vista del paciente para mostrar la nueva ficha
+        if (window.mostrarDetallePaciente) {
+            window.mostrarDetallePaciente(patientId);
+        }
+    } catch (error) {
+        console.error('Error al guardar desde formulario:', error);
+        // El toast ya se muestra en guardarFichaIngreso
+    }
+}
+
+// ============================================
+// FUNCIONES AUXILIARES (para compatibilidad)
+// ============================================
+
+export function editarFichaIngreso(fichaIngresoId) {
+    // Por implementar - similar a mostrarFormulario pero con datos precargados
+    showToast('Función de edición en desarrollo', 'info');
+}
+
+export function verNotaSesion(sesionId) {
+    // Por implementar - mostrar detalle de la sesión
+    showToast('Función de visualización en desarrollo', 'info');
+}
+
+export function mostrarFormularioNotaSesion(patientId) {
+    // Por implementar - formulario para nueva nota
+    showToast('Función de nueva sesión en desarrollo', 'info');
+}
+
+// ============================================
+// EXPORTAR FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {
   window.fichasClinicas = {
@@ -174,8 +331,14 @@ if (typeof window !== 'undefined') {
     guardarNotaSesion,
     obtenerSesionesDePaciente,
     obtenerFichasIngresoDePaciente,
-    cargarTodasLasFichas
+    cargarTodasLasFichas,
+    // Nuevas funciones
+    mostrarFormularioFichaIngreso,
+    guardarFichaIngresoDesdeFormulario,
+    editarFichaIngreso,
+    verNotaSesion,
+    mostrarFormularioNotaSesion
   };
 }
 
-console.log('✅ fichasClinicas.js cargado correctamente');
+console.log('✅ fichasClinicas.js cargado correctamente con formulario de creación');

@@ -113,10 +113,8 @@ export function renderPatients() {
 }
 
 // ============================================
-// FUNCIONES PARA DETALLE DE PACIENTE CON PESTAÑAS
+// FUNCIÓN MEJORADA - DETECTA Y OFRECE CREAR FICHA
 // ============================================
-
-// Mostrar detalle completo del paciente con pestañas
 export async function mostrarDetallePaciente(patientId) {
     if (!puedeAccederAPaciente(patientId)) {
         showToast('No tienes permisos para ver este paciente', 'error');
@@ -141,7 +139,68 @@ export async function mostrarDetallePaciente(patientId) {
     const fichaIngreso = fichasIngresoArray.length > 0 ? fichasIngresoArray[0] : null;
     const informes = await obtenerInformesDePaciente(patientId);
     
-    renderDetallePaciente(patient, sesiones, fichaIngreso, informes);
+    // Si no hay ficha de ingreso, mostrar opción para crear una
+    if (!fichaIngreso) {
+        mostrarOpcionCrearFicha(patient, sesiones, informes);
+    } else {
+        renderDetallePaciente(patient, sesiones, fichaIngreso, informes);
+    }
+}
+
+// ============================================
+// NUEVA FUNCIÓN - MUESTRA OPCIÓN PARA CREAR FICHA
+// ============================================
+function mostrarOpcionCrearFicha(patient, sesiones = [], informes = []) {
+    const container = document.getElementById('patientsList');
+    if (!container) return;
+    
+    const edad = calculateAge(patient.birthdate);
+    const iniciales = getInitials(patient.name);
+    
+    container.innerHTML = `
+        <div class="detalle-paciente">
+            <!-- HEADER -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:white; padding:20px; border-radius:12px;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="width:60px; height:60px; background:var(--azul-apple); border-radius:30px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:24px;">
+                        ${iniciales}
+                    </div>
+                    <div>
+                        <h2 style="margin:0;">${patient.name}</h2>
+                        <p style="margin:5px 0 0; color:#666;">${patient.rut} · ${edad} años</p>
+                    </div>
+                </div>
+                <button class="btn-icon" onclick="renderPatients()" 
+                        style="background: var(--text-light); color: white;">
+                    <i class="fa fa-arrow-left"></i> Volver
+                </button>
+            </div>
+            
+            <!-- MENSAJE DE FICHA NO ENCONTRADA -->
+            <div style="background: white; border-radius:12px; padding:40px; text-align:center; margin-bottom:20px;">
+                <i class="fa fa-file-medical" style="font-size:64px; color:var(--azul-apple); opacity:0.5;"></i>
+                <h3 style="margin:20px 0 10px;">Este paciente no tiene ficha clínica</h3>
+                <p style="color:#666; margin-bottom:30px;">
+                    Para comenzar el proceso terapéutico, necesitas crear una ficha de ingreso.
+                </p>
+                <button class="btn-icon" onclick="window.fichasClinicas?.mostrarFormularioFichaIngreso('${patient.id}')" 
+                        style="background: var(--verde-exito); color: white; padding:12px 24px; font-size:16px;">
+                    <i class="fa fa-plus-circle"></i> Crear Ficha de Ingreso
+                </button>
+            </div>
+            
+            <!-- INFORMACIÓN BÁSICA DEL PACIENTE -->
+            <div style="background:white; border-radius:12px; padding:20px;">
+                <h3 style="margin:0 0 15px 0;">📋 Información del Paciente</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                    <div><strong>Email:</strong> ${patient.email}</div>
+                    <div><strong>Teléfono:</strong> ${patient.phone || '—'}</div>
+                    <div><strong>Fecha Registro:</strong> ${patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : '—'}</div>
+                    <div><strong>Notas:</strong> ${patient.notes || '—'}</div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Renderizar el detalle con pestañas

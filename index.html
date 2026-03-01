@@ -10,7 +10,7 @@
     <!-- Estilos externos -->
     <link rel="stylesheet" href="css/estilos.css">
     
-    <!-- 🔥 FIREBASE SDK -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 </head>
@@ -89,7 +89,7 @@
     </div>
 </div>
 
-<!-- Modal de Edición de Terapeuta (CON LINKS DE PAGO Y QR) -->
+<!-- Modal de Edición de Terapeuta -->
 <div class="modal" id="editTherapistModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeEditTherapistModal()">&times;</button>
@@ -101,66 +101,52 @@
                 <label>Nombre Completo *</label>
                 <input type="text" id="editName">
             </div>
-            
             <div class="form-group">
                 <label>Email *</label>
                 <input type="email" id="editEmail" placeholder="correo@ejemplo.com">
             </div>
-            
             <div class="form-group">
                 <label>Especialidades *</label>
-                <select id="editSpec" multiple size="4" style="height: auto;">
-                    <!-- Se llena dinámicamente -->
-                </select>
+                <select id="editSpec" multiple size="4" style="height: auto;"></select>
                 <small style="color:var(--text-light);">Selecciona múltiples especialidades (Ctrl+clic)</small>
             </div>
-            
             <div class="form-group">
                 <label>Usuario *</label>
                 <input type="text" id="editUser">
             </div>
-            
             <div class="form-group">
                 <label>Contraseña (dejar vacío para no cambiar)</label>
                 <input type="text" id="editPass">
             </div>
-            
             <div class="form-group" style="grid-column:1/-1;">
                 <label>Foto de Perfil</label>
                 <div class="file-upload" onclick="document.getElementById('editPhotoInput').click()">
                     <i class="fa fa-cloud-upload-alt"></i>
                     <p>Haz clic para seleccionar una foto desde tu dispositivo</p>
-                    <p style="font-size:0.7rem; margin-top:5px;">Formatos: JPG, PNG (máx 5MB)</p>
                 </div>
                 <input type="file" id="editPhotoInput" accept="image/*" style="display:none;" onchange="previewEditImage(this)">
                 <img id="editPhotoPreview" class="image-preview" src="" style="display:none;">
             </div>
-            
             <div class="form-group">
                 <label>WhatsApp</label>
                 <input type="text" id="editWhatsapp" placeholder="+56912345678">
             </div>
-            
             <div class="form-group">
                 <label>Instagram</label>
                 <input type="text" id="editInstagram" placeholder="usuario sin @">
             </div>
-            
             <div class="form-group">
                 <label>Dirección</label>
                 <input type="text" id="editAddress">
             </div>
-            
             <div class="form-group">
                 <label>Teléfono</label>
                 <input type="text" id="editPhone">
             </div>
-            
             <div class="form-group">
                 <label>Precio Online ($)</label>
                 <input type="number" id="editPriceOnline">
             </div>
-            
             <div class="form-group">
                 <label>Precio Presencial ($)</label>
                 <input type="number" id="editPricePresencial">
@@ -170,12 +156,10 @@
             <div class="form-group" style="grid-column:1/-1;">
                 <h4 style="margin:15px 0; color: var(--azul-medico);">Datos Bancarios para Transferencia</h4>
             </div>
-            
             <div class="form-group">
                 <label>Banco</label>
                 <input type="text" id="editBank">
             </div>
-            
             <div class="form-group">
                 <label>Tipo de Cuenta</label>
                 <select id="editAccountType">
@@ -185,44 +169,36 @@
                     <option value="rut">Cuenta RUT</option>
                 </select>
             </div>
-            
             <div class="form-group">
                 <label>Número de Cuenta</label>
                 <input type="text" id="editAccountNumber">
             </div>
-            
             <div class="form-group">
                 <label>RUT</label>
                 <input type="text" id="editBankRut" placeholder="12.345.678-9">
             </div>
-            
             <div class="form-group">
                 <label>Email para transferencias</label>
                 <input type="email" id="editBankEmail">
             </div>
             
-            <!-- Links de Pago y QR -->
+            <!-- Links de Pago -->
             <div class="form-group" style="grid-column:1/-1;">
                 <h4 style="margin:15px 0; color: var(--azul-medico);">🔗 Links de Pago (SumUp)</h4>
             </div>
-            
             <div class="form-group">
                 <label>Link de pago ONLINE</label>
-                <input type="url" id="editPaymentLinkOnline" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
-                <small style="color:var(--text-light);">Para pagos online con tarjeta</small>
+                <input type="url" id="editPaymentLinkOnline" placeholder="https://pay.sumup.com/b2c/XXXXXX">
             </div>
-            
             <div class="form-group">
                 <label>Link de pago PRESENCIAL</label>
-                <input type="url" id="editPaymentLinkPresencial" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
-                <small style="color:var(--text-light);">Para pagos presenciales con QR</small>
+                <input type="url" id="editPaymentLinkPresencial" placeholder="https://pay.sumup.com/b2c/XXXXXX">
             </div>
-            
             <div class="form-group">
                 <label>QR de pago (para presencial)</label>
                 <div class="file-upload" onclick="document.getElementById('editQrInput').click()">
                     <i class="fa fa-qrcode"></i>
-                    <p>Haz clic para subir imagen del QR (para pagos presenciales)</p>
+                    <p>Haz clic para subir imagen del QR</p>
                 </div>
                 <input type="file" id="editQrInput" accept="image/*" style="display:none;" onchange="previewQrImage(this)">
                 <img id="editQrPreview" class="image-preview" src="" style="display:none; width:150px; height:150px; border-radius:10px; margin-top:10px;">
@@ -230,38 +206,26 @@
         </div>
         
         <div style="display:flex; gap:15px; margin-top:20px;">
-            <button class="btn-staff" style="background:var(--verde-exito); flex:1; justify-content:center;" onclick="updateTherapist()">
-                Guardar Cambios
-            </button>
-            <button class="btn-staff" style="background:var(--text-light); flex:0.5; justify-content:center;" onclick="closeEditTherapistModal()">
-                Cancelar
-            </button>
+            <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="updateTherapist()">Guardar Cambios</button>
+            <button class="btn-staff" style="background:var(--text-light); flex:0.5;" onclick="closeEditTherapistModal()">Cancelar</button>
         </div>
     </div>
 </div>
 
-<!-- Modal de Especialidades (Admin) -->
+<!-- Modal de Especialidades -->
 <div class="modal" id="specialtiesModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closeSpecialtiesModal()">&times;</button>
         <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">🏷️ Gestión de Especialidades</h2>
-        
         <div class="form-group">
             <label>Nueva Especialidad</label>
             <div style="display:flex; gap:10px;">
                 <input type="text" id="newSpecialty" placeholder="Ej: Psicología Infantil" style="flex:1;">
-                <button class="btn-staff" style="background:var(--azul-medico); width:auto;" onclick="addSpecialty()">
-                    <i class="fa fa-plus"></i> Agregar
-                </button>
+                <button class="btn-staff" style="background:var(--azul-medico);" onclick="addSpecialty()">Agregar</button>
             </div>
         </div>
-        
-        <h3 style="margin:25px 0 15px; color: var(--azul-oscuro);">Especialidades Disponibles</h3>
+        <h3 style="margin:25px 0 15px;">Especialidades Disponibles</h3>
         <div id="specialtiesList" style="max-height: 300px; overflow-y: auto;"></div>
-        
-        <p style="color:var(--text-light); font-size:0.8rem; margin-top:15px;">
-            <i class="fa fa-info-circle"></i> Las especialidades pueden ser seleccionadas por los profesionales en su perfil.
-        </p>
     </div>
 </div>
 
@@ -269,105 +233,81 @@
 <div class="modal" id="patientModal">
     <div class="modal-content" style="max-width: 700px;">
         <button class="modal-close" onclick="closePatientModal()">&times;</button>
-        <h2 id="patientModalTitle" style="margin-bottom: 25px; color: var(--azul-oscuro);">Datos del Paciente</h2>
+        <h2 id="patientModalTitle" style="margin-bottom: 25px;">Datos del Paciente</h2>
         <input type="hidden" id="editPatientId">
-        
         <div class="form-group">
             <label>RUT *</label>
             <input type="text" id="patientRut" placeholder="12.345.678-9" oninput="formatRut(this)" onblur="searchPatientByRut()">
         </div>
-        
         <div class="form-group">
             <label>Nombre Completo *</label>
             <input type="text" id="patientName">
         </div>
-        
         <div class="form-group">
             <label>Email *</label>
             <input type="email" id="patientEmail">
         </div>
-        
         <div class="form-group">
             <label>Teléfono</label>
             <input type="text" id="patientPhone">
         </div>
-        
         <div class="form-group">
             <label>Fecha de nacimiento</label>
             <input type="date" id="patientBirthdate">
         </div>
-        
         <div class="form-group">
             <label>Notas / Historial Clínico</label>
-            <textarea id="patientNotes" rows="4" placeholder="Antecedentes, diagnósticos, observaciones importantes..."></textarea>
+            <textarea id="patientNotes" rows="4"></textarea>
         </div>
-        
         <div id="patientStatsContainer" style="display:none;" class="patient-stats"></div>
-        
         <div id="patientHistoryContainer" style="margin: 20px 0; display: none;">
-            <h3 style="margin-bottom: 15px; color: var(--azul-oscuro);">📋 Historial de Atenciones</h3>
+            <h3 style="margin-bottom: 15px;">📋 Historial de Atenciones</h3>
             <div id="patientHistoryList" class="patient-history"></div>
-            <button class="btn-staff" style="background:var(--azul-medico); margin-top:15px;" onclick="printPatientSummary()">
-                <i class="fa fa-print"></i> Imprimir Resumen
-            </button>
+            <button class="btn-staff" style="background:var(--azul-medico);" onclick="printPatientSummary()">Imprimir Resumen</button>
         </div>
-        
-        <button class="btn-staff" style="width:100%; justify-content:center; background:var(--verde-exito);" onclick="savePatient()">
-            Guardar Paciente
-        </button>
+        <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="savePatient()">Guardar Paciente</button>
     </div>
 </div>
 
-<!-- Modal de Configuración de Disponibilidad (mejorado) -->
+<!-- Modal de Disponibilidad -->
 <div class="modal" id="availabilityModal">
     <div class="modal-content" style="max-width: 900px;">
         <button class="modal-close" onclick="closeAvailabilityModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">Configurar Disponibilidad</h2>
-        
+        <h2 style="margin-bottom: 25px;">Configurar Disponibilidad</h2>
         <div class="range-generator">
-            <h3 style="margin-bottom: 20px; color: var(--azul-oscuro);">⏱️ Configuración de Sesiones</h3>
-            
+            <h3 style="margin-bottom: 20px;">⏱️ Configuración de Sesiones</h3>
             <div class="range-row" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:15px;">
                 <div class="form-group">
                     <label>Duración (minutos)</label>
                     <input type="number" id="sessionDuration" value="45" min="15" step="5">
                 </div>
-                
                 <div class="form-group">
                     <label>Descanso entre sesiones</label>
                     <input type="number" id="breakBetween" value="10" min="0" step="5">
                 </div>
-                
                 <div class="form-group">
                     <label>Hora inicio</label>
                     <input type="time" id="startTime" value="09:00">
                 </div>
-                
                 <div class="form-group">
                     <label>Hora fin</label>
                     <input type="time" id="endTime" value="18:00">
                 </div>
             </div>
-            
-            <button class="btn-staff" style="background:var(--azul-medico); margin-top:10px;" onclick="generateTimeSlots()">
-                <i class="fa fa-calculator"></i> Generar Horarios
-            </button>
+            <button class="btn-staff" style="background:var(--azul-medico);" onclick="generateTimeSlots()">Generar Horarios</button>
         </div>
-        
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin:20px 0;">
             <div class="form-group">
                 <label>Fecha inicio</label>
                 <input type="date" id="rangeStartDate">
             </div>
-            
             <div class="form-group">
                 <label>Fecha fin</label>
                 <input type="date" id="rangeEndDate">
             </div>
         </div>
-        
         <div style="margin-bottom:20px;">
-            <label style="display:block; margin-bottom:10px; color: var(--azul-oscuro);">Días de la semana</label>
+            <label style="display:block; margin-bottom:10px;">Días de la semana</label>
             <div class="weekday-selector" id="weekdaySelector">
                 <div class="weekday selected" onclick="toggleWeekday('Lun')">Lunes</div>
                 <div class="weekday selected" onclick="toggleWeekday('Mar')">Martes</div>
@@ -378,10 +318,8 @@
                 <div class="weekday" onclick="toggleWeekday('Dom')">Domingo</div>
             </div>
         </div>
-        
-        <!-- Bloque de anulación de rango de horas -->
         <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin:20px 0;">
-            <h4 style="margin-bottom:15px; color: var(--azul-oscuro);">🚫 Anular Rango de Horas</h4>
+            <h4 style="margin-bottom:15px;">🚫 Anular Rango de Horas</h4>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                 <div class="form-group">
                     <label>Desde hora</label>
@@ -392,52 +330,39 @@
                     <input type="time" id="blockEndTime" value="14:00">
                 </div>
             </div>
-            <button class="btn-staff" style="background:var(--rojo-alerta); margin-top:10px;" onclick="blockTimeRange()">
-                <i class="fa fa-ban"></i> Anular este rango
-            </button>
+            <button class="btn-staff" style="background:var(--rojo-alerta);" onclick="blockTimeRange()">Anular este rango</button>
         </div>
-        
-        <h3 style="margin-bottom: 15px; color: var(--azul-oscuro);">Horarios Generados</h3>
+        <h3 style="margin-bottom: 15px;">Horarios Generados</h3>
         <div class="time-slots" id="generatedTimeSlots" style="max-height: 300px;"></div>
-        
         <div style="display:flex; gap:15px; margin-top:20px; flex-wrap:wrap;">
-            <button class="btn-staff" style="background:var(--azul-medico); flex:1;" onclick="applyGeneratedSlots()">
-                Aplicar a fechas seleccionadas
-            </button>
-            <button class="btn-staff" style="background:var(--naranja-aviso); flex:0.5;" onclick="clearAllSlots()">
-                Limpiar todo
-            </button>
+            <button class="btn-staff" style="background:var(--azul-medico); flex:1;" onclick="applyGeneratedSlots()">Aplicar a fechas seleccionadas</button>
+            <button class="btn-staff" style="background:var(--naranja-aviso); flex:0.5;" onclick="clearAllSlots()">Limpiar todo</button>
         </div>
     </div>
 </div>
 
-<!-- Modal de Gestión de Boxes -->
+<!-- Modal de Boxes -->
 <div class="modal" id="boxModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeBoxModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">📦 Gestión de Boxes</h2>
-        
+        <h2 style="margin-bottom: 25px;">📦 Gestión de Boxes</h2>
         <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
             <div class="form-group">
                 <label>Nombre del Box *</label>
                 <input type="text" id="boxName" placeholder="Ej: BOX A">
             </div>
-            
             <div class="form-group">
                 <label>Ubicación</label>
                 <input type="text" id="boxLocation" placeholder="Ej: Piso 2, Sector A">
             </div>
-            
             <div class="form-group">
                 <label>Hora inicio *</label>
                 <input type="time" id="boxStartTime" value="09:00">
             </div>
-            
             <div class="form-group">
                 <label>Hora fin *</label>
                 <input type="time" id="boxEndTime" value="20:00">
             </div>
-            
             <div class="form-group" style="grid-column:1/-1;">
                 <label>Días de operación *</label>
                 <div style="display:flex; gap:15px; flex-wrap:wrap;">
@@ -450,29 +375,17 @@
                     <label><input type="checkbox" class="box-day" value="0"> Domingo</label>
                 </div>
             </div>
-            
             <div class="form-group" style="grid-column:1/-1;">
                 <label>Descripción (opcional)</label>
-                <textarea id="boxDescription" rows="2" placeholder="Equipamiento, capacidad, etc."></textarea>
+                <textarea id="boxDescription" rows="2"></textarea>
             </div>
-            
-            <button class="btn-staff" style="background:var(--verde-exito); grid-column:1/-1;" onclick="saveBox()" id="saveBoxBtn">
-                Guardar Box
-            </button>
+            <button class="btn-staff" style="background:var(--verde-exito); grid-column:1/-1;" onclick="saveBox()" id="saveBoxBtn">Guardar Box</button>
         </div>
-        
-        <h3 style="margin:30px 0 15px; color: var(--azul-oscuro);">Lista de Boxes</h3>
+        <h3 style="margin:30px 0 15px;">Lista de Boxes</h3>
         <div class="table-container">
             <table>
                 <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Ubicación</th>
-                        <th>Horario</th>
-                        <th>Días</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
+                    <tr><th>Nombre</th><th>Ubicación</th><th>Horario</th><th>Días</th><th>Estado</th><th>Acciones</th></tr>
                 </thead>
                 <tbody id="boxTableBody"></tbody>
             </table>
@@ -480,77 +393,61 @@
     </div>
 </div>
 
-<!-- Modal para Añadir Profesional (CON LINKS DE PAGO Y QR) -->
+<!-- Modal para Añadir Profesional -->
 <div class="modal" id="addStaffModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeAddStaffModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">➕ Añadir Nuevo Profesional</h2>
-        
+        <h2 style="margin-bottom: 25px;">➕ Añadir Nuevo Profesional</h2>
         <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
             <div class="form-group">
                 <label>Nombre Completo *</label>
                 <input type="text" id="addName">
             </div>
-            
             <div class="form-group">
                 <label>Email *</label>
-                <input type="email" id="addEmail" placeholder="correo@ejemplo.com">
+                <input type="email" id="addEmail">
             </div>
-            
             <div class="form-group">
                 <label>Especialidades *</label>
-                <select id="addSpec" multiple size="4" style="height: auto;">
-                    <!-- Se llena dinámicamente -->
-                </select>
-                <small style="color:var(--text-light);">Selecciona múltiples especialidades (Ctrl+clic)</small>
+                <select id="addSpec" multiple size="4" style="height: auto;"></select>
             </div>
-            
             <div class="form-group">
                 <label>Usuario *</label>
                 <input type="text" id="addUser">
             </div>
-            
             <div class="form-group">
                 <label>Contraseña *</label>
                 <input type="text" id="addPass">
             </div>
-            
             <div class="form-group" style="grid-column:1/-1;">
                 <label>Foto de Perfil</label>
                 <div class="file-upload" onclick="document.getElementById('addPhotoInput').click()">
                     <i class="fa fa-cloud-upload-alt"></i>
-                    <p>Haz clic para seleccionar una foto desde tu dispositivo</p>
-                    <p style="font-size:0.7rem; margin-top:5px;">Formatos: JPG, PNG (máx 5MB)</p>
+                    <p>Haz clic para seleccionar una foto</p>
                 </div>
                 <input type="file" id="addPhotoInput" accept="image/*" style="display:none;" onchange="previewAddImage(this)">
                 <img id="addPhotoPreview" class="image-preview" src="" style="display:none;">
             </div>
-            
             <div class="form-group">
                 <label>WhatsApp</label>
                 <input type="text" id="addWhatsapp">
             </div>
-            
             <div class="form-group">
                 <label>Instagram</label>
                 <input type="text" id="addInstagram">
             </div>
-            
             <div class="form-group">
                 <label>Dirección</label>
                 <input type="text" id="addAddress">
             </div>
-            
             <div class="form-group">
                 <label>Teléfono</label>
                 <input type="text" id="addPhone">
             </div>
-            
             <div class="form-group">
                 <label>Precio Online ($)</label>
                 <input type="number" id="addPriceOnline">
             </div>
-            
             <div class="form-group">
                 <label>Precio Presencial ($)</label>
                 <input type="number" id="addPricePresencial">
@@ -558,211 +455,152 @@
             
             <!-- Datos Bancarios -->
             <div class="form-group" style="grid-column:1/-1;">
-                <h4 style="margin:15px 0; color: var(--azul-medico);">Datos Bancarios para Transferencia</h4>
+                <h4 style="margin:15px 0; color: var(--azul-medico);">Datos Bancarios</h4>
             </div>
-            
             <div class="form-group">
                 <label>Banco</label>
                 <input type="text" id="addBank">
             </div>
-            
             <div class="form-group">
                 <label>Tipo de Cuenta</label>
                 <select id="addAccountType">
-                    <option value="corriente">Cuenta Corriente</option>
-                    <option value="vista">Cuenta Vista</option>
-                    <option value="ahorro">Cuenta de Ahorro</option>
-                    <option value="rut">Cuenta RUT</option>
+                    <option value="corriente">Corriente</option>
+                    <option value="vista">Vista</option>
+                    <option value="ahorro">Ahorro</option>
+                    <option value="rut">RUT</option>
                 </select>
             </div>
-            
             <div class="form-group">
                 <label>Número de Cuenta</label>
                 <input type="text" id="addAccountNumber">
             </div>
-            
             <div class="form-group">
                 <label>RUT</label>
-                <input type="text" id="addBankRut" placeholder="12.345.678-9">
+                <input type="text" id="addBankRut">
             </div>
-            
             <div class="form-group">
-                <label>Email para transferencias</label>
+                <label>Email transferencias</label>
                 <input type="email" id="addBankEmail">
             </div>
             
-            <!-- Links de Pago y QR -->
+            <!-- Links de Pago -->
             <div class="form-group" style="grid-column:1/-1;">
-                <h4 style="margin:15px 0; color: var(--azul-medico);">🔗 Links de Pago (SumUp)</h4>
+                <h4 style="margin:15px 0; color: var(--azul-medico);">🔗 Links de Pago</h4>
             </div>
-            
             <div class="form-group">
-                <label>Link de pago ONLINE</label>
-                <input type="url" id="addPaymentLinkOnline" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
-                <small style="color:var(--text-light);">Para pagos online con tarjeta</small>
+                <label>Link ONLINE</label>
+                <input type="url" id="addPaymentLinkOnline">
             </div>
-            
             <div class="form-group">
-                <label>Link de pago PRESENCIAL</label>
-                <input type="url" id="addPaymentLinkPresencial" placeholder="https://pay.sumup.com/b2c/XXXXXX" class="form-control">
-                <small style="color:var(--text-light);">Para pagos presenciales con QR</small>
+                <label>Link PRESENCIAL</label>
+                <input type="url" id="addPaymentLinkPresencial">
             </div>
-            
             <div class="form-group">
-                <label>QR de pago (para presencial)</label>
+                <label>QR de pago</label>
                 <div class="file-upload" onclick="document.getElementById('addQrInput').click()">
-                    <i class="fa fa-qrcode"></i>
-                    <p>Haz clic para subir imagen del QR (para pagos presenciales)</p>
+                    <i class="fa fa-qrcode"></i> Subir QR
                 </div>
                 <input type="file" id="addQrInput" accept="image/*" style="display:none;" onchange="previewAddQrImage(this)">
-                <img id="addQrPreview" class="image-preview" src="" style="display:none; width:150px; height:150px; border-radius:10px; margin-top:10px;">
+                <img id="addQrPreview" class="image-preview" src="" style="display:none;">
             </div>
         </div>
-        
         <div style="display:flex; gap:15px; margin-top:20px;">
-            <button class="btn-staff" style="background:var(--verde-exito); flex:1; justify-content:center;" onclick="addStaff()">
-                Guardar Profesional
-            </button>
-            <button class="btn-staff" style="background:var(--text-light); flex:0.5; justify-content:center;" onclick="closeAddStaffModal()">
-                Cancelar
-            </button>
+            <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="addStaff()">Guardar Profesional</button>
+            <button class="btn-staff" style="background:var(--text-light); flex:0.5;" onclick="closeAddStaffModal()">Cancelar</button>
         </div>
     </div>
 </div>
 
-<!-- Modal de Configuración de Métodos de Pago (Admin) -->
+<!-- Modal de Métodos de Pago -->
 <div class="modal" id="paymentMethodsModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closePaymentMethodsModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">💰 Métodos de Pago</h2>
-        
+        <h2 style="margin-bottom: 25px;">💰 Métodos de Pago Globales</h2>
         <div class="form-group">
-            <label>Métodos disponibles globalmente</label>
             <div class="payment-method-item">
-                <input type="checkbox" id="globalTransfer" checked> 
-                <label>Transferencia Bancaria</label>
+                <input type="checkbox" id="globalTransfer" checked> <label>Transferencia Bancaria</label>
             </div>
             <div class="payment-method-item">
-                <input type="checkbox" id="globalCardPresencial" checked> 
-                <label>Tarjeta (en consulta presencial)</label>
+                <input type="checkbox" id="globalCardPresencial" checked> <label>Tarjeta (presencial)</label>
             </div>
             <div class="payment-method-item">
-                <input type="checkbox" id="globalCardOnline"> 
-                <label>Tarjeta (pago online)</label>
+                <input type="checkbox" id="globalCardOnline"> <label>Tarjeta (online)</label>
             </div>
             <div class="payment-method-item">
-                <input type="checkbox" id="globalCash" checked> 
-                <label>Efectivo (en consulta)</label>
+                <input type="checkbox" id="globalCash" checked> <label>Efectivo</label>
             </div>
             <div class="payment-method-item">
-                <input type="checkbox" id="globalMercadoPago"> 
-                <label>Mercado Pago</label>
+                <input type="checkbox" id="globalMercadoPago"> <label>Mercado Pago</label>
             </div>
             <div class="payment-method-item">
-                <input type="checkbox" id="globalWebpay"> 
-                <label>Webpay</label>
+                <input type="checkbox" id="globalWebpay"> <label>Webpay</label>
             </div>
         </div>
-        
-        <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="saveGlobalPaymentMethods()">
-            Guardar Configuración Global
-        </button>
-        
-        <p style="color:var(--text-light); font-size:0.8rem; margin-top:15px;">
-            <i class="fa fa-info-circle"></i> Los profesionales pueden activar/desactivar estos métodos en su perfil.
-        </p>
+        <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="saveGlobalPaymentMethods()">Guardar</button>
     </div>
 </div>
 
-<!-- Modal de Configuración de Imagen de Fondo (Admin) -->
+<!-- Modal de Fondo -->
 <div class="modal" id="backgroundImageModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closeBackgroundImageModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">🎨 Imagen de Fondo</h2>
-        
+        <h2 style="margin-bottom: 25px;">🎨 Imagen de Fondo</h2>
         <div class="form-group">
-            <label>Imagen de Fondo</label>
             <div class="file-upload" onclick="document.getElementById('backgroundImageInput').click()">
-                <i class="fa fa-cloud-upload-alt"></i>
-                <p>Haz clic para seleccionar una imagen de fondo</p>
-                <p style="font-size:0.7rem; margin-top:5px;">Formatos: JPG, PNG (máx 5MB)</p>
+                <i class="fa fa-cloud-upload-alt"></i> Seleccionar imagen
             </div>
             <input type="file" id="backgroundImageInput" accept="image/*" style="display:none;" onchange="previewBackgroundImage(this)">
         </div>
-        
         <div class="form-group">
             <label>Transparencia (0-100%)</label>
             <input type="range" id="backgroundOpacity" min="0" max="100" value="10" onchange="updateBackgroundOpacity()">
             <span id="opacityValue">10%</span>
         </div>
-        
-        <div id="currentBackgroundPreview" style="margin:20px 0; text-align:center;">
+        <div style="margin:20px 0; text-align:center;">
             <img id="backgroundPreview" src="" style="max-width:100%; max-height:200px; border-radius:8px; display:none;">
         </div>
-        
-        <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-bottom:10px;" onclick="saveBackgroundImage()">
-            Guardar Imagen de Fondo
-        </button>
-        <button class="btn-staff" style="width:100%; background:var(--rojo-alerta);" onclick="removeBackgroundImage()">
-            Eliminar Fondo
-        </button>
+        <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-bottom:10px;" onclick="saveBackgroundImage()">Guardar</button>
+        <button class="btn-staff" style="width:100%; background:var(--rojo-alerta);" onclick="removeBackgroundImage()">Eliminar</button>
     </div>
 </div>
 
-<!-- Modal de Configuración de Textos (Admin) -->
+<!-- Modal de Textos -->
 <div class="modal" id="textsModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closeTextsModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">📝 Textos de Portada</h2>
-        
+        <h2 style="margin-bottom: 25px;">📝 Textos de Portada</h2>
         <div class="form-group">
             <label>Título Principal</label>
             <input type="text" id="heroTitle" value="Bienestar a tu alcance">
         </div>
-        
         <div class="form-group">
             <label>Subtítulo</label>
             <textarea id="heroSubtitle" rows="3">Encuentra al profesional ideal y agenda tu sesión</textarea>
         </div>
-        
-        <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="saveHeroTexts()">
-            Guardar Textos
-        </button>
+        <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="saveHeroTexts()">Guardar</button>
     </div>
 </div>
 
-<!-- Modal de Configuración de Logo (MEJORADO) -->
+<!-- Modal de Logo -->
 <div class="modal" id="logoModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closeLogoModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">🖼️ Logo del Sitio</h2>
-        
+        <h2 style="margin-bottom: 25px;">🖼️ Logo del Sitio</h2>
         <div class="form-group">
-            <label>Logo (imagen)</label>
             <div class="file-upload" onclick="document.getElementById('logoInput').click()">
-                <i class="fa fa-cloud-upload-alt"></i>
-                <p>Haz clic para seleccionar el logo</p>
-                <p style="font-size:0.7rem; margin-top:5px;">Formatos: JPG, PNG (máx 2MB)</p>
+                <i class="fa fa-cloud-upload-alt"></i> Seleccionar logo
             </div>
             <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewLogo(this)">
         </div>
-        
-        <div id="currentLogoPreview" style="margin:20px 0; text-align:center;">
+        <div style="margin:20px 0; text-align:center;">
             <img id="logoPreview" src="" style="max-width:200px; max-height:80px; border-radius:8px; display:none;">
         </div>
-        
         <div class="form-group">
-            <label>Texto del Logo (siempre visible)</label>
-            <input type="text" id="logoText" value="Vínculo Salud" class="form-control">
-            <small style="color:var(--text-light);">Este texto siempre se mostrará junto al logo</small>
+            <label>Texto del Logo</label>
+            <input type="text" id="logoText" value="Vínculo Salud">
         </div>
-        
-        <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-bottom:10px;" onclick="saveLogo()">
-            Guardar Logo
-        </button>
-        <button class="btn-staff" style="width:100%; background:var(--rojo-alerta);" onclick="removeLogo()">
-            Eliminar Logo
-        </button>
+        <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-bottom:10px;" onclick="saveLogo()">Guardar</button>
+        <button class="btn-staff" style="width:100%; background:var(--rojo-alerta);" onclick="removeLogo()">Eliminar</button>
     </div>
 </div>
 
@@ -784,14 +622,11 @@
         <div class="marquee-content" id="marqueeContent"></div>
     </div>
 
+    <!-- Vista Pública -->
     <main id="clientView">
         <section class="hero-section">
             <h1 id="heroTitleDisplay">Bienestar <br>a tu alcance</h1>
             <p id="heroSubtitleDisplay">Encuentra al profesional ideal y agenda tu sesión</p>
-            <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <span class="badge online" style="font-size: 1rem; padding: 8px 20px;"><i class="fa fa-video"></i> Atención Online</span>
-                <span class="badge presencial" style="font-size: 1rem; padding: 8px 20px;"><i class="fa fa-building"></i> Atención Presencial</span>
-            </div>
         </section>
 
         <div class="filters">
@@ -821,7 +656,7 @@
     </main>
 
     <!-- ============================================ -->
-    <!-- PANEL DE RESERVA PARA PACIENTES (CORREGIDO) -->
+    <!-- PANEL DE RESERVA - COMPLETO CON MÉTODOS DE PAGO -->
     <!-- ============================================ -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
@@ -882,11 +717,11 @@
                 
                 <div id="presencialWarning" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Solicitud Presencial:</strong> Esta es una solicitud que será revisada por el profesional. Solo necesitas indicar el día, el horario se coordinará contigo.
+                    <strong>Solicitud Presencial:</strong> Esta es una solicitud que será revisada por el profesional. Solo necesitas indicar el día.
                 </div>
                 
                 <!-- ============================================ -->
-                <!-- MÉTODOS DE PAGO - AGREGADO -->
+                <!-- MÉTODOS DE PAGO - AGREGADO CORRECTAMENTE -->
                 <!-- ============================================ -->
                 <div class="form-group">
                     <label>Método de Pago *</label>
@@ -906,7 +741,7 @@
                 
                 <div class="alert-info" style="background:#e8f4fd; padding:15px; border-radius:12px; margin-top:20px;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Política de Cancelación:</strong> En caso de no asistir a la cita, se retendrá el valor de la sesión como compensación por el tiempo reservado.
+                    <strong>Política de Cancelación:</strong> En caso de no asistir, se retendrá el valor de la sesión.
                 </div>
             </div>
             
@@ -956,17 +791,385 @@
         </div>
     </div>
 
-    <!-- Panel de Dashboard (para staff) -->
+    <!-- Panel de Dashboard (completo) -->
     <div id="dashboard" class="panel">
-        <!-- ... (todo el dashboard se mantiene igual) ... -->
-        <!-- Por brevedad no repito el dashboard, pero debe estar completo como en tu archivo -->
+        <div class="dashboard-header">
+            <div>
+                <h2 id="dashTitle">Panel de Gestión</h2>
+                <p id="dashSubtitle">Bienvenido al sistema</p>
+            </div>
+            <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="logout()">Cerrar Sesión</button>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-item">
+                <p>Ingresos del Mes</p>
+                <h4 id="statIncome">$0</h4>
+            </div>
+            <div class="stat-item">
+                <p>Total Citas</p>
+                <h4 id="statCitas">0</h4>
+            </div>
+            <div class="stat-item">
+                <p>Pacientes Activos</p>
+                <h4 id="statPatients">0</h4>
+            </div>
+        </div>
+
+        <div class="tabs" id="dashboardTabs">
+            <div class="tab active" onclick="switchTab('citas')">Citas</div>
+            <div class="tab" onclick="switchTab('solicitudes')">Solicitudes</div>
+            <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
+            <div class="tab" id="adminTabProfesionales" style="display:none;" onclick="switchTab('profesionales')">Profesionales</div>
+            <div class="tab" id="adminTabEspecialidades" style="display:none;" onclick="switchTab('especialidades')">Especialidades</div>
+            <div class="tab" id="adminTabPagos" style="display:none;" onclick="switchTab('pagos')">Métodos de Pago</div>
+            <div class="tab" id="adminTabFondo" style="display:none;" onclick="switchTab('fondo')">Fondo</div>
+            <div class="tab" id="adminTabTextos" style="display:none;" onclick="switchTab('textos')">Textos</div>
+            <div class="tab" id="adminTabLogo" style="display:none;" onclick="switchTab('logo')">Logo</div>
+            <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
+            <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
+            <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
+            <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
+            <div class="tab" id="agendarTab" style="display:none;" onclick="switchTab('agendar')">Agendar Cita</div>
+        </div>
+
+        <!-- Tab: Citas Confirmadas -->
+        <div id="tabCitas" class="tab-content active">
+            <h3>Citas Confirmadas</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Paciente</th><th>Especialista</th><th>Fecha / Hora</th><th>Tipo</th><th>Box</th><th>Pago</th><th>Estado</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Solicitudes Pendientes -->
+        <div id="tabSolicitudes" class="tab-content">
+            <h3>Solicitudes Pendientes</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Box</th><th>Motivo</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingRequestsTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Pacientes -->
+        <div id="tabPacientes" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3>Pacientes</h3>
+                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showNewPatientModal()">
+                    <i class="fa fa-plus"></i> Nuevo Paciente
+                </button>
+            </div>
+            <input type="text" class="filter-input" id="patientSearch" placeholder="Buscar paciente..." oninput="renderPatients()" style="width:100%; margin-bottom:15px;">
+            <div id="patientsList"></div>
+        </div>
+
+        <!-- Tab: Profesionales -->
+        <div id="tabProfesionales" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Profesionales</h3>
+                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showAddStaffModal()">
+                    <i class="fa fa-plus"></i> Nuevo Profesional
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Links</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Especialidades -->
+        <div id="tabEspecialidades" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Especialidades</h3>
+                <button class="btn-staff" style="background:var(--azul-medico)" onclick="showSpecialtiesModal()">
+                    <i class="fa fa-gear"></i> Administrar
+                </button>
+            </div>
+            <div id="allSpecialtiesList" class="specialties-container"></div>
+        </div>
+
+        <!-- Tab: Métodos de Pago -->
+        <div id="tabPagos" class="tab-content">
+            <h3>Métodos de Pago</h3>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showPaymentMethodsModal()">
+                Configurar Métodos de Pago
+            </button>
+            <div id="globalPaymentMethodsInfo" class="bank-details"></div>
+        </div>
+
+        <!-- Tab: Fondo -->
+        <div id="tabFondo" class="tab-content">
+            <h3>Imagen de Fondo</h3>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showBackgroundImageModal()">
+                Configurar Fondo
+            </button>
+        </div>
+
+        <!-- Tab: Textos -->
+        <div id="tabTextos" class="tab-content">
+            <h3>Textos de Portada</h3>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showTextsModal()">
+                Editar Textos
+            </button>
+        </div>
+
+        <!-- Tab: Logo -->
+        <div id="tabLogo" class="tab-content">
+            <h3>Logo del Sitio</h3>
+            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showLogoModal()">
+                Configurar Logo
+            </button>
+        </div>
+
+        <!-- Tab: Disponibilidad -->
+        <div id="tabDisponibilidad" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Disponibilidad</h3>
+                <button class="btn-staff" style="background:var(--azul-medico)" onclick="showAvailabilityModal()">
+                    Configuración Avanzada
+                </button>
+            </div>
+            <div class="form-group">
+                <label>Seleccionar Fecha</label>
+                <input type="date" id="availDate" onchange="loadTimeSlots()">
+            </div>
+            <div style="display:flex; justify-content:space-between; margin:20px 0;">
+                <h4>Horarios Disponibles</h4>
+                <label><input type="checkbox" id="showOvercupo" onchange="loadTimeSlots()"> Mostrar sobrecupo</label>
+            </div>
+            <div class="time-slots" id="timeSlotsContainer"></div>
+            <div style="display:flex; gap:15px; margin-top:20px;">
+                <button class="btn-staff" style="background:var(--verde-exito);" onclick="saveAvailability()">Guardar</button>
+                <button class="btn-staff" style="background:var(--naranja-aviso);" onclick="addOvercupo()">+ Sobrecupo</button>
+            </div>
+        </div>
+
+        <!-- Tab: Mi Configuración -->
+        <div id="tabConfiguracion" class="tab-content">
+            <h3>Mi Configuración</h3>
+            <div style="background:#f8fafc; padding:25px; border-radius:20px;">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="myName" disabled style="background:#f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="myEmail" disabled style="background:#f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label>Especialidades</label>
+                    <div id="mySpecialties" class="specialties-container"></div>
+                </div>
+                <h4 style="margin:25px 0 15px;">Precios</h4>
+                <div class="form-group">
+                    <label>Precio Online ($)</label>
+                    <input type="number" id="myPriceOnline">
+                </div>
+                <div class="form-group">
+                    <label>Precio Presencial ($)</label>
+                    <input type="number" id="myPricePresencial">
+                </div>
+                <h4 style="margin:25px 0 15px;">Redes Sociales</h4>
+                <div class="form-group">
+                    <label>WhatsApp</label>
+                    <input type="text" id="myWhatsapp">
+                </div>
+                <div class="form-group">
+                    <label>Instagram</label>
+                    <input type="text" id="myInstagram">
+                </div>
+                <h4 style="margin:25px 0 15px;">Datos Bancarios</h4>
+                <div class="form-group">
+                    <label>Banco</label>
+                    <input type="text" id="myBank">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Cuenta</label>
+                    <select id="myAccountType">
+                        <option value="corriente">Corriente</option>
+                        <option value="vista">Vista</option>
+                        <option value="ahorro">Ahorro</option>
+                        <option value="rut">RUT</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Número de Cuenta</label>
+                    <input type="text" id="myAccountNumber">
+                </div>
+                <div class="form-group">
+                    <label>RUT</label>
+                    <input type="text" id="myBankRut">
+                </div>
+                <div class="form-group">
+                    <label>Email transferencias</label>
+                    <input type="email" id="myBankEmail">
+                </div>
+                <h4 style="margin:25px 0 15px;">Métodos de Pago</h4>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myTransfer" checked> <label>Transferencia</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myCardPresencial" checked> <label>Tarjeta presencial</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myCardOnline"> <label>Tarjeta online</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="myCash" checked> <label>Efectivo</label>
+                </div>
+                <button class="btn-staff" style="background:var(--verde-exito); margin-top:20px;" onclick="saveMyConfig()">Guardar</button>
+            </div>
+        </div>
+
+        <!-- Tab: Mensajes -->
+        <div id="tabMensajes" class="tab-content">
+            <h3>Mensajes</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messagesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Boxes -->
+        <div id="tabBoxes" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Boxes</h3>
+                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showBoxModal()">
+                    <i class="fa fa-plus"></i> Nuevo Box
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th><th>Ubicación</th><th>Horario</th><th>Días</th><th>Estado</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boxTableBodyDashboard"></tbody>
+                </table>
+            </div>
+            <div class="box-schedule" style="margin-top:30px;">
+                <h3 style="margin-bottom:15px;">📋 Ocupación de Boxes - Hoy</h3>
+                <div id="boxOccupancy"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Agendar Cita (terapeutas) -->
+        <div id="tabAgendar" class="tab-content">
+            <div class="dashboard-header">
+                <h2>Agendar Cita para Paciente</h2>
+                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showTherapistBookingModal()">
+                    <i class="fa fa-calendar-plus"></i> Nueva Cita
+                </button>
+            </div>
+            <div class="booking-grid">
+                <div>
+                    <h3>Buscar Paciente</h3><br>
+                    <div class="form-group">
+                        <label>RUT del Paciente</label>
+                        <input type="text" id="therapistRut" oninput="formatRut(this)" onblur="searchPatientByRutTherapist()">
+                    </div>
+                    <div id="patientInfo" style="display:none; background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:20px;">
+                        <h4>Datos del Paciente</h4>
+                        <p><strong>Nombre:</strong> <span id="patientInfoName"></span></p>
+                        <p><strong>Email:</strong> <span id="patientInfoEmail"></span></p>
+                        <p><strong>Teléfono:</strong> <span id="patientInfoPhone"></span></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Atención *</label>
+                        <select id="therapistAppointmentType" onchange="updateTherapistBookingDetails()">
+                            <option value="online">Online</option>
+                            <option value="presencial">Presencial</option>
+                        </select>
+                    </div>
+                    <div id="therapistBoxField" style="display:none;" class="address-input">
+                        <label>Seleccionar Box *</label>
+                        <div id="therapistBoxSelector" class="box-selector"></div>
+                        <p id="therapistBoxAvailabilityMsg" style="margin-top:10px; font-size:0.85rem; color:var(--text-light);"></p>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <div class="form-group">
+                            <label>Fecha *</label>
+                            <input type="date" id="therapistDate" onchange="updateTherapistAvailableSlots()">
+                        </div>
+                        <div class="form-group">
+                            <label>Hora *</label>
+                            <select id="therapistTime" onchange="updateTherapistBookingDetails()">
+                                <option value="">Selecciona una fecha</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notas</label>
+                        <textarea id="therapistMsg" rows="3"></textarea>
+                    </div>
+                    <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-top:15px;" onclick="executeTherapistBooking()" id="therapistBookBtn">
+                        Confirmar Cita
+                    </button>
+                </div>
+                <div class="glass" style="padding:30px; background: var(--azul-oscuro); color:white;">
+                    <h3 style="color:white;">Resumen de Cita</h3>
+                    <p id="therapistPsychName" style="font-size:1.2rem; margin-bottom:5px; color:white;"></p>
+                    <div style="display:flex; justify-content:space-between; margin-top:20px;">
+                        <span>Paciente</span> <span id="therapistPatientName">—</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Fecha</span> <span id="therapistDateDisplay">—</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Hora</span> <span id="therapistTimeDisplay">—</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Tipo</span> <span id="therapistTypeDisplay">Online</span>
+                    </div>
+                    <div id="therapistBoxDisplay" style="display:none; justify-content:space-between;">
+                        <span>Box</span> <span id="therapistBoxName"></span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Valor</span> <span id="therapistPrice">$0</span>
+                    </div>
+                    <div style="margin:20px 0;">
+                        <label style="color:white;">Método de Pago</label>
+                        <select id="therapistPaymentMethod" style="width:100%; padding:12px;">
+                            <option value="transfer">Transferencia</option>
+                            <option value="cash">Efectivo</option>
+                            <option value="card">Tarjeta</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- JavaScript modular: punto de entrada -->
+<!-- JavaScript modular -->
 <script type="module" src="js/main.js"></script>
 
-<!-- Funciones de vista previa de imágenes -->
+<!-- Funciones de vista previa -->
 <script>
     window.previewAddImage = function(input) {
         if (input.files && input.files[0]) {
@@ -1049,5 +1252,6 @@
         location.reload();
     };
 </script>
+
 </body>
 </html>

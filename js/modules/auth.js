@@ -34,9 +34,12 @@ export function closeLoginModal() {
 }
 
 export function processLogin() {
-    const user = document.getElementById('loginUser')?.value;
-    const pass = document.getElementById('loginPass')?.value;
+    const userInput = document.getElementById('loginUser');
+    const passInput = document.getElementById('loginPass');
     const btn = document.getElementById('loginBtn');
+    
+    const user = userInput?.value;
+    const pass = passInput?.value;
 
     if (!user || !pass) {
         showToast('Ingresa usuario y contraseña', 'error');
@@ -76,7 +79,17 @@ export function processLogin() {
             }
             
             closeLoginModal();
-            showDashboard();
+            // Pequeño retraso para asegurar que el DOM esté listo
+            setTimeout(() => {
+                try {
+                    showDashboard();
+                } catch (error) {
+                    console.error("Error en showDashboard:", error);
+                    // Si falla, recargamos la página
+                    location.reload();
+                }
+            }, 100);
+            
             showToast(`Bienvenido ${foundUser.name}`, 'success');
         })
         .catch((error) => {
@@ -94,7 +107,14 @@ export function processLogin() {
                         }
                         
                         closeLoginModal();
-                        showDashboard();
+                        setTimeout(() => {
+                            try {
+                                showDashboard();
+                            } catch (error) {
+                                console.error("Error en showDashboard:", error);
+                                location.reload();
+                            }
+                        }, 100);
                         showToast(`Bienvenido ${foundUser.name}`, 'success');
                     })
                     .catch((createError) => {
@@ -129,81 +149,98 @@ export function logout() {
 }
 
 // ============================================
-// FUNCIONES DEL DASHBOARD (VERSIÓN CORREGIDA)
+// FUNCIONES DEL DASHBOARD (VERSIÓN ULTRA-SEGURA)
 // ============================================
 
 export function showDashboard() {
-    // Verificar que los elementos existen antes de usarlos
-    const clientView = document.getElementById('clientView');
-    const bookingPanel = document.getElementById('bookingPanel');
-    const dashboard = document.getElementById('dashboard');
+    console.log("🔄 Ejecutando showDashboard");
     
-    if (clientView) clientView.style.display = 'none';
-    if (bookingPanel) bookingPanel.style.display = 'none';
-    if (dashboard) dashboard.style.display = 'block';
+    // Verificar que los elementos existen ANTES de usarlos
+    const safeSetStyle = (id, property, value) => {
+        const el = document.getElementById(id);
+        if (el && el.style) {
+            el.style[property] = value;
+            return true;
+        }
+        console.log(`⚠️ Elemento no encontrado: ${id}`);
+        return false;
+    };
+
+    const safeSetText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerText = text;
+            return true;
+        }
+        return false;
+    };
+
+    // Ocultar vistas previas
+    safeSetStyle('clientView', 'display', 'none');
+    safeSetStyle('bookingPanel', 'display', 'none');
+    safeSetStyle('dashboard', 'display', 'block');
+
+    if (!state.currentUser) {
+        console.error("❌ No hay usuario actual");
+        return;
+    }
 
     const isAdmin = state.currentUser.role === 'admin';
     const isPsych = state.currentUser.role === 'psych';
 
-    // Función auxiliar para mostrar/ocultar tabs de forma segura
-    const setTabDisplay = (id, show) => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = show ? 'block' : 'none';
-    };
-
     // Mostrar/ocultar pestañas según el rol
-    setTabDisplay('adminTabProfesionales', isAdmin);
-    setTabDisplay('adminTabEspecialidades', isAdmin);
-    setTabDisplay('adminTabPagos', isAdmin);
-    setTabDisplay('adminTabFondo', isAdmin);
-    setTabDisplay('adminTabTextos', isAdmin);
-    setTabDisplay('adminTabLogo', isAdmin);
-    setTabDisplay('adminTabReinicio', isAdmin);
-    setTabDisplay('psychTab', isPsych);
-    setTabDisplay('configTab', isPsych);
-    setTabDisplay('messagesTab', isAdmin);
-    setTabDisplay('boxesTab', isAdmin);
-    setTabDisplay('agendarTab', isPsych);
+    const tabs = [
+        'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
+        'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
+        'psychTab', 'configTab', 'messagesTab', 'boxesTab', 'agendarTab'
+    ];
+    
+    tabs.forEach(id => {
+        const show = id.includes('admin') ? isAdmin : 
+                    (id === 'psychTab' || id === 'configTab' || id === 'agendarTab') ? isPsych : 
+                    (id === 'messagesTab' || id === 'boxesTab') ? isAdmin : false;
+        safeSetStyle(id, 'display', show ? 'block' : 'none');
+    });
 
     if (isAdmin) {
-        const dashTitle = document.getElementById('dashTitle');
-        if (dashTitle) dashTitle.innerText = "Panel Administrador";
+        safeSetText('dashTitle', "Panel Administrador");
         
-        // Verificar que estas funciones existan antes de llamarlas
-        if (typeof renderStaffTable === 'function') renderStaffTable();
-        if (typeof renderMessagesTable === 'function') renderMessagesTable();
-        if (typeof renderBoxesTable === 'function') renderBoxesTable();
-        if (typeof updatePaymentMethodsInfo === 'function') updatePaymentMethodsInfo();
+        // Llamar funciones de admin con try-catch
+        try { if (typeof renderStaffTable === 'function') renderStaffTable(); } catch (e) { console.error("Error en renderStaffTable:", e); }
+        try { if (typeof renderMessagesTable === 'function') renderMessagesTable(); } catch (e) { console.error("Error en renderMessagesTable:", e); }
+        try { if (typeof renderBoxesTable === 'function') renderBoxesTable(); } catch (e) { console.error("Error en renderBoxesTable:", e); }
+        try { if (typeof updatePaymentMethodsInfo === 'function') updatePaymentMethodsInfo(); } catch (e) { console.error("Error en updatePaymentMethodsInfo:", e); }
         
         setTimeout(() => {
             import('./admin.js').then(mod => {
                 if (mod && typeof mod.actualizarContadoresReinicio === 'function') {
-                    mod.actualizarContadoresReinicio();
+                    try { mod.actualizarContadoresReinicio(); } catch (e) { console.error("Error en actualizarContadoresReinicio:", e); }
                 }
             }).catch(err => console.log('Admin module not available'));
         }, 1000);
-    } else {
-        const dashTitle = document.getElementById('dashTitle');
-        if (dashTitle) dashTitle.innerText = `Panel de ${state.currentUser.data.name}`;
+    } else if (isPsych) {
+        safeSetText('dashTitle', `Panel de ${state.currentUser.data?.name || 'Psicólogo'}`);
         
         const availDate = document.getElementById('availDate');
         if (availDate) availDate.min = new Date().toISOString().split('T')[0];
         
-        if (typeof loadMyConfig === 'function') loadMyConfig();
-        if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
+        try { if (typeof loadMyConfig === 'function') loadMyConfig(); } catch (e) { console.error("Error en loadMyConfig:", e); }
+        try { if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy(); } catch (e) { console.error("Error en renderBoxOccupancy:", e); }
     }
 
-    if (typeof updateStats === 'function') updateStats();
-    if (typeof renderPatients === 'function') renderPatients();
-    if (typeof renderPendingRequests === 'function') renderPendingRequests();
+    try { if (typeof updateStats === 'function') updateStats(); } catch (e) { console.error("Error en updateStats:", e); }
+    try { if (typeof renderPatients === 'function') renderPatients(); } catch (e) { console.error("Error en renderPatients:", e); }
+    try { if (typeof renderPendingRequests === 'function') renderPendingRequests(); } catch (e) { console.error("Error en renderPendingRequests:", e); }
     
     // Cambiar a la pestaña de citas
-    if (typeof switchTab === 'function') switchTab('citas');
+    try { if (typeof switchTab === 'function') switchTab('citas'); } catch (e) { console.error("Error en switchTab:", e); }
+    
+    console.log("✅ showDashboard completado");
 }
 
 export function switchTab(tabName) {
     const tabs = document.querySelectorAll('.tab');
-    if (!tabs) return;
+    if (!tabs || tabs.length === 0) return;
     
     tabs.forEach(t => t.classList.remove('active'));
     
@@ -234,31 +271,44 @@ export function switchTab(tabName) {
     const element = document.getElementById(tabId);
     if (element) element.classList.add('active');
 
-    if (tabName === 'pacientes' && typeof renderPatients === 'function') renderPatients();
+    // Cargar contenido según la pestaña
+    if (tabName === 'pacientes' && typeof renderPatients === 'function') {
+        try { renderPatients(); } catch (e) { console.error("Error en renderPatients:", e); }
+    }
     if (tabName === 'disponibilidad' && state.currentUser?.role === 'psych') {
         import('./disponibilidad.js').then(mod => {
-            if (mod && typeof mod.loadTimeSlots === 'function') mod.loadTimeSlots();
+            if (mod && typeof mod.loadTimeSlots === 'function') {
+                try { mod.loadTimeSlots(); } catch (e) { console.error("Error en loadTimeSlots:", e); }
+            }
         });
     }
     if (tabName === 'configuracion' && state.currentUser?.role === 'psych') {
-        if (typeof loadMyConfig === 'function') loadMyConfig();
+        if (typeof loadMyConfig === 'function') {
+            try { loadMyConfig(); } catch (e) { console.error("Error en loadMyConfig:", e); }
+        }
     }
     if (tabName === 'mensajes' && state.currentUser?.role === 'admin') {
-        if (typeof renderMessagesTable === 'function') renderMessagesTable();
+        if (typeof renderMessagesTable === 'function') {
+            try { renderMessagesTable(); } catch (e) { console.error("Error en renderMessagesTable:", e); }
+        }
     }
     if (tabName === 'boxes' && state.currentUser?.role === 'admin') {
-        if (typeof renderBoxesTable === 'function') renderBoxesTable();
+        if (typeof renderBoxesTable === 'function') {
+            try { renderBoxesTable(); } catch (e) { console.error("Error en renderBoxesTable:", e); }
+        }
     }
     if (tabName === 'boxes' && state.currentUser?.role === 'psych') {
-        if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
+        if (typeof renderBoxOccupancy === 'function') {
+            try { renderBoxOccupancy(); } catch (e) { console.error("Error en renderBoxOccupancy:", e); }
+        }
     }
     if (tabName === 'solicitudes' && typeof renderPendingRequests === 'function') {
-        renderPendingRequests();
+        try { renderPendingRequests(); } catch (e) { console.error("Error en renderPendingRequests:", e); }
     }
     if (tabName === 'reinicio' && state.currentUser?.role === 'admin') {
         import('./admin.js').then(mod => {
             if (mod && typeof mod.actualizarContadoresReinicio === 'function') {
-                mod.actualizarContadoresReinicio();
+                try { mod.actualizarContadoresReinicio(); } catch (e) { console.error("Error en actualizarContadoresReinicio:", e); }
             }
         });
     }

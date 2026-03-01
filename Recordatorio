@@ -216,7 +216,7 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
 </div>
 
 <!-- Meta tags Apple -->
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <!-- Firebase Auth agregado -->

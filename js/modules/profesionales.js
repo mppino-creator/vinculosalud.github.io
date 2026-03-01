@@ -134,7 +134,7 @@ export function addStaff() {
     };
 
     state.staff.push(nuevoProfesional);
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     closeAddStaffModal();
     showToast('Profesional añadido', 'success');
 }
@@ -234,7 +234,7 @@ export function updateTherapist() {
     const newPass = document.getElementById('editPass').value;
     if (newPass) therapist.pass = newPass;
 
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     closeEditTherapistModal();
     renderStaffTable();
     showToast('Profesional actualizado', 'success');
@@ -251,7 +251,7 @@ export function deleteStaff(id) {
         state.appointments = state.appointments.filter(a => a.psychId != id);
         state.patients = state.patients.filter(p => p.psychId != id);
         state.staff = state.staff.filter(s => s.id != id);
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
         showToast('Profesional eliminado', 'success');
     }
 }

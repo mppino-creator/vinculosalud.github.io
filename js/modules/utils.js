@@ -5,13 +5,13 @@ import * as state from './state.js';
 // CONFIGURACIÓN DE EMAILJS (TUS DATOS REALES)
 // ============================================
 const EMAILJS_SERVICE_ID = 'vinculo_salud';
-const EMAILJS_TEMPLATE_ID = 'template_0cl1i1h'; // ← NUEVO TEMPLATE ID
+const EMAILJS_TEMPLATE_ID = 'template_0cl1i1h';
 const EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
 
 // ============================================
-// FUNCIÓN PARA ENVIAR EMAILS CON EMAILJS (VERSIÓN DEFINITIVA)
+// FUNCIÓN PARA ENVIAR EMAILS CON EMAILJS (VERSIÓN DEFINITIVA CON NOMBRE REAL)
 // ============================================
-export async function sendEmailNotification(to, subject, message, tipo = 'general') {
+export async function sendEmailNotification(to, subject, message, tipo = 'general', patientName = null, appointmentData = {}) {
   console.log(`📧 Enviando email a: ${to} (${tipo})`);
   
   try {
@@ -28,15 +28,18 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
       .replace(/\s+/g, ' ')         // Múltiples espacios a uno
       .trim();
 
-    // Preparar parámetros
+    // Usar el nombre real del paciente o extraer del email como fallback
+    const nombreReal = patientName || to.split('@')[0] || 'Paciente';
+    
+    // Preparar parámetros con los datos reales de la cita
     const templateParams = {
       to_email: to,
-      patient_name: to.split('@')[0] || 'Paciente',
-      appointment_date: new Date().toLocaleDateString('es-CL'),
-      appointment_time: '10:00',
-      professional_name: 'Profesional',
-      appointment_type: 'online',
-      appointment_price: '25000',
+      patient_name: nombreReal,  // ← AHORA USA EL NOMBRE REAL
+      appointment_date: appointmentData.date || new Date().toLocaleDateString('es-CL'),
+      appointment_time: appointmentData.time || '10:00',
+      professional_name: appointmentData.professional || 'Profesional',
+      appointment_type: appointmentData.type || 'online',
+      appointment_price: appointmentData.price || '25000',
       message: mensajeLimpio
     };
 

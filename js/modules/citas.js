@@ -466,13 +466,39 @@ export function executeBooking() {
 
             state.appointments.push(appointment);
             
-            // Enviar email de confirmación con los datos reales
+            // 📧 EMAIL AL PACIENTE - CONFIRMACIÓN ONLINE
             sendEmailNotification(
                 email,
                 'Confirmación de cita - Vínculo Salud',
                 `Hola ${name},\n\nTu cita ha sido confirmada con ${state.selectedPsych.name}.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time}\n💻 Tipo: Online\n\nEl enlace de videollamada se enviará 1 hora antes.\n\nVínculo Salud`,
-                'confirmacion_online'
+                'confirmacion_online',
+                name,
+                {
+                    date: date,
+                    time: time,
+                    professional: state.selectedPsych.name,
+                    type: 'Online',
+                    price: price
+                }
             );
+            
+            // 📧 EMAIL AL PROFESIONAL - NUEVA CITA ONLINE
+            if (state.selectedPsych.email) {
+                sendEmailNotification(
+                    state.selectedPsych.email,
+                    'Nueva cita agendada - Vínculo Salud',
+                    `Hola ${state.selectedPsych.name},\n\nSe ha agendado una nueva cita:\n\nPaciente: ${name}\n📅 Fecha: ${date}\n⏰ Hora: ${time}\n💻 Tipo: Online\n💰 Valor: $${price}\n\n📝 Notas del paciente: ${msg || 'Sin observaciones'}\n\nVínculo Salud`,
+                    'notificacion_profesional',
+                    state.selectedPsych.name,
+                    {
+                        date: date,
+                        time: time,
+                        patient: name,
+                        type: 'Online',
+                        price: price
+                    }
+                );
+            }
             
             if (paymentMethod === 'card-online') {
                 showToast('✅ Solicitud creada. Realiza el pago con el link de arriba para confirmar tu cita.', 'success');
@@ -515,12 +541,36 @@ export function executeBooking() {
                 mensajeEmail = `Hola ${name},\n\nHemos recibido tu solicitud de cita presencial con ${state.selectedPsych.name} para el día ${date}.\n\nEl pago se realizará en efectivo en el consultorio.\n\nEl profesional te confirmará la hora a la brevedad.\n\nVínculo Salud`;
             }
             
+            // 📧 EMAIL AL PACIENTE - SOLICITUD PRESENCIAL
             sendEmailNotification(
                 email,
                 'Solicitud de cita recibida - Vínculo Salud',
                 mensajeEmail,
-                'solicitud_presencial'
+                'solicitud_presencial',
+                name,
+                {
+                    date: date,
+                    professional: state.selectedPsych.name,
+                    type: 'Presencial',
+                    price: price
+                }
             );
+            
+            // 📧 EMAIL AL PROFESIONAL - NUEVA SOLICITUD PRESENCIAL
+            if (state.selectedPsych.email) {
+                sendEmailNotification(
+                    state.selectedPsych.email,
+                    'Nueva solicitud de cita - Vínculo Salud',
+                    `Hola ${state.selectedPsych.name},\n\nHas recibido una nueva solicitud de cita:\n\nPaciente: ${name}\n📅 Día solicitado: ${date}\n💻 Tipo: Presencial\n📝 Notas: ${msg || 'Sin observaciones'}\n\nIngresa al panel para confirmar la hora.\n\nVínculo Salud`,
+                    'notificacion_profesional',
+                    state.selectedPsych.name,
+                    {
+                        date: date,
+                        patient: name,
+                        type: 'Presencial'
+                    }
+                );
+            }
             
             if (paymentMethod === 'card-online') {
                 showToast('✅ Solicitud creada. Realiza el pago con el link de arriba para confirmar tu cita.', 'success');
@@ -621,11 +671,17 @@ export function rejectRequest(requestId) {
         state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
 
         if (request?.patientEmail) {
+            // 📧 EMAIL AL PACIENTE - RECHAZO
             sendEmailNotification(
                 request.patientEmail,
                 'Solicitud de cita no confirmada - Vínculo Salud',
                 `Hola ${request.patient},\n\nLamentamos informarte que no ha sido posible confirmar tu solicitud de cita con ${request.psych} para el ${request.preferredDate}.\n\nPor favor, contacta directamente con el profesional para acordar una nueva fecha.\n\nVínculo Salud`,
-                'rechazo'
+                'rechazo',
+                request.patient,
+                {
+                    date: request.preferredDate,
+                    professional: request.psych
+                }
             );
         }
 
@@ -852,11 +908,18 @@ export function cancelAppointment(id) {
         state.setAppointments(state.appointments.filter(a => a.id != id));
 
         if (appointment?.patientEmail) {
+            // 📧 EMAIL AL PACIENTE - CANCELACIÓN
             sendEmailNotification(
                 appointment.patientEmail,
                 'Cita cancelada - Vínculo Salud',
                 `Hola ${appointment.patient},\n\nTu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.\n\nSi necesitas reagendar, contáctanos.\n\nVínculo Salud`,
-                'cancelacion'
+                'cancelacion',
+                appointment.patient,
+                {
+                    date: appointment.date,
+                    time: appointment.time,
+                    professional: appointment.psych
+                }
             );
         }
 

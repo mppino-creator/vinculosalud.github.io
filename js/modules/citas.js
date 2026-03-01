@@ -3,32 +3,70 @@ import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, validarRut, sendEmailNotification } from './utils.js';
 
+// Función de verificación de elementos del DOM
+function verificarElementosReserva() {
+    const elementos = [
+        'paymentMethod', 'custDate', 'custTime', 'custRut', 'custName',
+        'custEmail', 'custPhone', 'appointmentType', 'custMsg', 'acceptPolicy',
+        'psychName', 'psychSelectedName', 'psychSelectedSpec', 'bookingDuration',
+        'bookingPrice', 'bookingType', 'onlineAvailabilityMsg', 'presencialWarning'
+    ];
+    
+    elementos.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) {
+            console.error(`❌ Elemento faltante en el DOM: ${id}`);
+        }
+    });
+}
+
 export function openBooking(id) {
-    state.setSelectedPsych(state.staff.find(p => p.id == id));
+    console.log("🔍 Abriendo reserva para ID:", id);
+    
+    // Verificar elementos del DOM
+    verificarElementosReserva();
+    
+    // Buscar el psicólogo
+    const psych = state.staff.find(p => p.id == id);
+    if (!psych) {
+        console.error("❌ Psicólogo no encontrado");
+        showToast('Profesional no encontrado', 'error');
+        return;
+    }
+    
+    state.setSelectedPsych(psych);
     state.setSelectedBoxId(null);
 
     const today = new Date().toISOString().split('T')[0];
+    
+    // Mostrar el panel de reserva
     document.getElementById('clientView').style.display = 'none';
     document.getElementById('bookingPanel').style.display = 'block';
-    document.getElementById('psychName').innerText = state.selectedPsych.name;
-    document.getElementById('psychSelectedName').innerText = state.selectedPsych.name;
-    document.getElementById('psychSelectedSpec').innerText = Array.isArray(state.selectedPsych.spec) ? state.selectedPsych.spec.join(' · ') : state.selectedPsych.spec;
-
+    
+    // Llenar datos básicos
+    document.getElementById('psychName').innerText = psych.name;
+    document.getElementById('psychSelectedName').innerText = psych.name;
+    document.getElementById('psychSelectedSpec').innerText = Array.isArray(psych.spec) ? psych.spec.join(' · ') : psych.spec;
     document.getElementById('custDate').min = today;
     document.getElementById('custDate').value = today;
-
-    document.getElementById('bookingDuration').innerText = (state.selectedPsych.sessionDuration || 45) + ' minutos';
-
+    document.getElementById('bookingDuration').innerText = (psych.sessionDuration || 45) + ' minutos';
+    
+    // Cargar métodos de pago (AHORA el panel está visible)
     loadPaymentMethods();
+    
+    // Actualizar detalles
     updateBookingDetails();
     document.getElementById('emailSimulation').style.display = 'none';
-    
-    // Mostrar mensaje según el tipo de atención
     updateAvailableTimes();
 }
 
 function loadPaymentMethods() {
     const select = document.getElementById('paymentMethod');
+    if (!select) {
+        console.error("❌ Elemento paymentMethod no encontrado");
+        return;
+    }
+    
     select.innerHTML = '<option value="">Selecciona método</option>';
 
     const methods = state.selectedPsych.paymentMethods || state.globalPaymentMethods;
@@ -78,38 +116,57 @@ function updateAvailableTimes() {
     const onlineMsg = document.getElementById('onlineAvailabilityMsg');
     const presencialWarning = document.getElementById('presencialWarning');
 
-    if (!date || !state.selectedPsych) return;
+    console.log("🔍 updateAvailableTimes ejecutado");
+    console.log("📅 Fecha seleccionada:", date);
+    console.log("💻 Tipo:", type);
+    console.log("👤 Psicólogo seleccionado:", state.selectedPsych?.name);
 
-    // Limpiar opciones anteriores
+    if (!date || !state.selectedPsych) {
+        console.log("❌ Falta fecha o psicólogo");
+        return;
+    }
+
     timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
 
-    // Si es presencial, no mostramos select de horas
     if (type === 'presencial') {
-        timeSelect.innerHTML = '<option value="">Solicitar día (la hora se coordinará)</option>';
+        console.log("🏢 Es presencial, no mostramos horas");
+        timeSelect.innerHTML = '<option value="">Selecciona un día (la hora se coordinará)</option>';
         presencialWarning.style.display = 'block';
         onlineMsg.style.display = 'none';
         return;
     }
 
-    // Si es online, mostramos horas disponibles
     presencialWarning.style.display = 'none';
     
-    // Obtener slots disponibles para la fecha
-    const availableSlots = state.selectedPsych.availability?.[date] || [];
+    // Verificar disponibilidad
+    console.log("📊 Disponibilidad completa:", state.selectedPsych.availability);
     
-    // Obtener TODAS las citas confirmadas del psicólogo en esa fecha (tanto online como presencial)
+    const availableSlots = state.selectedPsych.availability?.[date] || [];
+    console.log("🕐 Slots para esta fecha:", availableSlots);
+
+    if (availableSlots.length === 0) {
+        console.log("⚠️ No hay slots para esta fecha");
+        timeSelect.innerHTML = '<option value="">No hay horarios disponibles para esta fecha</option>';
+        onlineMsg.style.display = 'none';
+        return;
+    }
+
+    // Obtener citas ocupadas (solo confirmadas)
     const bookedTimes = state.appointments
         .filter(a => a.psychId == state.selectedPsych.id && a.date === date && a.status === 'confirmada')
         .map(a => a.time);
+    console.log("🚫 Horas ocupadas:", bookedTimes);
 
     const now = new Date();
     const availableTimes = availableSlots
-        .filter(slot => !bookedTimes.includes(slot.time)) // Filtra horas ya ocupadas
+        .filter(slot => !bookedTimes.includes(slot.time))
         .filter(slot => {
             const slotDateTime = new Date(date + 'T' + slot.time);
-            return slotDateTime > now; // Solo horas futuras
+            return slotDateTime > now;
         })
         .sort((a, b) => a.time.localeCompare(b.time));
+
+    console.log("✅ Horas disponibles finales:", availableTimes);
 
     if (availableTimes.length === 0) {
         timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
@@ -126,7 +183,6 @@ function updateAvailableTimes() {
         timeSelect.appendChild(option);
     });
 
-    // Mostrar mensaje de disponibilidad
     onlineMsg.style.display = 'block';
     onlineMsg.innerHTML = '<i class="fa fa-info-circle"></i> Horarios disponibles para reserva inmediata';
     onlineMsg.style.background = '#e6f7e6';
@@ -289,16 +345,16 @@ export function executeBooking() {
                 boxName: null,
                 price,
                 paymentMethod,
-                paymentStatus: 'pendiente', // Cambiará a pagado cuando confirmen pago
+                paymentStatus: 'pendiente',
                 msg,
-                status: 'pendiente', // Pendiente hasta que paguen
+                status: 'pendiente',
                 createdAt: new Date().toISOString(),
                 editableUntil: new Date(Date.now() + state.EDIT_HOURS * 60 * 60 * 1000).toISOString()
             };
 
             state.appointments.push(appointment);
             
-            // Enviar email de solicitud (no de confirmación)
+            // Enviar email de solicitud
             sendRequestEmail({
                 ...appointment,
                 preferredDate: date,
@@ -347,7 +403,7 @@ export function executeBooking() {
     }, 1500);
 }
 
-// Funciones de email (simplificadas)
+// Funciones de email
 function sendRequestEmail(request) {
     const patientEmail = request.patientEmail;
     
@@ -616,7 +672,7 @@ export function executeTherapistBooking() {
             date,
             time,
             type,
-            boxId: null, // Se asignará después si es presencial
+            boxId: null,
             boxName: null,
             price,
             paymentMethod,

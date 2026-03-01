@@ -1400,6 +1400,119 @@
         }, 500);
     }
 </script>
-
+<script>
+    // Forzar recarga de funciones después del dashboard
+    window.ensureFunctions = function() {
+        console.log('🔧 Asegurando funciones globales...');
+        
+        // Re-exportar funciones de auth
+        import('./js/modules/auth.js').then(mod => {
+            window.switchTab = mod.switchTab;
+            window.showLoginModal = mod.showLoginModal;
+            window.closeLoginModal = mod.closeLoginModal;
+            window.processLogin = mod.processLogin;
+            window.logout = mod.logout;
+            console.log('✅ Funciones de auth cargadas');
+        });
+        
+        import('./js/modules/citas.js').then(mod => {
+            window.openBooking = mod.openBooking;
+            window.updateBookingDetails = mod.updateBookingDetails;
+            window.updateAvailableTimes = mod.updateAvailableTimes;
+            window.searchPatientByRutBooking = mod.searchPatientByRutBooking;
+            window.checkOnlineAvailability = mod.checkOnlineAvailability;
+            window.executeBooking = mod.executeBooking;
+            window.showPaymentDetails = mod.showPaymentDetails;
+            console.log('✅ Funciones de citas cargadas');
+        });
+        
+        import('./js/modules/mensajes.js').then(mod => {
+            window.showMessageModal = mod.showMessageModal;
+            window.closeMessageModal = mod.closeMessageModal;
+            window.setRating = mod.setRating;
+            window.saveMessage = mod.saveMessage;
+            window.deleteMessage = mod.deleteMessage;
+            console.log('✅ Funciones de mensajes cargadas');
+        });
+        
+        import('./js/modules/pacientes.js').then(mod => {
+            window.showNewPatientModal = mod.showNewPatientModal;
+            window.closePatientModal = mod.closePatientModal;
+            window.savePatient = mod.savePatient;
+            window.printPatientSummary = mod.printPatientSummary;
+            window.searchPatientByRut = mod.searchPatientByRut;
+            window.viewPatientDetails = mod.viewPatientDetails;
+            window.renderPatients = mod.renderPatients;
+            console.log('✅ Funciones de pacientes cargadas');
+        });
+        
+        import('./js/modules/profesionales.js').then(mod => {
+            window.showAddStaffModal = mod.showAddStaffModal;
+            window.closeAddStaffModal = mod.closeAddStaffModal;
+            window.addStaff = mod.addStaff;
+            window.editTherapist = mod.editTherapist;
+            window.closeEditTherapistModal = mod.closeEditTherapistModal;
+            window.updateTherapist = mod.updateTherapist;
+            window.deleteStaff = mod.deleteStaff;
+            console.log('✅ Funciones de profesionales cargadas');
+        });
+        
+        import('./js/modules/boxes.js').then(mod => {
+            window.showBoxModal = mod.showBoxModal;
+            window.closeBoxModal = mod.closeBoxModal;
+            window.saveBox = mod.saveBox;
+            window.editBox = mod.editBox;
+            window.toggleBoxStatus = mod.toggleBoxStatus;
+            window.deleteBox = mod.deleteBox;
+            console.log('✅ Funciones de boxes cargadas');
+        });
+        
+        import('./js/modules/disponibilidad.js').then(mod => {
+            window.showAvailabilityModal = mod.showAvailabilityModal;
+            window.closeAvailabilityModal = mod.closeAvailabilityModal;
+            window.generateTimeSlots = mod.generateTimeSlots;
+            window.toggleWeekday = mod.toggleWeekday;
+            window.blockTimeRange = mod.blockTimeRange;
+            window.applyGeneratedSlots = mod.applyGeneratedSlots;
+            window.clearAllSlots = mod.clearAllSlots;
+            window.saveAvailability = mod.saveAvailability;
+            window.loadTimeSlots = mod.loadTimeSlots;
+            window.addOvercupo = mod.addOvercupo;
+            console.log('✅ Funciones de disponibilidad cargadas');
+        });
+        
+        import('./js/modules/personalizacion.js').then(mod => {
+            window.showLogoModal = mod.showLogoModal;
+            window.closeLogoModal = mod.closeLogoModal;
+            window.saveLogo = mod.saveLogo;
+            window.removeLogo = mod.removeLogo;
+            window.showTextsModal = mod.showTextsModal;
+            window.closeTextsModal = mod.closeTextsModal;
+            window.saveHeroTexts = mod.saveHeroTexts;
+            window.showBackgroundImageModal = mod.showBackgroundImageModal;
+            window.closeBackgroundImageModal = mod.closeBackgroundImageModal;
+            window.saveBackgroundImage = mod.saveBackgroundImage;
+            window.removeBackgroundImage = mod.removeBackgroundImage;
+            window.showPaymentMethodsModal = mod.showPaymentMethodsModal;
+            window.closePaymentMethodsModal = mod.closePaymentMethodsModal;
+            window.saveGlobalPaymentMethods = mod.saveGlobalPaymentMethods;
+            window.updatePaymentMethodsInfo = mod.updatePaymentMethodsInfo;
+            window.loadMyConfig = mod.loadMyConfig;
+            window.saveMyConfig = mod.saveMyConfig;
+            window.showSpecialtiesModal = mod.showSpecialtiesModal;
+            window.closeSpecialtiesModal = mod.closeSpecialtiesModal;
+            window.addSpecialty = mod.addSpecialty;
+            window.deleteSpecialty = mod.deleteSpecialty;
+            console.log('✅ Funciones de personalización cargadas');
+        });
+        
+        console.log('🎉 Todas las funciones cargadas');
+    };
+    
+    // Llamar después de cargar el dashboard
+    if (window.location.search.includes('dashboard')) {
+        setTimeout(window.ensureFunctions, 1000);
+    }
+</script>
 </body>
 </html>

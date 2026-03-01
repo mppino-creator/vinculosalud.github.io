@@ -1186,77 +1186,90 @@
     };
 </script>
 
-<!-- Script de depuración temporal (opcional, puedes eliminarlo después) -->
+<!-- SCRIPT DE DIAGNÓSTICO UNIFICADO -->
 <script>
-    window.addEventListener('load', function() {
-        console.log('🔍 Verificando funciones después de 2 segundos...');
+    (function() {
+        console.log('🔍 Iniciando diagnóstico de Vínculo Salud...');
+        
+        // Verificación inmediata
+        console.log('📊 Estado inicial - switchTab:', typeof window.switchTab);
+        
+        // Verificar después de 2 segundos
         setTimeout(() => {
-            console.log('✅ Funciones disponibles:', {
-                renderPatients: typeof window.renderPatients === 'function',
-                showNewPatientModal: typeof window.showNewPatientModal === 'function',
-                viewPatientDetails: typeof window.viewPatientDetails === 'function',
-                savePatient: typeof window.savePatient === 'function'
-            });
-        }, 2000);
-    });
-</script>
-
-<!-- Script de depuración mejorado -->
-<script>
-    window.addEventListener('load', function() {
-        console.log('🔍 Verificando funciones después de 3 segundos...');
-        setTimeout(() => {
-            console.log('📊 Estado de funciones:');
+            console.log('⏱️ Diagnóstico después de 2 segundos:');
             console.log('- switchTab:', typeof window.switchTab);
             console.log('- renderPatients:', typeof window.renderPatients);
             console.log('- showNewPatientModal:', typeof window.showNewPatientModal);
+            console.log('- state disponible:', typeof window.state !== 'undefined');
             
-            // Verificar si estamos en dashboard
+            // Si estamos en dashboard, probar renderizado
             const dashboard = document.getElementById('dashboard');
             if (dashboard && dashboard.style.display === 'block') {
-                console.log('✅ Dashboard visible, intentando renderizar pacientes...');
+                console.log('📋 Dashboard visible, ejecutando renderPatients...');
                 if (typeof window.renderPatients === 'function') {
                     window.renderPatients();
                 }
             }
-        }, 3000);
-    });
+        }, 2000);
+        
+        // Verificar después de 4 segundos
+        setTimeout(() => {
+            console.log('⏱️ Diagnóstico después de 4 segundos:');
+            if (window.state) {
+                console.log('📊 Total pacientes:', window.state.patients?.length || 0);
+                console.log('📊 Total citas:', window.state.appointments?.length || 0);
+                console.log('👥 Total profesionales:', window.state.staff?.length || 0);
+            }
+        }, 4000);
+    })();
 
-    // Función para probar manualmente
+    // Función de diagnóstico manual
+    window.diagnostico = function() {
+        console.log('🔍 DIAGNÓSTICO MANUAL');
+        console.log('=====================');
+        
+        if (!window.state) {
+            console.error('❌ state no disponible');
+            return;
+        }
+        
+        console.log('✅ state disponible');
+        console.log('👤 Current User:', window.state.currentUser);
+        console.log('📋 Pacientes:', window.state.patients?.length || 0);
+        console.log('📅 Citas:', window.state.appointments?.length || 0);
+        console.log('👥 Profesionales:', window.state.staff?.length || 0);
+        
+        // Buscar a Marcelo
+        const marcelo = window.state.staff?.find(s => s.name?.toLowerCase().includes('marcelo'));
+        if (marcelo) {
+            console.log('✅ Marcelo encontrado:', { id: marcelo.id, name: marcelo.name });
+            
+            const pacientesMarcelo = window.state.patients?.filter(p => p.psychId == marcelo.id) || [];
+            console.log('📋 Pacientes de Marcelo:', pacientesMarcelo.length);
+            
+            const citasMarcelo = window.state.appointments?.filter(a => a.psychId == marcelo.id) || [];
+            console.log('📅 Citas de Marcelo:', citasMarcelo.length);
+            
+            const ingresos = citasMarcelo.reduce((sum, a) => sum + (a.price || 0), 0);
+            console.log('💰 Ingresos de Marcelo:', ingresos);
+        } else {
+            console.log('❌ Marcelo no encontrado');
+        }
+        
+        console.log('=====================');
+    };
+
+    // Función para probar renderizado manual
     window.probarPacientes = function() {
-        console.log('🧪 Probando renderizado manual de pacientes...');
+        console.log('🧪 Renderizando pacientes manualmente...');
         if (typeof window.renderPatients === 'function') {
             window.renderPatients();
             console.log('✅ renderPatients ejecutado');
         } else {
-            console.error('❌ renderPatients NO es una función');
+            console.error('❌ renderPatients no disponible');
         }
     };
 </script>
-<!-- Script de verificación mejorado -->
-<script>
-    // Verificar inmediatamente
-    console.log('🔍 Verificando funciones al cargar página...');
-    console.log('- switchTab:', typeof window.switchTab);
-    
-    // Si no está disponible, esperar y verificar
-    if (typeof window.switchTab !== 'function') {
-        console.log('⏳ switchTab no disponible, esperando 2 segundos...');
-        setTimeout(() => {
-            console.log('- switchTab después de 2s:', typeof window.switchTab);
-            
-            // Probar manualmente si ya estamos en dashboard
-            const dashboard = document.getElementById('dashboard');
-            if (dashboard && dashboard.style.display === 'block') {
-                console.log('📊 Probando cambiar a especialidades...');
-                if (typeof window.switchTab === 'function') {
-                    window.switchTab('especialidades');
-                } else {
-                    console.error('❌ switchTab sigue sin estar disponible');
-                }
-            }
-        }, 2000);
-    }
-</script>
+
 </body>
 </html>

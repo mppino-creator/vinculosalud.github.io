@@ -13,6 +13,12 @@ import * as personalizacion from './modules/personalizacion.js';
 import * as publico from './modules/publico.js';
 
 // ============================================
+// EXPONER STATE GLOBALMENTE PARA DEPURACIÓN
+// ============================================
+window.state = state;
+console.log('✅ state expuesto globalmente');
+
+// ============================================
 // EXPONER FUNCIONES GLOBALES INMEDIATAMENTE
 // ============================================
 console.log('🚀 Exponiendo funciones globales...');

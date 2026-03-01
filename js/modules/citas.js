@@ -35,7 +35,7 @@ export function openBooking(id) {
     document.getElementById('custDate').value = today;
     document.getElementById('bookingDuration').innerText = (psych.sessionDuration || 45) + ' minutos';
     
-    // Cargar métodos de pago (si existe el elemento)
+    // Cargar métodos de pago
     loadPaymentMethods();
     
     // Actualizar detalles
@@ -44,11 +44,11 @@ export function openBooking(id) {
     updateAvailableTimes();
 }
 
-// Función de carga de métodos de pago - CORREGIDA (tolerante a elementos faltantes)
+// Función de carga de métodos de pago
 function loadPaymentMethods() {
     const select = document.getElementById('paymentMethod');
     if (!select) {
-        console.log("ℹ️ Elemento paymentMethod no encontrado - se omite carga de métodos de pago");
+        console.log("ℹ️ Elemento paymentMethod no encontrado");
         return;
     }
     
@@ -60,7 +60,7 @@ function loadPaymentMethods() {
         select.innerHTML += '<option value="transfer">Transferencia Bancaria</option>';
     }
     if (methods.cardPresencial) {
-        select.innerHTML += '<option value="card-presencial">Tarjeta (en consulta)</option>';
+        select.innerHTML += '<option value="card-presencial">Tarjeta (en consulta presencial)</option>';
     }
     if (methods.cardOnline) {
         select.innerHTML += '<option value="card-online">Tarjeta (pago online)</option>';
@@ -90,6 +90,7 @@ export function showPaymentDetails() {
             <p><strong>Cuenta:</strong> ${bank.accountType || ''} ${bank.accountNumber || ''}</p>
             <p><strong>RUT:</strong> ${bank.rut || ''}</p>
             <p><strong>Email:</strong> ${bank.email || ''}</p>
+            <p style="font-size:0.8rem; margin-top:10px;">💡 Envía el comprobante a este email para confirmar tu cita</p>
         `;
     } else {
         detailsDiv.style.display = 'none';
@@ -129,11 +130,7 @@ export function updateAvailableTimes() {
     timeSelect.disabled = false;
     presencialWarning.style.display = 'none';
     
-    // Verificar disponibilidad
-    console.log("📊 Disponibilidad completa:", state.selectedPsych.availability);
-    
     const availableSlots = state.selectedPsych.availability?.[date] || [];
-    console.log("🕐 Slots para esta fecha:", availableSlots);
 
     if (availableSlots.length === 0) {
         console.log("⚠️ No hay slots para esta fecha");
@@ -156,8 +153,6 @@ export function updateAvailableTimes() {
             return slotDateTime > now;
         })
         .sort((a, b) => a.time.localeCompare(b.time));
-
-    console.log("✅ Horas disponibles finales:", availableTimes);
 
     if (availableTimes.length === 0) {
         timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
@@ -185,6 +180,9 @@ export function updateBookingDetails() {
 
     document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
     document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial (solicitud)';
+    
+    // Ocultar contenedor de pago al cambiar tipo
+    document.getElementById('paymentLinkContainer').style.display = 'none';
     
     updateAvailableTimes();
 }
@@ -228,7 +226,7 @@ export function executeBooking() {
     const date = document.getElementById('custDate').value;
     const time = document.getElementById('custTime').value;
     const type = document.getElementById('appointmentType').value;
-    const paymentMethod = document.getElementById('paymentMethod')?.value || 'transfer';
+    const paymentMethod = document.getElementById('paymentMethod')?.value;
     const msg = document.getElementById('custMsg').value;
     const acceptPolicy = document.getElementById('acceptPolicy').checked;
 
@@ -240,6 +238,11 @@ export function executeBooking() {
 
     if (!validarRut(rut)) {
         showToast('RUT inválido', 'error');
+        return;
+    }
+
+    if (!paymentMethod) {
+        showToast('Selecciona un método de pago', 'error');
         return;
     }
 
@@ -309,17 +312,50 @@ export function executeBooking() {
 
         const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
 
-        // Mostrar link de pago si existe (solo para online)
+        // ============================================
+        // MOSTRAR LINK DE PAGO SEGÚN MÉTODO SELECCIONADO
+        // ============================================
         const paymentContainer = document.getElementById('paymentLinkContainer');
-        if (type === 'online' && state.selectedPsych.paymentLinks?.online) {
-            let paymentLink = state.selectedPsych.paymentLinks.online;
+        let paymentLink = '';
+        let qrCode = '';
+
+        // Mostrar link de pago si el método es con tarjeta
+        if (paymentMethod === 'card-online' || paymentMethod === 'card-presencial') {
+            if (type === 'online' && state.selectedPsych.paymentLinks?.online) {
+                // Link para pago online (cuando la atención es online)
+                paymentLink = state.selectedPsych.paymentLinks.online;
+                qrCode = state.selectedPsych.paymentLinks?.qrCode || '';
+            } else if (type === 'presencial' && state.selectedPsych.paymentLinks?.presencial) {
+                // Link para pago presencial (cuando la atención es presencial)
+                paymentLink = state.selectedPsych.paymentLinks.presencial;
+                qrCode = state.selectedPsych.paymentLinks?.qrCode || '';
+            }
+        }
+
+        if (paymentLink) {
+            // Personalizar link con datos del paciente
             const separator = paymentLink.includes('?') ? '&' : '?';
-            paymentLink = `${paymentLink}${separator}description=Atención Online - ${encodeURIComponent(name)}&customer_email=${encodeURIComponent(email)}&customer_name=${encodeURIComponent(name)}`;
+            paymentLink = `${paymentLink}${separator}description=Atención ${type} - ${encodeURIComponent(name)}&customer_email=${encodeURIComponent(email)}&customer_name=${encodeURIComponent(name)}`;
+
+            let qrHtml = '';
+            if (qrCode) {
+                qrHtml = `
+                    <div style="text-align: center; margin: 20px 0;">
+                        <p style="font-weight:600; margin-bottom:10px;">📱 Escanea para pagar:</p>
+                        <img src="${qrCode}" 
+                             style="width: 200px; height: 200px; border-radius: 12px; border: 3px solid var(--azul-medico); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    </div>
+                `;
+            }
 
             paymentContainer.innerHTML = `
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center; margin-top:20px;">
-                    <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 Pago online</h4>
+                    <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 Pago con Tarjeta</h4>
+                    <p style="font-size: 1.2rem; margin-bottom:10px;">Atención: ${type === 'online' ? 'Online' : 'Presencial'}</p>
                     <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${price.toLocaleString()}</p>
+                    
+                    ${qrHtml}
+                    
                     <a href="${paymentLink}" target="_blank" class="btn-staff" style="background: var(--verde-exito); text-decoration: none; padding: 15px 40px; font-size:1.2rem; margin-top:15px; display:inline-block;">
                         <i class="fab fa-cc-visa"></i> Pagar con Tarjeta
                     </a>
@@ -354,9 +390,9 @@ export function executeBooking() {
                 boxName: null,
                 price,
                 paymentMethod,
-                paymentStatus: 'pendiente',
+                paymentStatus: paymentLink ? 'pendiente' : 'pagado',
                 msg,
-                status: 'pendiente',
+                status: paymentLink ? 'pendiente' : 'confirmada',
                 createdAt: new Date().toISOString(),
                 editableUntil: new Date(Date.now() + state.EDIT_HOURS * 60 * 60 * 1000).toISOString()
             };
@@ -370,7 +406,7 @@ export function executeBooking() {
                 preferredTime: time
             });
             
-            showToast('¡Solicitud enviada! Completa el pago para confirmar', 'success');
+            showToast(paymentLink ? '¡Solicitud enviada! Realiza el pago para confirmar' : '¡Cita confirmada!', 'success');
         } else {
             // Solicitud presencial (solo día, sin hora)
             const request = {
@@ -395,7 +431,7 @@ export function executeBooking() {
 
             state.pendingRequests.push(request);
             sendRequestEmail(request);
-            showToast('¡Solicitud enviada! El profesional te confirmará la hora', 'success');
+            showToast(paymentLink ? '¡Solicitud enviada! Realiza el pago para confirmar' : '¡Solicitud enviada! El profesional te confirmará la hora', 'success');
         }
 
         import('../main.js').then(main => main.save());
@@ -421,10 +457,28 @@ function sendRequestEmail(request) {
         
         if (request.type === 'online') {
             subject = 'Solicitud de cita online - Vínculo Salud';
-            message = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita ONLINE con ${request.psych}.\n\n📅 Fecha: ${request.preferredDate}\n⏰ Hora: ${request.preferredTime}\n\nPara confirmar tu cita, debes realizar el pago a través del link que encontrarás en la página.\n\nUna vez confirmado el pago, recibirás un email con los detalles de la videollamada.\n\nVínculo Salud`;
+            message = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita ONLINE con ${request.psych}.\n\n📅 Fecha: ${request.preferredDate}\n⏰ Hora: ${request.preferredTime}\n\n`;
+            
+            if (request.paymentMethod === 'card-online' || request.paymentMethod === 'card-presencial') {
+                message += `Para confirmar tu cita, realiza el pago a través del link que aparece en la página.\n\n`;
+            } else {
+                message += `Para confirmar tu cita, realiza la transferencia a la cuenta indicada y envía el comprobante.\n\n`;
+            }
+            
+            message += `Una vez confirmado el pago, recibirás un email con los detalles.\n\nVínculo Salud`;
         } else {
             subject = 'Solicitud de cita presencial - Vínculo Salud';
-            message = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita PRESENCIAL con ${request.psych}.\n\n📅 Día solicitado: ${request.preferredDate}\n\nEl profesional revisará tu solicitud y te confirmará la hora exacta a la brevedad.\n\nVínculo Salud`;
+            message = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita PRESENCIAL con ${request.psych}.\n\n📅 Día solicitado: ${request.preferredDate}\n\n`;
+            
+            if (request.paymentMethod === 'card-online' || request.paymentMethod === 'card-presencial') {
+                message += `Para confirmar tu cita, realiza el pago a través del link que aparece en la página.\n\n`;
+            } else if (request.paymentMethod === 'transfer') {
+                message += `Para confirmar tu cita, realiza la transferencia a la cuenta indicada y envía el comprobante.\n\n`;
+            } else {
+                message += `El pago se realizará en el consultorio el día de la atención.\n\n`;
+            }
+            
+            message += `El profesional revisará tu solicitud y te confirmará la hora exacta a la brevedad.\n\nVínculo Salud`;
         }
         
         sendEmailNotification(patientEmail, subject, message);
@@ -458,7 +512,7 @@ export function renderPendingRequests() {
             <td>${r.psych}</td>
             <td>${r.preferredDate}</td>
             <td>${r.preferredTime}</td>
-            <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online (pago pendiente)' : 'Presencial'}</span></td>
+            <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
             <td>${r.boxName || '—'}</td>
             <td>${r.msg || '—'}</td>
             <td>
@@ -466,9 +520,9 @@ export function renderPendingRequests() {
                     <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--verde-exito); color:white;">
                         <i class="fa fa-check"></i> Confirmar
                     </button>
-                ` : `
+                ` : r.paymentStatus === 'pendiente' ? `
                     <span class="badge" style="background:var(--naranja-aviso);">Esperando pago</span>
-                `}
+                ` : ''}
                 <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
                     <i class="fa fa-times"></i> Rechazar
                 </button>
@@ -600,7 +654,6 @@ export function updateTherapistAvailableSlots() {
 
     if (!date || !state.currentUser?.data) return;
 
-    // Obtener TODAS las citas confirmadas del profesional en esa fecha
     const bookedTimes = state.appointments
         .filter(a => a.psychId == state.currentUser.data.id && a.date === date && a.status === 'confirmada')
         .map(a => a.time);
@@ -655,7 +708,6 @@ export function executeTherapistBooking() {
         return;
     }
 
-    // Verificar que no haya otra cita a la misma hora
     const existingAppointment = state.appointments.find(a => 
         a.psychId == state.currentUser.data.id && 
         a.date === date && 
@@ -706,7 +758,6 @@ export function executeTherapistBooking() {
         }
         state.selectedPatientForTherapist.appointments.push(appointment.id);
 
-        // Si venía de una solicitud, eliminarla
         if (window.currentRequestId) {
             state.setPendingRequests(state.pendingRequests.filter(r => r.id != window.currentRequestId));
             window.currentRequestId = null;
@@ -716,7 +767,6 @@ export function executeTherapistBooking() {
 
         showToast(`Cita confirmada con ${state.selectedPatientForTherapist.name}`, 'success');
 
-        // Limpiar formulario
         document.getElementById('therapistRut').value = '';
         document.getElementById('patientInfo').style.display = 'none';
         document.getElementById('therapistDate').value = '';

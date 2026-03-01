@@ -726,8 +726,12 @@
                 <div class="form-group">
                     <label>Método de Pago *</label>
                     <select id="paymentMethod" onchange="showPaymentDetails()">
-                        <option value="">Selecciona método</option>
-                    </select>
+    <option value="">Selecciona método</option>
+    <option value="transfer">Transferencia Bancaria</option>
+    <option value="card-presencial">Tarjeta (en consulta presencial)</option>
+    <option value="card-online">Tarjeta (pago online)</option>
+    <option value="cash">Efectivo (en consulta)</option>
+</select>
                 </div>
                 
                 <!-- Detalles de pago (para transferencia) -->

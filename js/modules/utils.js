@@ -9,12 +9,17 @@ const EMAILJS_TEMPLATE_ID = 'template_dhhwp7d';
 const EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa'; // ← TU PUBLIC KEY
 
 // ============================================
-// FUNCIÓN PARA ENVIAR EMAILS CON EMAILJS
+// FUNCIÓN PARA ENVIAR EMAILS CON EMAILJS (CORREGIDA)
 // ============================================
 export async function sendEmailNotification(to, subject, message, tipo = 'general') {
   console.log(`📧 Enviando email a: ${to} (${tipo})`);
   
   try {
+    // Verificar que emailjs esté disponible
+    if (typeof emailjs === 'undefined') {
+      throw new Error('EmailJS no está cargado. Verifica que el script esté en index.html');
+    }
+    
     // Preparar parámetros según el tipo de email
     const templateParams = {
       to_email: to,
@@ -26,6 +31,8 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
       appointment_price: '25000',
       message: message
     };
+
+    console.log('📤 Enviando con EmailJS...', templateParams);
 
     // Enviar usando EmailJS
     const response = await emailjs.send(
@@ -49,8 +56,30 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
     
   } catch (error) {
     console.error('❌ Error enviando email:', error);
+    // Mostrar más detalles si existen
+    if (error.text) console.error('Texto del error:', error.text);
     return false;
   }
+}
+
+// ============================================
+// FUNCIÓN DE RESPALDO (OPCIONAL)
+// ============================================
+export function sendEmailFallback(to, subject, message) {
+  console.log('📧 Usando fallback - simulación:');
+  console.log('To:', to);
+  console.log('Subject:', subject);
+  console.log('Message:', message);
+  
+  const emailDiv = document.getElementById('emailSimulation');
+  if (emailDiv) {
+    emailDiv.innerHTML = `<strong>📧 SIMULACIÓN: Email a ${to}</strong><br>${subject}`;
+    emailDiv.style.display = 'block';
+    setTimeout(() => { emailDiv.style.display = 'none'; }, 5000);
+  }
+  
+  showToast(`Simulación: Email enviado a ${to}`, 'info');
+  return true;
 }
 
 // ============================================

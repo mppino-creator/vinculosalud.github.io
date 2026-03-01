@@ -13,48 +13,95 @@ import * as personalizacion from './modules/personalizacion.js';
 import * as publico from './modules/publico.js';
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (OPTIMIZADA)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA)
 // ============================================
 export function save() {
-    const updates = {};
-
-    updates['/Staff'] = state.staff.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
-    updates['/Boxes'] = state.boxes.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
-    updates['/Patients'] = state.patients.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
-    updates['/Appointments'] = state.appointments.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
-    updates['/PendingRequests'] = state.pendingRequests.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
-    updates['/Messages'] = state.messages.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
-
-    db.ref().update(updates)
-        .then(() => console.log('Datos guardados correctamente'))
-        .catch(err => console.error('Error al guardar:', err));
-
-    // Guardar especialidades por separado (usa set)
-    const specialtiesObj = {};
-    state.specialties.forEach(item => {
-        specialtiesObj[item.id] = { name: item.name };
+    console.log("💾 Guardando datos en Firebase...");
+    
+    // Preparar objetos para Firebase (convertir arrays a objetos con ID como clave)
+    const staffObj = {};
+    state.staff.forEach(item => {
+        staffObj[item.id] = item;
     });
-    db.ref('Specialties').set(specialtiesObj);
 
-    if (state.currentUser) {
-        auth.updateStats();
-        citas.renderPendingRequests();
-        if (state.currentUser.role === 'admin') {
-            profesionales.renderStaffTable();
-            mensajes.renderMessagesTable();
-            boxes.renderBoxesTable();
-        }
-        if (state.currentUser.role === 'psych') {
-            pacientes.renderPatients();
-            boxes.renderBoxOccupancy();
-            if (document.getElementById('tabDisponibilidad')?.classList.contains('active')) {
-                disponibilidad.loadTimeSlots();
+    const boxesObj = {};
+    state.boxes.forEach(item => {
+        boxesObj[item.id] = item;
+    });
+
+    const patientsObj = {};
+    state.patients.forEach(item => {
+        patientsObj[item.id] = item;
+    });
+
+    const appointmentsObj = {};
+    state.appointments.forEach(item => {
+        appointmentsObj[item.id] = item;
+    });
+
+    const pendingRequestsObj = {};
+    state.pendingRequests.forEach(item => {
+        pendingRequestsObj[item.id] = item;
+    });
+
+    const messagesObj = {};
+    state.messages.forEach(item => {
+        messagesObj[item.id] = item;
+    });
+
+    // Realizar todas las actualizaciones en una sola operación
+    const updates = {
+        '/Staff': staffObj,
+        '/Boxes': boxesObj,
+        '/Patients': patientsObj,
+        '/Appointments': appointmentsObj,
+        '/PendingRequests': pendingRequestsObj,
+        '/Messages': messagesObj
+    };
+
+    // Ejecutar la actualización
+    db.ref().update(updates)
+        .then(() => {
+            console.log('✅ Datos guardados correctamente en Firebase');
+            
+            // Guardar especialidades por separado (usa set en lugar de update)
+            const specialtiesObj = {};
+            state.specialties.forEach(item => {
+                specialtiesObj[item.id] = { name: item.name };
+            });
+            return db.ref('Specialties').set(specialtiesObj);
+        })
+        .then(() => {
+            console.log('✅ Especialidades guardadas correctamente');
+            
+            // Actualizar vistas si hay usuario logueado
+            if (state.currentUser) {
+                auth.updateStats();
+                citas.renderPendingRequests();
+                
+                if (state.currentUser.role === 'admin') {
+                    profesionales.renderStaffTable();
+                    mensajes.renderMessagesTable();
+                    boxes.renderBoxesTable();
+                }
+                if (state.currentUser.role === 'psych') {
+                    pacientes.renderPatients();
+                    boxes.renderBoxOccupancy();
+                    if (document.getElementById('tabDisponibilidad')?.classList.contains('active')) {
+                        disponibilidad.loadTimeSlots();
+                    }
+                }
             }
-        }
-    }
-    publico.filterProfessionals();
-    mensajes.renderMessages();
-    mensajes.updateMarquee();
+            
+            // Actualizar vista pública
+            publico.filterProfessionals();
+            mensajes.renderMessages();
+            mensajes.updateMarquee();
+        })
+        .catch(err => {
+            console.error('❌ Error al guardar en Firebase:', err);
+            utils.showToast('Error al guardar los datos', 'error');
+        });
 }
 
 // ============================================

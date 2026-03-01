@@ -1200,5 +1200,38 @@
         }, 2000);
     });
 </script>
+
+<!-- Script de depuración mejorado -->
+<script>
+    window.addEventListener('load', function() {
+        console.log('🔍 Verificando funciones después de 3 segundos...');
+        setTimeout(() => {
+            console.log('📊 Estado de funciones:');
+            console.log('- switchTab:', typeof window.switchTab);
+            console.log('- renderPatients:', typeof window.renderPatients);
+            console.log('- showNewPatientModal:', typeof window.showNewPatientModal);
+            
+            // Verificar si estamos en dashboard
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard && dashboard.style.display === 'block') {
+                console.log('✅ Dashboard visible, intentando renderizar pacientes...');
+                if (typeof window.renderPatients === 'function') {
+                    window.renderPatients();
+                }
+            }
+        }, 3000);
+    });
+
+    // Función para probar manualmente
+    window.probarPacientes = function() {
+        console.log('🧪 Probando renderizado manual de pacientes...');
+        if (typeof window.renderPatients === 'function') {
+            window.renderPatients();
+            console.log('✅ renderPatients ejecutado');
+        } else {
+            console.error('❌ renderPatients NO es una función');
+        }
+    };
+</script>
 </body>
 </html>

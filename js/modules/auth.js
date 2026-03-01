@@ -10,9 +10,93 @@ import { renderPendingRequests } from './citas.js';
 import { actualizarContadoresReinicio } from './admin.js';
 
 // ============================================
-// FUNCIONES DE LOGIN
+// FUNCIÓN SWITCH TAB - CORREGIDA
 // ============================================
+export function switchTab(tabName) {
+    console.log('🔄 Cambiando a pestaña:', tabName);
+    
+    // Desactivar todas las pestañas
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    
+    // Activar la pestaña clickeada
+    const activeTab = Array.from(document.querySelectorAll('.tab')).find(t => 
+        t.textContent.trim().toLowerCase().includes(tabName.toLowerCase())
+    );
+    if (activeTab) activeTab.classList.add('active');
+    
+    // Ocultar todos los contenidos
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    // Mostrar el contenido seleccionado
+    const tabMap = {
+        'citas': 'tabCitas',
+        'solicitudes': 'tabSolicitudes',
+        'pacientes': 'tabPacientes',
+        'profesionales': 'tabProfesionales',
+        'especialidades': 'tabEspecialidades',
+        'pagos': 'tabPagos',
+        'fondo': 'tabFondo',
+        'textos': 'tabTextos',
+        'logo': 'tabLogo',
+        'reinicio': 'tabReinicio',
+        'disponibilidad': 'tabDisponibilidad',
+        'configuracion': 'tabConfiguracion',
+        'mensajes': 'tabMensajes',
+        'boxes': 'tabBoxes',
+        'agendar': 'tabAgendar'
+    };
+    
+    const tabId = tabMap[tabName];
+    if (tabId) {
+        const tabElement = document.getElementById(tabId);
+        if (tabElement) {
+            tabElement.classList.add('active');
+            console.log('✅ Pestaña activada:', tabId);
+        } else {
+            console.warn('⚠️ No se encontró el elemento:', tabId);
+        }
+    }
+    
+    // Cargar datos según la pestaña
+    setTimeout(() => {
+        try {
+            if (tabName === 'pacientes') {
+                if (typeof renderPatients === 'function') {
+                    console.log('📊 Renderizando pacientes...');
+                    renderPatients();
+                }
+            }
+            else if (tabName === 'profesionales' && state.currentUser?.role === 'admin') {
+                if (typeof renderStaffTable === 'function') renderStaffTable();
+            }
+            else if (tabName === 'mensajes' && state.currentUser?.role === 'admin') {
+                if (typeof renderMessagesTable === 'function') renderMessagesTable();
+            }
+            else if (tabName === 'boxes') {
+                if (typeof renderBoxesTable === 'function') renderBoxesTable();
+                if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
+            }
+            else if (tabName === 'disponibilidad' && state.currentUser?.role === 'psych') {
+                if (typeof loadTimeSlots === 'function') loadTimeSlots();
+            }
+            else if (tabName === 'configuracion' && state.currentUser?.role === 'psych') {
+                if (typeof loadMyConfig === 'function') loadMyConfig();
+            }
+            else if (tabName === 'pagos' && state.currentUser?.role === 'admin') {
+                if (typeof updatePaymentMethodsInfo === 'function') updatePaymentMethodsInfo();
+            }
+            else if (tabName === 'reinicio' && state.currentUser?.role === 'admin') {
+                if (typeof actualizarContadoresReinicio === 'function') actualizarContadoresReinicio();
+            }
+        } catch (error) {
+            console.error('❌ Error cargando datos:', error);
+        }
+    }, 100);
+}
 
+// ============================================
+// FUNCIONES DE LOGIN (sin cambios)
+// ============================================
 export function showLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) modal.style.display = 'flex';
@@ -65,7 +149,10 @@ export function processLogin() {
         state.setCurrentUser({ role: 'admin', data: adminUser });
         closeLoginModal();
         
-        // Cargar dashboard directamente (sin recargar)
+        // Guardar sesión
+        localStorage.setItem('vinculoCurrentUser', JSON.stringify({ role: 'admin', data: adminUser }));
+        
+        // Cargar dashboard
         cargarDashboard('admin');
         
         if (btn) {
@@ -87,7 +174,10 @@ export function processLogin() {
         state.setCurrentUser({ role, data: foundUser });
         closeLoginModal();
         
-        // Cargar dashboard directamente (sin recargar)
+        // Guardar sesión
+        localStorage.setItem('vinculoCurrentUser', JSON.stringify({ role, data: foundUser }));
+        
+        // Cargar dashboard
         cargarDashboard(role);
         
     } else {
@@ -102,11 +192,12 @@ export function processLogin() {
 
 export function logout() {
     state.setCurrentUser(null);
+    localStorage.removeItem('vinculoCurrentUser');
     location.reload();
 }
 
 // ============================================
-// FUNCIÓN PARA CARGAR EL DASHBOARD DIRECTAMENTE
+// FUNCIÓN PARA CARGAR EL DASHBOARD
 // ============================================
 export function cargarDashboard(role) {
     console.log('🔄 Cargando dashboard como:', role);
@@ -147,47 +238,13 @@ export function cargarDashboard(role) {
     });
 
     // Activar pestaña de citas
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    const citasTab = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.trim() === 'Citas');
-    if (citasTab) citasTab.classList.add('active');
-
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    const tabCitas = document.getElementById('tabCitas');
-    if (tabCitas) tabCitas.classList.add('active');
-
-    // Cargar datos según el rol
-    setTimeout(() => {
-        try {
-            if (isAdmin) {
-                if (typeof renderStaffTable === 'function') renderStaffTable();
-                if (typeof renderMessagesTable === 'function') renderMessagesTable();
-                if (typeof renderBoxesTable === 'function') renderBoxesTable();
-                if (typeof updatePaymentMethodsInfo === 'function') updatePaymentMethodsInfo();
-                if (typeof actualizarContadoresReinicio === 'function') actualizarContadoresReinicio();
-            } else {
-                const availDate = document.getElementById('availDate');
-                if (availDate) availDate.min = new Date().toISOString().split('T')[0];
-                
-                if (typeof loadMyConfig === 'function') loadMyConfig();
-                if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
-            }
-            
-            if (typeof renderPatients === 'function') renderPatients();
-            if (typeof renderPendingRequests === 'function') renderPendingRequests();
-            
-            console.log('✅ Datos cargados correctamente');
-        } catch (error) {
-            console.error('❌ Error cargando datos:', error);
-        }
-    }, 500);
+    switchTab('citas');
 }
 
 // ============================================
 // EXPONER FUNCIONES GLOBALMENTE
 // ============================================
-window.switchTab = function(tabName) {
-    import('./auth.js').then(mod => mod.switchTab(tabName));
-};
+window.switchTab = switchTab;
 window.showLoginModal = showLoginModal;
 window.closeLoginModal = closeLoginModal;
 window.processLogin = processLogin;

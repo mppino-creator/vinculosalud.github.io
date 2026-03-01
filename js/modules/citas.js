@@ -1,5 +1,4 @@
 // js/modules/citas.js
-import { getAvailableBoxes } from './boxes.js';
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, validarRut, sendEmailNotification } from './utils.js';
@@ -23,6 +22,8 @@ export function openBooking(id) {
     loadPaymentMethods();
     updateBookingDetails();
     document.getElementById('emailSimulation').style.display = 'none';
+    
+    // Mostrar mensaje según el tipo de atención
     updateAvailableTimes();
 }
 
@@ -74,29 +75,45 @@ function updateAvailableTimes() {
     const date = document.getElementById('custDate').value;
     const type = document.getElementById('appointmentType').value;
     const timeSelect = document.getElementById('custTime');
+    const onlineMsg = document.getElementById('onlineAvailabilityMsg');
+    const presencialWarning = document.getElementById('presencialWarning');
 
     if (!date || !state.selectedPsych) return;
 
+    // Limpiar opciones anteriores
     timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
 
+    // Si es presencial, no mostramos select de horas
     if (type === 'presencial') {
-        timeSelect.innerHTML = '<option value="">Selecciona un día (la hora se coordinará)</option>';
+        timeSelect.innerHTML = '<option value="">Solicitar día (la hora se coordinará)</option>';
+        presencialWarning.style.display = 'block';
+        onlineMsg.style.display = 'none';
         return;
     }
 
+    // Si es online, mostramos horas disponibles
+    presencialWarning.style.display = 'none';
+    
+    // Obtener slots disponibles para la fecha
     const availableSlots = state.selectedPsych.availability?.[date] || [];
+    
+    // Obtener TODAS las citas confirmadas del psicólogo en esa fecha (tanto online como presencial)
     const bookedTimes = state.appointments
-        .filter(a => a.psychId == state.selectedPsych.id && a.date === date)
+        .filter(a => a.psychId == state.selectedPsych.id && a.date === date && a.status === 'confirmada')
         .map(a => a.time);
 
     const now = new Date();
     const availableTimes = availableSlots
-        .filter(slot => !bookedTimes.includes(slot.time))
-        .filter(slot => new Date(date + 'T' + slot.time) > now)
+        .filter(slot => !bookedTimes.includes(slot.time)) // Filtra horas ya ocupadas
+        .filter(slot => {
+            const slotDateTime = new Date(date + 'T' + slot.time);
+            return slotDateTime > now; // Solo horas futuras
+        })
         .sort((a, b) => a.time.localeCompare(b.time));
 
     if (availableTimes.length === 0) {
         timeSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+        onlineMsg.style.display = 'none';
         return;
     }
 
@@ -108,50 +125,11 @@ function updateAvailableTimes() {
         if (slot.isOvercupo) option.style.color = '#f59e0b';
         timeSelect.appendChild(option);
     });
-}
 
-export function checkOnlineAvailability() {
-    const date = document.getElementById('custDate').value;
-    const time = document.getElementById('custTime').value;
-    const type = document.getElementById('appointmentType').value;
-
-    if (type === 'presencial') {
-        document.getElementById('onlineAvailabilityMsg').style.display = 'none';
-        return true;
-    }
-
-    if (type === 'online' && date && time) {
-        const selectedDateTime = new Date(date + 'T' + time);
-        const now = new Date();
-
-        if (selectedDateTime < now) {
-            document.getElementById('onlineAvailabilityMsg').style.display = 'block';
-            document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-exclamation-circle"></i> No puedes seleccionar una hora que ya pasó.';
-            document.getElementById('onlineAvailabilityMsg').style.background = '#fff3cd';
-            return false;
-        }
-
-        const existingAppointment = state.appointments.find(a => 
-            a.psychId == state.selectedPsych.id && 
-            a.date === date && 
-            a.time === time
-        );
-
-        const isAvailable = !existingAppointment && 
-            state.selectedPsych.availability?.[date]?.some(s => s.time === time);
-
-        if (isAvailable) {
-            document.getElementById('onlineAvailabilityMsg').style.display = 'block';
-            document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-check-circle"></i> Horario disponible para reserva inmediata.';
-            document.getElementById('onlineAvailabilityMsg').style.background = '#e6f7e6';
-            return true;
-        } else {
-            document.getElementById('onlineAvailabilityMsg').style.display = 'block';
-            document.getElementById('onlineAvailabilityMsg').innerHTML = '<i class="fa fa-exclamation-circle"></i> Horario no disponible. Por favor selecciona otro.';
-            document.getElementById('onlineAvailabilityMsg').style.background = '#fff3cd';
-            return false;
-        }
-    }
+    // Mostrar mensaje de disponibilidad
+    onlineMsg.style.display = 'block';
+    onlineMsg.innerHTML = '<i class="fa fa-info-circle"></i> Horarios disponibles para reserva inmediata';
+    onlineMsg.style.background = '#e6f7e6';
 }
 
 export function updateBookingDetails() {
@@ -159,19 +137,8 @@ export function updateBookingDetails() {
     const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
 
     document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
-    document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial';
-
-    const warning = document.getElementById('presencialWarning');
-    const onlineMsg = document.getElementById('onlineAvailabilityMsg');
-
-    if (type === 'presencial') {
-        warning.style.display = 'block';
-        onlineMsg.style.display = 'none';
-    } else {
-        warning.style.display = 'none';
-        onlineMsg.style.display = 'block';
-    }
-
+    document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial (solicitud)';
+    
     updateAvailableTimes();
 }
 
@@ -200,8 +167,9 @@ export function executeBooking() {
     const msg = document.getElementById('custMsg').value;
     const acceptPolicy = document.getElementById('acceptPolicy').checked;
 
+    // Validaciones básicas
     if (!rut || !name || !email || !date || !paymentMethod) {
-        showToast('Completa todos los campos obligatorios (RUT, nombre, email, fecha y método de pago)', 'error');
+        showToast('Completa todos los campos obligatorios', 'error');
         return;
     }
 
@@ -210,40 +178,43 @@ export function executeBooking() {
         return;
     }
 
-    if (type === 'online' && !time) {
-        showToast('Para atención online debes seleccionar una hora', 'error');
-        return;
-    }
-
     if (!acceptPolicy) {
         showToast('Debes aceptar la política de cancelación', 'error');
         return;
     }
 
+    // Para online: requiere hora y validaciones adicionales
     if (type === 'online') {
+        if (!time) {
+            showToast('Selecciona una hora para la cita online', 'error');
+            return;
+        }
+
+        // Validar que la hora no haya pasado
         const selectedDateTime = new Date(date + 'T' + time);
         const now = new Date();
         if (selectedDateTime < now) {
             showToast('No puedes agendar una hora que ya pasó', 'error');
             return;
         }
-    }
 
-    if (type === 'online') {
+        // Verificar que el horario esté disponible en la agenda del psicólogo
+        const isAvailable = state.selectedPsych.availability?.[date]?.some(s => s.time === time);
+        if (!isAvailable) {
+            showToast('El profesional no tiene disponibilidad en ese horario', 'error');
+            return;
+        }
+
+        // Verificar que no haya otra cita (online o presencial) a la misma hora
         const existingAppointment = state.appointments.find(a => 
             a.psychId == state.selectedPsych.id && 
             a.date === date && 
-            a.time === time
+            a.time === time &&
+            a.status === 'confirmada'
         );
 
         if (existingAppointment) {
             showToast('El profesional ya tiene una cita agendada en este horario', 'error');
-            return;
-        }
-
-        const isAvailable = state.selectedPsych.availability?.[date]?.some(s => s.time === time);
-        if (!isAvailable) {
-            showToast('Horario no disponible', 'error');
             return;
         }
     }
@@ -253,6 +224,7 @@ export function executeBooking() {
     bookBtn.disabled = true;
 
     setTimeout(() => {
+        // Buscar o crear paciente
         let patient = state.patients.find(p => p.rut === rut);
         if (!patient) {
             patient = {
@@ -272,59 +244,35 @@ export function executeBooking() {
 
         const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
 
+        // Mostrar link de pago si existe (solo para online)
         const paymentContainer = document.getElementById('paymentLinkContainer');
-        let paymentLink = '';
-        let qrCode = '';
-
         if (type === 'online' && state.selectedPsych.paymentLinks?.online) {
-            paymentLink = state.selectedPsych.paymentLinks.online;
-        } else if (type === 'presencial' && state.selectedPsych.paymentLinks?.presencial) {
-            paymentLink = state.selectedPsych.paymentLinks.presencial;
-            qrCode = state.selectedPsych.paymentLinks?.qrCode || '';
-        }
-
-        if (paymentLink) {
+            let paymentLink = state.selectedPsych.paymentLinks.online;
             const separator = paymentLink.includes('?') ? '&' : '?';
-            paymentLink = `${paymentLink}${separator}description=Atención ${type} - ${encodeURIComponent(name)}&customer_email=${encodeURIComponent(email)}&customer_name=${encodeURIComponent(name)}`;
-        }
-
-        if (paymentContainer) {
-            let qrHtml = '';
-            if (qrCode) {
-                qrHtml = `
-                    <div style="text-align: center; margin: 20px 0;">
-                        <p style="font-weight:600; margin-bottom:10px;">📱 Escanea para pagar (presencial):</p>
-                        <img src="${qrCode}" 
-                             style="width: 200px; height: 200px; border-radius: 12px; border: 3px solid var(--azul-medico); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                    </div>
-                `;
-            }
+            paymentLink = `${paymentLink}${separator}description=Atención Online - ${encodeURIComponent(name)}&customer_email=${encodeURIComponent(email)}&customer_name=${encodeURIComponent(name)}`;
 
             paymentContainer.innerHTML = `
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center;">
-                    <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 ${type === 'online' ? 'Pago online' : 'Pago presencial'}</h4>
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center; margin-top:20px;">
+                    <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 Pago online</h4>
                     <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${price.toLocaleString()}</p>
-                    
-                    ${qrHtml}
-                    
-                    ${paymentLink ? `
-                        <a href="${paymentLink}" target="_blank" class="btn-staff" style="background: var(--verde-exito); text-decoration: none; padding: 15px 40px; font-size:1.2rem; margin-top:15px; display:inline-block;">
-                            <i class="fab fa-cc-visa"></i> Pagar con Tarjeta
-                        </a>
-                        <p style="margin-top:15px; font-size:0.9rem; opacity:0.8;">
-                            <i class="fas fa-lock"></i> Pago seguro procesado por SumUp
-                        </p>
-                    ` : ''}
-                    
+                    <a href="${paymentLink}" target="_blank" class="btn-staff" style="background: var(--verde-exito); text-decoration: none; padding: 15px 40px; font-size:1.2rem; margin-top:15px; display:inline-block;">
+                        <i class="fab fa-cc-visa"></i> Pagar con Tarjeta
+                    </a>
+                    <p style="margin-top:15px; font-size:0.9rem; opacity:0.8;">
+                        <i class="fas fa-lock"></i> Pago seguro procesado por SumUp
+                    </p>
                     <p style="margin-top:20px; font-size:0.8rem; background: rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
-                        ⏰ Una vez realizado el pago, la cita se confirmará automáticamente y recibirás un email.
+                        ⏰ Una vez realizado el pago, la cita se confirmará automáticamente.
                     </p>
                 </div>
             `;
             paymentContainer.style.display = 'block';
+        } else {
+            paymentContainer.style.display = 'none';
         }
 
         if (type === 'online') {
+            // Reserva online directa
             const appointment = {
                 id: Date.now(),
                 patientId: patient.id,
@@ -336,22 +284,30 @@ export function executeBooking() {
                 psychId: state.selectedPsych.id,
                 date,
                 time,
-                type,
+                type: 'online',
                 boxId: null,
                 boxName: null,
                 price,
                 paymentMethod,
-                paymentStatus: paymentLink ? 'pendiente' : 'pagado',
+                paymentStatus: 'pendiente', // Cambiará a pagado cuando confirmen pago
                 msg,
-                status: paymentLink ? 'pendiente' : 'confirmada',
+                status: 'pendiente', // Pendiente hasta que paguen
                 createdAt: new Date().toISOString(),
                 editableUntil: new Date(Date.now() + state.EDIT_HOURS * 60 * 60 * 1000).toISOString()
             };
 
             state.appointments.push(appointment);
-            sendAppointmentEmails(appointment);
-            showToast(paymentLink ? '¡Cita creada! Realiza el pago para confirmar' : '¡Cita confirmada!', 'success');
+            
+            // Enviar email de solicitud (no de confirmación)
+            sendRequestEmail({
+                ...appointment,
+                preferredDate: date,
+                preferredTime: time
+            });
+            
+            showToast('¡Solicitud enviada! Completa el pago para confirmar', 'success');
         } else {
+            // Solicitud presencial (solo día, sin hora)
             const request = {
                 id: Date.now(),
                 patientId: patient.id,
@@ -363,7 +319,7 @@ export function executeBooking() {
                 psychId: state.selectedPsych.id,
                 preferredDate: date,
                 preferredTime: 'A coordinar',
-                type,
+                type: 'presencial',
                 boxId: null,
                 boxName: null,
                 paymentMethod,
@@ -381,71 +337,126 @@ export function executeBooking() {
 
         bookBtn.innerHTML = 'SOLICITAR CITA';
         bookBtn.disabled = false;
+        
+        // Opcional: redirigir o limpiar formulario
+        setTimeout(() => {
+            if (confirm('¿Quieres volver a la página principal?')) {
+                location.reload();
+            }
+        }, 2000);
     }, 1500);
 }
 
-function sendAppointmentEmails(appointment, isReminder = false) {
-    const patientEmail = appointment.patientEmail;
-    const psych = state.staff.find(s => s.id == appointment.psychId);
-    const psychEmail = psych?.email || '';
-
-    let subject, message;
-
-    if (isReminder) {
-        subject = `Recordatorio: Cita con ${appointment.psych} - Mañana`;
-        message = `Hola ${appointment.patient},\n\nTe recordamos que tienes una cita MAÑANA con ${appointment.psych}.\n\n📅 Fecha: ${appointment.date}\n⏰ Hora: ${appointment.time}\n💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}${appointment.boxName ? `\n📍 Box: ${appointment.boxName}` : ''}\n📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}\n\nPor favor, confirma tu asistencia.\n\nVínculo Salud`;
-    } else {
-        subject = `Confirmación de cita - Vínculo Salud`;
-        message = `Hola ${appointment.patient},\n\nTu cita ha sido confirmada con ${appointment.psych}.\n\n📅 Fecha: ${appointment.date}\n⏰ Hora: ${appointment.time}\n💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}${appointment.boxName ? `\n📍 Box: ${appointment.boxName}` : ''}\n📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}\n\n💳 Método de pago: ${appointment.paymentMethod === 'transfer' ? 'Transferencia bancaria' : appointment.paymentMethod === 'cash' ? 'Efectivo' : appointment.paymentMethod === 'mercadopago' ? 'Mercado Pago' : appointment.paymentMethod === 'webpay' ? 'Webpay' : 'Tarjeta'}\n\nSi necesitas modificar o cancelar tu cita, contáctanos con al menos 24 horas de anticipación.\n\nVínculo Salud`;
-    }
-
-    if (patientEmail) {
-        sendEmailNotification(patientEmail, subject, message);
-    }
-
-    if (!isReminder && psychEmail) {
-        const psychSubject = `Nueva cita confirmada - ${appointment.patient}`;
-        const psychMessage = `Hola ${appointment.psych},\n\nSe ha confirmado una nueva cita.\n\nPaciente: ${appointment.patient}\nEmail: ${appointment.patientEmail}\nTeléfono: ${appointment.patientPhone}\n📅 Fecha: ${appointment.date}\n⏰ Hora: ${appointment.time}\n💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}${appointment.boxName ? `\n📍 Box: ${appointment.boxName}` : ''}\n📝 Notas: ${appointment.msg || 'Sin observaciones'}\n\nVínculo Salud`;
-        sendEmailNotification(psychEmail, psychSubject, psychMessage);
-    }
-}
-
+// Funciones de email (simplificadas)
 function sendRequestEmail(request) {
     const patientEmail = request.patientEmail;
-    const psych = state.staff.find(s => s.id == request.psychId);
-    const psychEmail = psych?.email || '';
-
+    
     if (patientEmail) {
-        const patientSubject = `Solicitud de cita recibida - Vínculo Salud`;
-        const patientMessage = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita con ${request.psych}.\n\n📅 Fecha solicitada: ${request.preferredDate}\n⏰ Hora solicitada: ${request.preferredTime}\n💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}\n\nEl profesional revisará tu solicitud y te confirmará la hora exacta a la brevedad.\n\nPara consultas, puedes contactarnos directamente.\n\nVínculo Salud`;
-        sendEmailNotification(patientEmail, patientSubject, patientMessage);
-    }
-
-    if (psychEmail) {
-        const psychSubject = `Nueva solicitud de cita - ${request.patient}`;
-        const psychMessage = `Hola ${request.psych},\n\nHas recibido una nueva solicitud de cita.\n\nPaciente: ${request.patient}\nEmail: ${request.patientEmail}\nTeléfono: ${request.patientPhone}\n📅 Fecha solicitada: ${request.preferredDate}\n⏰ Hora solicitada: ${request.preferredTime}\n💻 Tipo: ${request.type === 'online' ? 'Online' : 'Presencial'}\n📝 Motivo: ${request.msg || 'No especificado'}\n\nPor favor, ingresa al sistema para confirmar o reprogramar esta cita.\n\nVínculo Salud`;
-        sendEmailNotification(psychEmail, psychSubject, psychMessage);
-    }
-}
-
-function sendConfirmationEmail(request, appointment) {
-    const patientEmail = request.patientEmail;
-    const psych = state.staff.find(s => s.id == appointment.psychId);
-
-    if (patientEmail) {
-        const subject = `Cita confirmada - Vínculo Salud`;
-        const message = `Hola ${request.patient},\n\nTu solicitud de cita ha sido confirmada.\n\n📅 Fecha: ${appointment.date}\n⏰ Hora: ${appointment.time}\n💻 Tipo: ${appointment.type === 'online' ? 'Online' : 'Presencial'}${appointment.boxName ? `\n📍 Box: ${appointment.boxName}` : ''}\n📍 Dirección: ${appointment.type === 'presencial' ? (psych?.address || 'Dirección no especificada') : 'El enlace de videollamada se enviará 1 hora antes'}\n\nPor favor, llega 10 minutos antes de tu hora agendada.\n\nVínculo Salud`;
+        let subject, message;
+        
+        if (request.type === 'online') {
+            subject = 'Solicitud de cita online - Vínculo Salud';
+            message = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita ONLINE con ${request.psych}.\n\n📅 Fecha: ${request.preferredDate}\n⏰ Hora: ${request.preferredTime}\n\nPara confirmar tu cita, debes realizar el pago a través del link que encontrarás en la página.\n\nUna vez confirmado el pago, recibirás un email con los detalles de la videollamada.\n\nVínculo Salud`;
+        } else {
+            subject = 'Solicitud de cita presencial - Vínculo Salud';
+            message = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita PRESENCIAL con ${request.psych}.\n\n📅 Día solicitado: ${request.preferredDate}\n\nEl profesional revisará tu solicitud y te confirmará la hora exacta a la brevedad.\n\nVínculo Salud`;
+        }
+        
         sendEmailNotification(patientEmail, subject, message);
     }
 }
 
-function sendCancellationEmail(appointment) {
-    if (appointment?.patientEmail) {
-        const subject = 'Cita cancelada - Vínculo Salud';
-        const message = `Hola ${appointment.patient},\n\nTu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.\n\nSi necesitas reagendar, contáctanos.\n\nVínculo Salud`;
-        sendEmailNotification(appointment.patientEmail, subject, message);
+// ============================================
+// FUNCIONES PARA EL PANEL DEL PROFESIONAL
+// ============================================
+
+export function renderPendingRequests() {
+    const tb = document.getElementById('pendingRequestsTable');
+    if (!tb) return;
+
+    let requestsToShow = [];
+    if (state.currentUser.role === 'admin') {
+        requestsToShow = state.pendingRequests;
+    } else if (state.currentUser.role === 'psych') {
+        requestsToShow = state.pendingRequests.filter(r => r.psychId == state.currentUser.data.id);
+    }
+
+    if (requestsToShow.length === 0) {
+        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes pendientes</td></tr>';
+        return;
+    }
+
+    tb.innerHTML = requestsToShow.reverse().map(r => `
+        <tr>
+            <td>${r.createdAt || '—'}</td>
+            <td><strong>${r.patient}</strong><br><small>${r.patientRut}</small></td>
+            <td>${r.psych}</td>
+            <td>${r.preferredDate}</td>
+            <td>${r.preferredTime}</td>
+            <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online (pago pendiente)' : 'Presencial'}</span></td>
+            <td>${r.boxName || '—'}</td>
+            <td>${r.msg || '—'}</td>
+            <td>
+                ${r.type === 'presencial' ? `
+                    <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--verde-exito); color:white;">
+                        <i class="fa fa-check"></i> Confirmar
+                    </button>
+                ` : `
+                    <span class="badge" style="background:var(--naranja-aviso);">Esperando pago</span>
+                `}
+                <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
+                    <i class="fa fa-times"></i> Rechazar
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+export function showConfirmRequestModal(requestId) {
+    const request = state.pendingRequests.find(r => r.id == requestId);
+    if (!request) return;
+
+    state.setSelectedPatientForTherapist(state.patients.find(p => p.id == request.patientId));
+    document.getElementById('therapistRut').value = state.selectedPatientForTherapist?.rut || '';
+    document.getElementById('patientInfoName').innerText = state.selectedPatientForTherapist?.name || '';
+    document.getElementById('patientInfoEmail').innerText = state.selectedPatientForTherapist?.email || '';
+    document.getElementById('patientInfoPhone').innerText = state.selectedPatientForTherapist?.phone || '';
+    document.getElementById('patientInfo').style.display = 'block';
+    document.getElementById('therapistPatientName').innerText = state.selectedPatientForTherapist?.name || '';
+    document.getElementById('therapistAppointmentType').value = 'presencial';
+    document.getElementById('therapistDate').value = request.preferredDate;
+    document.getElementById('therapistMsg').value = request.msg;
+    document.getElementById('therapistPaymentMethod').value = request.paymentMethod || 'transfer';
+
+    window.currentRequestId = requestId;
+
+    updateTherapistBookingDetails();
+    setTimeout(() => {
+        updateTherapistAvailableSlots();
+    }, 500);
+
+    import('./auth.js').then(auth => auth.switchTab('agendar'));
+}
+
+export function rejectRequest(requestId) {
+    if (confirm('¿Rechazar esta solicitud? Se notificará al paciente.')) {
+        const request = state.pendingRequests.find(r => r.id == requestId);
+        state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
+
+        if (request?.patientEmail) {
+            const subject = 'Solicitud de cita no confirmada - Vínculo Salud';
+            const message = `Hola ${request.patient},\n\nLamentamos informarte que no ha sido posible confirmar tu solicitud de cita con ${request.psych} para el ${request.preferredDate}.\n\nPor favor, contacta directamente con el profesional para acordar una nueva fecha.\n\nVínculo Salud`;
+            sendEmailNotification(request.patientEmail, subject, message);
+        }
+
+        import('./main.js').then(main => main.save());
+        showToast('Solicitud rechazada', 'success');
     }
 }
+
+// ============================================
+// FUNCIONES PARA QUE EL PROFESIONAL AGENDE MANUALMENTE
+// ============================================
 
 export function showTherapistBookingModal() {
     state.setSelectedTherapistBoxId(null);
@@ -509,12 +520,11 @@ export function updateTherapistBookingDetails() {
 
     if (type === 'presencial') {
         document.getElementById('therapistBoxField').style.display = 'block';
-        updateTherapistAvailableSlots();
     } else {
         document.getElementById('therapistBoxField').style.display = 'none';
         document.getElementById('therapistBoxDisplay').style.display = 'none';
-        updateTherapistAvailableSlots();
     }
+    updateTherapistAvailableSlots();
 }
 
 export function updateTherapistAvailableSlots() {
@@ -524,8 +534,9 @@ export function updateTherapistAvailableSlots() {
 
     if (!date || !state.currentUser) return;
 
+    // Obtener TODAS las citas confirmadas del profesional en esa fecha
     const bookedTimes = state.appointments
-        .filter(a => a.psychId == state.currentUser.data.id && a.date === date)
+        .filter(a => a.psychId == state.currentUser.data.id && a.date === date && a.status === 'confirmada')
         .map(a => a.time);
 
     const availableSlots = state.currentUser.data.availability?.[date] || [];
@@ -541,16 +552,6 @@ export function updateTherapistAvailableSlots() {
                 option.value = slot.time;
                 option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
                 if (slot.isOvercupo) option.style.color = '#f59e0b';
-
-                if (type === 'presencial') {
-                    const availableBoxes = getAvailableBoxes(date, slot.time);
-                    if (availableBoxes.length === 0) {
-                        option.disabled = true;
-                        option.textContent += ' (sin boxes disponibles)';
-                        option.style.color = 'var(--text-light)';
-                    }
-                }
-
                 timeSelect.appendChild(option);
             }
         }
@@ -563,51 +564,6 @@ export function updateTherapistAvailableSlots() {
     const time = document.getElementById('therapistTime').value;
     if (time) {
         document.getElementById('therapistTimeDisplay').innerText = time;
-        updateTherapistBoxSelector(date, time);
-    }
-}
-
-export function updateTherapistBoxSelector(date, time) {
-    const boxSelector = document.getElementById('therapistBoxSelector');
-    const boxAvailabilityMsg = document.getElementById('therapistBoxAvailabilityMsg');
-
-    if (!date || !time) {
-        boxSelector.innerHTML = '';
-        boxAvailabilityMsg.innerHTML = 'Selecciona fecha y horario primero';
-        return;
-    }
-
-    const availableBoxes = getAvailableBoxes(date, time);
-
-    if (availableBoxes.length === 0) {
-        boxSelector.innerHTML = '';
-        boxAvailabilityMsg.innerHTML = 'No hay boxes disponibles para este horario';
-        document.getElementById('therapistBoxDisplay').style.display = 'none';
-        state.setSelectedTherapistBoxId(null);
-        return;
-    }
-
-    boxSelector.innerHTML = availableBoxes.map(box => `
-        <div class="box-option ${state.selectedTherapistBoxId == box.id ? 'selected' : ''}" 
-             onclick="selectTherapistBox(${box.id}, this)"
-             title="${box.description || ''}">
-            📦 ${box.name} ${box.location ? `- ${box.location}` : ''}
-        </div>
-    `).join('');
-
-    boxAvailabilityMsg.innerHTML = `${availableBoxes.length} box(es) disponible(s)`;
-}
-
-export function selectTherapistBox(boxId, element) {
-    state.setSelectedTherapistBoxId(boxId);
-    const box = state.boxes.find(b => b.id == boxId);
-
-    document.querySelectorAll('#therapistBoxSelector .box-option').forEach(opt => opt.classList.remove('selected'));
-    element.classList.add('selected');
-
-    if (box) {
-        document.getElementById('therapistBoxName').innerText = `${box.name} ${box.location ? `(${box.location})` : ''}`;
-        document.getElementById('therapistBoxDisplay').style.display = 'flex';
     }
 }
 
@@ -628,19 +584,16 @@ export function executeTherapistBooking() {
         return;
     }
 
+    // Verificar que no haya otra cita a la misma hora
     const existingAppointment = state.appointments.find(a => 
         a.psychId == state.currentUser.data.id && 
         a.date === date && 
-        a.time === time
+        a.time === time &&
+        a.status === 'confirmada'
     );
 
     if (existingAppointment) {
         showToast('Ya tienes una cita agendada en este horario', 'error');
-        return;
-    }
-
-    if (type === 'presencial' && !state.selectedTherapistBoxId) {
-        showToast('Debes seleccionar un box para atención presencial', 'error');
         return;
     }
 
@@ -650,7 +603,6 @@ export function executeTherapistBooking() {
 
     setTimeout(() => {
         const price = type === 'online' ? state.currentUser.data.priceOnline : state.currentUser.data.pricePresencial;
-        const box = type === 'presencial' ? state.boxes.find(b => b.id == state.selectedTherapistBoxId) : null;
 
         const appointment = {
             id: Date.now(),
@@ -664,8 +616,8 @@ export function executeTherapistBooking() {
             date,
             time,
             type,
-            boxId: type === 'presencial' ? state.selectedTherapistBoxId : null,
-            boxName: box ? box.name : null,
+            boxId: null, // Se asignará después si es presencial
+            boxName: null,
             price,
             paymentMethod,
             paymentStatus: 'pagado',
@@ -678,27 +630,22 @@ export function executeTherapistBooking() {
 
         state.appointments.push(appointment);
 
-        if (!state.selectedPatientForTherapist.appointments) state.selectedPatientForTherapist.appointments = [];
+        if (!state.selectedPatientForTherapist.appointments) {
+            state.selectedPatientForTherapist.appointments = [];
+        }
         state.selectedPatientForTherapist.appointments.push(appointment.id);
 
+        // Si venía de una solicitud, eliminarla
         if (window.currentRequestId) {
-            const request = state.pendingRequests.find(r => r.id == window.currentRequestId);
-            if (request) {
-                sendConfirmationEmail(request, appointment);
-            }
             state.setPendingRequests(state.pendingRequests.filter(r => r.id != window.currentRequestId));
             window.currentRequestId = null;
-        } else {
-            sendAppointmentEmails(appointment);
         }
 
         import('./main.js').then(main => main.save());
 
         showToast(`Cita confirmada con ${state.selectedPatientForTherapist.name}`, 'success');
 
-        bookBtn.innerHTML = 'Confirmar Cita';
-        bookBtn.disabled = false;
-
+        // Limpiar formulario
         document.getElementById('therapistRut').value = '';
         document.getElementById('patientInfo').style.display = 'none';
         document.getElementById('therapistDate').value = '';
@@ -707,107 +654,13 @@ export function executeTherapistBooking() {
         document.getElementById('therapistPatientName').innerText = '—';
         document.getElementById('therapistDateDisplay').innerText = '—';
         document.getElementById('therapistTimeDisplay').innerText = '—';
-        document.getElementById('therapistBoxDisplay').style.display = 'none';
         state.setSelectedPatientForTherapist(null);
-        state.setSelectedTherapistBoxId(null);
 
-        import('./boxes.js').then(boxes => boxes.renderBoxOccupancy());
         import('./auth.js').then(auth => auth.switchTab('citas'));
     }, 1500);
 }
 
-export function renderPendingRequests() {
-    const tb = document.getElementById('pendingRequestsTable');
-    if (!tb) return;
-
-    let requestsToShow = [];
-    if (state.currentUser.role === 'admin') {
-        requestsToShow = state.pendingRequests;
-    } else if (state.currentUser.role === 'psych') {
-        requestsToShow = state.pendingRequests.filter(r => r.psychId == state.currentUser.data.id);
-    }
-
-    if (requestsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes pendientes</td></tr>';
-        return;
-    }
-
-    tb.innerHTML = requestsToShow.reverse().map(r => `
-        <tr>
-            <td>${r.createdAt || '—'}</td>
-            <td><strong>${r.patient}</strong><br><small>${r.patientRut}</small></td>
-            <td>${r.psych}</td>
-            <td>${r.preferredDate}</td>
-            <td>${r.preferredTime}</td>
-            <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-            <td>${r.boxName || '—'}</td>
-            <td>${r.msg || '—'}</td>
-            <td>
-                <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--verde-exito); color:white;">
-                    <i class="fa fa-check"></i> Confirmar
-                </button>
-                <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
-                    <i class="fa fa-times"></i> Rechazar
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-export function showConfirmRequestModal(requestId) {
-    const request = state.pendingRequests.find(r => r.id == requestId);
-    if (!request) return;
-
-    state.setSelectedPatientForTherapist(state.patients.find(p => p.id == request.patientId));
-    document.getElementById('therapistRut').value = state.selectedPatientForTherapist?.rut || '';
-    document.getElementById('patientInfoName').innerText = state.selectedPatientForTherapist?.name || '';
-    document.getElementById('patientInfoEmail').innerText = state.selectedPatientForTherapist?.email || '';
-    document.getElementById('patientInfoPhone').innerText = state.selectedPatientForTherapist?.phone || '';
-    document.getElementById('patientInfo').style.display = 'block';
-    document.getElementById('therapistPatientName').innerText = state.selectedPatientForTherapist?.name || '';
-    document.getElementById('therapistAppointmentType').value = request.type;
-    document.getElementById('therapistDate').value = request.preferredDate;
-    document.getElementById('therapistMsg').value = request.msg;
-    document.getElementById('therapistPaymentMethod').value = 'transfer';
-
-    if (request.boxId) {
-        state.setSelectedTherapistBoxId(request.boxId);
-    }
-
-    window.currentRequestId = requestId;
-
-    updateTherapistBookingDetails();
-    setTimeout(() => {
-        updateTherapistAvailableSlots();
-        document.getElementById('therapistTime').value = request.preferredTime;
-        document.getElementById('therapistTimeDisplay').innerText = request.preferredTime;
-        if (request.boxId) {
-            updateTherapistBoxSelector(request.preferredDate, request.preferredTime);
-        }
-    }, 500);
-
-    import('./auth.js').then(auth => auth.switchTab('agendar'));
-}
-
-export function rejectRequest(requestId) {
-    if (confirm('¿Rechazar esta solicitud? Se notificará al paciente.')) {
-        const request = state.pendingRequests.find(r => r.id == requestId);
-        state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
-
-        if (request?.patientEmail) {
-            const subject = 'Solicitud de cita no confirmada - Vínculo Salud';
-            const message = `Hola ${request.patient},\n\nLamentamos informarte que no ha sido posible confirmar tu solicitud de cita con ${request.psych} para el ${request.preferredDate} a las ${request.preferredTime}.\n\nPor favor, contacta directamente con el profesional para acordar una nueva fecha.\n\nVínculo Salud`;
-            sendEmailNotification(request.patientEmail, subject, message);
-        }
-
-        import('./main.js').then(main => main.save());
-        showToast('Solicitud rechazada', 'success');
-    }
-}
-
 export function editAppointment(id) {
-    const appointment = state.appointments.find(a => a.id == id);
-    if (!appointment) return;
     showToast('Función de edición en desarrollo', 'info');
 }
 
@@ -817,7 +670,9 @@ export function cancelAppointment(id) {
         state.setAppointments(state.appointments.filter(a => a.id != id));
 
         if (appointment?.patientEmail) {
-            sendCancellationEmail(appointment);
+            const subject = 'Cita cancelada - Vínculo Salud';
+            const message = `Hola ${appointment.patient},\n\nTu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.\n\nSi necesitas reagendar, contáctanos.\n\nVínculo Salud`;
+            sendEmailNotification(appointment.patientEmail, subject, message);
         }
 
         import('./main.js').then(main => main.save());
@@ -829,6 +684,7 @@ export function markAsPaid(id) {
     const appointment = state.appointments.find(a => a.id == id);
     if (appointment) {
         appointment.paymentStatus = 'pagado';
+        appointment.status = 'confirmada';
         import('./main.js').then(main => main.save());
         showToast('Pago marcado como recibido', 'success');
     }

@@ -38,6 +38,10 @@ export function openBooking(id) {
     // Cargar métodos de pago
     loadPaymentMethods();
     
+    // Ocultar contenedores de pago al inicio
+    document.getElementById('paymentDetails').style.display = 'none';
+    document.getElementById('paymentLinkContainer').style.display = 'none';
+    
     // Actualizar detalles
     updateBookingDetails();
     document.getElementById('emailSimulation').style.display = 'none';
@@ -52,7 +56,7 @@ function loadPaymentMethods() {
         return;
     }
     
-    select.innerHTML = '<option value="">Selecciona método</option>';
+    select.innerHTML = '<option value="">Selecciona método de pago</option>';
 
     const methods = state.selectedPsych.paymentMethods || state.globalPaymentMethods;
 
@@ -76,11 +80,24 @@ function loadPaymentMethods() {
     }
 }
 
+// ============================================
+// FUNCIÓN PARA MOSTRAR LINK DE PAGO INMEDIATAMENTE
+// ============================================
 export function showPaymentDetails() {
     const method = document.getElementById('paymentMethod')?.value;
     const detailsDiv = document.getElementById('paymentDetails');
-    if (!detailsDiv) return;
+    const paymentContainer = document.getElementById('paymentLinkContainer');
+    const type = document.getElementById('appointmentType').value;
+    const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
     
+    // Ocultar todo primero
+    if (detailsDiv) detailsDiv.style.display = 'none';
+    if (paymentContainer) paymentContainer.style.display = 'none';
+    
+    // Si no hay método seleccionado, salir
+    if (!method) return;
+    
+    // Si es transferencia, mostrar datos bancarios
     if (method === 'transfer' && state.selectedPsych.bankDetails) {
         const bank = state.selectedPsych.bankDetails;
         detailsDiv.style.display = 'block';
@@ -90,10 +107,76 @@ export function showPaymentDetails() {
             <p><strong>Cuenta:</strong> ${bank.accountType || ''} ${bank.accountNumber || ''}</p>
             <p><strong>RUT:</strong> ${bank.rut || ''}</p>
             <p><strong>Email:</strong> ${bank.email || ''}</p>
-            <p style="font-size:0.8rem; margin-top:10px;">💡 Envía el comprobante a este email para confirmar tu cita</p>
+            <p style="font-size:0.8rem; margin-top:10px; background:#fff3cd; padding:10px; border-radius:8px;">
+                <i class="fa fa-info-circle"></i> 
+                💡 Realiza la transferencia y envía el comprobante al email indicado. Una vez confirmado el pago, recibirás un email con la confirmación de tu cita.
+            </p>
         `;
-    } else {
-        detailsDiv.style.display = 'none';
+    }
+    
+    // Si es pago con tarjeta, mostrar link de pago INMEDIATAMENTE
+    if (method === 'card-online' || method === 'card-presencial') {
+        let paymentLink = '';
+        let qrCode = '';
+        
+        // Determinar qué link mostrar según el tipo de atención
+        if (type === 'online' && state.selectedPsych.paymentLinks?.online) {
+            paymentLink = state.selectedPsych.paymentLinks.online;
+            qrCode = state.selectedPsych.paymentLinks?.qrCode || '';
+        } else if (type === 'presencial' && state.selectedPsych.paymentLinks?.presencial) {
+            paymentLink = state.selectedPsych.paymentLinks.presencial;
+            qrCode = state.selectedPsych.paymentLinks?.qrCode || '';
+        }
+        
+        if (paymentLink) {
+            // Personalizar link con datos del paciente (si ya ingresó algunos)
+            const name = document.getElementById('custName')?.value || 'Paciente';
+            const email = document.getElementById('custEmail')?.value || '';
+            
+            const separator = paymentLink.includes('?') ? '&' : '?';
+            const personalizedLink = `${paymentLink}${separator}description=Atención ${type} - ${encodeURIComponent(name)}&customer_email=${encodeURIComponent(email)}&customer_name=${encodeURIComponent(name)}`;
+
+            let qrHtml = '';
+            if (qrCode) {
+                qrHtml = `
+                    <div style="text-align: center; margin: 20px 0;">
+                        <p style="font-weight:600; margin-bottom:10px;">📱 Escanea para pagar:</p>
+                        <img src="${qrCode}" 
+                             style="width: 200px; height: 200px; border-radius: 12px; border: 3px solid var(--azul-medico); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    </div>
+                `;
+            }
+
+            paymentContainer.innerHTML = `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center; margin-top:20px;">
+                    <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 Pago con Tarjeta</h4>
+                    <p style="font-size: 1.2rem; margin-bottom:10px;">Atención: ${type === 'online' ? 'Online' : 'Presencial'}</p>
+                    <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${price.toLocaleString()}</p>
+                    
+                    ${qrHtml}
+                    
+                    <a href="${personalizedLink}" target="_blank" class="btn-staff" style="background: var(--verde-exito); text-decoration: none; padding: 15px 40px; font-size:1.2rem; margin-top:15px; display:inline-block;">
+                        <i class="fab fa-cc-visa"></i> Pagar con Tarjeta
+                    </a>
+                    <p style="margin-top:15px; font-size:0.9rem; opacity:0.8;">
+                        <i class="fas fa-lock"></i> Pago seguro procesado por SumUp
+                    </p>
+                    <p style="margin-top:20px; font-size:0.8rem; background: rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                        ⏰ Una vez realizado el pago, la cita se confirmará automáticamente y recibirás un email.
+                    </p>
+                </div>
+            `;
+            paymentContainer.style.display = 'block';
+        } else {
+            paymentContainer.innerHTML = `
+                <div style="background: #fff3cd; padding: 20px; border-radius: 12px; color: #856404; margin-top:20px;">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>El profesional no ha configurado el link de pago.</strong>
+                    <p style="margin-top:10px;">Por favor, contacta directamente al profesional para coordinar el pago.</p>
+                </div>
+            `;
+            paymentContainer.style.display = 'block';
+        }
     }
 }
 
@@ -181,7 +264,8 @@ export function updateBookingDetails() {
     document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
     document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial (solicitud)';
     
-    // Ocultar contenedor de pago al cambiar tipo
+    // Ocultar contenedores de pago al cambiar tipo
+    document.getElementById('paymentDetails').style.display = 'none';
     document.getElementById('paymentLinkContainer').style.display = 'none';
     
     updateAvailableTimes();
@@ -197,6 +281,9 @@ export function searchPatientByRutBooking() {
         document.getElementById('custEmail').value = patient.email || '';
         document.getElementById('custPhone').value = patient.phone || '';
         showToast('Datos del paciente cargados', 'success');
+        
+        // Actualizar link de pago si ya hay método seleccionado
+        showPaymentDetails();
     }
 }
 
@@ -248,6 +335,13 @@ export function executeBooking() {
 
     if (!acceptPolicy) {
         showToast('Debes aceptar la política de cancelación', 'error');
+        return;
+    }
+
+    // Para pago con tarjeta, verificar que haya link configurado
+    if ((paymentMethod === 'card-online' || paymentMethod === 'card-presencial') && 
+        !state.selectedPsych.paymentLinks?.online && !state.selectedPsych.paymentLinks?.presencial) {
+        showToast('El profesional no tiene configurado el pago con tarjeta', 'error');
         return;
     }
 
@@ -312,66 +406,6 @@ export function executeBooking() {
 
         const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
 
-        // ============================================
-        // MOSTRAR LINK DE PAGO SEGÚN MÉTODO SELECCIONADO
-        // ============================================
-        const paymentContainer = document.getElementById('paymentLinkContainer');
-        let paymentLink = '';
-        let qrCode = '';
-
-        // Mostrar link de pago si el método es con tarjeta
-        if (paymentMethod === 'card-online' || paymentMethod === 'card-presencial') {
-            if (type === 'online' && state.selectedPsych.paymentLinks?.online) {
-                // Link para pago online (cuando la atención es online)
-                paymentLink = state.selectedPsych.paymentLinks.online;
-                qrCode = state.selectedPsych.paymentLinks?.qrCode || '';
-            } else if (type === 'presencial' && state.selectedPsych.paymentLinks?.presencial) {
-                // Link para pago presencial (cuando la atención es presencial)
-                paymentLink = state.selectedPsych.paymentLinks.presencial;
-                qrCode = state.selectedPsych.paymentLinks?.qrCode || '';
-            }
-        }
-
-        if (paymentLink) {
-            // Personalizar link con datos del paciente
-            const separator = paymentLink.includes('?') ? '&' : '?';
-            paymentLink = `${paymentLink}${separator}description=Atención ${type} - ${encodeURIComponent(name)}&customer_email=${encodeURIComponent(email)}&customer_name=${encodeURIComponent(name)}`;
-
-            let qrHtml = '';
-            if (qrCode) {
-                qrHtml = `
-                    <div style="text-align: center; margin: 20px 0;">
-                        <p style="font-weight:600; margin-bottom:10px;">📱 Escanea para pagar:</p>
-                        <img src="${qrCode}" 
-                             style="width: 200px; height: 200px; border-radius: 12px; border: 3px solid var(--azul-medico); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                    </div>
-                `;
-            }
-
-            paymentContainer.innerHTML = `
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; color: white; text-align: center; margin-top:20px;">
-                    <h4 style="margin-bottom: 15px; font-size:1.5rem;">💰 Pago con Tarjeta</h4>
-                    <p style="font-size: 1.2rem; margin-bottom:10px;">Atención: ${type === 'online' ? 'Online' : 'Presencial'}</p>
-                    <p style="font-size: 2rem; font-weight:700; margin-bottom:10px;">$${price.toLocaleString()}</p>
-                    
-                    ${qrHtml}
-                    
-                    <a href="${paymentLink}" target="_blank" class="btn-staff" style="background: var(--verde-exito); text-decoration: none; padding: 15px 40px; font-size:1.2rem; margin-top:15px; display:inline-block;">
-                        <i class="fab fa-cc-visa"></i> Pagar con Tarjeta
-                    </a>
-                    <p style="margin-top:15px; font-size:0.9rem; opacity:0.8;">
-                        <i class="fas fa-lock"></i> Pago seguro procesado por SumUp
-                    </p>
-                    <p style="margin-top:20px; font-size:0.8rem; background: rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
-                        ⏰ Una vez realizado el pago, la cita se confirmará automáticamente.
-                    </p>
-                </div>
-            `;
-            paymentContainer.style.display = 'block';
-        } else {
-            paymentContainer.style.display = 'none';
-        }
-
         if (type === 'online') {
             // Reserva online directa
             const appointment = {
@@ -390,9 +424,9 @@ export function executeBooking() {
                 boxName: null,
                 price,
                 paymentMethod,
-                paymentStatus: paymentLink ? 'pendiente' : 'pagado',
+                paymentStatus: paymentMethod === 'card-online' || paymentMethod === 'card-presencial' ? 'pendiente' : 'pagado',
                 msg,
-                status: paymentLink ? 'pendiente' : 'confirmada',
+                status: paymentMethod === 'card-online' || paymentMethod === 'card-presencial' ? 'pendiente' : 'confirmada',
                 createdAt: new Date().toISOString(),
                 editableUntil: new Date(Date.now() + state.EDIT_HOURS * 60 * 60 * 1000).toISOString()
             };
@@ -406,7 +440,11 @@ export function executeBooking() {
                 preferredTime: time
             });
             
-            showToast(paymentLink ? '¡Solicitud enviada! Realiza el pago para confirmar' : '¡Cita confirmada!', 'success');
+            if (paymentMethod === 'card-online' || paymentMethod === 'card-presencial') {
+                showToast('✅ Solicitud creada. Realiza el pago con el link de arriba para confirmar tu cita.', 'success');
+            } else {
+                showToast('✅ Cita confirmada. Recibirás un email con los detalles.', 'success');
+            }
         } else {
             // Solicitud presencial (solo día, sin hora)
             const request = {
@@ -431,7 +469,12 @@ export function executeBooking() {
 
             state.pendingRequests.push(request);
             sendRequestEmail(request);
-            showToast(paymentLink ? '¡Solicitud enviada! Realiza el pago para confirmar' : '¡Solicitud enviada! El profesional te confirmará la hora', 'success');
+            
+            if (paymentMethod === 'card-online' || paymentMethod === 'card-presencial') {
+                showToast('✅ Solicitud creada. Realiza el pago con el link de arriba para confirmar tu cita.', 'success');
+            } else {
+                showToast('✅ Solicitud enviada. El profesional te confirmará la hora.', 'success');
+            }
         }
 
         import('../main.js').then(main => main.save());
@@ -461,11 +504,13 @@ function sendRequestEmail(request) {
             
             if (request.paymentMethod === 'card-online' || request.paymentMethod === 'card-presencial') {
                 message += `Para confirmar tu cita, realiza el pago a través del link que aparece en la página.\n\n`;
+            } else if (request.paymentMethod === 'transfer') {
+                message += `Para confirmar tu cita, realiza la transferencia a la cuenta indicada y envía el comprobante al email correspondiente.\n\n`;
             } else {
-                message += `Para confirmar tu cita, realiza la transferencia a la cuenta indicada y envía el comprobante.\n\n`;
+                message += `Tu cita está confirmada. Recibirás un email con los detalles de la videollamada 1 hora antes.\n\n`;
             }
             
-            message += `Una vez confirmado el pago, recibirás un email con los detalles.\n\nVínculo Salud`;
+            message += `Vínculo Salud`;
         } else {
             subject = 'Solicitud de cita presencial - Vínculo Salud';
             message = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita PRESENCIAL con ${request.psych}.\n\n📅 Día solicitado: ${request.preferredDate}\n\n`;
@@ -520,7 +565,7 @@ export function renderPendingRequests() {
                     <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--verde-exito); color:white;">
                         <i class="fa fa-check"></i> Confirmar
                     </button>
-                ` : r.paymentStatus === 'pendiente' ? `
+                ` : r.paymentMethod === 'card-online' || r.paymentMethod === 'card-presencial' || r.paymentMethod === 'transfer' ? `
                     <span class="badge" style="background:var(--naranja-aviso);">Esperando pago</span>
                 ` : ''}
                 <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">

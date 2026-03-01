@@ -2,39 +2,40 @@
 import * as state from './state.js';
 
 // ============================================
-// CONFIGURACIÓN DE EMAILJS (TUS DATOS REALES)
+// CONFIGURACIÓN DE EMAILJS
 // ============================================
 const EMAILJS_SERVICE_ID = 'vinculo_salud';
-const EMAILJS_TEMPLATE_ID = 'template_dhhwp7d';
-const EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa'; // ← TU PUBLIC KEY
+const EMAILJS_TEMPLATE_ID = 'template_abc123'; // ← PON EL NUEVO ID
+const EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
 
 // ============================================
-// FUNCIÓN PARA ENVIAR EMAILS CON EMAILJS (CORREGIDA)
+// FUNCIÓN PARA ENVIAR EMAILS (VERSIÓN DEFINITIVA)
 // ============================================
 export async function sendEmailNotification(to, subject, message, tipo = 'general') {
-  console.log(`📧 Enviando email a: ${to} (${tipo})`);
+  console.log(`📧 Enviando email a: ${to}`);
   
   try {
-    // Verificar que emailjs esté disponible
-    if (typeof emailjs === 'undefined') {
-      throw new Error('EmailJS no está cargado. Verifica que el script esté en index.html');
-    }
-    
-    // Preparar parámetros según el tipo de email
+    // Limpiar el mensaje de caracteres problemáticos
+    const mensajeLimpio = (message || 'Sin observaciones')
+      .replace(/[<>]/g, '')        // Eliminar < y >
+      .replace(/&/g, 'y')           // Cambiar & por "y"
+      .replace(/\n/g, ' ')          // Saltos de línea a espacios
+      .replace(/\s+/g, ' ')         // Múltiples espacios a uno
+      .trim();
+
     const templateParams = {
       to_email: to,
-      patient_name: to.split('@')[0],
+      patient_name: to.split('@')[0] || 'Paciente',
       appointment_date: new Date().toLocaleDateString('es-CL'),
       appointment_time: '10:00',
       professional_name: 'Profesional',
       appointment_type: 'online',
       appointment_price: '25000',
-      message: message
+      message: mensajeLimpio
     };
 
-    console.log('📤 Enviando con EmailJS...', templateParams);
+    console.log('📤 Enviando:', templateParams);
 
-    // Enviar usando EmailJS
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
@@ -42,48 +43,26 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
       EMAILJS_USER_ID
     );
 
-    console.log('✅ Email enviado correctamente:', response);
+    console.log('✅ Email enviado:', response);
     
-    // Mostrar en la interfaz
+    // Mostrar en interfaz
     const emailDiv = document.getElementById('emailSimulation');
     if (emailDiv) {
-      emailDiv.innerHTML = `<strong>📧 Email enviado a ${to}</strong><br>${subject}`;
+      emailDiv.innerHTML = `<strong>📧 Email enviado a ${to}</strong>`;
       emailDiv.style.display = 'block';
-      setTimeout(() => { emailDiv.style.display = 'none'; }, 5000);
+      setTimeout(() => emailDiv.style.display = 'none', 5000);
     }
     
     return true;
     
   } catch (error) {
-    console.error('❌ Error enviando email:', error);
-    // Mostrar más detalles si existen
-    if (error.text) console.error('Texto del error:', error.text);
+    console.error('❌ Error:', error);
     return false;
   }
 }
 
 // ============================================
-// FUNCIÓN DE RESPALDO (OPCIONAL)
-// ============================================
-export function sendEmailFallback(to, subject, message) {
-  console.log('📧 Usando fallback - simulación:');
-  console.log('To:', to);
-  console.log('Subject:', subject);
-  console.log('Message:', message);
-  
-  const emailDiv = document.getElementById('emailSimulation');
-  if (emailDiv) {
-    emailDiv.innerHTML = `<strong>📧 SIMULACIÓN: Email a ${to}</strong><br>${subject}`;
-    emailDiv.style.display = 'block';
-    setTimeout(() => { emailDiv.style.display = 'none'; }, 5000);
-  }
-  
-  showToast(`Simulación: Email enviado a ${to}`, 'info');
-  return true;
-}
-
-// ============================================
-// RESTO DE FUNCIONES (formatRut, validarRut, showToast, getPublicStaff)
+// RESTO DE FUNCIONES (sin cambios)
 // ============================================
 export function formatRut(input) {
   let value = input.value.replace(/[^0-9kK]/g, '');

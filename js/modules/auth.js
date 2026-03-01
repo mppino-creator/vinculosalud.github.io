@@ -10,7 +10,7 @@ import { renderPendingRequests } from './citas.js';
 import { actualizarContadoresReinicio } from './admin.js';
 
 // ============================================
-// FUNCIÓN SWITCH TAB - CORREGIDA
+// FUNCIÓN SWITCH TAB - CORREGIDA Y MEJORADA
 // ============================================
 export function switchTab(tabName) {
     console.log('🔄 Cambiando a pestaña:', tabName);
@@ -22,7 +22,10 @@ export function switchTab(tabName) {
     const activeTab = Array.from(document.querySelectorAll('.tab')).find(t => 
         t.textContent.trim().toLowerCase().includes(tabName.toLowerCase())
     );
-    if (activeTab) activeTab.classList.add('active');
+    if (activeTab) {
+        activeTab.classList.add('active');
+        console.log('✅ Pestaña activada:', activeTab.textContent.trim());
+    }
     
     // Ocultar todos los contenidos
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -51,7 +54,7 @@ export function switchTab(tabName) {
         const tabElement = document.getElementById(tabId);
         if (tabElement) {
             tabElement.classList.add('active');
-            console.log('✅ Pestaña activada:', tabId);
+            console.log('✅ Contenido activado:', tabId);
         } else {
             console.warn('⚠️ No se encontró el elemento:', tabId);
         }
@@ -64,6 +67,8 @@ export function switchTab(tabName) {
                 if (typeof renderPatients === 'function') {
                     console.log('📊 Renderizando pacientes...');
                     renderPatients();
+                } else {
+                    console.warn('⚠️ renderPatients no está disponible');
                 }
             }
             else if (tabName === 'profesionales' && state.currentUser?.role === 'admin') {
@@ -95,7 +100,7 @@ export function switchTab(tabName) {
 }
 
 // ============================================
-// FUNCIONES DE LOGIN (sin cambios)
+// FUNCIONES DE LOGIN
 // ============================================
 export function showLoginModal() {
     const modal = document.getElementById('loginModal');
@@ -242,10 +247,33 @@ export function cargarDashboard(role) {
 }
 
 // ============================================
-// EXPONER FUNCIONES GLOBALMENTE
+// FUNCIÓN UPDATE STATS (FALTABA)
 // ============================================
-window.switchTab = switchTab;
+export function updateStats() {
+    console.log('📊 Actualizando estadísticas...');
+    // Esta función debe ser implementada según tu lógica
+    // Por ahora solo mostramos un log
+}
+
+// ============================================
+// EXPONER FUNCIONES GLOBALMENTE (VERSIÓN MEJORADA)
+// ============================================
+// Asegurar que switchTab esté disponible globalmente
+window.switchTab = function(tabName) {
+    console.log('🔄 switchTab llamado desde window con:', tabName);
+    // Llamar a la función interna
+    switchTab(tabName);
+};
+
 window.showLoginModal = showLoginModal;
 window.closeLoginModal = closeLoginModal;
 window.processLogin = processLogin;
 window.logout = logout;
+
+// Verificar que se asignó correctamente
+console.log('✅ Funciones de auth asignadas a window:', {
+    switchTab: typeof window.switchTab,
+    showLoginModal: typeof window.showLoginModal,
+    processLogin: typeof window.processLogin,
+    logout: typeof window.logout
+});

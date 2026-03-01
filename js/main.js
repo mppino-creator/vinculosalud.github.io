@@ -13,7 +13,108 @@ import * as personalizacion from './modules/personalizacion.js';
 import * as publico from './modules/publico.js';
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA)
+// EXPONER FUNCIONES GLOBALES INMEDIATAMENTE
+// ============================================
+console.log('🚀 Exponiendo funciones globales...');
+
+// Funciones de autenticación
+window.showLoginModal = auth.showLoginModal;
+window.closeLoginModal = auth.closeLoginModal;
+window.processLogin = auth.processLogin;
+window.logout = auth.logout;
+window.switchTab = auth.switchTab;
+
+// Funciones de mensajes
+window.showMessageModal = mensajes.showMessageModal;
+window.closeMessageModal = mensajes.closeMessageModal;
+window.setRating = mensajes.setRating;
+window.saveMessage = mensajes.saveMessage;
+window.deleteMessage = mensajes.deleteMessage;
+
+// Funciones de profesionales
+window.showAddStaffModal = profesionales.showAddStaffModal;
+window.closeAddStaffModal = profesionales.closeAddStaffModal;
+window.addStaff = profesionales.addStaff;
+window.editTherapist = profesionales.editTherapist;
+window.closeEditTherapistModal = profesionales.closeEditTherapistModal;
+window.updateTherapist = profesionales.updateTherapist;
+window.deleteStaff = profesionales.deleteStaff;
+
+// Funciones de pacientes
+window.showNewPatientModal = pacientes.showNewPatientModal;
+window.closePatientModal = pacientes.closePatientModal;
+window.savePatient = pacientes.savePatient;
+window.printPatientSummary = pacientes.printPatientSummary;
+window.searchPatientByRut = pacientes.searchPatientByRut;
+window.viewPatientDetails = pacientes.viewPatientDetails;
+window.renderPatients = pacientes.renderPatients;
+
+// Funciones de citas
+window.openBooking = citas.openBooking;
+window.executeBooking = citas.executeBooking;
+window.showTherapistBookingModal = citas.showTherapistBookingModal;
+window.searchPatientByRutTherapist = citas.searchPatientByRutTherapist;
+window.executeTherapistBooking = citas.executeTherapistBooking;
+window.showConfirmRequestModal = citas.showConfirmRequestModal;
+window.rejectRequest = citas.rejectRequest;
+window.editAppointment = citas.editAppointment;
+window.cancelAppointment = citas.cancelAppointment;
+window.markAsPaid = citas.markAsPaid;
+
+// Funciones de disponibilidad
+window.showAvailabilityModal = disponibilidad.showAvailabilityModal;
+window.closeAvailabilityModal = disponibilidad.closeAvailabilityModal;
+window.generateTimeSlots = disponibilidad.generateTimeSlots;
+window.toggleWeekday = disponibilidad.toggleWeekday;
+window.blockTimeRange = disponibilidad.blockTimeRange;
+window.applyGeneratedSlots = disponibilidad.applyGeneratedSlots;
+window.clearAllSlots = disponibilidad.clearAllSlots;
+window.saveAvailability = disponibilidad.saveAvailability;
+window.loadTimeSlots = disponibilidad.loadTimeSlots;
+window.addOvercupo = disponibilidad.addOvercupo;
+
+// Funciones de boxes
+window.showBoxModal = boxes.showBoxModal;
+window.closeBoxModal = boxes.closeBoxModal;
+window.saveBox = boxes.saveBox;
+window.editBox = boxes.editBox;
+window.toggleBoxStatus = boxes.toggleBoxStatus;
+window.deleteBox = boxes.deleteBox;
+
+// Funciones de personalización
+window.showLogoModal = personalizacion.showLogoModal;
+window.closeLogoModal = personalizacion.closeLogoModal;
+window.saveLogo = personalizacion.saveLogo;
+window.removeLogo = personalizacion.removeLogo;
+window.showTextsModal = personalizacion.showTextsModal;
+window.closeTextsModal = personalizacion.closeTextsModal;
+window.saveHeroTexts = personalizacion.saveHeroTexts;
+window.showBackgroundImageModal = personalizacion.showBackgroundImageModal;
+window.closeBackgroundImageModal = personalizacion.closeBackgroundImageModal;
+window.saveBackgroundImage = personalizacion.saveBackgroundImage;
+window.removeBackgroundImage = personalizacion.removeBackgroundImage;
+window.showPaymentMethodsModal = personalizacion.showPaymentMethodsModal;
+window.closePaymentMethodsModal = personalizacion.closePaymentMethodsModal;
+window.saveGlobalPaymentMethods = personalizacion.saveGlobalPaymentMethods;
+window.updatePaymentMethodsInfo = personalizacion.updatePaymentMethodsInfo;
+window.loadMyConfig = personalizacion.loadMyConfig;
+window.saveMyConfig = personalizacion.saveMyConfig;
+window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
+window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
+window.addSpecialty = personalizacion.addSpecialty;
+window.deleteSpecialty = personalizacion.deleteSpecialty;
+
+// Funciones de utilidad
+window.filterProfessionals = publico.filterProfessionals;
+window.formatRut = utils.formatRut;
+window.validarRut = utils.validarRut;
+window.showToast = utils.showToast;
+
+// Verificar que switchTab se asignó correctamente
+console.log('✅ switchTab asignada a window:', typeof window.switchTab);
+
+// ============================================
+// FUNCIÓN PARA GUARDAR EN FIREBASE
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -64,7 +165,7 @@ export function save() {
         .then(() => {
             console.log('✅ Datos guardados correctamente en Firebase');
             
-            // Guardar especialidades por separado (usa set en lugar de update)
+            // Guardar especialidades por separado
             const specialtiesObj = {};
             state.specialties.forEach(item => {
                 specialtiesObj[item.id] = { name: item.name };
@@ -105,95 +206,6 @@ export function save() {
 }
 
 // ============================================
-// EXPONER FUNCIONES GLOBALES PARA LOS onclick DEL HTML
-// ============================================
-
-window.showLoginModal = auth.showLoginModal;
-window.closeLoginModal = auth.closeLoginModal;
-window.processLogin = auth.processLogin;
-window.logout = auth.logout;
-window.switchTab = auth.switchTab;
-
-window.showMessageModal = mensajes.showMessageModal;
-window.closeMessageModal = mensajes.closeMessageModal;
-window.setRating = mensajes.setRating;
-window.saveMessage = mensajes.saveMessage;
-window.deleteMessage = mensajes.deleteMessage;
-
-window.showAddStaffModal = profesionales.showAddStaffModal;
-window.closeAddStaffModal = profesionales.closeAddStaffModal;
-window.addStaff = profesionales.addStaff;
-window.editTherapist = profesionales.editTherapist;
-window.closeEditTherapistModal = profesionales.closeEditTherapistModal;
-window.updateTherapist = profesionales.updateTherapist;
-window.deleteStaff = profesionales.deleteStaff;
-
-window.showNewPatientModal = pacientes.showNewPatientModal;
-window.closePatientModal = pacientes.closePatientModal;
-window.savePatient = pacientes.savePatient;
-window.printPatientSummary = pacientes.printPatientSummary;
-window.searchPatientByRut = pacientes.searchPatientByRut;
-window.viewPatientDetails = pacientes.viewPatientDetails;
-window.renderPatients = pacientes.renderPatients;
-
-window.openBooking = citas.openBooking;
-window.executeBooking = citas.executeBooking;
-window.showTherapistBookingModal = citas.showTherapistBookingModal;
-window.searchPatientByRutTherapist = citas.searchPatientByRutTherapist;
-window.executeTherapistBooking = citas.executeTherapistBooking;
-window.showConfirmRequestModal = citas.showConfirmRequestModal;
-window.rejectRequest = citas.rejectRequest;
-window.editAppointment = citas.editAppointment;
-window.cancelAppointment = citas.cancelAppointment;
-window.markAsPaid = citas.markAsPaid;
-
-window.showAvailabilityModal = disponibilidad.showAvailabilityModal;
-window.closeAvailabilityModal = disponibilidad.closeAvailabilityModal;
-window.generateTimeSlots = disponibilidad.generateTimeSlots;
-window.toggleWeekday = disponibilidad.toggleWeekday;
-window.blockTimeRange = disponibilidad.blockTimeRange;
-window.applyGeneratedSlots = disponibilidad.applyGeneratedSlots;
-window.clearAllSlots = disponibilidad.clearAllSlots;
-window.saveAvailability = disponibilidad.saveAvailability;
-window.loadTimeSlots = disponibilidad.loadTimeSlots;
-window.addOvercupo = disponibilidad.addOvercupo;
-
-window.showBoxModal = boxes.showBoxModal;
-window.closeBoxModal = boxes.closeBoxModal;
-window.saveBox = boxes.saveBox;
-window.editBox = boxes.editBox;
-window.toggleBoxStatus = boxes.toggleBoxStatus;
-window.deleteBox = boxes.deleteBox;
-
-window.showLogoModal = personalizacion.showLogoModal;
-window.closeLogoModal = personalizacion.closeLogoModal;
-window.saveLogo = personalizacion.saveLogo;
-window.removeLogo = personalizacion.removeLogo;
-window.showTextsModal = personalizacion.showTextsModal;
-window.closeTextsModal = personalizacion.closeTextsModal;
-window.saveHeroTexts = personalizacion.saveHeroTexts;
-window.showBackgroundImageModal = personalizacion.showBackgroundImageModal;
-window.closeBackgroundImageModal = personalizacion.closeBackgroundImageModal;
-window.saveBackgroundImage = personalizacion.saveBackgroundImage;
-window.removeBackgroundImage = personalizacion.removeBackgroundImage;
-window.showPaymentMethodsModal = personalizacion.showPaymentMethodsModal;
-window.closePaymentMethodsModal = personalizacion.closePaymentMethodsModal;
-window.saveGlobalPaymentMethods = personalizacion.saveGlobalPaymentMethods;
-window.updatePaymentMethodsInfo = personalizacion.updatePaymentMethodsInfo;
-window.loadMyConfig = personalizacion.loadMyConfig;
-window.saveMyConfig = personalizacion.saveMyConfig;
-window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
-window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
-window.addSpecialty = personalizacion.addSpecialty;
-window.deleteSpecialty = personalizacion.deleteSpecialty;
-
-window.filterProfessionals = publico.filterProfessionals;
-
-window.formatRut = utils.formatRut;
-window.validarRut = utils.validarRut;
-window.showToast = utils.showToast;
-
-// ============================================
 // INICIALIZAR LA APLICACIÓN
 // ============================================
 publico.cargarDatosIniciales();
@@ -207,7 +219,7 @@ if (savedUser) {
         const checkData = setInterval(() => {
             if (state.dataLoaded) {
                 clearInterval(checkData);
-                auth.showDashboard();
+                auth.cargarDashboard(state.currentUser.role);
             }
         }, 100);
     } catch (e) {
@@ -238,7 +250,7 @@ import './modules/admin.js';
 // Mejorar scroll en móviles
 document.addEventListener('touchstart', function(){}, {passive: true});
 
-// Desactivar zoom en inputs (mejor experiencia en móviles)
+// Desactivar zoom en inputs
 document.querySelectorAll('input, select, textarea').forEach(el => {
     el.addEventListener('focus', () => {
         document.querySelector('meta[name=viewport]').setAttribute('content', 
@@ -249,3 +261,5 @@ document.querySelectorAll('input, select, textarea').forEach(el => {
             'width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes');
     });
 });
+
+console.log('✅ main.js cargado completamente');

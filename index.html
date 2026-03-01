@@ -1233,5 +1233,30 @@
         }
     };
 </script>
+<!-- Script de verificación mejorado -->
+<script>
+    // Verificar inmediatamente
+    console.log('🔍 Verificando funciones al cargar página...');
+    console.log('- switchTab:', typeof window.switchTab);
+    
+    // Si no está disponible, esperar y verificar
+    if (typeof window.switchTab !== 'function') {
+        console.log('⏳ switchTab no disponible, esperando 2 segundos...');
+        setTimeout(() => {
+            console.log('- switchTab después de 2s:', typeof window.switchTab);
+            
+            // Probar manualmente si ya estamos en dashboard
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard && dashboard.style.display === 'block') {
+                console.log('📊 Probando cambiar a especialidades...');
+                if (typeof window.switchTab === 'function') {
+                    window.switchTab('especialidades');
+                } else {
+                    console.error('❌ switchTab sigue sin estar disponible');
+                }
+            }
+        }, 2000);
+    }
+</script>
 </body>
 </html>

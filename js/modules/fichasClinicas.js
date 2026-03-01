@@ -5,7 +5,7 @@ import { puedeEditarFichas } from './permisos.js';
 import { showToast } from './utils.js';
 
 // ============================================
-// FICHA DE INGRESO (basado en FICHA PREINGRESOS.docx)
+// FICHA DE INGRESO
 // ============================================
 
 export async function guardarFichaIngreso(patientId, data) {
@@ -32,11 +32,10 @@ export async function guardarFichaIngreso(patientId, data) {
   };
   
   try {
-    let docRef;
+    // Usar Realtime Database (ref, no collection)
     if (data.id) {
       // Actualizar existente
-      await db.collection('fichasIngreso').doc(data.id).update(ficha);
-      docRef = { id: data.id };
+      await db.ref(`fichasIngreso/${data.id}`).update(ficha);
       
       // Actualizar en state
       const index = state.fichasIngreso.findIndex(f => f.id === data.id);
@@ -45,13 +44,14 @@ export async function guardarFichaIngreso(patientId, data) {
       showToast('Ficha de ingreso actualizada', 'success');
     } else {
       // Crear nueva
-      docRef = await db.collection('fichasIngreso').add(ficha);
-      state.fichasIngreso.push({ ...ficha, id: docRef.id });
+      const newRef = db.ref('fichasIngreso').push();
+      await newRef.set(ficha);
+      state.fichasIngreso.push({ ...ficha, id: newRef.key });
       
       showToast('Ficha de ingreso guardada', 'success');
     }
     
-    return { success: true, id: docRef.id };
+    return { success: true };
   } catch (error) {
     console.error('Error guardando ficha ingreso:', error);
     showToast('Error al guardar la ficha', 'error');
@@ -60,7 +60,7 @@ export async function guardarFichaIngreso(patientId, data) {
 }
 
 // ============================================
-// NOTAS DE SESIÓN / EVOLUCIÓN
+// NOTAS DE SESIÓN
 // ============================================
 
 export async function guardarNotaSesion(patientId, data) {
@@ -82,13 +82,14 @@ export async function guardarNotaSesion(patientId, data) {
   
   try {
     if (data.id) {
-      await db.collection('sesiones').doc(data.id).update(sesion);
+      await db.ref(`sesiones/${data.id}`).update(sesion);
       const index = state.sesiones.findIndex(s => s.id === data.id);
       if (index !== -1) state.sesiones[index] = { ...sesion, id: data.id };
       showToast('Nota de sesión actualizada', 'success');
     } else {
-      const docRef = await db.collection('sesiones').add(sesion);
-      state.sesiones.push({ ...sesion, id: docRef.id });
+      const newRef = db.ref('sesiones').push();
+      await newRef.set(sesion);
+      state.sesiones.push({ ...sesion, id: newRef.key });
       showToast('Nota de sesión guardada', 'success');
     }
     return { success: true };
@@ -103,40 +104,15 @@ export async function guardarNotaSesion(patientId, data) {
 // FUNCIONES PARA OBTENER DATOS
 // ============================================
 
-/**
- * Obtiene todas las fichas de ingreso de un paciente
- * @param {string} patientId - ID del paciente
- * @returns {Promise<Array>} Lista de fichas de ingreso
- */
 export async function obtenerFichasIngresoDePaciente(patientId) {
     console.log(`📋 Obteniendo fichas de ingreso para paciente: ${patientId}`);
     
     try {
-        // Si tenemos datos en memoria y están cargados
         if (state.fichasIngreso && state.fichasIngreso.length > 0) {
             const fichas = state.fichasIngreso.filter(f => f.patientId == patientId);
             console.log(`✅ Encontradas ${fichas.length} fichas en memoria`);
             return fichas;
         }
-        
-        // Si no, intentar cargar desde Firebase
-        if (typeof db !== 'undefined') {
-            const snapshot = await db.collection('fichasIngreso')
-                .where('patientId', '==', patientId)
-                .get();
-            
-            const fichas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log(`✅ Cargadas ${fichas.length} fichas desde Firebase`);
-            
-            // Actualizar state
-            state.fichasIngreso = [
-                ...state.fichasIngreso.filter(f => f.patientId != patientId),
-                ...fichas
-            ];
-            
-            return fichas;
-        }
-        
         return [];
     } catch (error) {
         console.error('❌ Error obteniendo fichas de ingreso:', error);
@@ -146,28 +122,12 @@ export async function obtenerFichasIngresoDePaciente(patientId) {
 
 export async function obtenerSesionesDePaciente(patientId) {
   try {
-    // Si tenemos datos en memoria
     if (state.sesiones && state.sesiones.length > 0) {
       return state.sesiones
         .filter(s => s.patientId == patientId)
         .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion));
     }
-    
-    // Si no, buscar en Firebase
-    const snapshot = await db.collection('sesiones')
-      .where('patientId', '==', patientId)
-      .orderBy('fechaAtencion', 'desc')
-      .get();
-      
-    const sesiones = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
-    // Actualizar state
-    state.sesiones = [
-      ...state.sesiones.filter(s => s.patientId != patientId),
-      ...sesiones
-    ];
-    
-    return sesiones;
+    return [];
   } catch (error) {
     console.error('Error obteniendo sesiones:', error);
     return [];
@@ -175,23 +135,26 @@ export async function obtenerSesionesDePaciente(patientId) {
 }
 
 // ============================================
-// CARGAR DATOS INICIALES
+// CARGAR DATOS INICIALES (CORREGIDO)
 // ============================================
 
 export async function cargarTodasLasFichas() {
   try {
     console.log('📂 Cargando todas las fichas clínicas...');
     
-    // Cargar fichas de ingreso
-    const fichasSnapshot = await db.collection('fichasIngreso').get();
-    state.fichasIngreso = fichasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Cargar fichas de ingreso usando Realtime Database
+    const fichasSnapshot = await db.ref('fichasIngreso').once('value');
+    const fichasData = fichasSnapshot.val();
+    if (fichasData) {
+      state.fichasIngreso = Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] }));
+    }
     
-    // Cargar sesiones (últimas 100 para no saturar)
-    const sesionesSnapshot = await db.collection('sesiones')
-      .orderBy('fechaGuardado', 'desc')
-      .limit(100)
-      .get();
-    state.sesiones = sesionesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Cargar sesiones
+    const sesionesSnapshot = await db.ref('sesiones').once('value');
+    const sesionesData = sesionesSnapshot.val();
+    if (sesionesData) {
+      state.sesiones = Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] }));
+    }
     
     console.log('✅ Fichas clínicas cargadas:', {
       fichasIngreso: state.fichasIngreso.length,
@@ -203,7 +166,7 @@ export async function cargarTodasLasFichas() {
 }
 
 // ============================================
-// EXPORTAR FUNCIONES AL OBJETO WINDOW
+// EXPORTAR FUNCIONES
 // ============================================
 if (typeof window !== 'undefined') {
   window.fichasClinicas = {

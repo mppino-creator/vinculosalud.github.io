@@ -88,12 +88,14 @@ export function showDashboard() {
     const isAdmin = state.currentUser.role === 'admin';
     const isPsych = state.currentUser.role === 'psych';
 
+    // Mostrar/ocultar pestañas según el rol
     document.getElementById('adminTabProfesionales').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabEspecialidades').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabPagos').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabFondo').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabTextos').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminTabLogo').style.display = isAdmin ? 'block' : 'none';
+    document.getElementById('adminTabReinicio').style.display = isAdmin ? 'block' : 'none'; // NUEVA PESTAÑA
     document.getElementById('psychTab').style.display = isPsych ? 'block' : 'none';
     document.getElementById('configTab').style.display = isPsych ? 'block' : 'none';
     document.getElementById('messagesTab').style.display = isAdmin ? 'block' : 'none';
@@ -106,6 +108,15 @@ export function showDashboard() {
         renderMessagesTable();
         renderBoxesTable();
         updatePaymentMethodsInfo();
+        
+        // Actualizar contadores de la pestaña de reinicio
+        setTimeout(() => {
+            import('./admin.js').then(mod => {
+                if (mod.actualizarContadoresReinicio) {
+                    mod.actualizarContadoresReinicio();
+                }
+            });
+        }, 1000);
     } else {
         document.getElementById('dashTitle').innerText = `Panel de ${state.currentUser.data.name}`;
         document.getElementById('availDate').min = new Date().toISOString().split('T')[0];
@@ -122,29 +133,36 @@ export function showDashboard() {
 export function switchTab(tabName) {
     const tabs = document.querySelectorAll('.tab');
     tabs.forEach(t => t.classList.remove('active'));
+    
+    // Buscar el tab por el texto y activarlo
     tabs.forEach(t => {
-        if (t.textContent.trim().toLowerCase().includes(tabName.toLowerCase()) || 
-            (tabName === 'citas' && t.textContent.trim() === 'Citas') ||
-            (tabName === 'solicitudes' && t.textContent.trim() === 'Solicitudes Pendientes') ||
-            (tabName === 'pacientes' && t.textContent.trim() === 'Pacientes') ||
-            (tabName === 'profesionales' && t.textContent.trim() === 'Profesionales') ||
-            (tabName === 'especialidades' && t.textContent.trim() === 'Especialidades') ||
-            (tabName === 'pagos' && t.textContent.trim() === 'Métodos de Pago') ||
-            (tabName === 'fondo' && t.textContent.trim() === 'Fondo') ||
-            (tabName === 'logo' && t.textContent.trim() === 'Logo') ||
-            (tabName === 'textos' && t.textContent.trim() === 'Textos') ||
-            (tabName === 'disponibilidad' && t.textContent.trim() === 'Disponibilidad') ||
-            (tabName === 'configuracion' && t.textContent.trim() === 'Mi Config') ||
-            (tabName === 'mensajes' && t.textContent.trim() === 'Mensajes') ||
-            (tabName === 'boxes' && t.textContent.trim() === 'Boxes') ||
-            (tabName === 'agendar' && t.textContent.trim() === 'Agendar Cita')) {
+        const text = t.textContent.trim();
+        if (text.toLowerCase().includes(tabName.toLowerCase()) || 
+            (tabName === 'citas' && text === 'Citas') ||
+            (tabName === 'solicitudes' && text === 'Solicitudes Pendientes') ||
+            (tabName === 'pacientes' && text === 'Pacientes') ||
+            (tabName === 'profesionales' && text === 'Profesionales') ||
+            (tabName === 'especialidades' && text === 'Especialidades') ||
+            (tabName === 'pagos' && text === 'Métodos de Pago') ||
+            (tabName === 'fondo' && text === 'Fondo') ||
+            (tabName === 'logo' && text === 'Logo') ||
+            (tabName === 'textos' && text === 'Textos') ||
+            (tabName === 'disponibilidad' && text === 'Disponibilidad') ||
+            (tabName === 'configuracion' && text === 'Mi Config') ||
+            (tabName === 'mensajes' && text === 'Mensajes') ||
+            (tabName === 'boxes' && text === 'Boxes') ||
+            (tabName === 'agendar' && text === 'Agendar Cita') ||
+            (tabName === 'reinicio' && text === '🔄 Reinicio')) {
             t.classList.add('active');
         }
     });
 
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+    const tabId = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+    const element = document.getElementById(tabId);
+    if (element) element.classList.add('active');
 
+    // Acciones específicas por pestaña
     if (tabName === 'pacientes') renderPatients();
     if (tabName === 'disponibilidad' && state.currentUser?.role === 'psych') {
         import('./disponibilidad.js').then(mod => mod.loadTimeSlots());
@@ -163,6 +181,14 @@ export function switchTab(tabName) {
     }
     if (tabName === 'solicitudes') {
         renderPendingRequests();
+    }
+    if (tabName === 'reinicio' && state.currentUser?.role === 'admin') {
+        // Actualizar contadores al entrar a la pestaña de reinicio
+        import('./admin.js').then(mod => {
+            if (mod.actualizarContadoresReinicio) {
+                mod.actualizarContadoresReinicio();
+            }
+        });
     }
 }
 
@@ -227,3 +253,16 @@ function renderAppointmentsTable(apps) {
         `;
     });
 }
+
+// Funciones de edición de citas (se llaman desde el HTML)
+window.editAppointment = (id) => {
+    import('./citas.js').then(mod => mod.editAppointment(id));
+};
+
+window.cancelAppointment = (id) => {
+    import('./citas.js').then(mod => mod.cancelAppointment(id));
+};
+
+window.markAsPaid = (id) => {
+    import('./citas.js').then(mod => mod.markAsPaid(id));
+};

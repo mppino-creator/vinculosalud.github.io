@@ -214,3 +214,38 @@ if (savedUser) {
         localStorage.removeItem('vinculoCurrentUser');
     }
 }
+
+// ============================================
+// OCULTAR LOADER CUANDO TODO ESTÉ CARGADO
+// ============================================
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        const loader = document.getElementById('initialLoader');
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 500);
+        }
+    }, 1000);
+});
+
+// ============================================
+// IMPORTAR FUNCIONES DE ADMIN
+// ============================================
+import './modules/admin.js';
+
+// Mejorar scroll en móviles
+document.addEventListener('touchstart', function(){}, {passive: true});
+
+// Desactivar zoom en inputs (mejor experiencia en móviles)
+document.querySelectorAll('input, select, textarea').forEach(el => {
+    el.addEventListener('focus', () => {
+        document.querySelector('meta[name=viewport]').setAttribute('content', 
+            'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    });
+    el.addEventListener('blur', () => {
+        document.querySelector('meta[name=viewport]').setAttribute('content', 
+            'width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes');
+    });
+});

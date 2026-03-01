@@ -22,7 +22,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
        (function() {
-          emailjs.init('_LDTyGJlGKoOIWVJa'); // TU PUBLIC KEY
+          emailjs.init('_LDTyGJlGKoOIWVJa');
        })();
     </script>
 </head>
@@ -43,7 +43,7 @@
 <div class="modal" id="loginModal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeLoginModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">Acceso Privado</h2>
+        <h2 style="margin-bottom: 25px;">Acceso Privado</h2>
         <div class="form-group">
             <label>Usuario</label>
             <input type="text" id="loginUser" placeholder="Ingresa tu usuario">
@@ -52,7 +52,7 @@
             <label>Contraseña</label>
             <input type="password" id="loginPass" placeholder="Ingresa tu contraseña">
         </div>
-        <button class="btn-staff" style="width:100%; justify-content:center; background: var(--azul-medico);" onclick="processLogin()" id="loginBtn">
+        <button class="btn-staff" style="width:100%; justify-content:center;" onclick="processLogin()" id="loginBtn">
             Ingresar al Panel
         </button>
     </div>
@@ -62,7 +62,7 @@
 <div class="modal" id="messageModal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeMessageModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">💬 Dejar un Mensaje</h2>
+        <h2 style="margin-bottom: 25px;">💬 Dejar un Mensaje</h2>
         
         <div class="form-group">
             <label>Tu Nombre *</label>
@@ -70,30 +70,30 @@
         </div>
         
         <div class="form-group">
-            <label>Email (opcional, para respuesta)</label>
+            <label>Email (opcional)</label>
             <input type="email" id="messageEmail" placeholder="tucorreo@ejemplo.com">
         </div>
         
         <div class="form-group">
-            <label>WhatsApp (opcional, para contacto)</label>
+            <label>WhatsApp (opcional)</label>
             <input type="text" id="messageWhatsapp" placeholder="+56912345678">
         </div>
         
         <div class="form-group">
             <label>Profesional (opcional)</label>
             <select id="messageTherapist">
-                <option value="">Mensaje general para todos</option>
+                <option value="">Mensaje general</option>
             </select>
         </div>
         
         <div class="form-group">
             <label>Calificación</label>
             <div style="display: flex; gap: 15px; font-size: 2rem; color: var(--gold); justify-content: center; margin: 10px 0;">
-                <span onclick="setRating(1)" style="cursor:pointer; transition:0.3s;" id="star1">☆</span>
-                <span onclick="setRating(2)" style="cursor:pointer; transition:0.3s;" id="star2">☆</span>
-                <span onclick="setRating(3)" style="cursor:pointer; transition:0.3s;" id="star3">☆</span>
-                <span onclick="setRating(4)" style="cursor:pointer; transition:0.3s;" id="star4">☆</span>
-                <span onclick="setRating(5)" style="cursor:pointer; transition:0.3s;" id="star5">☆</span>
+                <span onclick="setRating(1)" style="cursor:pointer;" id="star1">☆</span>
+                <span onclick="setRating(2)" style="cursor:pointer;" id="star2">☆</span>
+                <span onclick="setRating(3)" style="cursor:pointer;" id="star3">☆</span>
+                <span onclick="setRating(4)" style="cursor:pointer;" id="star4">☆</span>
+                <span onclick="setRating(5)" style="cursor:pointer;" id="star5">☆</span>
             </div>
             <input type="hidden" id="messageRating" value="5">
         </div>
@@ -103,7 +103,7 @@
             <textarea id="messageText" rows="4" placeholder="Cuéntanos tu experiencia..."></textarea>
         </div>
         
-        <button class="btn-staff" style="width:100%; background:var(--azul-medico); justify-content:center;" onclick="saveMessage()">
+        <button class="btn-staff" style="width:100%;" onclick="saveMessage()">
             Publicar Mensaje
         </button>
     </div>
@@ -113,7 +113,7 @@
 <div class="modal" id="editTherapistModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeEditTherapistModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">Editar Profesional</h2>
+        <h2 style="margin-bottom: 25px;">Editar Profesional</h2>
         <input type="hidden" id="editTherapistId">
         
         <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
@@ -123,37 +123,36 @@
             </div>
             <div class="form-group">
                 <label>Email *</label>
-                <input type="email" id="editEmail" placeholder="correo@ejemplo.com">
+                <input type="email" id="editEmail">
             </div>
             <div class="form-group">
                 <label>Especialidades *</label>
                 <select id="editSpec" multiple size="4" style="height: auto;"></select>
-                <small style="color:var(--text-light);">Selecciona múltiples especialidades (Ctrl+clic)</small>
             </div>
             <div class="form-group">
                 <label>Usuario *</label>
                 <input type="text" id="editUser">
             </div>
             <div class="form-group">
-                <label>Contraseña (dejar vacío para no cambiar)</label>
+                <label>Contraseña</label>
                 <input type="text" id="editPass">
             </div>
             <div class="form-group" style="grid-column:1/-1;">
                 <label>Foto de Perfil</label>
                 <div class="file-upload" onclick="document.getElementById('editPhotoInput').click()">
                     <i class="fa fa-cloud-upload-alt"></i>
-                    <p>Haz clic para seleccionar una foto desde tu dispositivo</p>
+                    <p>Seleccionar foto</p>
                 </div>
                 <input type="file" id="editPhotoInput" accept="image/*" style="display:none;" onchange="previewEditImage(this)">
                 <img id="editPhotoPreview" class="image-preview" src="" style="display:none;">
             </div>
             <div class="form-group">
                 <label>WhatsApp</label>
-                <input type="text" id="editWhatsapp" placeholder="+56912345678">
+                <input type="text" id="editWhatsapp">
             </div>
             <div class="form-group">
                 <label>Instagram</label>
-                <input type="text" id="editInstagram" placeholder="usuario sin @">
+                <input type="text" id="editInstagram">
             </div>
             <div class="form-group">
                 <label>Dirección</label>
@@ -174,7 +173,7 @@
             
             <!-- Datos Bancarios -->
             <div class="form-group" style="grid-column:1/-1;">
-                <h4 style="margin:15px 0; color: var(--azul-medico);">Datos Bancarios para Transferencia</h4>
+                <h4 style="margin:15px 0;">Datos Bancarios</h4>
             </div>
             <div class="form-group">
                 <label>Banco</label>
@@ -183,10 +182,10 @@
             <div class="form-group">
                 <label>Tipo de Cuenta</label>
                 <select id="editAccountType">
-                    <option value="corriente">Cuenta Corriente</option>
-                    <option value="vista">Cuenta Vista</option>
-                    <option value="ahorro">Cuenta de Ahorro</option>
-                    <option value="rut">Cuenta RUT</option>
+                    <option value="corriente">Corriente</option>
+                    <option value="vista">Vista</option>
+                    <option value="ahorro">Ahorro</option>
+                    <option value="rut">RUT</option>
                 </select>
             </div>
             <div class="form-group">
@@ -195,38 +194,37 @@
             </div>
             <div class="form-group">
                 <label>RUT</label>
-                <input type="text" id="editBankRut" placeholder="12.345.678-9">
+                <input type="text" id="editBankRut">
             </div>
             <div class="form-group">
-                <label>Email para transferencias</label>
+                <label>Email transferencias</label>
                 <input type="email" id="editBankEmail">
             </div>
             
             <!-- Links de Pago -->
             <div class="form-group" style="grid-column:1/-1;">
-                <h4 style="margin:15px 0; color: var(--azul-medico);">🔗 Links de Pago (SumUp)</h4>
+                <h4 style="margin:15px 0;">Links de Pago</h4>
             </div>
             <div class="form-group">
-                <label>Link de pago ONLINE</label>
-                <input type="url" id="editPaymentLinkOnline" placeholder="https://pay.sumup.com/b2c/XXXXXX">
+                <label>Link ONLINE</label>
+                <input type="url" id="editPaymentLinkOnline">
             </div>
             <div class="form-group">
-                <label>Link de pago PRESENCIAL</label>
-                <input type="url" id="editPaymentLinkPresencial" placeholder="https://pay.sumup.com/b2c/XXXXXX">
+                <label>Link PRESENCIAL</label>
+                <input type="url" id="editPaymentLinkPresencial">
             </div>
             <div class="form-group">
-                <label>QR de pago (para presencial)</label>
+                <label>QR de pago</label>
                 <div class="file-upload" onclick="document.getElementById('editQrInput').click()">
-                    <i class="fa fa-qrcode"></i>
-                    <p>Haz clic para subir imagen del QR</p>
+                    <i class="fa fa-qrcode"></i> Subir QR
                 </div>
                 <input type="file" id="editQrInput" accept="image/*" style="display:none;" onchange="previewQrImage(this)">
-                <img id="editQrPreview" class="image-preview" src="" style="display:none; width:150px; height:150px; border-radius:10px; margin-top:10px;">
+                <img id="editQrPreview" class="image-preview" src="" style="display:none;">
             </div>
         </div>
         
         <div style="display:flex; gap:15px; margin-top:20px;">
-            <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="updateTherapist()">Guardar Cambios</button>
+            <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="updateTherapist()">Guardar</button>
             <button class="btn-staff" style="background:var(--text-light); flex:0.5;" onclick="closeEditTherapistModal()">Cancelar</button>
         </div>
     </div>
@@ -236,12 +234,12 @@
 <div class="modal" id="specialtiesModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closeSpecialtiesModal()">&times;</button>
-        <h2 style="margin-bottom: 25px; color: var(--azul-oscuro);">🏷️ Gestión de Especialidades</h2>
+        <h2 style="margin-bottom: 25px;">Gestión de Especialidades</h2>
         <div class="form-group">
             <label>Nueva Especialidad</label>
             <div style="display:flex; gap:10px;">
                 <input type="text" id="newSpecialty" placeholder="Ej: Psicología Infantil" style="flex:1;">
-                <button class="btn-staff" style="background:var(--azul-medico);" onclick="addSpecialty()">Agregar</button>
+                <button class="btn-staff" onclick="addSpecialty()">Agregar</button>
             </div>
         </div>
         <h3 style="margin:25px 0 15px;">Especialidades Disponibles</h3>
@@ -253,7 +251,7 @@
 <div class="modal" id="patientModal">
     <div class="modal-content" style="max-width: 700px;">
         <button class="modal-close" onclick="closePatientModal()">&times;</button>
-        <h2 id="patientModalTitle" style="margin-bottom: 25px;">Datos del Paciente</h2>
+        <h2 id="patientModalTitle">Datos del Paciente</h2>
         <input type="hidden" id="editPatientId">
         <div class="form-group">
             <label>RUT *</label>
@@ -276,16 +274,16 @@
             <input type="date" id="patientBirthdate">
         </div>
         <div class="form-group">
-            <label>Notas / Historial Clínico</label>
+            <label>Notas</label>
             <textarea id="patientNotes" rows="4"></textarea>
         </div>
         <div id="patientStatsContainer" style="display:none;" class="patient-stats"></div>
         <div id="patientHistoryContainer" style="margin: 20px 0; display: none;">
-            <h3 style="margin-bottom: 15px;">📋 Historial de Atenciones</h3>
+            <h3 style="margin-bottom: 15px;">Historial de Atenciones</h3>
             <div id="patientHistoryList" class="patient-history"></div>
-            <button class="btn-staff" style="background:var(--azul-medico);" onclick="printPatientSummary()">Imprimir Resumen</button>
+            <button class="btn-staff" onclick="printPatientSummary()">Imprimir</button>
         </div>
-        <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="savePatient()">Guardar Paciente</button>
+        <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="savePatient()">Guardar</button>
     </div>
 </div>
 
@@ -295,14 +293,14 @@
         <button class="modal-close" onclick="closeAvailabilityModal()">&times;</button>
         <h2 style="margin-bottom: 25px;">Configurar Disponibilidad</h2>
         <div class="range-generator">
-            <h3 style="margin-bottom: 20px;">⏱️ Configuración de Sesiones</h3>
-            <div class="range-row" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:15px;">
+            <h3>Configuración de Sesiones</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:15px;">
                 <div class="form-group">
-                    <label>Duración (minutos)</label>
+                    <label>Duración (min)</label>
                     <input type="number" id="sessionDuration" value="45" min="15" step="5">
                 </div>
                 <div class="form-group">
-                    <label>Descanso entre sesiones</label>
+                    <label>Descanso</label>
                     <input type="number" id="breakBetween" value="10" min="0" step="5">
                 </div>
                 <div class="form-group">
@@ -314,7 +312,7 @@
                     <input type="time" id="endTime" value="18:00">
                 </div>
             </div>
-            <button class="btn-staff" style="background:var(--azul-medico);" onclick="generateTimeSlots()">Generar Horarios</button>
+            <button class="btn-staff" onclick="generateTimeSlots()">Generar Horarios</button>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin:20px 0;">
             <div class="form-group">
@@ -327,7 +325,7 @@
             </div>
         </div>
         <div style="margin-bottom:20px;">
-            <label style="display:block; margin-bottom:10px;">Días de la semana</label>
+            <label>Días de la semana</label>
             <div class="weekday-selector" id="weekdaySelector">
                 <div class="weekday selected" onclick="toggleWeekday('Lun')">Lunes</div>
                 <div class="weekday selected" onclick="toggleWeekday('Mar')">Martes</div>
@@ -339,24 +337,24 @@
             </div>
         </div>
         <div style="background:#f1f5f9; padding:20px; border-radius:12px; margin:20px 0;">
-            <h4 style="margin-bottom:15px;">🚫 Anular Rango de Horas</h4>
+            <h4>Anular Rango de Horas</h4>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                 <div class="form-group">
-                    <label>Desde hora</label>
+                    <label>Desde</label>
                     <input type="time" id="blockStartTime" value="12:00">
                 </div>
                 <div class="form-group">
-                    <label>Hasta hora</label>
+                    <label>Hasta</label>
                     <input type="time" id="blockEndTime" value="14:00">
                 </div>
             </div>
-            <button class="btn-staff" style="background:var(--rojo-alerta);" onclick="blockTimeRange()">Anular este rango</button>
+            <button class="btn-staff" style="background:var(--rojo-alerta);" onclick="blockTimeRange()">Anular</button>
         </div>
-        <h3 style="margin-bottom: 15px;">Horarios Generados</h3>
+        <h3>Horarios Generados</h3>
         <div class="time-slots" id="generatedTimeSlots" style="max-height: 300px;"></div>
-        <div style="display:flex; gap:15px; margin-top:20px; flex-wrap:wrap;">
-            <button class="btn-staff" style="background:var(--azul-medico); flex:1;" onclick="applyGeneratedSlots()">Aplicar a fechas seleccionadas</button>
-            <button class="btn-staff" style="background:var(--naranja-aviso); flex:0.5;" onclick="clearAllSlots()">Limpiar todo</button>
+        <div style="display:flex; gap:15px; margin-top:20px;">
+            <button class="btn-staff" style="background:var(--azul-medico); flex:1;" onclick="applyGeneratedSlots()">Aplicar</button>
+            <button class="btn-staff" style="background:var(--naranja-aviso); flex:0.5;" onclick="clearAllSlots()">Limpiar</button>
         </div>
     </div>
 </div>
@@ -365,15 +363,15 @@
 <div class="modal" id="boxModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeBoxModal()">&times;</button>
-        <h2 style="margin-bottom: 25px;">📦 Gestión de Boxes</h2>
+        <h2 style="margin-bottom: 25px;">Gestión de Boxes</h2>
         <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
             <div class="form-group">
                 <label>Nombre del Box *</label>
-                <input type="text" id="boxName" placeholder="Ej: BOX A">
+                <input type="text" id="boxName">
             </div>
             <div class="form-group">
                 <label>Ubicación</label>
-                <input type="text" id="boxLocation" placeholder="Ej: Piso 2, Sector A">
+                <input type="text" id="boxLocation">
             </div>
             <div class="form-group">
                 <label>Hora inicio *</label>
@@ -396,10 +394,10 @@
                 </div>
             </div>
             <div class="form-group" style="grid-column:1/-1;">
-                <label>Descripción (opcional)</label>
+                <label>Descripción</label>
                 <textarea id="boxDescription" rows="2"></textarea>
             </div>
-            <button class="btn-staff" style="background:var(--verde-exito); grid-column:1/-1;" onclick="saveBox()" id="saveBoxBtn">Guardar Box</button>
+            <button class="btn-staff" style="background:var(--verde-exito); grid-column:1/-1;" onclick="saveBox()" id="saveBoxBtn">Guardar</button>
         </div>
         <h3 style="margin:30px 0 15px;">Lista de Boxes</h3>
         <div class="table-container">
@@ -417,7 +415,7 @@
 <div class="modal" id="addStaffModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeAddStaffModal()">&times;</button>
-        <h2 style="margin-bottom: 25px;">➕ Añadir Nuevo Profesional</h2>
+        <h2 style="margin-bottom: 25px;">➕ Añadir Profesional</h2>
         <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
             <div class="form-group">
                 <label>Nombre Completo *</label>
@@ -429,7 +427,7 @@
             </div>
             <div class="form-group">
                 <label>Especialidades *</label>
-                <select id="addSpec" multiple size="4" style="height: auto;"></select>
+                <select id="addSpec" multiple size="4"></select>
             </div>
             <div class="form-group">
                 <label>Usuario *</label>
@@ -442,8 +440,7 @@
             <div class="form-group" style="grid-column:1/-1;">
                 <label>Foto de Perfil</label>
                 <div class="file-upload" onclick="document.getElementById('addPhotoInput').click()">
-                    <i class="fa fa-cloud-upload-alt"></i>
-                    <p>Haz clic para seleccionar una foto</p>
+                    <i class="fa fa-cloud-upload-alt"></i> Seleccionar foto
                 </div>
                 <input type="file" id="addPhotoInput" accept="image/*" style="display:none;" onchange="previewAddImage(this)">
                 <img id="addPhotoPreview" class="image-preview" src="" style="display:none;">
@@ -475,7 +472,7 @@
             
             <!-- Datos Bancarios -->
             <div class="form-group" style="grid-column:1/-1;">
-                <h4 style="margin:15px 0; color: var(--azul-medico);">Datos Bancarios</h4>
+                <h4 style="margin:15px 0;">Datos Bancarios</h4>
             </div>
             <div class="form-group">
                 <label>Banco</label>
@@ -505,7 +502,7 @@
             
             <!-- Links de Pago -->
             <div class="form-group" style="grid-column:1/-1;">
-                <h4 style="margin:15px 0; color: var(--azul-medico);">🔗 Links de Pago</h4>
+                <h4 style="margin:15px 0;">Links de Pago</h4>
             </div>
             <div class="form-group">
                 <label>Link ONLINE</label>
@@ -525,7 +522,7 @@
             </div>
         </div>
         <div style="display:flex; gap:15px; margin-top:20px;">
-            <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="addStaff()">Guardar Profesional</button>
+            <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="addStaff()">Guardar</button>
             <button class="btn-staff" style="background:var(--text-light); flex:0.5;" onclick="closeAddStaffModal()">Cancelar</button>
         </div>
     </div>
@@ -535,16 +532,16 @@
 <div class="modal" id="paymentMethodsModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closePaymentMethodsModal()">&times;</button>
-        <h2 style="margin-bottom: 25px;">💰 Métodos de Pago Globales</h2>
+        <h2 style="margin-bottom: 25px;">Métodos de Pago Globales</h2>
         <div class="form-group">
             <div class="payment-method-item">
-                <input type="checkbox" id="globalTransfer" checked> <label>Transferencia Bancaria</label>
+                <input type="checkbox" id="globalTransfer" checked> <label>Transferencia</label>
             </div>
             <div class="payment-method-item">
-                <input type="checkbox" id="globalCardPresencial" checked> <label>Tarjeta (presencial)</label>
+                <input type="checkbox" id="globalCardPresencial" checked> <label>Tarjeta presencial</label>
             </div>
             <div class="payment-method-item">
-                <input type="checkbox" id="globalCardOnline"> <label>Tarjeta (online)</label>
+                <input type="checkbox" id="globalCardOnline"> <label>Tarjeta online</label>
             </div>
             <div class="payment-method-item">
                 <input type="checkbox" id="globalCash" checked> <label>Efectivo</label>
@@ -564,7 +561,7 @@
 <div class="modal" id="backgroundImageModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closeBackgroundImageModal()">&times;</button>
-        <h2 style="margin-bottom: 25px;">🎨 Imagen de Fondo</h2>
+        <h2 style="margin-bottom: 25px;">Imagen de Fondo</h2>
         <div class="form-group">
             <div class="file-upload" onclick="document.getElementById('backgroundImageInput').click()">
                 <i class="fa fa-cloud-upload-alt"></i> Seleccionar imagen
@@ -572,11 +569,11 @@
             <input type="file" id="backgroundImageInput" accept="image/*" style="display:none;" onchange="previewBackgroundImage(this)">
         </div>
         <div class="form-group">
-            <label>Transparencia (0-100%)</label>
+            <label>Transparencia</label>
             <input type="range" id="backgroundOpacity" min="0" max="100" value="10" onchange="updateBackgroundOpacity()">
             <span id="opacityValue">10%</span>
         </div>
-        <div style="margin:20px 0; text-align:center;">
+        <div style="margin:20px 0;">
             <img id="backgroundPreview" src="" style="max-width:100%; max-height:200px; border-radius:8px; display:none;">
         </div>
         <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-bottom:10px;" onclick="saveBackgroundImage()">Guardar</button>
@@ -588,7 +585,7 @@
 <div class="modal" id="textsModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closeTextsModal()">&times;</button>
-        <h2 style="margin-bottom: 25px;">📝 Textos de Portada</h2>
+        <h2 style="margin-bottom: 25px;">Textos de Portada</h2>
         <div class="form-group">
             <label>Título Principal</label>
             <input type="text" id="heroTitle" value="Tu bienestar comienza con un buen vínculo">
@@ -605,14 +602,14 @@
 <div class="modal" id="logoModal">
     <div class="modal-content" style="max-width: 600px;">
         <button class="modal-close" onclick="closeLogoModal()">&times;</button>
-        <h2 style="margin-bottom: 25px;">🖼️ Logo del Sitio</h2>
+        <h2 style="margin-bottom: 25px;">Logo del Sitio</h2>
         <div class="form-group">
             <div class="file-upload" onclick="document.getElementById('logoInput').click()">
                 <i class="fa fa-cloud-upload-alt"></i> Seleccionar logo
             </div>
             <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewLogo(this)">
         </div>
-        <div style="margin:20px 0; text-align:center;">
+        <div style="margin:20px 0;">
             <img id="logoPreview" src="" style="max-width:200px; max-height:80px; border-radius:8px; display:none;">
         </div>
         <div class="form-group">
@@ -675,16 +672,16 @@
         </div>
     </main>
 
-    <!-- PANEL DE RESERVA -->
+    <!-- Panel de Reserva -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
-            <h2 style="color: var(--azul-oscuro);">Solicitar Cita con <span id="psychName"></span></h2>
+            <h2>Solicitar Cita con <span id="psychName"></span></h2>
             <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="closePanels()">Cerrar</button>
         </div>
         
         <div class="booking-grid">
             <div>
-                <h3 style="color: var(--azul-oscuro);">Información del Paciente</h3><br>
+                <h3>Información del Paciente</h3><br>
                 
                 <div class="form-group">
                     <label>RUT *</label>
@@ -727,93 +724,83 @@
                     </div>
                 </div>
                 
-                <!-- Mensajes de disponibilidad -->
                 <div id="onlineAvailabilityMsg" style="background:#e6f7e6; padding:15px; border-radius:12px; margin:15px 0; display:none;">
                     <i class="fa fa-check-circle" style="color: var(--verde-exito);"></i> 
-                    Horario disponible para reserva inmediata.
+                    Horario disponible
                 </div>
                 
                 <div id="presencialWarning" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Solicitud Presencial:</strong> Esta es una solicitud que será revisada por el profesional. Solo necesitas indicar el día.
+                    <strong>Solicitud Presencial:</strong> El profesional confirmará la hora
                 </div>
                 
-                <!-- MÉTODOS DE PAGO -->
                 <div class="form-group">
                     <label>Método de Pago *</label>
                     <select id="paymentMethod" onchange="showPaymentDetails()">
-                        <option value="">Selecciona método de pago</option>
+                        <option value="">Selecciona método</option>
                     </select>
                 </div>
                 
-                <!-- Detalles de pago (para transferencia) -->
                 <div id="paymentDetails" class="bank-details" style="display:none;"></div>
-                
-                <!-- CONTENEDOR DE PAGO -->
                 <div id="paymentLinkContainer" style="grid-column:1/-1; margin: 30px 0; display:none;"></div>
                 
-                <!-- NOTAS Y POLÍTICA -->
                 <div class="form-group">
-                    <label>Notas / Motivo de consulta</label>
-                    <textarea id="custMsg" rows="4" placeholder="Cuéntanos brevemente el motivo de tu consulta..."></textarea>
+                    <label>Notas / Motivo</label>
+                    <textarea id="custMsg" rows="4"></textarea>
                 </div>
                 
                 <div class="alert-info" style="background:#e8f4fd; padding:15px; border-radius:12px; margin-top:20px;">
-                    <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Política de Cancelación:</strong> En caso de no asistir, se retendrá el valor de la sesión.
+                    <i class="fa fa-info-circle"></i> 
+                    <strong>Política de Cancelación:</strong> En caso de no asistir, se retendrá el valor.
                 </div>
             </div>
             
             <div class="glass" style="padding:30px; background: var(--azul-oscuro); color:white;">
-                <h3 style="color:white; margin-bottom:20px;">Resumen de Solicitud</h3>
-                <p id="psychSelectedName" style="font-size:1.2rem; margin-bottom:5px; color:white;"></p>
-                <p id="psychSelectedSpec" style="opacity:0.7; margin-bottom:30px; color:white;"></p>
+                <h3 style="color:white;">Resumen</h3>
+                <p id="psychSelectedName" style="font-size:1.2rem; color:white;"></p>
+                <p id="psychSelectedSpec" style="opacity:0.7; color:white;"></p>
                 
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <span style="color:white;">Valor Sesión</span>
-                    <span id="bookingPrice" style="color:white;">$0</span>
+                <div style="display:flex; justify-content:space-between; margin:15px 0;">
+                    <span>Valor</span>
+                    <span id="bookingPrice">$0</span>
                 </div>
                 
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <span style="color:white;">Duración</span>
-                    <span id="bookingDuration" style="color:white;">45 minutos</span>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Duración</span>
+                    <span id="bookingDuration">45 min</span>
                 </div>
                 
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <span style="color:white;">Tipo</span>
-                    <span id="bookingType" style="color:white;">Online</span>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Tipo</span>
+                    <span id="bookingType">Online</span>
                 </div>
                 
                 <div style="margin:15px 0;">
-                    <label style="display:flex; align-items:center; gap:10px; color:white; font-size:0.9rem;">
+                    <label style="display:flex; align-items:center; gap:10px; color:white;">
                         <input type="checkbox" id="acceptPolicy">
-                        <span>Acepto la política de cancelación</span>
+                        <span>Acepto la política</span>
                     </label>
                 </div>
                 
-                <button class="btn-staff" style="width:100%; height:50px; background:var(--naranja-aviso); justify-content:center;" onclick="executeBooking()" id="bookBtn">
+                <button class="btn-staff" style="width:100%; background:var(--naranja-aviso);" onclick="executeBooking()" id="bookBtn">
                     SOLICITAR CITA
                 </button>
                 
-                <p style="text-align:center; font-size:0.7rem; margin-top:15px; opacity:0.6; color:white;">
-                    <i class="fa fa-clock"></i> Para pagos con tarjeta, realiza el pago primero con el botón de arriba
+                <p style="text-align:center; font-size:0.7rem; margin-top:15px; opacity:0.6;">
+                    <i class="fa fa-clock"></i> Para pagos con tarjeta, paga primero
                 </p>
             </div>
         </div>
         
-        <!-- Contenedor para simulación de email -->
-        <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;">
-            <strong>📧 CORREO ENVIADO</strong><br>
-            <span id="emailContent"></span>
-        </div>
+        <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;"></div>
     </div>
 
-    <!-- Panel de Dashboard COMPLETO -->
+    <!-- Panel de Dashboard -->
     <div id="dashboard" class="panel">
         <div class="dashboard-header">
             <div>
                 <h2 id="dashTitle">Panel de Gestión</h2>
-                <p id="dashSubtitle">Bienvenido al sistema</p>
+                <p id="dashSubtitle">Bienvenido</p>
             </div>
             <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="logout()">Cerrar Sesión</button>
         </div>
@@ -828,14 +815,14 @@
                 <h4 id="statCitas">0</h4>
             </div>
             <div class="stat-item">
-                <p>Pacientes Activos</p>
+                <p>Pacientes</p>
                 <h4 id="statPatients">0</h4>
             </div>
         </div>
 
         <div class="tabs" id="dashboardTabs">
             <div class="tab active" onclick="switchTab('citas')">Citas</div>
-            <div class="tab" onclick="switchTab('solicitudes')">Solicitudes Pendientes</div>
+            <div class="tab" onclick="switchTab('solicitudes')">Solicitudes</div>
             <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
             <div class="tab" id="adminTabProfesionales" style="display:none;" onclick="switchTab('profesionales')">Profesionales</div>
             <div class="tab" id="adminTabEspecialidades" style="display:none;" onclick="switchTab('especialidades')">Especialidades</div>
@@ -848,18 +835,15 @@
             <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
             <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
             <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
-            <div class="tab" id="agendarTab" style="display:none;" onclick="switchTab('agendar')">Agendar Cita</div>
+            <div class="tab" id="agendarTab" style="display:none;" onclick="switchTab('agendar')">Agendar</div>
         </div>
 
-        <!-- Contenido de las pestañas -->
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Paciente</th><th>Especialista</th><th>Fecha / Hora</th><th>Tipo</th><th>Box</th><th>Pago</th><th>Estado</th><th>Acciones</th>
-                        </tr>
+                        <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Box</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
                 </table>
@@ -871,9 +855,7 @@
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Fecha Solicitud</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Box</th><th>Motivo</th><th>Acciones</th>
-                        </tr>
+                        <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Box</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
                 </table>
@@ -881,13 +863,13 @@
         </div>
 
         <div id="tabPacientes" class="tab-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                 <h3>Pacientes</h3>
                 <button class="btn-staff" style="background:var(--verde-exito)" onclick="showNewPatientModal()">
-                    <i class="fa fa-plus"></i> Nuevo Paciente
+                    <i class="fa fa-plus"></i> Nuevo
                 </button>
             </div>
-            <input type="text" class="filter-input" id="patientSearch" placeholder="Buscar paciente..." oninput="renderPatients()" style="width:100%; margin-bottom:15px;">
+            <input type="text" class="filter-input" id="patientSearch" placeholder="Buscar paciente..." oninput="renderPatients()" style="width:100%;">
             <div id="patientsList"></div>
         </div>
 
@@ -895,15 +877,13 @@
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                 <h3>Profesionales</h3>
                 <button class="btn-staff" style="background:var(--verde-exito)" onclick="showAddStaffModal()">
-                    <i class="fa fa-plus"></i> Nuevo Profesional
+                    <i class="fa fa-plus"></i> Nuevo
                 </button>
             </div>
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Links Pago</th><th>Acciones</th>
-                        </tr>
+                        <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Links</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
                 </table>
@@ -913,7 +893,7 @@
         <div id="tabEspecialidades" class="tab-content">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                 <h3>Especialidades</h3>
-                <button class="btn-staff" style="background:var(--azul-medico)" onclick="showSpecialtiesModal()">
+                <button class="btn-staff" onclick="showSpecialtiesModal()">
                     <i class="fa fa-gear"></i> Administrar
                 </button>
             </div>
@@ -922,68 +902,68 @@
 
         <div id="tabPagos" class="tab-content">
             <h3>Métodos de Pago</h3>
-            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showPaymentMethodsModal()">
-                Configurar Métodos de Pago
+            <button class="btn-staff" style="margin-bottom:20px;" onclick="showPaymentMethodsModal()">
+                Configurar
             </button>
             <div id="globalPaymentMethodsInfo" class="bank-details"></div>
         </div>
 
         <div id="tabFondo" class="tab-content">
-            <h3>Imagen de Fondo</h3>
-            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showBackgroundImageModal()">
-                Configurar Fondo
+            <h3>Fondo</h3>
+            <button class="btn-staff" onclick="showBackgroundImageModal()">
+                Configurar
             </button>
         </div>
 
         <div id="tabTextos" class="tab-content">
-            <h3>Textos de Portada</h3>
-            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showTextsModal()">
-                Editar Textos
+            <h3>Textos</h3>
+            <button class="btn-staff" onclick="showTextsModal()">
+                Editar
             </button>
         </div>
 
         <div id="tabLogo" class="tab-content">
-            <h3>Logo del Sitio</h3>
-            <button class="btn-staff" style="background:var(--azul-medico); margin-bottom:20px;" onclick="showLogoModal()">
-                Configurar Logo
+            <h3>Logo</h3>
+            <button class="btn-staff" onclick="showLogoModal()">
+                Configurar
             </button>
         </div>
 
         <div id="tabReinicio" class="tab-content">
-            <h3 style="color: var(--rojo-alerta); margin-bottom: 20px;">⚠️ Panel de Reinicio - Solo Administrador</h3>
+            <h3 style="color: var(--rojo-alerta);">Panel de Reinicio</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                 <div class="reinicio-card">
                     <h4>🧑 Pacientes <span class="total-badge" id="totalPacientes">0</span></h4>
                     <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%; margin-bottom: 10px;" onclick="eliminarTodosLosPacientes()">
-                        <i class="fa fa-trash"></i> Eliminar TODOS los pacientes
+                        <i class="fa fa-trash"></i> Eliminar TODOS
                     </button>
                     <button class="btn-staff" style="background: var(--naranja-aviso); width: 100%;" onclick="eliminarPacientesPrueba()">
-                        <i class="fa fa-eraser"></i> Eliminar solo pacientes de prueba
+                        <i class="fa fa-eraser"></i> Eliminar prueba
                     </button>
                 </div>
                 <div class="reinicio-card">
                     <h4>💬 Mensajes <span class="total-badge" id="totalMensajes">0</span></h4>
                     <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%; margin-bottom: 10px;" onclick="eliminarTodosLosMensajes()">
-                        <i class="fa fa-trash"></i> Eliminar TODOS los mensajes
+                        <i class="fa fa-trash"></i> Eliminar TODOS
                     </button>
                     <button class="btn-staff" style="background: var(--naranja-aviso); width: 100%;" onclick="restaurarMensajesIniciales()">
-                        <i class="fa fa-refresh"></i> Restaurar mensajes iniciales
+                        <i class="fa fa-refresh"></i> Restaurar
                     </button>
                 </div>
                 <div class="reinicio-card">
                     <h4>📅 Citas <span class="total-badge" id="totalCitas">0</span></h4>
                     <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%; margin-bottom: 10px;" onclick="eliminarTodasLasCitas()">
-                        <i class="fa fa-trash"></i> Eliminar TODAS las citas
+                        <i class="fa fa-trash"></i> Eliminar TODAS
                     </button>
                     <button class="btn-staff" style="background: var(--naranja-aviso); width: 100%;" onclick="eliminarCitasPrueba()">
-                        <i class="fa fa-eraser"></i> Eliminar citas de prueba
+                        <i class="fa fa-eraser"></i> Eliminar prueba
                     </button>
                 </div>
                 <div class="reinicio-card warning" style="grid-column: 1/-1;">
-                    <h4 style="color: var(--rojo-alerta);">🔥 Reinicio Completo del Sistema</h4>
-                    <p style="margin-bottom: 15px;">Esto eliminará TODOS los pacientes, mensajes, citas y solicitudes. Los profesionales se mantienen.</p>
+                    <h4 style="color: var(--rojo-alerta);">🔥 Reinicio Completo</h4>
+                    <p>Eliminará TODOS los datos (pacientes, mensajes, citas).</p>
                     <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%;" onclick="reinicioCompleto()">
-                        <i class="fa fa-exclamation-triangle"></i> REINICIAR TODO EL SISTEMA
+                        <i class="fa fa-exclamation-triangle"></i> REINICIAR TODO
                     </button>
                 </div>
             </div>
@@ -992,17 +972,17 @@
         <div id="tabDisponibilidad" class="tab-content">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                 <h3>Disponibilidad</h3>
-                <button class="btn-staff" style="background:var(--azul-medico)" onclick="showAvailabilityModal()">
-                    Configuración Avanzada
+                <button class="btn-staff" onclick="showAvailabilityModal()">
+                    Configuración
                 </button>
             </div>
             <div class="form-group">
-                <label>Seleccionar Fecha</label>
+                <label>Fecha</label>
                 <input type="date" id="availDate" onchange="loadTimeSlots()">
             </div>
             <div style="display:flex; justify-content:space-between; margin:20px 0;">
-                <h4>Horarios Disponibles</h4>
-                <label><input type="checkbox" id="showOvercupo" onchange="loadTimeSlots()"> Mostrar sobrecupo</label>
+                <h4>Horarios</h4>
+                <label><input type="checkbox" id="showOvercupo" onchange="loadTimeSlots()"> Sobrecupo</label>
             </div>
             <div class="time-slots" id="timeSlotsContainer"></div>
             <div style="display:flex; gap:15px; margin-top:20px;">
@@ -1016,11 +996,11 @@
             <div style="background:#f8fafc; padding:25px; border-radius:20px;">
                 <div class="form-group">
                     <label>Nombre</label>
-                    <input type="text" id="myName" disabled style="background:#f1f5f9;">
+                    <input type="text" id="myName" disabled>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="myEmail" disabled style="background:#f1f5f9;">
+                    <input type="email" id="myEmail" disabled>
                 </div>
                 <div class="form-group">
                     <label>Especialidades</label>
@@ -1028,14 +1008,14 @@
                 </div>
                 <h4 style="margin:25px 0 15px;">Precios</h4>
                 <div class="form-group">
-                    <label>Precio Online ($)</label>
+                    <label>Online ($)</label>
                     <input type="number" id="myPriceOnline">
                 </div>
                 <div class="form-group">
-                    <label>Precio Presencial ($)</label>
+                    <label>Presencial ($)</label>
                     <input type="number" id="myPricePresencial">
                 </div>
-                <h4 style="margin:25px 0 15px;">Redes Sociales</h4>
+                <h4>Redes Sociales</h4>
                 <div class="form-group">
                     <label>WhatsApp</label>
                     <input type="text" id="myWhatsapp">
@@ -1044,7 +1024,7 @@
                     <label>Instagram</label>
                     <input type="text" id="myInstagram">
                 </div>
-                <h4 style="margin:25px 0 15px;">Datos Bancarios</h4>
+                <h4>Datos Bancarios</h4>
                 <div class="form-group">
                     <label>Banco</label>
                     <input type="text" id="myBank">
@@ -1059,7 +1039,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Número de Cuenta</label>
+                    <label>Número</label>
                     <input type="text" id="myAccountNumber">
                 </div>
                 <div class="form-group">
@@ -1070,19 +1050,6 @@
                     <label>Email transferencias</label>
                     <input type="email" id="myBankEmail">
                 </div>
-                <h4 style="margin:25px 0 15px;">Métodos de Pago Aceptados</h4>
-                <div class="payment-method-item">
-                    <input type="checkbox" id="myTransfer" checked> <label>Transferencia</label>
-                </div>
-                <div class="payment-method-item">
-                    <input type="checkbox" id="myCardPresencial" checked> <label>Tarjeta presencial</label>
-                </div>
-                <div class="payment-method-item">
-                    <input type="checkbox" id="myCardOnline"> <label>Tarjeta online</label>
-                </div>
-                <div class="payment-method-item">
-                    <input type="checkbox" id="myCash" checked> <label>Efectivo</label>
-                </div>
                 <button class="btn-staff" style="background:var(--verde-exito); margin-top:20px;" onclick="saveMyConfig()">Guardar</button>
             </div>
         </div>
@@ -1092,9 +1059,7 @@
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th>
-                        </tr>
+                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
                 </table>
@@ -1105,108 +1070,31 @@
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                 <h3>Boxes</h3>
                 <button class="btn-staff" style="background:var(--verde-exito)" onclick="showBoxModal()">
-                    <i class="fa fa-plus"></i> Nuevo Box
+                    <i class="fa fa-plus"></i> Nuevo
                 </button>
             </div>
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Nombre</th><th>Ubicación</th><th>Horario</th><th>Días</th><th>Estado</th><th>Acciones</th>
-                        </tr>
+                        <tr><th>Nombre</th><th>Ubicación</th><th>Horario</th><th>Días</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="boxTableBodyDashboard"></tbody>
                 </table>
             </div>
             <div class="box-schedule" style="margin-top:30px;">
-                <h3 style="margin-bottom:15px;">📋 Ocupación de Boxes - Hoy</h3>
+                <h3>Ocupación de Boxes - Hoy</h3>
                 <div id="boxOccupancy"></div>
             </div>
         </div>
 
         <div id="tabAgendar" class="tab-content">
             <div class="dashboard-header">
-                <h2>Agendar Cita para Paciente</h2>
+                <h2>Agendar Cita</h2>
                 <button class="btn-staff" style="background:var(--verde-exito)" onclick="showTherapistBookingModal()">
-                    <i class="fa fa-calendar-plus"></i> Nueva Cita
+                    <i class="fa fa-calendar-plus"></i> Nueva
                 </button>
             </div>
-            <div class="booking-grid">
-                <div>
-                    <h3>Buscar Paciente</h3><br>
-                    <div class="form-group">
-                        <label>RUT del Paciente</label>
-                        <input type="text" id="therapistRut" oninput="formatRut(this)" onblur="searchPatientByRutTherapist()">
-                    </div>
-                    <div id="patientInfo" style="display:none; background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:20px;">
-                        <h4>Datos del Paciente</h4>
-                        <p><strong>Nombre:</strong> <span id="patientInfoName"></span></p>
-                        <p><strong>Email:</strong> <span id="patientInfoEmail"></span></p>
-                        <p><strong>Teléfono:</strong> <span id="patientInfoPhone"></span></p>
-                    </div>
-                    <div class="form-group">
-                        <label>Tipo de Atención *</label>
-                        <select id="therapistAppointmentType" onchange="updateTherapistBookingDetails()">
-                            <option value="online">Online</option>
-                            <option value="presencial">Presencial</option>
-                        </select>
-                    </div>
-                    <div id="therapistBoxField" style="display:none;" class="address-input">
-                        <label>Seleccionar Box *</label>
-                        <div id="therapistBoxSelector" class="box-selector"></div>
-                        <p id="therapistBoxAvailabilityMsg" style="margin-top:10px; font-size:0.85rem; color:var(--text-light);"></p>
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                        <div class="form-group">
-                            <label>Fecha *</label>
-                            <input type="date" id="therapistDate" onchange="updateTherapistAvailableSlots()">
-                        </div>
-                        <div class="form-group">
-                            <label>Hora *</label>
-                            <select id="therapistTime" onchange="updateTherapistBookingDetails()">
-                                <option value="">Selecciona una fecha</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Notas</label>
-                        <textarea id="therapistMsg" rows="3"></textarea>
-                    </div>
-                    <button class="btn-staff" style="width:100%; background:var(--verde-exito); margin-top:15px;" onclick="executeTherapistBooking()" id="therapistBookBtn">
-                        Confirmar Cita
-                    </button>
-                </div>
-                <div class="glass" style="padding:30px; background: var(--azul-oscuro); color:white;">
-                    <h3 style="color:white;">Resumen de Cita</h3>
-                    <p id="therapistPsychName" style="font-size:1.2rem; margin-bottom:5px; color:white;"></p>
-                    <div style="display:flex; justify-content:space-between; margin-top:20px;">
-                        <span>Paciente</span> <span id="therapistPatientName">—</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between;">
-                        <span>Fecha</span> <span id="therapistDateDisplay">—</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between;">
-                        <span>Hora</span> <span id="therapistTimeDisplay">—</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between;">
-                        <span>Tipo</span> <span id="therapistTypeDisplay">Online</span>
-                    </div>
-                    <div id="therapistBoxDisplay" style="display:none; justify-content:space-between;">
-                        <span>Box</span> <span id="therapistBoxName"></span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between;">
-                        <span>Valor</span> <span id="therapistPrice">$0</span>
-                    </div>
-                    <div style="margin:20px 0;">
-                        <label style="color:white;">Método de Pago</label>
-                        <select id="therapistPaymentMethod" style="width:100%; padding:12px;">
-                            <option value="transfer">Transferencia</option>
-                            <option value="cash">Efectivo</option>
-                            <option value="card">Tarjeta</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <!-- Contenido simplificado -->
         </div>
     </div>
 </div>
@@ -1298,121 +1186,17 @@
     };
 </script>
 
-<!-- Detectar dashboard desde URL -->
+<!-- Script de ensureFunctions -->
 <script type="module">
-    // Importar funciones necesarias
-    import { renderStaffTable } from './js/modules/profesionales.js';
-    import { renderMessagesTable } from './js/modules/mensajes.js';
-    import { renderBoxesTable, renderBoxOccupancy } from './js/modules/boxes.js';
-    import { updatePaymentMethodsInfo, loadMyConfig } from './js/modules/personalizacion.js';
-    import { renderPatients } from './js/modules/pacientes.js';
-    import { renderPendingRequests } from './js/modules/citas.js';
-    import { actualizarContadoresReinicio } from './js/modules/admin.js';
-    import * as state from './js/modules/state.js';
-
-    // Detectar si debemos mostrar el dashboard
-    const urlParams = new URLSearchParams(window.location.search);
-    const dashboard = urlParams.get('dashboard');
-    
-    if (dashboard) {
-        console.log('🔄 Cargando dashboard como:', dashboard);
-        
-        // Pequeña pausa para asegurar que el DOM cargó
-        setTimeout(() => {
-            // Ocultar vista pública
-            const clientView = document.getElementById('clientView');
-            const bookingPanel = document.getElementById('bookingPanel');
-            const dashboardEl = document.getElementById('dashboard');
-            
-            if (clientView) clientView.style.display = 'none';
-            if (bookingPanel) bookingPanel.style.display = 'none';
-            if (dashboardEl) dashboardEl.style.display = 'block';
-            
-            const isAdmin = dashboard === 'admin';
-            const isPsych = dashboard === 'psych';
-            
-            // Título
-            const dashTitle = document.getElementById('dashTitle');
-            if (dashTitle) {
-                dashTitle.innerText = isAdmin ? "Panel Administrador" : "Panel de Psicólogo";
-            }
-            
-            // Mostrar/ocultar tabs según el rol
-            const adminTabs = [
-                'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
-                'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
-                'messagesTab', 'boxesTab'
-            ];
-            adminTabs.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = isAdmin ? 'block' : 'none';
-            });
-            
-            const psychTabs = ['psychTab', 'configTab', 'agendarTab'];
-            psychTabs.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = isPsych ? 'block' : 'none';
-            });
-            
-            // Activar pestaña de citas
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            const citasTab = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.trim() === 'Citas');
-            if (citasTab) citasTab.classList.add('active');
-            
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            const tabCitas = document.getElementById('tabCitas');
-            if (tabCitas) tabCitas.classList.add('active');
-            
-            // Cargar datos según el rol
-            console.log('📊 Cargando datos...');
-            
-            try {
-                if (isAdmin) {
-                    // Cargar datos de admin
-                    if (typeof renderStaffTable === 'function') renderStaffTable();
-                    if (typeof renderMessagesTable === 'function') renderMessagesTable();
-                    if (typeof renderBoxesTable === 'function') renderBoxesTable();
-                    if (typeof updatePaymentMethodsInfo === 'function') updatePaymentMethodsInfo();
-                    if (typeof actualizarContadoresReinicio === 'function') actualizarContadoresReinicio();
-                } else {
-                    // Cargar datos de psicólogo
-                    const availDate = document.getElementById('availDate');
-                    if (availDate) availDate.min = new Date().toISOString().split('T')[0];
-                    
-                    if (typeof loadMyConfig === 'function') loadMyConfig();
-                    if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
-                }
-                
-                // Datos comunes
-                if (typeof renderPatients === 'function') renderPatients();
-                if (typeof renderPendingRequests === 'function') renderPendingRequests();
-                
-                console.log('✅ Datos cargados correctamente');
-            } catch (error) {
-                console.error('❌ Error cargando datos:', error);
-            }
-            
-            // Limpiar URL
-            setTimeout(() => {
-                window.history.replaceState({}, document.title, '/');
-            }, 500);
-            
-        }, 500);
-    }
-</script>
-<script>
-    // Forzar recarga de funciones después del dashboard
     window.ensureFunctions = function() {
-        console.log('🔧 Asegurando funciones globales...');
+        console.log('🔧 Cargando funciones...');
         
-        // Re-exportar funciones de auth
         import('./js/modules/auth.js').then(mod => {
             window.switchTab = mod.switchTab;
             window.showLoginModal = mod.showLoginModal;
             window.closeLoginModal = mod.closeLoginModal;
             window.processLogin = mod.processLogin;
             window.logout = mod.logout;
-            console.log('✅ Funciones de auth cargadas');
         });
         
         import('./js/modules/citas.js').then(mod => {
@@ -1423,7 +1207,6 @@
             window.checkOnlineAvailability = mod.checkOnlineAvailability;
             window.executeBooking = mod.executeBooking;
             window.showPaymentDetails = mod.showPaymentDetails;
-            console.log('✅ Funciones de citas cargadas');
         });
         
         import('./js/modules/mensajes.js').then(mod => {
@@ -1432,7 +1215,6 @@
             window.setRating = mod.setRating;
             window.saveMessage = mod.saveMessage;
             window.deleteMessage = mod.deleteMessage;
-            console.log('✅ Funciones de mensajes cargadas');
         });
         
         import('./js/modules/pacientes.js').then(mod => {
@@ -1443,7 +1225,6 @@
             window.searchPatientByRut = mod.searchPatientByRut;
             window.viewPatientDetails = mod.viewPatientDetails;
             window.renderPatients = mod.renderPatients;
-            console.log('✅ Funciones de pacientes cargadas');
         });
         
         import('./js/modules/profesionales.js').then(mod => {
@@ -1454,7 +1235,6 @@
             window.closeEditTherapistModal = mod.closeEditTherapistModal;
             window.updateTherapist = mod.updateTherapist;
             window.deleteStaff = mod.deleteStaff;
-            console.log('✅ Funciones de profesionales cargadas');
         });
         
         import('./js/modules/boxes.js').then(mod => {
@@ -1464,7 +1244,6 @@
             window.editBox = mod.editBox;
             window.toggleBoxStatus = mod.toggleBoxStatus;
             window.deleteBox = mod.deleteBox;
-            console.log('✅ Funciones de boxes cargadas');
         });
         
         import('./js/modules/disponibilidad.js').then(mod => {
@@ -1478,7 +1257,6 @@
             window.saveAvailability = mod.saveAvailability;
             window.loadTimeSlots = mod.loadTimeSlots;
             window.addOvercupo = mod.addOvercupo;
-            console.log('✅ Funciones de disponibilidad cargadas');
         });
         
         import('./js/modules/personalizacion.js').then(mod => {
@@ -1503,16 +1281,88 @@
             window.closeSpecialtiesModal = mod.closeSpecialtiesModal;
             window.addSpecialty = mod.addSpecialty;
             window.deleteSpecialty = mod.deleteSpecialty;
-            console.log('✅ Funciones de personalización cargadas');
         });
         
-        console.log('🎉 Todas las funciones cargadas');
+        console.log('✅ Funciones cargadas');
     };
     
-    // Llamar después de cargar el dashboard
     if (window.location.search.includes('dashboard')) {
-        setTimeout(window.ensureFunctions, 1000);
+        setTimeout(() => window.ensureFunctions(), 1000);
     }
 </script>
+
+<!-- Detectar dashboard desde URL -->
+<script type="module">
+    import { renderStaffTable } from './js/modules/profesionales.js';
+    import { renderMessagesTable } from './js/modules/mensajes.js';
+    import { renderBoxesTable, renderBoxOccupancy } from './js/modules/boxes.js';
+    import { updatePaymentMethodsInfo, loadMyConfig } from './js/modules/personalizacion.js';
+    import { renderPatients } from './js/modules/pacientes.js';
+    import { renderPendingRequests } from './js/modules/citas.js';
+    import { actualizarContadoresReinicio } from './js/modules/admin.js';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const dashboard = urlParams.get('dashboard');
+    
+    if (dashboard) {
+        setTimeout(() => {
+            document.getElementById('clientView').style.display = 'none';
+            document.getElementById('bookingPanel').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            const isAdmin = dashboard === 'admin';
+            
+            document.getElementById('dashTitle').innerText = isAdmin ? "Panel Administrador" : "Panel de Psicólogo";
+            
+            const adminTabs = [
+                'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
+                'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
+                'messagesTab', 'boxesTab'
+            ];
+            adminTabs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = isAdmin ? 'block' : 'none';
+            });
+            
+            const psychTabs = ['psychTab', 'configTab', 'agendarTab'];
+            psychTabs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = !isAdmin ? 'block' : 'none';
+            });
+            
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const citasTab = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.trim() === 'Citas');
+            if (citasTab) citasTab.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const tabCitas = document.getElementById('tabCitas');
+            if (tabCitas) tabCitas.classList.add('active');
+            
+            try {
+                if (isAdmin) {
+                    if (typeof renderStaffTable === 'function') renderStaffTable();
+                    if (typeof renderMessagesTable === 'function') renderMessagesTable();
+                    if (typeof renderBoxesTable === 'function') renderBoxesTable();
+                    if (typeof updatePaymentMethodsInfo === 'function') updatePaymentMethodsInfo();
+                    if (typeof actualizarContadoresReinicio === 'function') actualizarContadoresReinicio();
+                } else {
+                    const availDate = document.getElementById('availDate');
+                    if (availDate) availDate.min = new Date().toISOString().split('T')[0];
+                    
+                    if (typeof loadMyConfig === 'function') loadMyConfig();
+                    if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
+                }
+                
+                if (typeof renderPatients === 'function') renderPatients();
+                if (typeof renderPendingRequests === 'function') renderPendingRequests();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            
+            setTimeout(() => window.history.replaceState({}, document.title, '/'), 500);
+        }, 500);
+    }
+</script>
+
 </body>
 </html>

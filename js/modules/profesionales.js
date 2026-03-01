@@ -37,6 +37,9 @@ export function closeAddStaffModal() {
     document.getElementById('addStaffModal').style.display = 'none';
 }
 
+// ============================================
+// RENDERIZAR TABLA DE PROFESIONALES (CORREGIDO CON ICONOS VISIBLES)
+// ============================================
 export function renderStaffTable() {
     const tb = document.getElementById('staffTableBody');
     if (!tb) return;
@@ -46,24 +49,39 @@ export function renderStaffTable() {
         const specs = Array.isArray(p.spec) ? p.spec.join(', ') : p.spec;
         return `
         <tr>
-            <td>${p.name}</td>
+            <td><strong>${p.name}</strong></td>
             <td>${p.email || '—'}</td>
-            <td>${specs ? specs.substring(0, 30) + '...' : '—'}</td>
+            <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
             <td>${p.usuario || p.name || '—'}</td>
-            <td>$${p.priceOnline || 0}/$${p.pricePresencial || 0}</td>
-            <td>${p.whatsapp || '—'}</td>
-            <td>${p.instagram || '—'}</td>
             <td>
-                ${p.paymentLinks?.online ? '✅ Online' : '❌ Online'}<br>
-                ${p.paymentLinks?.presencial ? '✅ Presencial' : '❌ Presencial'}
+                <span style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span>
+                    <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
+                </span>
             </td>
+            <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank" style="color:var(--verde-exito);">${p.whatsapp}</a>` : '—'}</td>
+            <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank" style="color:#E1306C;">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
             <td>
-                <button onclick="editTherapist('${p.id}')" class="btn-icon" style="background:var(--azul-medico); color:white;">
-                    <i class="fa fa-edit"></i>
-                </button>
-                <button onclick="deleteStaff('${p.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
-                    <i class="fa fa-trash"></i>
-                </button>
+                <span style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
+                        <i class="fa ${p.paymentLinks?.online ? 'fa-check-circle' : 'fa-times-circle'}"></i> Online
+                    </span>
+                    <span style="color:${p.paymentLinks?.presencial ? 'var(--verde-exito)' : 'var(--text-light)'}">
+                        <i class="fa ${p.paymentLinks?.presencial ? 'fa-check-circle' : 'fa-times-circle'}"></i> Presencial
+                    </span>
+                </span>
+            </td>
+            <td style="min-width: 160px;">
+                <div style="display:flex; gap:5px;">
+                    <button onclick="editTherapist('${p.id}')" class="btn-icon" 
+                        style="background:var(--azul-medico); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                        <i class="fa fa-edit"></i> Editar
+                    </button>
+                    <button onclick="deleteStaff('${p.id}')" class="btn-icon" 
+                        style="background:var(--rojo-alerta); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                        <i class="fa fa-trash"></i> Eliminar
+                    </button>
+                </div>
             </td>
         </tr>
     `}).join('');
@@ -101,7 +119,7 @@ export function addStaff() {
         return;
     }
 
-    // Crear nuevo profesional (sin isAdmin por defecto)
+    // Crear nuevo profesional
     const nuevoProfesional = {
         id: String(Date.now()),
         name: name,
@@ -133,7 +151,7 @@ export function addStaff() {
             presencial: paymentLinkPresencial,
             qrCode: state.tempQrData || ''
         },
-        isAdmin: false, // Por defecto, ningún profesional es admin
+        isAdmin: false,
         isHiddenAdmin: false,
         createdAt: new Date().toISOString()
     };
@@ -177,6 +195,7 @@ export function editTherapist(id) {
     
     document.getElementById('editPaymentLinkOnline').value = therapist.paymentLinks?.online || '';
     document.getElementById('editPaymentLinkPresencial').value = therapist.paymentLinks?.presencial || '';
+    
     if (therapist.paymentLinks?.qrCode) {
         document.getElementById('editQrPreview').src = therapist.paymentLinks.qrCode;
         document.getElementById('editQrPreview').style.display = 'block';
@@ -254,60 +273,45 @@ export function deleteStaff(id) {
     }
     
     if (confirm('¿Eliminar profesional y todos sus datos?')) {
-        // Eliminar citas asociadas
-        state.appointments = state.appointments.filter(a => a.psychId != id);
-        
-        // Eliminar pacientes asociados (o reasignarlos? mejor eliminar por ahora)
-        state.patients = state.patients.filter(p => p.psychId != id);
-        
-        // ============================================
-        // NUEVO: Eliminar también fichas clínicas asociadas
-        // ============================================
         // Obtener IDs de pacientes que tenía este profesional
         const patientIds = state.patients
             .filter(p => p.psychId == id)
             .map(p => p.id);
         
-        // Eliminar fichas de ingreso de esos pacientes
+        // Eliminar citas asociadas
+        state.appointments = state.appointments.filter(a => a.psychId != id);
+        
+        // Eliminar pacientes asociados
+        state.patients = state.patients.filter(p => p.psychId != id);
+        
+        // Eliminar fichas clínicas
         state.fichasIngreso = state.fichasIngreso.filter(f => !patientIds.includes(f.patientId));
-        
-        // Eliminar sesiones de esos pacientes
         state.sesiones = state.sesiones.filter(s => !patientIds.includes(s.patientId));
-        
-        // Eliminar informes de esos pacientes
         state.informes = state.informes.filter(i => !patientIds.includes(i.patientId));
         
-        // Finalmente eliminar al profesional
+        // Eliminar al profesional
         state.staff = state.staff.filter(s => s.id != id);
         
         import('../main.js').then(main => main.save());
+        renderStaffTable();
         showToast('Profesional y todos sus datos eliminados', 'success');
     }
 }
 
 // ============================================
-// NUEVAS FUNCIONES PARA GESTIÓN DE PROFESIONALES CON FICHAS
+// FUNCIONES PARA GESTIÓN DE PROFESIONALES
 // ============================================
 
-/**
- * Obtiene el resumen de actividad de un profesional
- * @param {string} psychId - ID del profesional
- * @returns {Object} Resumen con estadísticas
- */
 export function getPsychologistSummary(psychId) {
     const psych = state.staff.find(s => s.id == psychId);
     if (!psych) return null;
     
-    // Pacientes asignados
     const misPacientes = state.patients.filter(p => p.psychId == psychId);
     const misPatientIds = misPacientes.map(p => p.id);
     
-    // Citas
     const misCitas = state.appointments.filter(a => a.psychId == psychId);
     const citasPagadas = misCitas.filter(a => a.paymentStatus === 'pagado');
-    const citasPendientes = misCitas.filter(a => a.paymentStatus === 'pendiente');
     
-    // Ingresos
     const ingresosTotales = citasPagadas.reduce((sum, a) => sum + (a.price || 0), 0);
     const ingresosMes = citasPagadas
         .filter(a => {
@@ -317,9 +321,6 @@ export function getPsychologistSummary(psychId) {
         })
         .reduce((sum, a) => sum + (a.price || 0), 0);
     
-    // ============================================
-    // NUEVO: Estadísticas de fichas clínicas
-    // ============================================
     const fichasIngreso = state.fichasIngreso.filter(f => misPatientIds.includes(f.patientId));
     const sesiones = state.sesiones.filter(s => misPatientIds.includes(s.patientId));
     const informes = state.informes.filter(i => misPatientIds.includes(i.patientId));
@@ -338,7 +339,7 @@ export function getPsychologistSummary(psychId) {
         citas: {
             total: misCitas.length,
             pagadas: citasPagadas.length,
-            pendientes: citasPendientes.length
+            pendientes: misCitas.filter(a => a.paymentStatus === 'pendiente').length
         },
         ingresos: {
             total: ingresosTotales,
@@ -355,11 +356,6 @@ export function getPsychologistSummary(psychId) {
     };
 }
 
-/**
- * Obtiene todos los pacientes de un profesional con sus fichas clínicas
- * @param {string} psychId - ID del profesional
- * @returns {Array} Lista de pacientes enriquecida
- */
 export function getPatientsWithClinicalData(psychId) {
     const misPacientes = state.patients.filter(p => p.psychId == psychId);
     
@@ -379,7 +375,7 @@ export function getPatientsWithClinicalData(psychId) {
                     .reduce((sum, a) => sum + (a.price || 0), 0),
                 tieneFichaIngreso: fichas.length > 0,
                 ultimaSesion: sesiones.length > 0 
-                    ? sesiones.sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion))[0].fechaAtencion
+                    ? sesiones.sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion))[0]?.fechaAtencion
                     : null,
                 informes: informes.length
             }
@@ -387,23 +383,11 @@ export function getPatientsWithClinicalData(psychId) {
     });
 }
 
-/**
- * Verifica si un profesional tiene acceso a un paciente específico
- * @param {string} psychId - ID del profesional
- * @param {string} patientId - ID del paciente
- * @returns {boolean} true si tiene acceso
- */
 export function canPsychologistAccessPatient(psychId, patientId) {
     const patient = state.patients.find(p => p.id == patientId);
     return patient && patient.psychId == psychId;
 }
 
-/**
- * Obtiene las últimas sesiones de un profesional
- * @param {string} psychId - ID del profesional
- * @param {number} limit - Límite de resultados
- * @returns {Array} Últimas sesiones
- */
 export function getRecentSessions(psychId, limit = 10) {
     const misPatientIds = state.patients
         .filter(p => p.psychId == psychId)
@@ -423,9 +407,6 @@ export function getRecentSessions(psychId, limit = 10) {
         });
 }
 
-/**
- * Carga las especialidades en los selects de los modales
- */
 export function loadSpecialtiesInSelects() {
     const addSpecSelect = document.getElementById('addSpec');
     const editSpecSelect = document.getElementById('editSpec');
@@ -444,6 +425,14 @@ export function loadSpecialtiesInSelects() {
 // EXPORTAR FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {
+    window.showAddStaffModal = showAddStaffModal;
+    window.closeAddStaffModal = closeAddStaffModal;
+    window.renderStaffTable = renderStaffTable;
+    window.addStaff = addStaff;
+    window.editTherapist = editTherapist;
+    window.closeEditTherapistModal = closeEditTherapistModal;
+    window.updateTherapist = updateTherapist;
+    window.deleteStaff = deleteStaff;
     window.getPsychologistSummary = getPsychologistSummary;
     window.getPatientsWithClinicalData = getPatientsWithClinicalData;
     window.canPsychologistAccessPatient = canPsychologistAccessPatient;

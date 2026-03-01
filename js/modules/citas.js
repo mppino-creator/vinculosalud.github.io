@@ -764,10 +764,10 @@ export function markAsPaid(id) {
 // ============================================
 // EXPONER FUNCIONES AL OBJETO WINDOW PARA EL HTML
 // ============================================
-window.searchPatientByRutBooking = searchPatientByRutBooking;
-window.checkOnlineAvailability = checkOnlineAvailability;
+window.openBooking = openBooking;
 window.updateBookingDetails = updateBookingDetails;
 window.updateAvailableTimes = updateAvailableTimes;
-window.openBooking = openBooking;
+window.searchPatientByRutBooking = searchPatientByRutBooking;
+window.checkOnlineAvailability = checkOnlineAvailability;
 window.executeBooking = executeBooking;
 window.showPaymentDetails = showPaymentDetails;

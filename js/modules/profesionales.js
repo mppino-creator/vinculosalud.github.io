@@ -38,7 +38,7 @@ export function closeAddStaffModal() {
 }
 
 // ============================================
-// RENDERIZAR TABLA DE PROFESIONALES (CORREGIDO CON ICONOS VISIBLES)
+// RENDERIZAR TABLA DE PROFESIONALES (VERSIÓN CON EMOJIS)
 // ============================================
 export function renderStaffTable() {
     const tb = document.getElementById('staffTableBody');
@@ -64,22 +64,22 @@ export function renderStaffTable() {
             <td>
                 <span style="display:flex; flex-direction:column; gap:2px;">
                     <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
-                        <i class="fa ${p.paymentLinks?.online ? 'fa-check-circle' : 'fa-times-circle'}"></i> Online
+                        ${p.paymentLinks?.online ? '✅' : '❌'} Online
                     </span>
                     <span style="color:${p.paymentLinks?.presencial ? 'var(--verde-exito)' : 'var(--text-light)'}">
-                        <i class="fa ${p.paymentLinks?.presencial ? 'fa-check-circle' : 'fa-times-circle'}"></i> Presencial
+                        ${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial
                     </span>
                 </span>
             </td>
             <td style="min-width: 160px;">
                 <div style="display:flex; gap:5px;">
-                    <button onclick="editTherapist('${p.id}')" class="btn-icon" 
-                        style="background:var(--azul-medico); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
-                        <i class="fa fa-edit"></i> Editar
+                    <button onclick="editTherapist('${p.id}')" 
+                        style="background:var(--azul-medico); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:5px; font-size:14px;">
+                        <span style="font-size:16px;">✏️</span> Editar
                     </button>
-                    <button onclick="deleteStaff('${p.id}')" class="btn-icon" 
-                        style="background:var(--rojo-alerta); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
-                        <i class="fa fa-trash"></i> Eliminar
+                    <button onclick="deleteStaff('${p.id}')" 
+                        style="background:var(--rojo-alerta); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:5px; font-size:14px;">
+                        <span style="font-size:16px;">🗑️</span> Eliminar
                     </button>
                 </div>
             </td>

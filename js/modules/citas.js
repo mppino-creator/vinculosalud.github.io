@@ -433,12 +433,13 @@ export function executeBooking() {
 
             state.appointments.push(appointment);
             
-            // Enviar email de solicitud
-            sendRequestEmail({
-                ...appointment,
-                preferredDate: date,
-                preferredTime: time
-            });
+            // Enviar email de confirmación con los datos reales
+            sendEmailNotification(
+                email,
+                'Confirmación de cita - Vínculo Salud',
+                `Hola ${name},\n\nTu cita ha sido confirmada con ${state.selectedPsych.name}.\n\n📅 Fecha: ${date}\n⏰ Hora: ${time}\n💻 Tipo: Online\n\nEl enlace de videollamada se enviará 1 hora antes.\n\nVínculo Salud`,
+                'confirmacion_online'
+            );
             
             if (paymentMethod === 'card-online' || paymentMethod === 'card-presencial') {
                 showToast('✅ Solicitud creada. Realiza el pago con el link de arriba para confirmar tu cita.', 'success');
@@ -468,7 +469,14 @@ export function executeBooking() {
             };
 
             state.pendingRequests.push(request);
-            sendRequestEmail(request);
+            
+            // Enviar email de solicitud con los datos reales
+            sendEmailNotification(
+                email,
+                'Solicitud de cita recibida - Vínculo Salud',
+                `Hola ${name},\n\nHemos recibido tu solicitud de cita presencial con ${state.selectedPsych.name} para el día ${date}.\n\nEl profesional te confirmará la hora a la brevedad.\n\nVínculo Salud`,
+                'solicitud_presencial'
+            );
             
             if (paymentMethod === 'card-online' || paymentMethod === 'card-presencial') {
                 showToast('✅ Solicitud creada. Realiza el pago con el link de arriba para confirmar tu cita.', 'success');
@@ -491,43 +499,11 @@ export function executeBooking() {
     }, 1500);
 }
 
-// Funciones de email
+// Función para enviar emails de solicitud (ya no se usa directamente, pero la mantenemos por si acaso)
 function sendRequestEmail(request) {
-    const patientEmail = request.patientEmail;
-    
-    if (patientEmail) {
-        let subject, message;
-        
-        if (request.type === 'online') {
-            subject = 'Solicitud de cita online - Vínculo Salud';
-            message = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita ONLINE con ${request.psych}.\n\n📅 Fecha: ${request.preferredDate}\n⏰ Hora: ${request.preferredTime}\n\n`;
-            
-            if (request.paymentMethod === 'card-online' || request.paymentMethod === 'card-presencial') {
-                message += `Para confirmar tu cita, realiza el pago a través del link que aparece en la página.\n\n`;
-            } else if (request.paymentMethod === 'transfer') {
-                message += `Para confirmar tu cita, realiza la transferencia a la cuenta indicada y envía el comprobante al email correspondiente.\n\n`;
-            } else {
-                message += `Tu cita está confirmada. Recibirás un email con los detalles de la videollamada 1 hora antes.\n\n`;
-            }
-            
-            message += `Vínculo Salud`;
-        } else {
-            subject = 'Solicitud de cita presencial - Vínculo Salud';
-            message = `Hola ${request.patient},\n\nHemos recibido tu solicitud de cita PRESENCIAL con ${request.psych}.\n\n📅 Día solicitado: ${request.preferredDate}\n\n`;
-            
-            if (request.paymentMethod === 'card-online' || request.paymentMethod === 'card-presencial') {
-                message += `Para confirmar tu cita, realiza el pago a través del link que aparece en la página.\n\n`;
-            } else if (request.paymentMethod === 'transfer') {
-                message += `Para confirmar tu cita, realiza la transferencia a la cuenta indicada y envía el comprobante.\n\n`;
-            } else {
-                message += `El pago se realizará en el consultorio el día de la atención.\n\n`;
-            }
-            
-            message += `El profesional revisará tu solicitud y te confirmará la hora exacta a la brevedad.\n\nVínculo Salud`;
-        }
-        
-        sendEmailNotification(patientEmail, subject, message);
-    }
+    // Esta función ya no se usa porque los emails se envían directamente en executeBooking
+    // La dejamos para no romper código existente
+    console.log("📧 Función sendRequestEmail reemplazada por envío directo en executeBooking");
 }
 
 // ============================================
@@ -608,9 +584,12 @@ export function rejectRequest(requestId) {
         state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
 
         if (request?.patientEmail) {
-            const subject = 'Solicitud de cita no confirmada - Vínculo Salud';
-            const message = `Hola ${request.patient},\n\nLamentamos informarte que no ha sido posible confirmar tu solicitud de cita con ${request.psych} para el ${request.preferredDate}.\n\nPor favor, contacta directamente con el profesional para acordar una nueva fecha.\n\nVínculo Salud`;
-            sendEmailNotification(request.patientEmail, subject, message);
+            sendEmailNotification(
+                request.patientEmail,
+                'Solicitud de cita no confirmada - Vínculo Salud',
+                `Hola ${request.patient},\n\nLamentamos informarte que no ha sido posible confirmar tu solicitud de cita con ${request.psych} para el ${request.preferredDate}.\n\nPor favor, contacta directamente con el profesional para acordar una nueva fecha.\n\nVínculo Salud`,
+                'rechazo'
+            );
         }
 
         import('../main.js').then(main => main.save());
@@ -836,9 +815,12 @@ export function cancelAppointment(id) {
         state.setAppointments(state.appointments.filter(a => a.id != id));
 
         if (appointment?.patientEmail) {
-            const subject = 'Cita cancelada - Vínculo Salud';
-            const message = `Hola ${appointment.patient},\n\nTu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.\n\nSi necesitas reagendar, contáctanos.\n\nVínculo Salud`;
-            sendEmailNotification(appointment.patientEmail, subject, message);
+            sendEmailNotification(
+                appointment.patientEmail,
+                'Cita cancelada - Vínculo Salud',
+                `Hola ${appointment.patient},\n\nTu cita con ${appointment.psych} para el ${appointment.date} a las ${appointment.time} ha sido cancelada.\n\nSi necesitas reagendar, contáctanos.\n\nVínculo Salud`,
+                'cancelacion'
+            );
         }
 
         import('../main.js').then(main => main.save());

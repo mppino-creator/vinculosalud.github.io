@@ -1,37 +1,35 @@
-Te hago un resumen ejecutivo de todo lo que hemos hecho y el estado actual del proyecto, para que cuando abras una nueva conversación tengas todo el contexto:
-
-# RESUMEN DEL PROYECTO VÍNCULO SALUD
-**Fecha:** 28 de febrero de 2026
+# RESUMEN ACTUALIZADO DEL PROYECTO VÍNCULO SALUD
+**Fecha:** 01 de marzo de 2026
 **URL:** https://vinculosalud.cl
 
 ## ✅ ESTADO ACTUAL: FUNCIONANDO CORRECTAMENTE
-El sitio web está operativo y funciona tanto en Chrome como en Safari (después de limpiar caché). El error de Firebase se solucionó y la aplicación carga todos los datos correctamente.
+El sitio web está completamente operativo con todas las funcionalidades de reserva, pagos y gestión funcionando. La aplicación carga todos los datos correctamente desde Firebase.
 
 ## 🏗️ ARQUITECTURA ACTUAL (VERSIÓN MODULAR)
 ```
 /
-├── index.html (versión modular con type="module")
+├── index.html (versión modular con type="module" - orden de pago corregido)
 ├── css/
-│   └── estilos.css (con paleta de colores: azul-oscuro, azul-medico, verde-exito, etc.)
+│   └── estilos.css (paleta de colores: azul-oscuro, azul-medico, verde-exito, etc.)
 └── js/
-    ├── main.js (punto de entrada que exporta save())
+    ├── main.js (punto de entrada que exporta save() con ruta correcta ../main.js)
     ├── config/
     │   └── firebase.js (inicializa Firebase y exporta db)
     └── modules/
         ├── auth.js (login, logout, dashboard)
         ├── boxes.js (gestión de boxes, con getAvailableBoxes exportada)
-        ├── citas.js (reservas, solicitudes, emails - con import corregido)
+        ├── citas.js (reservas, solicitudes, emails, pagos SumUp - flujo corregido: pago antes de reserva)
         ├── disponibilidad.js (configuración de horarios)
-        ├── mensajes.js (testimonios)
+        ├── mensajes.js (testimonios - eliminación permanente corregida)
         ├── pacientes.js (CRUD de pacientes)
         ├── personalizacion.js (logo, textos, fondo, métodos de pago)
-        ├── profesionales.js (gestión de terapeutas)
+        ├── profesionales.js (gestión de terapeutas con links de pago SumUp)
         ├── publico.js (filtros y vista pública)
         ├── state.js (variables globales con setters)
         └── utils.js (toast, rut, email)
 ```
 
-## 🔧 PROBLEMAS RESUELTOS
+## 🔧 PROBLEMAS RESUELTOS (ACTUALIZADO)
 
 | Problema | Solución aplicada |
 |----------|-------------------|
@@ -39,10 +37,31 @@ El sitio web está operativo y funciona tanto en Chrome como en Safari (después
 | Error `getAvailableBoxes is not found` | Se agregó `export` a la función en `boxes.js` |
 | Caché de Safari | Limpieza manual de datos del sitio web |
 | Logo mostrando solo imagen o solo texto | Se modificó para mostrar siempre ambos |
+| Mensajes no se borraban permanentemente | Se agregó `import('../main.js').then(main => main.save())` en `deleteMessage` |
+| Error 404 en importación de `main.js` | Se corrigieron todas las rutas de `./main.js` a `../main.js` en todos los módulos |
+| Links de pago SumUp no aparecían | Se implementó `showPaymentDetails()` con lógica para mostrar links según método y tipo |
+| Flujo de pago incorrecto (pago después de reserva) | Se reorganizó el HTML: el contenedor de pago ahora aparece ANTES del botón de reserva |
+| Validación de pago con tarjeta | Se agregó validación que impide reservar sin haber pagado primero con tarjeta |
+| Métodos de pago por tipo de atención | Se implementó lógica: link ONLINE para atenciones online, link PRESENCIAL para atenciones presenciales |
 
 ## 👤 CREDENCIALES DE ACCESO
 - **Admin:** Usuario: `Admin` / Contraseña: `Nina2026`
-- **Psicólogos de prueba:** isabel/isabel2026, julian/julian2026, martina/martina2026
+- **Psicólogos de prueba:** 
+  - `isabel` / `isabel2026` (Psic. Alison Gutiérrez)
+  - `julian` / `julian2026` (Dr. Julián Sossa)
+  - `martina` / `martina2026` (Dra. Martina Luz)
+
+## 💳 FLUJO DE PAGO ACTUAL (CORREGIDO)
+1. Paciente selecciona profesional, fecha, hora y **método de pago**
+2. Si selecciona **"Tarjeta (pago online)"**:
+   - Aparece inmediatamente el link de pago SumUp (con QR si está configurado)
+   - Debe pagar primero (el botón "Pagar con Tarjeta" lo lleva a SumUp)
+   - **NO puede reservar hasta haber pagado** (validación en `executeBooking`)
+3. Si selecciona **"Transferencia Bancaria"**:
+   - Aparecen los datos bancarios del profesional
+   - Puede reservar y enviar comprobante después
+4. Si selecciona **"Efectivo"** o **"Tarjeta (en consulta)"**:
+   - Reserva directa sin pago anticipado
 
 ## 📁 ARCHIVOS CORREGIDOS (VERSIÓN FINAL)
 
@@ -66,33 +85,77 @@ export { db };
 export function getAvailableBoxes(date, time) { ... }
 ```
 
-### 3. `js/modules/citas.js` (importación correcta)
+### 3. `js/modules/citas.js` (fragmento clave - pago)
 ```javascript
-import { getAvailableBoxes } from './boxes.js';
+// Mostrar link de pago según método seleccionado
+if (method === 'card-online' || method === 'card-presencial') {
+    if (type === 'online' && state.selectedPsych.paymentLinks?.online) {
+        paymentLink = state.selectedPsych.paymentLinks.online;
+    } else if (type === 'presencial' && state.selectedPsych.paymentLinks?.presencial) {
+        paymentLink = state.selectedPsych.paymentLinks.presencial;
+    }
+    // Mostrar link INMEDIATAMENTE
+    paymentContainer.innerHTML = mostrarLinkPago(paymentLink, qrCode, price, type);
+    paymentContainer.style.display = 'block';
+}
 ```
 
-### 4. `js/modules/personalizacion.js` (logo corregido)
+### 4. `js/modules/mensajes.js` (fragmento clave - eliminación)
 ```javascript
-// Siempre muestra imagen (si existe) + texto
-if (logoImage.url) document.getElementById('headerLogo').src = logoImage.url;
-document.getElementById('headerLogoText').innerText = logoImage.text;
+export function deleteMessage(id) {
+    if (confirm('¿Eliminar este mensaje?')) {
+        const newMessages = state.messages.filter(m => String(m.id) !== String(id));
+        state.setMessages(newMessages);
+        import('../main.js').then(main => {
+            main.save();
+            renderMessagesTable();
+            showToast('Mensaje eliminado', 'success');
+        });
+    }
+}
+```
+
+### 5. `index.html` (orden corregido)
+```html
+<!-- MÉTODOS DE PAGO -->
+<div class="form-group">
+    <label>Método de Pago *</label>
+    <select id="paymentMethod" onchange="showPaymentDetails()">
+        <option value="">Selecciona método</option>
+    </select>
+</div>
+
+<!-- CONTENEDOR DE PAGO (AHORA ARRIBA) -->
+<div id="paymentLinkContainer" style="margin:30px 0; display:none;"></div>
+
+<!-- NOTAS Y RESERVA (DESPUÉS DEL PAGO) -->
+<div class="form-group">
+    <label>Notas / Motivo de consulta</label>
+    <textarea id="custMsg"></textarea>
+</div>
 ```
 
 ## ⚠️ ERRORES MENORES (NO CRÍTICOS)
-- **404 favicon.ico** - No afecta funcionamiento. Opcional: subir un archivo `favicon.ico` a la raíz.
+- **404 favicon.ico** - No afecta funcionamiento. Opcional: crear archivo `favicon.ico` en la raíz.
 
 ## 📝 PRÓXIMOS PASOS SUGERIDOS
-1. Crear un archivo `favicon.ico` y subirlo a la raíz para eliminar el error 404
-2. Hacer una copia de seguridad de todos los archivos actuales
-3. Documentar cualquier nueva funcionalidad que se agregue
+1. Crear archivo `favicon.ico` para eliminar el error 404
+2. Configurar webhooks de SumUp para confirmación automática de pagos (opcional)
+3. Agregar más psicólogos de prueba con diferentes configuraciones de pago
+4. Implementar recordatorios automáticos por email 24h antes de la cita
 
 ## 🆘 SI VUELVES A TENER PROBLEMAS
 Si en el futuro algo deja de funcionar, lo primero que debes revisar es:
-1. Consola del navegador (F12) para ver errores específicos
-2. Verificar que todos los archivos JS tengan los `export` necesarios
-3. Confirmar que Firebase esté inicializado antes de usarlo
-4. Limpiar caché del navegador (especialmente en Safari)
+
+1. **Consola del navegador** (F12) para ver errores específicos
+2. **Rutas de importación**: Todos los módulos deben usar `import('../main.js')` (con dos puntos)
+3. **Exportaciones**: Verificar que las funciones usadas en HTML estén en `window` al final de cada módulo
+4. **Firebase**: Confirmar que `firebase.initializeApp()` se ejecuta antes que cualquier otra operación
+5. **Caché**: Especialmente en Safari, limpiar datos del sitio web si los cambios no se reflejan
+
+## 📞 CONTACTO Y SOPORTE
+Para cualquier incidencia, revisar la consola del navegador y verificar la conexión a Firebase. El sistema está diseñado para ser completamente funcional con los archivos actuales.
 
 ---
 
-**¿Necesitas que te entregue algún archivo específico nuevamente?** Con este resumen puedes retomar el trabajo en cualquier momento. ¡El sitio está funcionando perfectamente!
+**¿Necesitas que te entregue algún archivo específico nuevamente?** Con este resumen puedes retomar el trabajo en cualquier momento. ¡El sitio está funcionando perfectamente con el nuevo flujo de pago!

@@ -11,26 +11,44 @@ import state from './state.js';
  * @returns {boolean} true si tiene acceso
  */
 export function puedeAccederAPaciente(patientId) {
-  const user = state.currentUser;
-  const patient = state.patients.find(p => p.id == patientId);
+  console.log('🔍 Verificando permisos para paciente:', patientId);
   
-  if (!user || !patient) {
-    console.log('❌ No hay usuario o paciente');
+  // 1. Verificar usuario
+  const user = state.currentUser;
+  if (!user) {
+    console.log('❌ No hay usuario logueado');
     return false;
   }
   
-  // Admin puede todo
-  if (user.data?.isAdmin) {
+  console.log('👤 Usuario actual:', user);
+  console.log('👤 Role:', user.role);
+  console.log('👤 user.data:', user.data);
+  
+  // 2. Buscar paciente
+  const patient = state.patients.find(p => p.id == patientId);
+  if (!patient) {
+    console.log('❌ Paciente no encontrado');
+    return false;
+  }
+  
+  console.log('👤 Paciente:', patient.name, 'psychId:', patient.psychId);
+  
+  // 3. Admin puede todo
+  if (user.data?.isAdmin === true) {
     console.log('✅ Es admin, acceso concedido');
     return true;
   }
   
-  // Psicólogo (acepta 'psychologist' o 'psych')
-  const esPsicologo = user.data?.role === 'psychologist' || user.role === 'psych';
+  // 4. Psicólogo (acepta varios formatos de role)
+  const esPsicologo = user.role === 'psych' || 
+                      user.role === 'psychologist' || 
+                      user.data?.role === 'psych' || 
+                      user.data?.role === 'psychologist';
   
   if (esPsicologo) {
-    const tieneAcceso = patient.psychId == user.data.id;
-    console.log(`🔍 Comparando: psychId=${patient.psychId} vs userId=${user.data.id} → ${tieneAcceso}`);
+    // Comparar IDs (usando == para comparar string con number)
+    const tieneAcceso = patient.psychId == user.data?.id;
+    console.log(`🔍 Comparando: psychId=${patient.psychId} (${typeof patient.psychId}) vs userId=${user.data?.id} (${typeof user.data?.id}) → ${tieneAcceso}`);
     return tieneAcceso;
   }
   
@@ -127,7 +145,10 @@ export function isAdmin() {
 }
 
 export function isPsychologist() {
-  return state.currentUser?.role === 'psychologist' || state.currentUser?.role === 'psych';
+  return state.currentUser?.role === 'psychologist' || 
+         state.currentUser?.role === 'psych' ||
+         state.currentUser?.data?.role === 'psychologist' || 
+         state.currentUser?.data?.role === 'psych';
 }
 
 export function isPatient() {
@@ -208,29 +229,6 @@ export function getPermisosResumen() {
       ? state.patients.filter(p => p.psychId == user.data.id).length 
       : 0
   };
-}
-
-// ============================================
-// FUNCIONES DE VALIDACIÓN ESPECÍFICA
-// ============================================
-
-export function puedeRealizarAccion(tipo, action, id) {
-  switch(tipo) {
-    case 'fichaIngreso':
-      if (action === 'ver') return puedeVerFichaIngreso(id);
-      return puedeVerFichaIngreso(id) && puedeEditarFichas(state.fichasIngreso.find(f => f.id == id)?.patientId);
-    
-    case 'sesion':
-      if (action === 'ver') return puedeVerSesion(id);
-      return puedeVerSesion(id) && puedeEditarFichas(state.sesiones.find(s => s.id == id)?.patientId);
-    
-    case 'informe':
-      if (action === 'ver') return puedeVerInforme(id);
-      return puedeVerInforme(id) && puedeEditarFichas(state.informes.find(i => i.id == id)?.patientId);
-    
-    default:
-      return false;
-  }
 }
 
 // ============================================

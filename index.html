@@ -1384,5 +1384,36 @@
     }, 3000);
 })();
 </script>
+
+<!-- FIX PARA ESTADÍSTICAS Y CITAS -->
+<script>
+(function() {
+    console.log('🔧 Instalando fix de estadísticas...');
+    
+    // Forzar actualización cada vez que se carga una pestaña
+    const originalSwitch = window.switchTab;
+    window.switchTab = function(tabName) {
+        if (originalSwitch) originalSwitch(tabName);
+        
+        // Actualizar estadísticas después de cambiar de pestaña
+        setTimeout(() => {
+            if (tabName === 'citas' || tabName === 'solicitudes') {
+                if (typeof window.updateStats === 'function') {
+                    window.updateStats();
+                }
+            }
+        }, 200);
+    };
+    
+    // Forzar actualización inmediata
+    setTimeout(() => {
+        if (typeof window.updateStats === 'function') {
+            window.updateStats();
+        }
+    }, 1000);
+    
+    console.log('✅ Fix instalado');
+})();
+</script>
 </body>
 </html>

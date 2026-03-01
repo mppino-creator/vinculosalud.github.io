@@ -373,7 +373,7 @@ export function deleteSpecialty(id) {
             }
         });
         guardarEspecialidades();
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
         showToast('Especialidad eliminada', 'success');
     }
 }
@@ -455,6 +455,6 @@ export function saveMyConfig() {
     const staffIndex = state.staff.findIndex(s => s.id == psych.id);
     if (staffIndex !== -1) state.staff[staffIndex] = psych;
 
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     showToast('Configuración guardada', 'success');
 }

@@ -225,7 +225,7 @@ export function savePatient() {
         }
     }
 
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     closePatientModal();
 
     if (document.getElementById('tabAgendar')?.classList.contains('active')) {

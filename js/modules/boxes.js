@@ -73,7 +73,7 @@ export function saveBox() {
     };
 
     state.boxes.push(newBox);
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     closeBoxModal();
     renderBoxesTable();
     showToast('Box guardado correctamente', 'success');
@@ -144,7 +144,7 @@ export function updateBox(id) {
     box.description = document.getElementById('boxDescription').value;
     box.days = Array.from(document.querySelectorAll('.box-day:checked')).map(cb => parseInt(cb.value));
 
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     closeBoxModal();
     renderBoxesTable();
     showToast('Box actualizado', 'success');
@@ -154,7 +154,7 @@ export function toggleBoxStatus(id) {
     const box = state.boxes.find(b => b.id == id);
     if (box) {
         box.active = !box.active;
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
         renderBoxesTable();
         showToast(`Box ${box.active ? 'activado' : 'desactivado'}`, 'success');
     }
@@ -166,7 +166,7 @@ export function deleteBox(id) {
         state.appointments.forEach(a => {
             if (a.boxId == id) a.boxId = null;
         });
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
         renderBoxesTable();
         showToast('Box eliminado', 'success');
     }

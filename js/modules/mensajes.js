@@ -69,7 +69,7 @@ export function saveMessage() {
     };
 
     state.messages.push(newMessage);
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     renderMessages();
     updateMarquee();
     closeMessageModal();

@@ -136,7 +136,7 @@ export function applyGeneratedSlots() {
     const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
     if (staffIndex !== -1) state.staff[staffIndex].availability = state.currentUser.data.availability;
 
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     closeAvailabilityModal();
     loadTimeSlots();
     showToast('Horarios aplicados', 'success');
@@ -147,7 +147,7 @@ export function clearAllSlots() {
         state.currentUser.data.availability = {};
         const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
         if (staffIndex !== -1) state.staff[staffIndex].availability = {};
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
         closeAvailabilityModal();
         showToast('Disponibilidad eliminada', 'success');
     }
@@ -227,6 +227,6 @@ export function addOvercupo() {
 }
 
 export function saveAvailability() {
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     showToast('Disponibilidad guardada', 'success');
 }

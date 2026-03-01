@@ -3,28 +3,12 @@ import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, validarRut, sendEmailNotification } from './utils.js';
 
-// Función de verificación de elementos del DOM
-function verificarElementosReserva() {
-    const elementos = [
-        'paymentMethod', 'custDate', 'custTime', 'custRut', 'custName',
-        'custEmail', 'custPhone', 'appointmentType', 'custMsg', 'acceptPolicy',
-        'psychName', 'psychSelectedName', 'psychSelectedSpec', 'bookingDuration',
-        'bookingPrice', 'bookingType', 'onlineAvailabilityMsg', 'presencialWarning'
-    ];
-    
-    elementos.forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) {
-            console.error(`❌ Elemento faltante en el DOM: ${id}`);
-        }
-    });
-}
+// ============================================
+// FUNCIONES EXPORTADAS (se llaman desde el HTML)
+// ============================================
 
 export function openBooking(id) {
     console.log("🔍 Abriendo reserva para ID:", id);
-    
-    // Verificar elementos del DOM
-    verificarElementosReserva();
     
     // Buscar el psicólogo
     const psych = state.staff.find(p => p.id == id);
@@ -51,7 +35,7 @@ export function openBooking(id) {
     document.getElementById('custDate').value = today;
     document.getElementById('bookingDuration').innerText = (psych.sessionDuration || 45) + ' minutos';
     
-    // Cargar métodos de pago (AHORA el panel está visible)
+    // Cargar métodos de pago (si existe el elemento)
     loadPaymentMethods();
     
     // Actualizar detalles
@@ -60,10 +44,11 @@ export function openBooking(id) {
     updateAvailableTimes();
 }
 
+// Función de carga de métodos de pago - CORREGIDA (tolerante a elementos faltantes)
 function loadPaymentMethods() {
     const select = document.getElementById('paymentMethod');
     if (!select) {
-        console.error("❌ Elemento paymentMethod no encontrado");
+        console.log("ℹ️ Elemento paymentMethod no encontrado - se omite carga de métodos de pago");
         return;
     }
     
@@ -92,8 +77,10 @@ function loadPaymentMethods() {
 }
 
 export function showPaymentDetails() {
-    const method = document.getElementById('paymentMethod').value;
+    const method = document.getElementById('paymentMethod')?.value;
     const detailsDiv = document.getElementById('paymentDetails');
+    if (!detailsDiv) return;
+    
     if (method === 'transfer' && state.selectedPsych.bankDetails) {
         const bank = state.selectedPsych.bankDetails;
         detailsDiv.style.display = 'block';
@@ -109,7 +96,7 @@ export function showPaymentDetails() {
     }
 }
 
-function updateAvailableTimes() {
+export function updateAvailableTimes() {
     const date = document.getElementById('custDate').value;
     const type = document.getElementById('appointmentType').value;
     const timeSelect = document.getElementById('custTime');
@@ -128,14 +115,18 @@ function updateAvailableTimes() {
 
     timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
 
+    // SI ES PRESENCIAL: no mostrar horas
     if (type === 'presencial') {
         console.log("🏢 Es presencial, no mostramos horas");
-        timeSelect.innerHTML = '<option value="">Selecciona un día (la hora se coordinará)</option>';
+        timeSelect.innerHTML = '<option value="">La hora se coordinará con el profesional</option>';
+        timeSelect.disabled = true;
         presencialWarning.style.display = 'block';
         onlineMsg.style.display = 'none';
         return;
     }
 
+    // SI ES ONLINE: mostrar horas disponibles
+    timeSelect.disabled = false;
     presencialWarning.style.display = 'none';
     
     // Verificar disponibilidad
@@ -219,13 +210,13 @@ export function executeBooking() {
     const date = document.getElementById('custDate').value;
     const time = document.getElementById('custTime').value;
     const type = document.getElementById('appointmentType').value;
-    const paymentMethod = document.getElementById('paymentMethod').value;
+    const paymentMethod = document.getElementById('paymentMethod')?.value || 'transfer'; // Opcional con valor por defecto
     const msg = document.getElementById('custMsg').value;
     const acceptPolicy = document.getElementById('acceptPolicy').checked;
 
-    // Validaciones básicas
-    if (!rut || !name || !email || !date || !paymentMethod) {
-        showToast('Completa todos los campos obligatorios', 'error');
+    // Validaciones básicas - CORREGIDO (sin paymentMethod obligatorio)
+    if (!rut || !name || !email || !date) {
+        showToast('Completa todos los campos obligatorios (RUT, nombre, email, fecha)', 'error');
         return;
     }
 
@@ -389,7 +380,7 @@ export function executeBooking() {
             showToast('¡Solicitud enviada! El profesional te confirmará la hora', 'success');
         }
 
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
 
         bookBtn.innerHTML = 'SOLICITAR CITA';
         bookBtn.disabled = false;
@@ -431,9 +422,9 @@ export function renderPendingRequests() {
     if (!tb) return;
 
     let requestsToShow = [];
-    if (state.currentUser.role === 'admin') {
+    if (state.currentUser?.role === 'admin') {
         requestsToShow = state.pendingRequests;
-    } else if (state.currentUser.role === 'psych') {
+    } else if (state.currentUser?.role === 'psych') {
         requestsToShow = state.pendingRequests.filter(r => r.psychId == state.currentUser.data.id);
     }
 
@@ -505,7 +496,7 @@ export function rejectRequest(requestId) {
             sendEmailNotification(request.patientEmail, subject, message);
         }
 
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
         showToast('Solicitud rechazada', 'success');
     }
 }
@@ -526,7 +517,7 @@ export function showTherapistBookingModal() {
     document.getElementById('therapistTime').innerHTML = '<option value="">Selecciona una fecha</option>';
     document.getElementById('therapistMsg').value = '';
     document.getElementById('therapistPaymentMethod').value = 'transfer';
-    document.getElementById('therapistPsychName').innerText = state.currentUser.data.name;
+    document.getElementById('therapistPsychName').innerText = state.currentUser?.data?.name || '';
     document.getElementById('therapistPatientName').innerText = '—';
     document.getElementById('therapistDateDisplay').innerText = '—';
     document.getElementById('therapistTimeDisplay').innerText = '—';
@@ -569,6 +560,8 @@ export function searchPatientByRutTherapist() {
 }
 
 export function updateTherapistBookingDetails() {
+    if (!state.currentUser?.data) return;
+    
     const type = document.getElementById('therapistAppointmentType').value;
     const price = type === 'online' ? state.currentUser.data.priceOnline : state.currentUser.data.pricePresencial;
     document.getElementById('therapistPrice').innerText = `$${price.toLocaleString()}`;
@@ -586,9 +579,8 @@ export function updateTherapistBookingDetails() {
 export function updateTherapistAvailableSlots() {
     const date = document.getElementById('therapistDate').value;
     const timeSelect = document.getElementById('therapistTime');
-    const type = document.getElementById('therapistAppointmentType').value;
 
-    if (!date || !state.currentUser) return;
+    if (!date || !state.currentUser?.data) return;
 
     // Obtener TODAS las citas confirmadas del profesional en esa fecha
     const bookedTimes = state.appointments
@@ -626,6 +618,11 @@ export function updateTherapistAvailableSlots() {
 export function executeTherapistBooking() {
     if (!state.selectedPatientForTherapist) {
         showToast('Debes buscar y seleccionar un paciente', 'error');
+        return;
+    }
+
+    if (!state.currentUser?.data) {
+        showToast('Error de sesión', 'error');
         return;
     }
 
@@ -697,7 +694,7 @@ export function executeTherapistBooking() {
             window.currentRequestId = null;
         }
 
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
 
         showToast(`Cita confirmada con ${state.selectedPatientForTherapist.name}`, 'success');
 
@@ -731,7 +728,7 @@ export function cancelAppointment(id) {
             sendEmailNotification(appointment.patientEmail, subject, message);
         }
 
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
         showToast('Cita cancelada', 'success');
     }
 }
@@ -741,7 +738,7 @@ export function markAsPaid(id) {
     if (appointment) {
         appointment.paymentStatus = 'pagado';
         appointment.status = 'confirmada';
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
         showToast('Pago marcado como recibido', 'success');
     }
 }

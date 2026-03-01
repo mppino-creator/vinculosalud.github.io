@@ -116,7 +116,7 @@ export function addStaff() {
         paymentLinks: { online: paymentLinkOnline, presencial: paymentLinkPresencial, qrCode: state.tempQrData || '' }
     });
 
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     closeAddStaffModal();
     showToast('Profesional añadido', 'success');
 }
@@ -216,7 +216,7 @@ export function updateTherapist() {
     const newPass = document.getElementById('editPass').value;
     if (newPass) therapist.pass = newPass;
 
-    import('./main.js').then(main => main.save());
+    import('../main.js').then(main => main.save());
     closeEditTherapistModal();
     renderStaffTable();
     showToast('Profesional actualizado', 'success');
@@ -232,7 +232,7 @@ export function deleteStaff(id) {
         state.setAppointments(state.appointments.filter(a => a.psychId != id));
         state.setPatients(state.patients.filter(p => p.psychId != id));
         state.setStaff(state.staff.filter(s => s.id != id));
-        import('./main.js').then(main => main.save());
+        import('../main.js').then(main => main.save());
         showToast('Profesional eliminado', 'success');
     }
 }

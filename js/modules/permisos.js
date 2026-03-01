@@ -2,16 +2,17 @@
 import state from './state.js';
 
 // ============================================
-// FUNCIONES BÁSICAS DE PERMISOS - VERSIÓN SIMPLIFICADA
+// FUNCIONES BÁSICAS DE PERMISOS - VERSIÓN ASÍNCRONA CON REINTENTOS
 // ============================================
 
 /**
  * Verifica si un usuario puede acceder a un paciente específico
  * @param {string|number} patientId - ID del paciente
- * @returns {boolean} true si tiene acceso
+ * @param {number} intento - Número de intento (para recursión, no usar manualmente)
+ * @returns {Promise<boolean>} true si tiene acceso
  */
-export function puedeAccederAPaciente(patientId) {
-  console.log('🔍 Verificando permisos para paciente:', patientId);
+export async function puedeAccederAPaciente(patientId, intento = 1) {
+  console.log(`🔍 Verificando permisos para paciente: ${patientId} (intento ${intento})`);
   
   // 1. Verificar que tenemos el estado
   if (!state) {
@@ -19,14 +20,21 @@ export function puedeAccederAPaciente(patientId) {
     return false;
   }
   
-  // 2. Verificar usuario - ACCESO DIRECTO a state.currentUser
+  // 2. Verificar usuario
   const user = state.currentUser;
   if (!user) {
-    console.log('❌ No hay usuario logueado (state.currentUser es null)');
+    // Reintentar hasta 5 veces con espera de 100ms
+    if (intento < 5) {
+      console.log(`⏳ Usuario no disponible, reintentando en 100ms... (intento ${intento}/5)`);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return puedeAccederAPaciente(patientId, intento + 1);
+    }
+    
+    console.log('❌ No hay usuario logueado después de 5 intentos');
     return false;
   }
   
-  console.log('👤 Usuario encontrado:', user);
+  console.log('👤 Usuario encontrado:', user.data?.name || user.name);
   console.log('👤 Role:', user.role);
   console.log('👤 user.data:', user.data);
   
@@ -59,7 +67,7 @@ export function puedeAccederAPaciente(patientId) {
     return false;
   }
   
-  console.log(`🔍 Comparando: psychId=${patient.psychId} vs userId=${userId}`);
+  console.log(`🔍 Comparando: psychId=${patient.psychId} (${typeof patient.psychId}) vs userId=${userId} (${typeof userId})`);
   
   // Comparación flexible (== para permitir string/number)
   const tieneAcceso = patient.psychId == userId;
@@ -71,8 +79,8 @@ export function puedeAccederAPaciente(patientId) {
 /**
  * Verifica si un usuario puede editar fichas de un paciente
  */
-export function puedeEditarFichas(patientId) {
-  return puedeAccederAPaciente(patientId);
+export async function puedeEditarFichas(patientId) {
+  return await puedeAccederAPaciente(patientId);
 }
 
 /**
@@ -101,35 +109,35 @@ export function filtrarSoloMisPacientes(array, campoPatientId = 'patientId') {
 // FUNCIONES PARA FICHAS CLÍNICAS
 // ============================================
 
-export function puedeVerFichaIngreso(fichaIngresoId) {
+export async function puedeVerFichaIngreso(fichaIngresoId) {
   const ficha = state.fichasIngreso?.find(f => f.id == fichaIngresoId);
-  return ficha ? puedeAccederAPaciente(ficha.patientId) : false;
+  return ficha ? await puedeAccederAPaciente(ficha.patientId) : false;
 }
 
-export function puedeVerSesion(sesionId) {
+export async function puedeVerSesion(sesionId) {
   const sesion = state.sesiones?.find(s => s.id == sesionId);
-  return sesion ? puedeAccederAPaciente(sesion.patientId) : false;
+  return sesion ? await puedeAccederAPaciente(sesion.patientId) : false;
 }
 
-export function puedeVerInforme(informeId) {
+export async function puedeVerInforme(informeId) {
   const informe = state.informes?.find(i => i.id == informeId);
-  return informe ? puedeAccederAPaciente(informe.patientId) : false;
+  return informe ? await puedeAccederAPaciente(informe.patientId) : false;
 }
 
-export function puedeEditarFichaIngreso(patientId) {
-  return puedeEditarFichas(patientId);
+export async function puedeEditarFichaIngreso(patientId) {
+  return await puedeEditarFichas(patientId);
 }
 
-export function puedeEditarSesion(patientId) {
-  return puedeEditarFichas(patientId);
+export async function puedeEditarSesion(patientId) {
+  return await puedeEditarFichas(patientId);
 }
 
-export function puedeEditarInforme(patientId) {
-  return puedeEditarFichas(patientId);
+export async function puedeEditarInforme(patientId) {
+  return await puedeEditarFichas(patientId);
 }
 
 // ============================================
-// FUNCIONES DE PERMISOS POR ROL
+// FUNCIONES DE PERMISOS POR ROL (síncronas)
 // ============================================
 
 export function isAdmin() {
@@ -177,4 +185,4 @@ if (typeof window !== 'undefined') {
   };
 }
 
-console.log('✅ permisos.js cargado con funciones para fichas clínicas');
+console.log('✅ permisos.js cargado con funciones para fichas clínicas (versión asíncrona)');

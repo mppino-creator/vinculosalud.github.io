@@ -126,14 +126,26 @@ export function renderMessagesTable() {
     `).join('');
 }
 
+// ✅ FUNCIÓN CORREGIDA - Ahora guarda en Firebase después de eliminar
 export function deleteMessage(id) {
-    if (confirm('¿Eliminar este mensaje?')) {
-        state.setMessages(state.messages.filter(m => m.id != id));
-        import('./main.js').then(main => main.save());
-        renderMessagesTable();
-        renderMessages();
-        updateMarquee();
-        showToast('Mensaje eliminado', 'success');
+    if (confirm('¿Eliminar este mensaje permanentemente?')) {
+        // Filtrar el mensaje a eliminar
+        const newMessages = state.messages.filter(m => m.id != id);
+        
+        // Actualizar el estado global
+        state.setMessages(newMessages);
+        
+        // Guardar en Firebase (¡esto es lo que faltaba!)
+        import('./main.js').then(main => {
+            main.save();
+            
+            // Actualizar las vistas
+            renderMessagesTable();
+            renderMessages();
+            updateMarquee();
+            
+            showToast('Mensaje eliminado permanentemente', 'success');
+        });
     }
 }
 
@@ -141,6 +153,7 @@ export function updateMarquee() {
     const marquee = document.getElementById('marqueeContent');
     if (!marquee) return;
 
+    // Usar más mensajes para el marquee
     const allMessages = [...state.messages, ...state.messages, ...state.messages].slice(0, 15);
 
     if (allMessages.length === 0) {

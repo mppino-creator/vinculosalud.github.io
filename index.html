@@ -901,6 +901,16 @@
         location.reload();
     };
 </script>
-
+<script>
+    // Detectar si debemos mostrar el dashboard
+    if (window.location.hash === '#dashboard') {
+        // Pequeña pausa para asegurar que todo cargó
+        setTimeout(() => {
+            if (typeof initDashboard === 'function') {
+                initDashboard();
+            }
+        }, 1000);
+    }
+</script>
 </body>
 </html>

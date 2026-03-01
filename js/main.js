@@ -13,6 +13,14 @@ import * as personalizacion from './modules/personalizacion.js';
 import * as publico from './modules/publico.js';
 
 // ============================================
+// NUEVOS MÓDULOS DE FICHAS CLÍNICAS
+// ============================================
+import * as fichasClinicas from './modules/fichasClinicas.js';
+import * as informes from './modules/informes.js';
+import * as permisos from './modules/permisos.js';
+import * as pdfGenerator from './modules/pdfGenerator.js';
+
+// ============================================
 // EXPONER STATE GLOBALMENTE PARA DEPURACIÓN
 // ============================================
 window.state = state;
@@ -46,7 +54,7 @@ window.closeEditTherapistModal = profesionales.closeEditTherapistModal;
 window.updateTherapist = profesionales.updateTherapist;
 window.deleteStaff = profesionales.deleteStaff;
 
-// Funciones de pacientes
+// Funciones de pacientes (originales + nuevas)
 window.showNewPatientModal = pacientes.showNewPatientModal;
 window.closePatientModal = pacientes.closePatientModal;
 window.savePatient = pacientes.savePatient;
@@ -54,6 +62,8 @@ window.printPatientSummary = pacientes.printPatientSummary;
 window.searchPatientByRut = pacientes.searchPatientByRut;
 window.viewPatientDetails = pacientes.viewPatientDetails;
 window.renderPatients = pacientes.renderPatients;
+window.mostrarDetallePaciente = pacientes.mostrarDetallePaciente; // NUEVA
+window.cambiarPestana = pacientes.cambiarPestana; // NUEVA
 
 // Funciones de citas
 window.openBooking = citas.openBooking;
@@ -110,6 +120,22 @@ window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
 window.addSpecialty = personalizacion.addSpecialty;
 window.deleteSpecialty = personalizacion.deleteSpecialty;
 
+// ============================================
+// EXPONER FUNCIONES DE FICHAS CLÍNICAS
+// ============================================
+window.fichasClinicas = fichasClinicas;
+window.informes = informes;
+window.permisos = permisos;
+window.pdfGenerator = pdfGenerator;
+
+// Funciones específicas de fichas clínicas
+window.guardarFichaIngreso = fichasClinicas.guardarFichaIngreso;
+window.guardarNotaSesion = fichasClinicas.guardarNotaSesion;
+window.obtenerSesionesDePaciente = fichasClinicas.obtenerSesionesDePaciente;
+window.guardarInforme = informes.guardarInforme;
+window.obtenerInformesDePaciente = informes.obtenerInformesDePaciente;
+window.verFichaCompleta = pacientes.mostrarDetallePaciente; // ATAJO
+
 // Funciones de utilidad
 window.filterProfessionals = publico.filterProfessionals;
 window.formatRut = utils.formatRut;
@@ -118,6 +144,7 @@ window.showToast = utils.showToast;
 
 // Verificar que switchTab se asignó correctamente
 console.log('✅ switchTab asignada a window:', typeof window.switchTab);
+console.log('✅ verFichaCompleta asignada:', typeof window.verFichaCompleta);
 
 // ============================================
 // FUNCIÓN PARA GUARDAR EN FIREBASE
@@ -233,6 +260,13 @@ if (savedUser) {
     }
 }
 
+// Cargar fichas clínicas si hay usuario logueado
+if (state.currentUser) {
+    fichasClinicas.cargarTodasLasFichas().then(() => {
+        console.log('📋 Fichas clínicas cargadas');
+    });
+}
+
 // ============================================
 // OCULTAR LOADER CUANDO TODO ESTÉ CARGADO
 // ============================================
@@ -268,4 +302,4 @@ document.querySelectorAll('input, select, textarea').forEach(el => {
     });
 });
 
-console.log('✅ main.js cargado completamente');
+console.log('✅ main.js cargado completamente con módulo de fichas clínicas');

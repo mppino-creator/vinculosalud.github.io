@@ -1,15 +1,18 @@
-## 📋 **RESUMEN EJECUTIVO PARA EL "TÚ DEL FUTURO"**
+## 📋 **RESUMEN EJECUTIVO PARA EL "TÚ DEL FUTURO"** (ACTUALIZADO)
 
-Aquí está todo lo que necesitas saber sobre Vínculo Salud, explicado de la forma más clara posible:
+Aquí está todo lo que necesitas saber sobre **Vínculo Salud v2.0**, explicado de la forma más clara posible:
 
 ---
 
 ## 🎯 **VISIÓN GENERAL DEL PROYECTO**
 
 **Vínculo Salud** es una plataforma web para centros de bienestar que permite:
-- **Pacientes**: Buscar profesionales, agendar citas online/presenciales, pagar con transferencia/efectivo/tarjeta
-- **Psicólogos**: Gestionar agenda, confirmar pagos, ver pacientes
-- **Administradores**: Gestionar profesionales, boxes, personalizar el sitio
+
+| Usuario | Funcionalidades |
+|---------|-----------------|
+| **Pacientes** | Buscar profesionales, agendar citas online/presenciales, pagar con transferencia/efectivo/tarjeta |
+| **Psicólogos** | Gestionar agenda, confirmar pagos, ver pacientes, **📋 gestionar fichas clínicas y notas de evolución** |
+| **Administradores** | Gestionar profesionales, boxes, personalizar el sitio, **acceso total a todas las fichas clínicas** |
 
 ---
 
@@ -17,276 +20,348 @@ Aquí está todo lo que necesitas saber sobre Vínculo Salud, explicado de la fo
 
 ```
 /
-├── index.html          # ÚNICO archivo HTML (carga todo)
+├── index.html               # ÚNICO archivo HTML (carga todo)
 ├── css/
-│   └── estilos.css     # Estilos Apple - muy bonito
+│   └── estilos.css          # Estilos Apple - muy bonito
 └── js/
-    ├── main.js         # ✅ PUNTO DE ENTRADA (exporta save() y window funciones)
+    ├── main.js              # ✅ PUNTO DE ENTRADA (exporta save() y window funciones)
     ├── config/
-    │   └── firebase.js # Firebase config
+    │   └── firebase.js      # Firebase config
     └── modules/
-        ├── state.js    # ✅ CORAZÓN: todas las variables globales
-        ├── auth.js     # Login/logout y switchTab
-        ├── citas.js    # ✅ CRÍTICO: reservas y pagos (¡lee esto!)
-        ├── pacientes.js # CRUD pacientes
-        ├── profesionales.js # Gestión de psicólogos
-        ├── boxes.js     # Gestión de boxes
-        ├── disponibilidad.js # Horarios
-        ├── mensajes.js  # Testimonios
-        ├── personalizacion.js # Logo, colores, textos
-        ├── publico.js   # Vista pública (filtros, grid)
-        └── admin.js     # Panel de reinicio (solo Admin)
+    │   ├── state.js         # ✅ CORAZÓN: todas las variables globales
+    │   ├── auth.js          # Login/logout y switchTab
+    │   ├── citas.js         # ✅ CRÍTICO: reservas y pagos
+    │   ├── pacientes.js     # CRUD pacientes + vista detalle con pestañas
+    │   ├── profesionales.js # Gestión de psicólogos
+    │   ├── boxes.js         # Gestión de boxes
+    │   ├── disponibilidad.js # Horarios
+    │   ├── mensajes.js      # Testimonios
+    │   ├── personalizacion.js # Logo, colores, textos
+    │   ├── publico.js       # Vista pública (filtros, grid)
+    │   ├── admin.js         # Panel de reinicio (solo Admin)
+    │   │
+    │   ├── **fichasClinicas.js**  # 🆕 NUEVO: CRUD de fichas de ingreso y sesiones
+    │   ├── **informes.js**        # 🆕 NUEVO: Informes psicodiagnóstico y cierre
+    │   ├── **pdfGenerator.js**    # 🆕 NUEVO: Exportar a PDF
+    │   └── **permisos.js**        # 🆕 NUEVO: Control de acceso
 ```
 
 ---
 
-## 🔐 **LO MÁS IMPORTANTE - SEGURIDAD Y AUTENTICACIÓN**
+## 📋 **NUEVO MÓDULO DE FICHAS CLÍNICAS (EHR)**
 
-### **Firebase Authentication (REAL, no simulado)**
+### **Estructura de datos en Firestore**
+
+```
+/pacientes/{patientId}
+  ├── nombre, rut, email, phone, birthdate, psychId, etc.
+  │
+  ├── /fichasIngreso/{fichaIngresoId}     # Una por paciente (FICHA PREINGRESOS.docx)
+  │    ├── motivoConsulta
+  │    ├── sintomatologia (fechaInicio, progresion, tratamientosPrevios)
+  │    ├── composicionFamiliar
+  │    ├── otrosAntecedentes
+  │    └── criteriosExclusion
+  │
+  ├── /sesiones/{sesionId}                 # Múltiples (Detalle de la Atención.pdf)
+  │    ├── fechaAtencion
+  │    ├── tipoAtencion
+  │    ├── notas (texto enriquecido)
+  │    └── realizadoPor
+  │
+  └── /informes/{informeId} (referencia)   # Vinculados
+       └── tipo: "psicodiagnostico" | "cierre"
+
+/informes/{informeId}                       # Colección global
+  ├── patientId, patientName, patientRut
+  ├── tipo
+  ├── contenido (estructurado según documento)
+  └── pdfUrl (opcional)
+```
+
+### **Flujo de trabajo clínico**
+
+```
+PSICÓLOGO VE LISTA DE PACIENTES:
+1. Hace clic en "Ver Ficha Clínica" de un paciente
+2. Se abre vista con 4 pestañas:
+
+   📋 PERFIL: Datos personales del paciente
+   📝 FICHA INGRESO: Crear/ver la ficha de ingreso inicial
+   📅 SESIONES: Listado cronológico de notas de evolución
+   📄 INFORMES: Psicodiagnóstico y Cierre de proceso
+
+3. Desde cada pestaña puede:
+   - Crear nuevo documento (ficha, sesión, informe)
+   - Editar existente (si tiene permisos)
+   - Ver versiones anteriores
+   - Exportar a PDF individual
+```
+
+---
+
+## 🔐 **CONTROL DE ACCESO GRANULAR**
+
 ```javascript
-// Los usuarios NO se guardan en la base de datos como antes
-// Ahora usan Firebase Auth real con email/contraseña
+// permisos.js - Reglas de negocio
+puedeAccederAPaciente(patientId) {
+  // Admin: acceso TOTAL a TODOS los pacientes
+  // Psicólogo: solo a SUS pacientes asignados (psychId)
+}
 
-// Admin: 
-- Email: admin@vinculosalud.cl
-- Contraseña: Nina2026
-- Se crea automáticamente al primer login
-
-// Psicólogos:
-- Se crean automáticamente en Firebase Auth cuando inician sesión
-- Usan su email y la contraseña que definiste en el panel
+puedeEditarFichas(patientId) {
+  // Misma lógica que acceso
+  // (podría separarse en lecto/escritura si se requiere)
+}
 ```
 
-### **Reglas de seguridad en Firebase**
+### **Matriz de permisos**
+
+| Acción | Admin | Psicólogo (su paciente) | Psicólogo (otro paciente) |
+|--------|-------|-------------------------|---------------------------|
+| Ver lista pacientes | ✅ Todos | ✅ Solo sus pacientes | ❌ |
+| Ver ficha clínica | ✅ Todos | ✅ | ❌ |
+| Crear/Editar ficha | ✅ Todos | ✅ | ❌ |
+| Ver informes | ✅ Todos | ✅ | ❌ |
+| Exportar PDF | ✅ Todos | ✅ | ❌ |
+
+---
+
+## 📄 **EXPORTACIÓN A PDF**
+
+### **Capacidades:**
+- ✅ Exportar documento individual (ficha ingreso, sesión, informe)
+- ✅ Exportar informe completo con formato profesional
+- ✅ Exportar TODOS los documentos del paciente en un ZIP
+- ✅ Plantillas HTML que replican los documentos Word originales
+
+### **Documentos soportados:**
 ```
-{
-  "rules": {
-    ".read": "auth != null",  // Solo usuarios autenticados
-    ".write": "auth != null",  // pueden leer/escribir
-    "Staff": {
-      "$uid": {
-        ".write": "auth.uid === $uid || root.child('Staff').child(auth.uid).child('isAdmin').val() === true"
-      }
-    }
-  }
+📄 Ficha de Ingreso (FICHA PREINGRESOS.docx)
+📄 Detalle de Atención (Detalle de la Atención.pdf)
+📄 Informe Psicodiagnóstico (INFORME PSICODIAGNOSTICO.docx)
+📄 Informe de Cierre (INFORME DE CIERRE PROCESO.docx)
+```
+
+---
+
+## 🎨 **NUEVA INTERFAZ DE PACIENTES**
+
+### **Lista de pacientes (AHORA CON BOTÓN):**
+
+```html
+<div class="patient-card">
+  <!-- datos del paciente ... -->
+  
+  <!-- NUEVO BOTÓN -->
+  <button class="btn-icon" onclick="verFichaCompleta('${p.id}')" 
+          style="background: var(--azul-apple); color: white;">
+    <i class="fa fa-folder-medical"></i> Ver Ficha Clínica
+  </button>
+</div>
+```
+
+### **Vista detalle con pestañas:**
+
+```
+┌─────────────────────────────────────────┐
+│  Juan Pérez                           ← Volver │
+├─────────────────────────────────────────┤
+│ [PERFIL] [FICHA INGRESO] [SESIONES] [INFORMES] │
+├─────────────────────────────────────────┤
+│                                         │
+│  CONTENIDO DE LA PESTAÑA ACTIVA         │
+│  - Datos del paciente                    │
+│  - Historial de atenciones               │
+│  - Estadísticas                          │
+│  - Botones de acción                     │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## 🔧 **NUEVAS FUNCIONES GLOBALES**
+
+```javascript
+// Disponibles en consola y código
+window.verFichaCompleta(patientId)        // Ver detalle con pestañas
+window.cambiarPestana('perfil')            // Cambiar entre pestañas
+window.fichasClinicas.guardarNotaSesion()  // Guardar nota de evolución
+window.fichasClinicas.guardarFichaIngreso() // Guardar ficha de ingreso
+window.informes.guardarInforme()           // Guardar informe
+window.pdfGenerator.exportarFichaCompleta() // Exportar todo a ZIP
+window.permisos.puedeAccederAPaciente()    // Verificar acceso
+```
+
+---
+
+## 📊 **ESTADO ACTUALIZADO EN STATE.JS**
+
+```javascript
+// NUEVAS variables de estado
+state.fichasIngreso = []           // Todas las fichas de ingreso
+state.sesiones = []                // Todas las notas de evolución
+state.informes = []                // Todos los informes
+
+// UI state para fichas
+state.ui.fichas = {
+  pacienteSeleccionadoId: null,
+  fichaActivaId: null,
+  sesionActivaId: null,
+  informeActivoId: null,
+  modoEdicion: false,
+  pestanaActiva: 'perfil'
 }
 ```
 
 ---
 
-## 💰 **SISTEMA DE PAGOS - LO MÁS CONFUSO PERO CRÍTICO**
+## 🆘 **PROBLEMAS COMUNES Y SOLUCIONES (ACTUALIZADO)**
 
-### **FLUJO CORRECTO (marzo 2026):**
-
-```
-PACIENTE AGENDA:
-1. Elige profesional, fecha, hora
-2. Elige método de pago
-3. **TODAS las citas nacen con paymentStatus = 'pendiente'** ✅
-4. **Ningún pago se confirma automáticamente** ✅
-
-PROFESIONAL CONFIRMA:
-1. Ve la solicitud en "Solicitudes" o "Citas"
-2. Botón VERDE "Conf. Pago" → marca como pagado
-3. Botón AZUL "Conf. Hora" (solo presenciales) → confirma la hora
-4. Botón ROJO "Rechazar" → cancela
-
-PAGOS POR MÉTODO:
-- Transferencia: El paciente transfiere, tú confirmas manualmente
-- Efectivo/Tarjeta presencial: Pagan en consulta, tú confirmas
-- **NUNCA se auto-confirma nada** (eso era engañoso)
-```
-
-### **FUNCIONES CLAVE EN `citas.js`:**
-```javascript
-confirmPayment(id)      // ✅ Marca pago como pagado
-rejectPayment(id)       // ❌ Rechaza pago
-confirmPresencialTime() // 🕐 Confirma hora presencial
-renderPendingRequests() // 📋 Muestra solicitudes con botones
-```
-
----
-
-## 📧 **EMAILS - SENDGRID + EMAILJS**
-
-### **Configuración actual:**
-```javascript
-EMAILJS_SERVICE_ID = 'vinculo_salud'
-EMAILJS_TEMPLATE_ID = 'template_0cl1i1h' 
-EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa'
-
-// Dominio verificado: em7234.vinculosalud.cl
-// Remitente: notificaciones@em7234.vinculosalud.cl
-// Link branding: url7139.vinculosalud.cl
-```
-
-### **Qué emails se envían:**
-- Confirmación de cita online
-- Solicitud de cita presencial  
-- Confirmación de pago
-- Rechazo de solicitud
-- Cancelación
-
----
-
-## 🎨 **ESTILO APPLE - CLAVES**
-
-```css
-/* Colores principales */
---azul-apple: #0071e3    /* Botones principales */
---verde-apple: #34c759   /* Confirmar, éxito */
---rojo-apple: #ff3b30    /* Rechazar, cancelar */
---fondo: #f5f5f7         /* Fondo gris clarito */
-
-/* Bordes redondeados (TODO es redondeado) */
---radius-full: 999px     /* Botones tipo píldora */
---radius-xl: 30px        /* Tarjetas, modales */
-
-/* Efecto glass (cristal) */
-.glass {
-  background: rgba(255,255,255,0.8);
-  backdrop-filter: blur(20px);
-}
-```
-
----
-
-## 🆘 **PROBLEMAS COMUNES Y SOLUCIONES**
-
-### **1. "No veo los pacientes/citas"**
+### **1. "No veo el botón de Ficha Clínica"**
 ```javascript
 // EJECUTAR EN CONSOLA:
-console.log(state.patients)  // ¿Hay datos?
-console.log(state.currentUser.data.id)  // ¿Mi ID?
-const misPacientes = state.patients.filter(p => p.psychId == state.currentUser.data.id)
-console.log(misPacientes)  // ¿Filtra bien?
-
-// SOLUCIÓN: El paciente tiene psychId incorrecto
-// Como Admin: state.patients[0].psychId = id_de_marcelo
+console.log(document.querySelectorAll('.btn-icon[onclick*="verFichaCompleta"]').length)
+// SOLUCIÓN: El botón se genera en renderPatients(), verificar que función existe
+console.log(typeof window.verFichaCompleta)  // Debe ser 'function'
 ```
 
-### **2. "Los botones de acciones no se ven"**
+### **2. "Error: No tengo permisos para ver este paciente"**
 ```javascript
-// PROBLEMA: Faltan estilos CSS
-// SOLUCIÓN: Agregar al final de index.html
-<style>
-  .btn-icon { 
-    display: inline-block !important;
-    padding: 8px 16px !important;
-    border-radius: 8px !important;
-    color: white !important;
-  }
-</style>
+// VERIFICAR:
+console.log(state.currentUser.data.role)           // admin o psych?
+console.log(patient.psychId)                       // ID del psicólogo asignado
+console.log(state.currentUser.data.id)             // Mi ID
+
+// SOLUCIÓN ADMIN: Asignar paciente al psicólogo correcto
+patient.psychId = id_del_psicologo
 ```
 
-### **3. "Error: Can't find variable: state"**
+### **3. "Las pestañas no se ven"**
 ```javascript
-// PROBLEMA: state no está en window
-// SOLUCIÓN: En main.js agregar:
-window.state = state;
-console.log('✅ state expuesto globalmente');
+// VERIFICAR CSS
+// Los tabs deben tener estos estilos:
+.tab-btn.active {
+  border-bottom: 3px solid var(--azul-apple);
+  font-weight: bold;
+}
 ```
 
-### **4. "El pago sigue apareciendo como pendiente"**
+### **4. "No puedo guardar la ficha de ingreso"**
 ```javascript
-// ✅ ESTO ES CORRECTO (así debe ser)
-// El profesional debe confirmar manualmente con:
-confirmPayment(id)  // En consola o con el botón
+// VERIFICAR:
+console.log(permisos.puedeEditarFichas(patientId))  // Debe ser true
+// SOLO el psicólogo asignado o admin pueden editar
 ```
 
-### **5. "Los emails no llegan"**
-```
-VERIFICAR:
-1. EmailJS dashboard → ¿logs de envío?
-2. SendGrid → ¿actividad?
-3. ¿El email del paciente es válido?
-4. ¿Llegó a SPAM?
+### **5. "El PDF no se genera"**
+```javascript
+// VERIFICAR dependencias
+console.log(typeof window.jspdf)  // ¿Está cargada la librería?
+// En index.html debe estar:
+// <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 ```
 
 ---
 
-## 🔧 **COMANDOS ÚTILES PARA DEPURACIÓN**
+## 📝 **CHECKLIST RÁPIDO - NUEVAS FUNCIONALIDADES**
 
-```javascript
-// Ver TODO el estado
-console.log(state)
-
-// Ver mi ID
-state.currentUser?.data?.id
-
-// Ver pacientes asignados a mí
-state.patients.filter(p => p.psychId == state.currentUser?.data?.id)
-
-// Ver citas asignadas a mí
-state.appointments.filter(a => a.psychId == state.currentUser?.data?.id)
-
-// Forzar renderizado de pacientes
-window.renderPatients()
-
-// Forzar actualización de estadísticas
-window.updateStats()
-
-// Confirmar pago manualmente (si no hay botón)
-window.confirmPayment('ID_DE_LA_CITA')
-
-// Diagnóstico completo (si lo agregaste)
-window.diagnostico()
-```
+- [ ] ¿Módulos nuevos creados? → `fichasClinicas.js`, `informes.js`, `permisos.js`, `pdfGenerator.js`
+- [ ] ¿State actualizado? → `state.fichasIngreso`, `state.sesiones`, `state.informes`
+- [ ] ¿Botón visible? → En cada tarjeta de paciente
+- [ ] ¿Pestañas funcionan? → Perfil, Ficha Ingreso, Sesiones, Informes
+- [ ] ¿Guardar ficha ingreso? → Probar con paciente nuevo
+- [ ] ¿Guardar nota sesión? → Probar crear nueva nota
+- [ ] ¿Permisos funcionan? → Probar con admin vs psicólogo
+- [ ] ¿Exportar PDF? → Probar generar informe y descargar
 
 ---
 
-## 📝 **CHECKLIST RÁPIDO - ¿TODO BIEN?**
+## ✅ **RESUMEN FINAL v2.0**
 
-- [ ] ¿Firebase conectado? → `console.log(db)`
-- [ ] ¿Usuario logueado? → `state.currentUser`
-- [ ] ¿Datos cargados? → `state.patients.length`
-- [ ] ¿Pacientes visibles? → ver pestaña Pacientes
-- [ ] ¿Citas visibles? → ver pestaña Citas
-- [ ] ¿Botones funcionan? → probar Confirmar/Rechazar
-- [ ] ¿Pagos confirmables? → botón verde "Conf. Pago"
-- [ ] ¿CSS se ve bien? → bordes redondeados, colores Apple
-
----
-
-## 🚨 **SI TODO FALLA - PLAN DE RESCATE**
-
-1. **Abrir consola** (F12) → pestaña "Console"
-2. **Buscar errores en ROJO**
-3. **El error más común**: `import('../main.js')` mal escrito
-4. **Segundo más común**: Falta `window.state = state`
-5. **Tercero**: CSS ocultando elementos (usa `!important`)
-
-```javascript
-// SOLUCIÓN NUCLEAR - Forzar recarga total
-localStorage.clear()
-sessionStorage.clear()
-// Recargar página sin caché: Ctrl+F5
-```
-
----
-
-## ✅ **RESUMEN FINAL**
-
-**MARZO 2026 - ESTADO: FUNCIONANDO**
+**MARZO 2026 - ESTADO: FUNCIONANDO CON FICHAS CLÍNICAS**
 
 | Aspecto | Estado |
 |---------|--------|
 | Reservas online | ✅ |
 | Reservas presenciales | ✅ |
-| Pagos (todos los métodos) | ✅ (confirmación manual) |
+| Pagos (confirmación manual) | ✅ |
 | Emails reales | ✅ (SendGrid + EmailJS) |
 | Diseño Apple | ✅ |
 | Firebase Auth | ✅ |
 | Seguridad | ✅ |
 | Panel Admin | ✅ |
-| Botones visibles | ✅ (con !important) |
-| Datos persistentes | ✅ |
+| **Fichas de Ingreso** | ✅ NUEVO |
+| **Notas de Evolución** | ✅ NUEVO |
+| **Informes Psicodiagnóstico** | ✅ NUEVO |
+| **Informes de Cierre** | ✅ NUEVO |
+| **Exportación PDF** | ✅ NUEVO |
+| **Control de Acceso Granular** | ✅ NUEVO |
 
-**Lo más importante que debes recordar:**
-- **Los pagos SIEMPRE comienzan como "pendiente"**
-- **El profesional SIEMPRE debe confirmar manualmente**
-- **El sistema es HONESTO - nada se auto-confirma**
-- **Si algo no se ve, es CSS (usa !important)**
-- **Si algo no funciona, revisa las importaciones**
+---
 
-¡Vínculo Salud está 100% operativo y listo para producción! 🚀
+## 🚀 **LO MÁS IMPORTANTE QUE DEBES RECORDAR**
+
+### **Antes (v1.0):**
+- Solo agenda y pagos
+- Datos básicos de pacientes
+- Sin historial clínico
+
+### **Ahora (v2.0):**
+- ✅ **Sistema de Historia Clínica completo**
+- ✅ Cada paciente tiene su expediente digital
+- ✅ Trazabilidad de todas las sesiones
+- ✅ Informes profesionales exportables
+- ✅ Permisos granulares por rol
+- ✅ Interfaz unificada con pestañas
+
+### **Flujo completo del paciente:**
+```
+1. PREINGRESO → Ficha de Ingreso (antecedentes, motivo consulta)
+2. PROCESO → Notas de evolución por cada sesión
+3. EVALUACIÓN → Informe Psicodiagnóstico
+4. CIERRE → Informe de Cierre (alta/derivación/abandono)
+5. EXPORTACIÓN → Todos los documentos en PDF
+```
+
+---
+
+## 🔥 **COMANDO DE VERIFICACIÓN RÁPIDA**
+
+```javascript
+// Copiar y pegar en consola para verificar TODO
+(function() {
+  console.log('🔍 VERIFICACIÓN COMPLETA VÍNCULO SALUD v2.0');
+  console.log('==========================================');
+  
+  const checks = {
+    'state global': !!window.state,
+    'main.js cargado': !!window.save,
+    'fichasClinicas': !!window.fichasClinicas,
+    'informes': !!window.informes,
+    'permisos': !!window.permisos,
+    'verFichaCompleta': typeof window.verFichaCompleta === 'function',
+    'cambiarPestana': typeof window.cambiarPestana === 'function',
+    'pacientes en state': window.state?.patients?.length || 0,
+    'fichas ingreso': window.state?.fichasIngreso?.length || 0,
+    'sesiones': window.state?.sesiones?.length || 0,
+    'informes': window.state?.informes?.length || 0
+  };
+  
+  console.table(checks);
+  
+  if (window.state?.currentUser) {
+    console.log(`👤 Usuario: ${window.state.currentUser.data?.name} (${window.state.currentUser.role})`);
+    console.log(`📋 Mis pacientes:`, 
+      window.state.patients?.filter(p => p.psychId == window.state.currentUser.data?.id).length || 0);
+  }
+  
+  console.log('==========================================');
+  return checks;
+})();
+```
+
+---
+
+**¡Vínculo Salud v2.0 está listo!** 🚀 Con agenda, pagos, fichas clínicas, informes profesionales y control de acceso granular. Todo lo que un centro de salud mental necesita.

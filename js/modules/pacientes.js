@@ -1,7 +1,11 @@
 // js/modules/pacientes.js
 import * as state from './state.js';
 import { showToast, validarRut, formatRut } from './utils.js';
+import { puedeAccederAPaciente } from './permisos.js';
+import { obtenerSesionesDePaciente, obtenerFichaIngreso } from './fichasClinicas.js';
+import { obtenerInformesDePaciente } from './informes.js';
 
+// Renderizar lista de pacientes (función existente mejorada)
 export function renderPatients() {
     const container = document.getElementById('patientsList');
     if (!container) return;
@@ -33,7 +37,7 @@ export function renderPatients() {
         const recentApps = patientApps.slice(0, 3);
 
         return `
-            <div class="patient-card" onclick="viewPatientDetails(${p.id})">
+            <div class="patient-card">
                 <div class="patient-header">
                     <span class="patient-name">${p.name}</span>
                     <span class="badge" style="background:var(--azul-medico); color:white;">${totalSessions} sesiones</span>
@@ -67,10 +71,265 @@ export function renderPatients() {
                         `).join('')}
                     </div>
                 ` : ''}
+                <!-- NUEVO BOTÓN PARA VER FICHA COMPLETA -->
+                <div style="margin-top:15px; display:flex; gap:10px;">
+                    <button class="btn-icon" onclick="verFichaCompleta('${p.id}')" 
+                            style="background: var(--azul-apple); color: white; flex:1;">
+                        <i class="fa fa-folder-medical"></i> Ver Ficha Clínica
+                    </button>
+                    <button class="btn-icon" onclick="viewPatientDetails(${p.id})" 
+                            style="background: var(--text-light); color: white;">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                </div>
             </div>
         `;
     }).join('');
 }
+
+// ============================================
+// NUEVAS FUNCIONES PARA DETALLE DE PACIENTE
+// ============================================
+
+// Mostrar detalle completo del paciente con pestañas
+export async function mostrarDetallePaciente(patientId) {
+    if (!puedeAccederAPaciente(patientId)) {
+        showToast('No tienes permisos para ver este paciente', 'error');
+        return;
+    }
+    
+    const patient = state.patients.find(p => p.id == patientId);
+    if (!patient) return;
+    
+    state.ui.fichas.pacienteSeleccionadoId = patientId;
+    state.ui.fichas.pestanaActiva = 'perfil';
+    
+    // Cargar datos del paciente
+    const sesiones = await obtenerSesionesDePaciente(patientId);
+    const fichaIngreso = await obtenerFichaIngreso(patientId);
+    const informes = await obtenerInformesDePaciente(patientId);
+    
+    renderDetallePaciente(patient, sesiones, fichaIngreso, informes);
+}
+
+// Renderizar el detalle con pestañas
+function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null, informes = []) {
+    const container = document.getElementById('patientsList');
+    if (!container) return;
+    
+    const html = `
+        <div class="detalle-paciente">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h2>${patient.name}</h2>
+                <button class="btn-icon" onclick="renderPatients()" 
+                        style="background: var(--text-light); color: white;">
+                    <i class="fa fa-arrow-left"></i> Volver
+                </button>
+            </div>
+            
+            <!-- TABS -->
+            <div class="tabs-container" style="display:flex; gap:5px; margin-bottom:20px; border-bottom:2px solid #e2e8f0;">
+                <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'perfil' ? 'active' : ''}" 
+                        onclick="cambiarPestana('perfil')" 
+                        style="padding:10px 20px; border:none; background:none; cursor:pointer; 
+                               ${state.ui.fichas.pestanaActiva === 'perfil' ? 'border-bottom:3px solid var(--azul-apple); font-weight:bold;' : ''}">
+                    Perfil
+                </button>
+                <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'fichaIngreso' ? 'active' : ''}" 
+                        onclick="cambiarPestana('fichaIngreso')"
+                        style="padding:10px 20px; border:none; background:none; cursor:pointer;
+                               ${state.ui.fichas.pestanaActiva === 'fichaIngreso' ? 'border-bottom:3px solid var(--azul-apple); font-weight:bold;' : ''}">
+                    Ficha Ingreso
+                </button>
+                <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'sesiones' ? 'active' : ''}" 
+                        onclick="cambiarPestana('sesiones')"
+                        style="padding:10px 20px; border:none; background:none; cursor:pointer;
+                               ${state.ui.fichas.pestanaActiva === 'sesiones' ? 'border-bottom:3px solid var(--azul-apple); font-weight:bold;' : ''}">
+                    Sesiones (${sesiones.length})
+                </button>
+                <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'informes' ? 'active' : ''}" 
+                        onclick="cambiarPestana('informes')"
+                        style="padding:10px 20px; border:none; background:none; cursor:pointer;
+                               ${state.ui.fichas.pestanaActiva === 'informes' ? 'border-bottom:3px solid var(--azul-apple); font-weight:bold;' : ''}">
+                    Informes (${informes.length})
+                </button>
+            </div>
+            
+            <!-- CONTENIDO SEGÚN PESTAÑA -->
+            <div class="tab-content">
+                ${renderPestanaActual(patient, sesiones, fichaIngreso, informes)}
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Renderizar pestaña actual
+function renderPestanaActual(patient, sesiones, fichaIngreso, informes) {
+    switch(state.ui.fichas.pestanaActiva) {
+        case 'perfil':
+            return renderPerfil(patient);
+        case 'fichaIngreso':
+            return renderFichaIngreso(patient, fichaIngreso);
+        case 'sesiones':
+            return renderSesiones(patient, sesiones);
+        case 'informes':
+            return renderInformes(patient, informes);
+        default:
+            return renderPerfil(patient);
+    }
+}
+
+// Renderizar perfil del paciente
+function renderPerfil(patient) {
+    return `
+        <div class="perfil-paciente" style="background:#f8fafc; padding:20px; border-radius:12px;">
+            <h3>Datos Personales</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:15px;">
+                <div><strong>RUT:</strong> ${patient.rut || '—'}</div>
+                <div><strong>Email:</strong> ${patient.email}</div>
+                <div><strong>Teléfono:</strong> ${patient.phone || '—'}</div>
+                <div><strong>Fecha Nac.:</strong> ${patient.birthdate || '—'}</div>
+                <div><strong>Notas:</strong> ${patient.notes || '—'}</div>
+                <div><strong>Registrado:</strong> ${patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : '—'}</div>
+            </div>
+            <div style="margin-top:20px;">
+                <button class="btn-icon" onclick="viewPatientDetails(${patient.id})" 
+                        style="background: var(--azul-apple); color: white;">
+                    <i class="fa fa-edit"></i> Editar Datos
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Renderizar ficha de ingreso
+function renderFichaIngreso(patient, fichaIngreso) {
+    if (!fichaIngreso) {
+        return `
+            <div style="text-align:center; padding:40px;">
+                <p>No hay ficha de ingreso para este paciente.</p>
+                <button class="btn-icon" onclick="fichasClinicas.mostrarFormularioFichaIngreso('${patient.id}')" 
+                        style="background: var(--verde-exito); color: white;">
+                    <i class="fa fa-plus"></i> Crear Ficha de Ingreso
+                </button>
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="ficha-ingreso" style="background:#f8fafc; padding:20px; border-radius:12px;">
+            <div style="display:flex; justify-content:space-between;">
+                <h3>Ficha de Ingreso</h3>
+                <button class="btn-icon" onclick="fichasClinicas.editarFichaIngreso('${fichaIngreso.id}')" 
+                        style="background: var(--azul-apple); color: white;">
+                    <i class="fa fa-edit"></i> Editar
+                </button>
+            </div>
+            
+            <div style="margin-top:20px;">
+                <h4>Motivo de Consulta</h4>
+                <p>${fichaIngreso.motivoConsulta || '—'}</p>
+                
+                <h4>Sintomatología</h4>
+                <p><strong>Inicio:</strong> ${fichaIngreso.sintomatologia?.fechaInicio || '—'}</p>
+                <p><strong>Progresión:</strong> ${fichaIngreso.sintomatologia?.progresion || '—'}</p>
+                <p><strong>Tratamientos previos:</strong> ${fichaIngreso.sintomatologia?.tratamientosPrevios || '—'}</p>
+                
+                <h4>Composición Familiar</h4>
+                <p>${fichaIngreso.composicionFamiliar || '—'}</p>
+                
+                <h4>Otros Antecedentes</h4>
+                <p>${fichaIngreso.otrosAntecedentes || '—'}</p>
+            </div>
+        </div>
+    `;
+}
+
+// Renderizar sesiones
+function renderSesiones(patient, sesiones) {
+    const sesionesHtml = sesiones.map(s => `
+        <div class="sesion-item" style="background:white; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--azul-apple);">
+            <div style="display:flex; justify-content:space-between;">
+                <strong>${s.fechaAtencion} ${s.fechaAtencion ? '·' : ''} ${s.tipoAtencion || 'Sesión'}</strong>
+                <button class="btn-icon" onclick="fichasClinicas.verNotaSesion('${s.id}')" 
+                        style="background: var(--azul-apple); color: white; padding:5px 10px;">
+                    <i class="fa fa-eye"></i> Ver
+                </button>
+            </div>
+            <p style="margin-top:10px;">${s.notas?.substring(0, 150)}${s.notas?.length > 150 ? '...' : ''}</p>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="sesiones-container">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Notas de Evolución</h3>
+                <button class="btn-icon" onclick="fichasClinicas.mostrarFormularioNotaSesion('${patient.id}')" 
+                        style="background: var(--verde-exito); color: white;">
+                    <i class="fa fa-plus"></i> Nueva Nota
+                </button>
+            </div>
+            
+            ${sesiones.length > 0 ? sesionesHtml : '<p style="text-align:center; padding:40px;">No hay sesiones registradas</p>'}
+        </div>
+    `;
+}
+
+// Renderizar informes
+function renderInformes(patient, informes) {
+    const informesHtml = informes.map(i => `
+        <div class="informe-item" style="background:white; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--naranja-aviso);">
+            <div style="display:flex; justify-content:space-between;">
+                <strong>${i.tipo === 'psicodiagnostico' ? '📋 Psicodiagnóstico' : '📄 Cierre de Proceso'}</strong>
+                <span>${new Date(i.fechaCreacion).toLocaleDateString()}</span>
+            </div>
+            <div style="margin-top:10px;">
+                <button class="btn-icon" onclick="informes.verInforme('${i.id}')" 
+                        style="background: var(--azul-apple); color: white; margin-right:5px;">
+                    <i class="fa fa-eye"></i> Ver
+                </button>
+                ${i.pdfUrl ? `
+                    <button class="btn-icon" onclick="window.open('${i.pdfUrl}')" 
+                            style="background: var(--verde-exito); color: white;">
+                        <i class="fa fa-file-pdf"></i> PDF
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="informes-container">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Informes</h3>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-icon" onclick="informes.mostrarFormularioInforme('${patient.id}', 'psicodiagnostico')" 
+                            style="background: var(--azul-apple); color: white;">
+                        <i class="fa fa-file"></i> Nuevo Psicodiagnóstico
+                    </button>
+                    <button class="btn-icon" onclick="informes.mostrarFormularioInforme('${patient.id}', 'cierre')" 
+                            style="background: var(--naranja-aviso); color: white;">
+                        <i class="fa fa-file"></i> Cierre de Proceso
+                    </button>
+                </div>
+            </div>
+            
+            ${informes.length > 0 ? informesHtml : '<p style="text-align:center; padding:40px;">No hay informes generados</p>'}
+        </div>
+    `;
+}
+
+// Cambiar pestaña
+export function cambiarPestana(pestana) {
+    state.ui.fichas.pestanaActiva = pestana;
+    mostrarDetallePaciente(state.ui.fichas.pacienteSeleccionadoId);
+}
+
+// ============================================
+// FUNCIONES EXISTENTES (SIN CAMBIOS)
+// ============================================
 
 export function showNewPatientModal() {
     document.getElementById('editPatientId').value = '';

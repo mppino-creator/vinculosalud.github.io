@@ -62,3 +62,39 @@ export function setTempLogoData(data) { tempLogoData = data; }
 export function setTempQrData(data) { tempQrData = data; }
 export function setSelectedPatientForTherapist(patient) { selectedPatientForTherapist = patient; }
 export function setDataLoaded(loaded) { dataLoaded = loaded; }
+
+// js/modules/state.js - AÑADE ESTO AL FINAL
+
+// ============================================
+// NUEVAS VARIABLES DE ESTADO PARA FICHAS CLÍNICAS
+// ============================================
+
+// Colecciones nuevas
+state.fichasIngreso = [];           // Todas las fichas de ingreso
+state.sesiones = [];                // Todas las notas de evolución por sesión
+state.informes = [];                // Todos los informes (psicodiagnóstico/cierre)
+
+// Estado UI para fichas
+state.ui.fichas = {
+  pacienteSeleccionadoId: null,
+  fichaActivaId: null,
+  sesionActivaId: null,
+  informeActivoId: null,
+  modoEdicion: false,
+  pestanaActiva: 'perfil' // 'perfil' | 'fichaIngreso' | 'sesiones' | 'informes'
+};
+
+// Función para limpiar estado de fichas (útil al cambiar de paciente)
+state.limpiarEstadoFichas = () => {
+  state.ui.fichas = {
+    pacienteSeleccionadoId: null,
+    fichaActivaId: null,
+    sesionActivaId: null,
+    informeActivoId: null,
+    modoEdicion: false,
+    pestanaActiva: 'perfil'
+  };
+};
+
+// Exportamos todo igual
+export default state;

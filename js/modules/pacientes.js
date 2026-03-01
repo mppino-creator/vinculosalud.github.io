@@ -2,7 +2,7 @@
 import * as state from './state.js';
 import { showToast, validarRut, formatRut, formatDate, calculateAge, getInitials } from './utils.js';
 import { puedeAccederAPaciente, puedeEditarFichas } from './permisos.js';
-import { obtenerSesionesDePaciente, obtenerFichaIngreso } from './fichasClinicas.js';
+import { obtenerSesionesDePaciente, obtenerFichasIngresoDePaciente } from './fichasClinicas.js';
 import { obtenerInformesDePaciente } from './informes.js';
 
 // ============================================
@@ -39,9 +39,7 @@ export function renderPatients() {
         const totalAmount = patientApps.reduce((sum, a) => sum + a.price, 0);
         const recentApps = patientApps.slice(0, 3);
         
-        // ============================================
-        // NUEVO: Obtener información de fichas clínicas
-        // ============================================
+        // Obtener información de fichas clínicas
         const tieneFichaIngreso = state.fichasIngreso.some(f => f.patientId == p.id);
         const totalSesionesRegistradas = state.sesiones.filter(s => s.patientId == p.id).length;
         const ultimaSesion = state.sesiones
@@ -139,7 +137,8 @@ export async function mostrarDetallePaciente(patientId) {
     
     // Cargar datos del paciente
     const sesiones = await obtenerSesionesDePaciente(patientId);
-    const fichaIngreso = await obtenerFichaIngreso(patientId);
+    const fichasIngresoArray = await obtenerFichasIngresoDePaciente(patientId);
+    const fichaIngreso = fichasIngresoArray.length > 0 ? fichasIngresoArray[0] : null;
     const informes = await obtenerInformesDePaciente(patientId);
     
     renderDetallePaciente(patient, sesiones, fichaIngreso, informes);
@@ -222,11 +221,7 @@ function renderPestanaActual(patient, sesiones, fichaIngreso, informes) {
     }
 }
 
-// ============================================
-// RENDERIZADO DE CADA PESTAÑA
-// ============================================
-
-// Renderizar perfil del paciente (MEJORADO)
+// Renderizar perfil del paciente
 function renderPerfil(patient, sesiones = [], informes = []) {
     const edad = calculateAge(patient.birthdate);
     const totalSesiones = sesiones.length;
@@ -284,7 +279,7 @@ function renderPerfil(patient, sesiones = [], informes = []) {
     `;
 }
 
-// Renderizar ficha de ingreso (MEJORADA)
+// Renderizar ficha de ingreso
 function renderFichaIngreso(patient, fichaIngreso) {
     if (!fichaIngreso) {
         return `
@@ -360,7 +355,7 @@ function renderFichaIngreso(patient, fichaIngreso) {
     `;
 }
 
-// Renderizar sesiones (MEJORADA)
+// Renderizar sesiones
 function renderSesiones(patient, sesiones) {
     const sesionesHtml = sesiones.map(s => `
         <div class="sesion-item" style="background:white; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--azul-apple);">
@@ -403,7 +398,7 @@ function renderSesiones(patient, sesiones) {
     `;
 }
 
-// Renderizar informes (MEJORADA)
+// Renderizar informes
 function renderInformes(patient, informes) {
     const informesHtml = informes.map(i => `
         <div class="informe-item" style="background:white; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--naranja-aviso);">

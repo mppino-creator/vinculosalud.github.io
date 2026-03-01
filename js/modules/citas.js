@@ -202,6 +202,24 @@ export function searchPatientByRutBooking() {
     }
 }
 
+export function checkOnlineAvailability() {
+    const date = document.getElementById('custDate').value;
+    const time = document.getElementById('custTime').value;
+    const type = document.getElementById('appointmentType').value;
+    
+    if (type === 'online' && date && time) {
+        const selectedDateTime = new Date(date + 'T' + time);
+        const now = new Date();
+        
+        if (selectedDateTime < now) {
+            showToast('No puedes seleccionar una hora que ya pasó', 'warning');
+            return false;
+        }
+        return true;
+    }
+    return true;
+}
+
 export function executeBooking() {
     const rut = document.getElementById('custRut').value;
     const name = document.getElementById('custName').value;
@@ -210,11 +228,11 @@ export function executeBooking() {
     const date = document.getElementById('custDate').value;
     const time = document.getElementById('custTime').value;
     const type = document.getElementById('appointmentType').value;
-    const paymentMethod = document.getElementById('paymentMethod')?.value || 'transfer'; // Opcional con valor por defecto
+    const paymentMethod = document.getElementById('paymentMethod')?.value || 'transfer';
     const msg = document.getElementById('custMsg').value;
     const acceptPolicy = document.getElementById('acceptPolicy').checked;
 
-    // Validaciones básicas - CORREGIDO (sin paymentMethod obligatorio)
+    // Validaciones básicas
     if (!rut || !name || !email || !date) {
         showToast('Completa todos los campos obligatorios (RUT, nombre, email, fecha)', 'error');
         return;
@@ -252,7 +270,7 @@ export function executeBooking() {
             return;
         }
 
-        // Verificar que no haya otra cita (online o presencial) a la misma hora
+        // Verificar que no haya otra cita a la misma hora
         const existingAppointment = state.appointments.find(a => 
             a.psychId == state.selectedPsych.id && 
             a.date === date && 
@@ -742,3 +760,14 @@ export function markAsPaid(id) {
         showToast('Pago marcado como recibido', 'success');
     }
 }
+
+// ============================================
+// EXPONER FUNCIONES AL OBJETO WINDOW PARA EL HTML
+// ============================================
+window.searchPatientByRutBooking = searchPatientByRutBooking;
+window.checkOnlineAvailability = checkOnlineAvailability;
+window.updateBookingDetails = updateBookingDetails;
+window.updateAvailableTimes = updateAvailableTimes;
+window.openBooking = openBooking;
+window.executeBooking = executeBooking;
+window.showPaymentDetails = showPaymentDetails;

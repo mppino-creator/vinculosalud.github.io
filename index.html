@@ -1415,5 +1415,35 @@
     console.log('✅ Fix instalado');
 })();
 </script>
+
+// Al final de citas.js, después de todas las funciones existentes
+
+// Sobrescribir renderPendingRequests para asegurar botones visibles
+const originalRenderPendingRequests = renderPendingRequests;
+renderPendingRequests = function() {
+    if (originalRenderPendingRequests) {
+        originalRenderPendingRequests();
+        
+        // Asegurar que los botones tengan estilos
+        setTimeout(() => {
+            const table = document.getElementById('pendingRequestsTable');
+            if (!table) return;
+            
+            const confirmButtons = table.querySelectorAll('button[onclick*="showConfirmRequestModal"]');
+            confirmButtons.forEach(btn => {
+                btn.style.background = '#34c759';
+                btn.style.color = 'white';
+                btn.innerHTML = '<i class="fa fa-check"></i> Confirmar';
+            });
+            
+            const rejectButtons = table.querySelectorAll('button[onclick*="rejectRequest"]');
+            rejectButtons.forEach(btn => {
+                btn.style.background = '#ff3b30';
+                btn.style.color = 'white';
+                btn.innerHTML = '<i class="fa fa-times"></i> Rechazar';
+            });
+        }, 50);
+    }
+};
 </body>
 </html>

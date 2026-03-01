@@ -113,16 +113,35 @@ export function renderPatients() {
 }
 
 // ============================================
-// FUNCIÓN CORREGIDA - Busca paciente PRIMERO, luego verifica permisos
+// FUNCIÓN CORREGIDA - ESPERA AL USUARIO
 // ============================================
 export async function mostrarDetallePaciente(patientId) {
     console.log('🔍 Mostrando detalle para paciente:', patientId);
     
-    // 1. Buscar el paciente PRIMERO (antes de verificar permisos)
+    // 1. ESPERAR a que state.currentUser esté disponible (hasta 2 segundos)
+    let intentos = 0;
+    const maxIntentos = 20; // 20 * 100ms = 2 segundos máximo
+    
+    while (!state.currentUser && intentos < maxIntentos) {
+        console.log(`⏳ Esperando usuario... Intento ${intentos + 1}/${maxIntentos}`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        intentos++;
+    }
+    
+    // 2. Verificar si después de esperar, el usuario está disponible
+    if (!state.currentUser) {
+        console.error('❌ Usuario no disponible después de esperar');
+        showToast('Error: Usuario no disponible', 'error');
+        return;
+    }
+    
+    console.log('✅ Usuario disponible:', state.currentUser.data?.name);
+    
+    // 3. Buscar el paciente
     const patient = state.patients.find(p => p.id == patientId);
     
     if (!patient) {
-        console.error('❌ Paciente no encontrado en state.patients');
+        console.error('❌ Paciente no encontrado');
         console.log('Pacientes disponibles:', state.patients.map(p => ({id: p.id, nombre: p.name})));
         showToast('Error: Paciente no encontrado', 'error');
         return;
@@ -130,24 +149,26 @@ export async function mostrarDetallePaciente(patientId) {
     
     console.log('✅ Paciente encontrado:', patient.name);
     
-    // 2. AHORA verificar permisos (ya tenemos el paciente)
+    // 4. Verificar permisos (ahora con usuario disponible)
     if (!puedeAccederAPaciente(patientId)) {
         console.log('❌ Sin permisos para ver paciente:', patient.name);
         showToast('No tienes permisos para ver este paciente', 'error');
         return;
     }
     
-    // 3. Actualizar UI state
+    console.log('✅ Permisos concedidos');
+    
+    // 5. Actualizar UI state
     state.ui.fichas.pacienteSeleccionadoId = patientId;
     state.ui.fichas.pestanaActiva = 'perfil';
     
-    // 4. Mostrar loader
+    // 6. Mostrar loader
     const container = document.getElementById('patientsList');
     if (container) {
         container.innerHTML = '<div style="text-align:center; padding:40px;">Cargando ficha del paciente...</div>';
     }
     
-    // 5. Cargar datos
+    // 7. Cargar datos
     try {
         const sesiones = await obtenerSesionesDePaciente(patientId);
         const fichasIngresoArray = await obtenerFichasIngresoDePaciente(patientId);
@@ -160,7 +181,7 @@ export async function mostrarDetallePaciente(patientId) {
             informes: informes.length
         });
         
-        // 6. Si no hay ficha, mostrar opción para crear
+        // 8. Si no hay ficha, mostrar opción para crear
         if (!fichaIngreso) {
             mostrarOpcionCrearFicha(patient, sesiones, informes);
         } else {

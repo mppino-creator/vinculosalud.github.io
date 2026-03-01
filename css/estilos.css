@@ -1473,4 +1473,130 @@ td {
         padding: 6px 12px;
         font-size: 0.9rem;
     }
+
+/* ============================================
+   FIX PARA INPUTS Y SELECTORS INVISIBLES
+   ============================================ */
+#bookingPanel input,
+#bookingPanel select,
+#bookingPanel textarea,
+.panel input,
+.panel select,
+.panel textarea,
+.modal input,
+.modal select,
+.modal textarea {
+    color: var(--texto-primario) !important;
+    background-color: var(--fondo-secundario) !important;
+    border: 1px solid var(--gris-oscuro) !important;
+    padding: 12px 16px !important;
+    border-radius: var(--radius-md) !important;
+    font-size: 1rem !important;
+    width: 100% !important;
+}
+
+#bookingPanel input::placeholder,
+#bookingPanel select::placeholder,
+#bookingPanel textarea::placeholder,
+.panel input::placeholder,
+.panel select::placeholder,
+.panel textarea::placeholder,
+.modal input::placeholder,
+.modal select::placeholder,
+.modal textarea::placeholder {
+    color: var(--texto-secundario) !important;
+    opacity: 0.8 !important;
+}
+
+#bookingPanel select,
+.panel select,
+.modal select {
+    appearance: auto !important;
+    -webkit-appearance: menulist !important;
+    background-image: none !important;
+}
+
+#bookingPanel option,
+.panel option,
+.modal option {
+    color: var(--texto-primario) !important;
+    background: var(--fondo-secundario) !important;
+}
+
+/* ============================================
+   FIX PARA TEXTOS DEL RESUMEN
+   ============================================ */
+.glass h3, 
+.glass p, 
+.glass span, 
+.glass div,
+.booking-grid h3,
+.booking-grid p,
+.booking-grid span,
+.booking-grid div,
+.dashboard-header h2,
+#psychName,
+#psychSelectedName,
+#psychSelectedSpec,
+#bookingPrice,
+#bookingDuration,
+#bookingType,
+#acceptPolicy + span {
+    color: var(--texto-primario) !important;
+}
+
+/* ============================================
+   FIX PARA ETIQUETAS Y TÍTULOS
+   ============================================ */
+label, 
+.form-group label,
+h3, h4, h5,
+.booking-grid h3,
+.dashboard-header h2,
+#psychName,
+#psychSelectedName,
+#psychSelectedSpec {
+    color: var(--texto-primario) !important;
+    font-weight: 500 !important;
+}
+
+/* ============================================
+   FIX PARA MENSAJES DE DISPONIBILIDAD
+   ============================================ */
+#onlineAvailabilityMsg,
+#presencialWarning {
+    color: var(--texto-primario) !important;
+}
+
+#onlineAvailabilityMsg i,
+#presencialWarning i {
+    color: inherit !important;
+}
+
+/* ============================================
+   FIX PARA EL CHECKBOX DE POLÍTICA
+   ============================================ */
+#acceptPolicy {
+    width: auto !important;
+    margin-right: 8px !important;
+}
+
+.glass label {
+    color: white !important;
+}
+
+/* ============================================
+   FIX PARA EL BOTÓN DE SOLICITAR CITA
+   ============================================ */
+#bookBtn,
+.btn-staff {
+    color: white !important;
+    background: var(--azul-apple) !important;
+}
+
+#bookBtn:hover,
+.btn-staff:hover {
+    background: var(--azul-apple-hover) !important;
+}
+
 }

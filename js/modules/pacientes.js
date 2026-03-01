@@ -113,37 +113,64 @@ export function renderPatients() {
 }
 
 // ============================================
-// FUNCIÓN MEJORADA - DETECTA Y OFRECE CREAR FICHA
+// FUNCIÓN CORREGIDA - Busca paciente PRIMERO, luego verifica permisos
 // ============================================
 export async function mostrarDetallePaciente(patientId) {
+    console.log('🔍 Mostrando detalle para paciente:', patientId);
+    
+    // 1. Buscar el paciente PRIMERO (antes de verificar permisos)
+    const patient = state.patients.find(p => p.id == patientId);
+    
+    if (!patient) {
+        console.error('❌ Paciente no encontrado en state.patients');
+        console.log('Pacientes disponibles:', state.patients.map(p => ({id: p.id, nombre: p.name})));
+        showToast('Error: Paciente no encontrado', 'error');
+        return;
+    }
+    
+    console.log('✅ Paciente encontrado:', patient.name);
+    
+    // 2. AHORA verificar permisos (ya tenemos el paciente)
     if (!puedeAccederAPaciente(patientId)) {
+        console.log('❌ Sin permisos para ver paciente:', patient.name);
         showToast('No tienes permisos para ver este paciente', 'error');
         return;
     }
     
-    const patient = state.patients.find(p => p.id == patientId);
-    if (!patient) return;
-    
+    // 3. Actualizar UI state
     state.ui.fichas.pacienteSeleccionadoId = patientId;
     state.ui.fichas.pestanaActiva = 'perfil';
     
-    // Mostrar loader
+    // 4. Mostrar loader
     const container = document.getElementById('patientsList');
     if (container) {
         container.innerHTML = '<div style="text-align:center; padding:40px;">Cargando ficha del paciente...</div>';
     }
     
-    // Cargar datos del paciente
-    const sesiones = await obtenerSesionesDePaciente(patientId);
-    const fichasIngresoArray = await obtenerFichasIngresoDePaciente(patientId);
-    const fichaIngreso = fichasIngresoArray.length > 0 ? fichasIngresoArray[0] : null;
-    const informes = await obtenerInformesDePaciente(patientId);
-    
-    // Si no hay ficha de ingreso, mostrar opción para crear una
-    if (!fichaIngreso) {
-        mostrarOpcionCrearFicha(patient, sesiones, informes);
-    } else {
-        renderDetallePaciente(patient, sesiones, fichaIngreso, informes);
+    // 5. Cargar datos
+    try {
+        const sesiones = await obtenerSesionesDePaciente(patientId);
+        const fichasIngresoArray = await obtenerFichasIngresoDePaciente(patientId);
+        const fichaIngreso = fichasIngresoArray.length > 0 ? fichasIngresoArray[0] : null;
+        const informes = await obtenerInformesDePaciente(patientId);
+        
+        console.log('✅ Datos cargados:', {
+            sesiones: sesiones.length,
+            fichas: fichasIngresoArray.length,
+            informes: informes.length
+        });
+        
+        // 6. Si no hay ficha, mostrar opción para crear
+        if (!fichaIngreso) {
+            mostrarOpcionCrearFicha(patient, sesiones, informes);
+        } else {
+            renderDetallePaciente(patient, sesiones, fichaIngreso, informes);
+        }
+    } catch (error) {
+        console.error('❌ Error cargando datos:', error);
+        if (container) {
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:red;">Error al cargar ficha</div>';
+        }
     }
 }
 
@@ -203,7 +230,9 @@ function mostrarOpcionCrearFicha(patient, sesiones = [], informes = []) {
     `;
 }
 
-// Renderizar el detalle con pestañas
+// ============================================
+// RENDERIZAR DETALLE COMPLETO CON PESTAÑAS
+// ============================================
 function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null, informes = []) {
     const container = document.getElementById('patientsList');
     if (!container) return;
@@ -264,7 +293,9 @@ function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null, info
     container.innerHTML = html;
 }
 
-// Renderizar pestaña actual
+// ============================================
+// RENDERIZAR PESTAÑA ACTUAL
+// ============================================
 function renderPestanaActual(patient, sesiones, fichaIngreso, informes) {
     switch(state.ui.fichas.pestanaActiva) {
         case 'perfil':
@@ -280,7 +311,9 @@ function renderPestanaActual(patient, sesiones, fichaIngreso, informes) {
     }
 }
 
-// Renderizar perfil del paciente
+// ============================================
+// RENDERIZAR PERFIL DEL PACIENTE
+// ============================================
 function renderPerfil(patient, sesiones = [], informes = []) {
     const edad = calculateAge(patient.birthdate);
     const totalSesiones = sesiones.length;
@@ -338,7 +371,9 @@ function renderPerfil(patient, sesiones = [], informes = []) {
     `;
 }
 
-// Renderizar ficha de ingreso
+// ============================================
+// RENDERIZAR FICHA DE INGRESO
+// ============================================
 function renderFichaIngreso(patient, fichaIngreso) {
     if (!fichaIngreso) {
         return `
@@ -414,7 +449,9 @@ function renderFichaIngreso(patient, fichaIngreso) {
     `;
 }
 
-// Renderizar sesiones
+// ============================================
+// RENDERIZAR SESIONES
+// ============================================
 function renderSesiones(patient, sesiones) {
     const sesionesHtml = sesiones.map(s => `
         <div class="sesion-item" style="background:white; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--azul-apple);">
@@ -457,7 +494,9 @@ function renderSesiones(patient, sesiones) {
     `;
 }
 
-// Renderizar informes
+// ============================================
+// RENDERIZAR INFORMES
+// ============================================
 function renderInformes(patient, informes) {
     const informesHtml = informes.map(i => `
         <div class="informe-item" style="background:white; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--naranja-aviso);">
@@ -555,7 +594,7 @@ export async function exportarFichaCompleta(patientId) {
 }
 
 // ============================================
-// FUNCIONES EXISTENTES (CON PEQUEÑAS MEJORAS)
+// FUNCIONES EXISTENTES (SIN CAMBIOS)
 // ============================================
 
 export function showNewPatientModal() {

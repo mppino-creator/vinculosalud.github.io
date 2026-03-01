@@ -389,72 +389,144 @@ function guardarEspecialidades() {
 }
 
 // ============================================
-// CONFIGURACIÓN PERSONAL DEL PSICÓLOGO
+// CONFIGURACIÓN PERSONAL DEL PSICÓLOGO (CORREGIDA)
 // ============================================
 
 export function loadMyConfig() {
-    if (!state.currentUser?.data) return;
+    console.log('⚙️ Cargando configuración personal...');
+    
+    if (!state.currentUser?.data) {
+        console.log('⚠️ No hay usuario logueado');
+        return;
+    }
+    
     const psych = state.currentUser.data;
+    console.log('👤 Psicólogo:', psych.name);
 
-    document.getElementById('myName').value = psych.name || '';
-    document.getElementById('myEmail').value = psych.email || '';
+    // Elementos básicos que siempre deben existir
+    const myName = document.getElementById('myName');
+    const myEmail = document.getElementById('myEmail');
+    const mySpecialties = document.getElementById('mySpecialties');
+    const myPriceOnline = document.getElementById('myPriceOnline');
+    const myPricePresencial = document.getElementById('myPricePresencial');
+    const myWhatsapp = document.getElementById('myWhatsapp');
+    const myInstagram = document.getElementById('myInstagram');
+    const myBank = document.getElementById('myBank');
+    const myAccountType = document.getElementById('myAccountType');
+    const myAccountNumber = document.getElementById('myAccountNumber');
+    const myBankRut = document.getElementById('myBankRut');
+    const myBankEmail = document.getElementById('myBankEmail');
 
-    const mySpecialtiesDiv = document.getElementById('mySpecialties');
-    if (mySpecialtiesDiv) {
+    // Asignar valores solo si los elementos existen
+    if (myName) myName.value = psych.name || '';
+    if (myEmail) myEmail.value = psych.email || '';
+
+    if (mySpecialties) {
         const specs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
-        mySpecialtiesDiv.innerHTML = specs.map(s => `<span class="specialty-tag">${s}</span>`).join('');
+        mySpecialties.innerHTML = specs.map(s => `<span class="specialty-tag">${s}</span>`).join('');
     }
 
-    document.getElementById('myPriceOnline').value = psych.priceOnline || '';
-    document.getElementById('myPricePresencial').value = psych.pricePresencial || '';
-    document.getElementById('myWhatsapp').value = psych.whatsapp || '';
-    document.getElementById('myInstagram').value = psych.instagram || '';
+    if (myPriceOnline) myPriceOnline.value = psych.priceOnline || '';
+    if (myPricePresencial) myPricePresencial.value = psych.pricePresencial || '';
+    if (myWhatsapp) myWhatsapp.value = psych.whatsapp || '';
+    if (myInstagram) myInstagram.value = psych.instagram || '';
 
     const bank = psych.bankDetails || {};
-    document.getElementById('myBank').value = bank.bank || '';
-    document.getElementById('myAccountType').value = bank.accountType || 'corriente';
-    document.getElementById('myAccountNumber').value = bank.accountNumber || '';
-    document.getElementById('myBankRut').value = bank.rut || '';
-    document.getElementById('myBankEmail').value = bank.email || '';
+    if (myBank) myBank.value = bank.bank || '';
+    if (myAccountType) myAccountType.value = bank.accountType || 'corriente';
+    if (myAccountNumber) myAccountNumber.value = bank.accountNumber || '';
+    if (myBankRut) myBankRut.value = bank.rut || '';
+    if (myBankEmail) myBankEmail.value = bank.email || '';
 
+    // Métodos de pago (pueden no existir en el HTML)
     const methods = psych.paymentMethods || state.globalPaymentMethods;
-    document.getElementById('myTransfer').checked = methods.transfer !== false;
-    document.getElementById('myCardPresencial').checked = methods.cardPresencial !== false;
-    document.getElementById('myCardOnline').checked = methods.cardOnline || false;
-    document.getElementById('myCash').checked = methods.cash !== false;
-    document.getElementById('myMercadoPago').checked = methods.mercadopago || false;
-    document.getElementById('myWebpay').checked = methods.webpay || false;
+    
+    // Verificar cada elemento antes de asignar
+    const myTransfer = document.getElementById('myTransfer');
+    const myCardPresencial = document.getElementById('myCardPresencial');
+    const myCardOnline = document.getElementById('myCardOnline');
+    const myCash = document.getElementById('myCash');
+    const myMercadoPago = document.getElementById('myMercadoPago');
+    const myWebpay = document.getElementById('myWebpay');
+
+    if (myTransfer) myTransfer.checked = methods.transfer !== false;
+    if (myCardPresencial) myCardPresencial.checked = methods.cardPresencial !== false;
+    if (myCardOnline) myCardOnline.checked = methods.cardOnline || false;
+    if (myCash) myCash.checked = methods.cash !== false;
+    if (myMercadoPago) myMercadoPago.checked = methods.mercadopago || false;
+    if (myWebpay) myWebpay.checked = methods.webpay || false;
+
+    console.log('✅ Configuración cargada');
 }
 
 export function saveMyConfig() {
-    if (!state.currentUser?.data) return;
+    console.log('💾 Guardando configuración personal...');
+    
+    if (!state.currentUser?.data) {
+        console.log('⚠️ No hay usuario logueado');
+        showToast('Error: No hay sesión activa', 'error');
+        return;
+    }
+    
     const psych = state.currentUser.data;
 
-    psych.priceOnline = parseInt(document.getElementById('myPriceOnline').value);
-    psych.pricePresencial = parseInt(document.getElementById('myPricePresencial').value);
-    psych.whatsapp = document.getElementById('myWhatsapp').value;
-    psych.instagram = document.getElementById('myInstagram').value;
+    // Solo guardar si los elementos existen
+    const myPriceOnline = document.getElementById('myPriceOnline');
+    const myPricePresencial = document.getElementById('myPricePresencial');
+    const myWhatsapp = document.getElementById('myWhatsapp');
+    const myInstagram = document.getElementById('myInstagram');
+    const myBank = document.getElementById('myBank');
+    const myAccountType = document.getElementById('myAccountType');
+    const myAccountNumber = document.getElementById('myAccountNumber');
+    const myBankRut = document.getElementById('myBankRut');
+    const myBankEmail = document.getElementById('myBankEmail');
+
+    if (myPriceOnline) psych.priceOnline = parseInt(myPriceOnline.value) || 0;
+    if (myPricePresencial) psych.pricePresencial = parseInt(myPricePresencial.value) || 0;
+    if (myWhatsapp) psych.whatsapp = myWhatsapp.value;
+    if (myInstagram) psych.instagram = myInstagram.value;
 
     psych.bankDetails = {
-        bank: document.getElementById('myBank').value,
-        accountType: document.getElementById('myAccountType').value,
-        accountNumber: document.getElementById('myAccountNumber').value,
-        rut: document.getElementById('myBankRut').value,
-        email: document.getElementById('myBankEmail').value
+        bank: myBank?.value || '',
+        accountType: myAccountType?.value || 'corriente',
+        accountNumber: myAccountNumber?.value || '',
+        rut: myBankRut?.value || '',
+        email: myBankEmail?.value || ''
     };
+
+    // Métodos de pago (solo si existen)
+    const myTransfer = document.getElementById('myTransfer');
+    const myCardPresencial = document.getElementById('myCardPresencial');
+    const myCardOnline = document.getElementById('myCardOnline');
+    const myCash = document.getElementById('myCash');
+    const myMercadoPago = document.getElementById('myMercadoPago');
+    const myWebpay = document.getElementById('myWebpay');
 
     psych.paymentMethods = {
-        transfer: document.getElementById('myTransfer').checked,
-        cardPresencial: document.getElementById('myCardPresencial').checked,
-        cardOnline: document.getElementById('myCardOnline').checked,
-        cash: document.getElementById('myCash').checked,
-        mercadopago: document.getElementById('myMercadoPago').checked,
-        webpay: document.getElementById('myWebpay').checked
+        transfer: myTransfer ? myTransfer.checked : true,
+        cardPresencial: myCardPresencial ? myCardPresencial.checked : true,
+        cardOnline: myCardOnline ? myCardOnline.checked : false,
+        cash: myCash ? myCash.checked : true,
+        mercadopago: myMercadoPago ? myMercadoPago.checked : false,
+        webpay: myWebpay ? myWebpay.checked : false
     };
 
+    // Actualizar en el array de staff
     const staffIndex = state.staff.findIndex(s => s.id == psych.id);
-    if (staffIndex !== -1) state.staff[staffIndex] = psych;
+    if (staffIndex !== -1) {
+        state.staff[staffIndex] = psych;
+        console.log('✅ Psicólogo actualizado en staff');
+    } else {
+        console.warn('⚠️ Psicólogo no encontrado en staff');
+    }
 
-    import('../main.js').then(main => main.save());
-    showToast('Configuración guardada', 'success');
+    // Guardar en Firebase
+    import('../main.js').then(main => {
+        main.save();
+        console.log('✅ Configuración guardada en Firebase');
+        showToast('Configuración guardada', 'success');
+    }).catch(err => {
+        console.error('❌ Error al guardar:', err);
+        showToast('Error al guardar la configuración', 'error');
+    });
 }

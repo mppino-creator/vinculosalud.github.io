@@ -189,7 +189,7 @@ export function cargarDatosIniciales() {
             phone: '',
             bankDetails: {},
             isHiddenAdmin: true,
-            isAdmin: true, // ← CAMPO CRUCIAL AGREGADO
+            isAdmin: true,
             paymentMethods: {},
             sessionDuration: 45,
             breakBetween: 10,
@@ -231,7 +231,21 @@ export function cargarDatosIniciales() {
             state.setAppointments([]);
         }
         if (state.currentUser) {
-            import('./auth.js').then(mod => mod.updateStats());
+            // ============================================
+            // LÍNEA 234 CORREGIDA - Verificar que updateStats existe
+            // ============================================
+            if (typeof window.updateStats === 'function') {
+                window.updateStats();
+            } else {
+                console.log('⏳ updateStats no disponible, se cargará después');
+                // Intentar cargar desde auth después
+                import('./auth.js').then(mod => {
+                    if (typeof mod.updateStats === 'function') {
+                        window.updateStats = mod.updateStats;
+                        window.updateStats();
+                    }
+                }).catch(err => console.warn('Error cargando updateStats:', err));
+            }
             renderPendingRequests();
         }
         if (state.currentUser?.role === 'psych') renderBoxOccupancy();
@@ -271,8 +285,6 @@ export function cargarDatosIniciales() {
     cargarTextos();
     cargarLogo();
 }
-
-// js/modules/publico.js - AÑADE ESTO AL FINAL
 
 // Forzar carga de datos iniciales si no se hizo
 export function forzarCargaDatos() {

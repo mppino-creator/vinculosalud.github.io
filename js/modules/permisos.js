@@ -2,7 +2,7 @@
 import state from './state.js';
 
 // ============================================
-// FUNCIONES BÁSICAS DE PERMISOS - VERSIÓN CORREGIDA
+// FUNCIONES BÁSICAS DE PERMISOS - VERSIÓN SIMPLIFICADA
 // ============================================
 
 /**
@@ -13,53 +13,63 @@ import state from './state.js';
 export function puedeAccederAPaciente(patientId) {
   console.log('🔍 Verificando permisos para paciente:', patientId);
   
-  // 1. Verificar usuario
-  const user = state.currentUser;
-  if (!user) {
-    console.log('❌ No hay usuario logueado');
+  // 1. Verificar que tenemos el estado
+  if (!state) {
+    console.log('❌ state no disponible');
     return false;
   }
   
-  console.log('👤 Usuario actual:', user);
+  // 2. Verificar usuario - ACCESO DIRECTO a state.currentUser
+  const user = state.currentUser;
+  if (!user) {
+    console.log('❌ No hay usuario logueado (state.currentUser es null)');
+    return false;
+  }
+  
+  console.log('👤 Usuario encontrado:', user);
   console.log('👤 Role:', user.role);
   console.log('👤 user.data:', user.data);
   
-  // 2. Buscar paciente
-  const patient = state.patients.find(p => p.id == patientId);
-  if (!patient) {
-    console.log('❌ Paciente no encontrado');
+  // 3. Buscar paciente
+  if (!state.patients || !Array.isArray(state.patients)) {
+    console.log('❌ state.patients no disponible');
     return false;
   }
   
-  console.log('👤 Paciente:', patient.name, 'psychId:', patient.psychId);
+  const patient = state.patients.find(p => p.id == patientId);
+  if (!patient) {
+    console.log('❌ Paciente no encontrado. Pacientes disponibles:', state.patients.length);
+    return false;
+  }
   
-  // 3. Admin puede todo
-  if (user.data?.isAdmin === true) {
+  console.log('👤 Paciente encontrado:', patient.name, 'psychId:', patient.psychId);
+  
+  // 4. Admin puede todo
+  if (user.data?.isAdmin === true || user.role === 'admin') {
     console.log('✅ Es admin, acceso concedido');
     return true;
   }
   
-  // 4. Psicólogo (acepta varios formatos de role)
-  const esPsicologo = user.role === 'psych' || 
-                      user.role === 'psychologist' || 
-                      user.data?.role === 'psych' || 
-                      user.data?.role === 'psychologist';
+  // 5. Psicólogo - verificar si el paciente le pertenece
+  // Obtener el ID del usuario (puede estar en diferentes lugares)
+  const userId = user.data?.id || user.id;
   
-  if (esPsicologo) {
-    // Comparar IDs (usando == para comparar string con number)
-    const tieneAcceso = patient.psychId == user.data?.id;
-    console.log(`🔍 Comparando: psychId=${patient.psychId} (${typeof patient.psychId}) vs userId=${user.data?.id} (${typeof user.data?.id}) → ${tieneAcceso}`);
-    return tieneAcceso;
+  if (!userId) {
+    console.log('❌ No se pudo determinar el ID del usuario');
+    return false;
   }
   
-  console.log('❌ No cumple ninguna condición');
-  return false;
+  console.log(`🔍 Comparando: psychId=${patient.psychId} vs userId=${userId}`);
+  
+  // Comparación flexible (== para permitir string/number)
+  const tieneAcceso = patient.psychId == userId;
+  console.log(`✅ Resultado: ${tieneAcceso ? 'ACCESO CONCEDIDO' : 'ACCESO DENEGADO'}`);
+  
+  return tieneAcceso;
 }
 
 /**
  * Verifica si un usuario puede editar fichas de un paciente
- * @param {string|number} patientId - ID del paciente
- * @returns {boolean} true si puede editar
  */
 export function puedeEditarFichas(patientId) {
   return puedeAccederAPaciente(patientId);
@@ -67,20 +77,21 @@ export function puedeEditarFichas(patientId) {
 
 /**
  * Filtra un array para mostrar solo elementos de pacientes del usuario actual
- * @param {Array} array - Array a filtrar
- * @param {string} campoPatientId - Nombre del campo que contiene el patientId
- * @returns {Array} Array filtrado
  */
 export function filtrarSoloMisPacientes(array, campoPatientId = 'patientId') {
   const user = state.currentUser;
   if (!user) return [];
   
   // Admin ve todo
-  if (user.data?.isAdmin) return array;
+  if (user.data?.isAdmin || user.role === 'admin') return array;
+  
+  // Obtener ID del usuario
+  const userId = user.data?.id || user.id;
+  if (!userId) return [];
   
   // Psicólogo ve solo lo de sus pacientes
   const misPatientIds = state.patients
-    .filter(p => p.psychId == user.data.id)
+    .filter(p => p.psychId == userId)
     .map(p => p.id);
     
   return array.filter(item => misPatientIds.includes(item[campoPatientId]));
@@ -91,33 +102,18 @@ export function filtrarSoloMisPacientes(array, campoPatientId = 'patientId') {
 // ============================================
 
 export function puedeVerFichaIngreso(fichaIngresoId) {
-  const user = state.currentUser;
-  if (!user) return false;
-  
-  const ficha = state.fichasIngreso.find(f => f.id == fichaIngresoId);
-  if (!ficha) return false;
-  
-  return puedeAccederAPaciente(ficha.patientId);
+  const ficha = state.fichasIngreso?.find(f => f.id == fichaIngresoId);
+  return ficha ? puedeAccederAPaciente(ficha.patientId) : false;
 }
 
 export function puedeVerSesion(sesionId) {
-  const user = state.currentUser;
-  if (!user) return false;
-  
-  const sesion = state.sesiones.find(s => s.id == sesionId);
-  if (!sesion) return false;
-  
-  return puedeAccederAPaciente(sesion.patientId);
+  const sesion = state.sesiones?.find(s => s.id == sesionId);
+  return sesion ? puedeAccederAPaciente(sesion.patientId) : false;
 }
 
 export function puedeVerInforme(informeId) {
-  const user = state.currentUser;
-  if (!user) return false;
-  
-  const informe = state.informes.find(i => i.id == informeId);
-  if (!informe) return false;
-  
-  return puedeAccederAPaciente(informe.patientId);
+  const informe = state.informes?.find(i => i.id == informeId);
+  return informe ? puedeAccederAPaciente(informe.patientId) : false;
 }
 
 export function puedeEditarFichaIngreso(patientId) {
@@ -136,97 +132,27 @@ export function puedeEditarInforme(patientId) {
 // FUNCIONES DE PERMISOS POR ROL
 // ============================================
 
-export function getCurrentUserRole() {
-  return state.currentUser?.role || null;
-}
-
 export function isAdmin() {
-  return state.currentUser?.data?.isAdmin === true;
+  const user = state.currentUser;
+  return user?.data?.isAdmin === true || user?.role === 'admin';
 }
 
 export function isPsychologist() {
-  return state.currentUser?.role === 'psychologist' || 
-         state.currentUser?.role === 'psych' ||
-         state.currentUser?.data?.role === 'psychologist' || 
-         state.currentUser?.data?.role === 'psych';
-}
-
-export function isPatient() {
-  return state.currentUser?.role === 'patient';
-}
-
-// ============================================
-// FUNCIONES PARA FILTRAR COLECCIONES
-// ============================================
-
-export function filtrarFichasIngresoVisibles() {
   const user = state.currentUser;
-  if (!user) return [];
-  
-  if (user.data?.isAdmin) return state.fichasIngreso;
-  
-  const misPatientIds = state.patients
-    .filter(p => p.psychId == user.data.id)
-    .map(p => p.id);
-    
-  return state.fichasIngreso.filter(f => misPatientIds.includes(f.patientId));
-}
-
-export function filtrarSesionesVisibles() {
-  const user = state.currentUser;
-  if (!user) return [];
-  
-  if (user.data?.isAdmin) return state.sesiones;
-  
-  const misPatientIds = state.patients
-    .filter(p => p.psychId == user.data.id)
-    .map(p => p.id);
-    
-  return state.sesiones.filter(s => misPatientIds.includes(s.patientId));
-}
-
-export function filtrarInformesVisibles() {
-  const user = state.currentUser;
-  if (!user) return [];
-  
-  if (user.data?.isAdmin) return state.informes;
-  
-  const misPatientIds = state.patients
-    .filter(p => p.psychId == user.data.id)
-    .map(p => p.id);
-    
-  return state.informes.filter(i => misPatientIds.includes(i.patientId));
-}
-
-// ============================================
-// FUNCIONES DE VERIFICACIÓN RÁPIDA
-// ============================================
-
-export function psicologoPuedeAccederAPaciente(psychId, patientId) {
-  const patient = state.patients.find(p => p.id == patientId);
-  return patient && patient.psychId == psychId;
-}
-
-export function pacienteTieneFichas(patientId) {
-  return {
-    fichaIngreso: state.fichasIngreso.some(f => f.patientId == patientId),
-    sesiones: state.sesiones.some(s => s.patientId == patientId),
-    informes: state.informes.some(i => i.patientId == patientId)
-  };
+  return user?.role === 'psychologist' || user?.role === 'psych';
 }
 
 export function getPermisosResumen() {
   const user = state.currentUser;
   if (!user) return null;
   
+  const userId = user.data?.id || user.id;
+  
   return {
     esAdmin: isAdmin(),
     esPsicologo: isPsychologist(),
-    esPaciente: isPatient(),
-    puedeVerTodo: isAdmin(),
-    puedeEditarTodo: isAdmin(),
-    misPacientes: isPsychologist() 
-      ? state.patients.filter(p => p.psychId == user.data.id).length 
+    misPacientes: isPsychologist() && userId
+      ? state.patients?.filter(p => p.psychId == userId).length || 0
       : 0
   };
 }
@@ -247,12 +173,7 @@ if (typeof window !== 'undefined') {
     puedeEditarInforme,
     isAdmin,
     isPsychologist,
-    getPermisosResumen,
-    filtrarFichasIngresoVisibles,
-    filtrarSesionesVisibles,
-    filtrarInformesVisibles,
-    psicologoPuedeAccederAPaciente,
-    pacienteTieneFichas
+    getPermisosResumen
   };
 }
 

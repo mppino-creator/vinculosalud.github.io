@@ -271,3 +271,16 @@ export function cargarDatosIniciales() {
     cargarTextos();
     cargarLogo();
 }
+
+// js/modules/publico.js - AÑADE ESTO AL FINAL
+
+// Forzar carga de datos iniciales si no se hizo
+export function forzarCargaDatos() {
+    console.log('🔄 Forzando carga de datos...');
+    if (!window.state?.dataLoaded) {
+        cargarDatosIniciales();
+    }
+}
+
+// Exponer función global
+window.forzarCargaDatos = forzarCargaDatos;

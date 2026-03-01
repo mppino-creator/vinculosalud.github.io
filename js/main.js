@@ -1,6 +1,14 @@
-// js/main.js
-import { db } from './config/firebase.js';
+// js/main.js - PRINCIPIO DEL ARCHIVO
+
+// ============================================
+// EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
+// ============================================
 import * as state from './modules/state.js';
+window.state = state;
+console.log('✅ state expuesto globalmente inmediatamente');
+
+// AHORA importamos el resto
+import { db } from './config/firebase.js';
 import * as utils from './modules/utils.js';
 import * as auth from './modules/auth.js';
 import * as pacientes from './modules/pacientes.js';
@@ -21,13 +29,12 @@ import * as permisos from './modules/permisos.js';
 import * as pdfGenerator from './modules/pdfGenerator.js';
 
 // ============================================
-// EXPONER STATE GLOBALMENTE PARA DEPURACIÓN
+// 🆕 NUEVO MÓDULO DE ESTADÍSTICAS GLOBALES
 // ============================================
-window.state = state;
-console.log('✅ state expuesto globalmente');
+import * as estadisticas from './modules/estadisticas.js';
 
 // ============================================
-// EXPONER FUNCIONES GLOBALES INMEDIATAMENTE
+// EXPONER FUNCIONES GLOBALES
 // ============================================
 console.log('🚀 Exponiendo funciones globales...');
 
@@ -62,8 +69,8 @@ window.printPatientSummary = pacientes.printPatientSummary;
 window.searchPatientByRut = pacientes.searchPatientByRut;
 window.viewPatientDetails = pacientes.viewPatientDetails;
 window.renderPatients = pacientes.renderPatients;
-window.mostrarDetallePaciente = pacientes.mostrarDetallePaciente; // NUEVA
-window.cambiarPestana = pacientes.cambiarPestana; // NUEVA
+window.mostrarDetallePaciente = pacientes.mostrarDetallePaciente;
+window.cambiarPestana = pacientes.cambiarPestana;
 
 // Funciones de citas
 window.openBooking = citas.openBooking;
@@ -136,15 +143,26 @@ window.guardarInforme = informes.guardarInforme;
 window.obtenerInformesDePaciente = informes.obtenerInformesDePaciente;
 window.verFichaCompleta = pacientes.mostrarDetallePaciente; // ATAJO
 
+// ============================================
+// 🆕 EXPONER FUNCIONES DE ESTADÍSTICAS
+// ============================================
+window.estadisticas = estadisticas;
+window.getEstadisticasCompletas = estadisticas.getEstadisticasCompletas;
+window.renderPanelEstadisticas = estadisticas.renderPanelEstadisticas;
+window.exportarEstadisticasJSON = estadisticas.exportarEstadisticasJSON;
+window.exportarEstadisticasCSV = estadisticas.exportarEstadisticasCSV;
+window.imprimirEstadisticas = estadisticas.imprimirEstadisticas;
+
 // Funciones de utilidad
 window.filterProfessionals = publico.filterProfessionals;
 window.formatRut = utils.formatRut;
 window.validarRut = utils.validarRut;
 window.showToast = utils.showToast;
 
-// Verificar que switchTab se asignó correctamente
+// Verificar que las funciones principales se asignaron correctamente
 console.log('✅ switchTab asignada a window:', typeof window.switchTab);
 console.log('✅ verFichaCompleta asignada:', typeof window.verFichaCompleta);
+console.log('✅ estadisticas asignada:', typeof window.estadisticas);
 
 // ============================================
 // FUNCIÓN PARA GUARDAR EN FIREBASE
@@ -302,4 +320,4 @@ document.querySelectorAll('input, select, textarea').forEach(el => {
     });
 });
 
-console.log('✅ main.js cargado completamente con módulo de fichas clínicas');
+console.log('✅ main.js cargado completamente con módulo de fichas clínicas y estadísticas');

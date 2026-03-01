@@ -7,11 +7,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Vínculo Salud - Centro de Bienestar</title>
+    
+    <!-- Fuentes y estilos externos -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Estilos externos -->
     <link rel="stylesheet" href="css/estilos.css">
+    
+    <!-- 📄 LIBRERÍAS PARA PDF (agregadas antes que todo) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -830,6 +835,8 @@
             <div class="tab" id="adminTabFondo" style="display:none;" onclick="switchTab('fondo')">Fondo</div>
             <div class="tab" id="adminTabTextos" style="display:none;" onclick="switchTab('textos')">Textos</div>
             <div class="tab" id="adminTabLogo" style="display:none;" onclick="switchTab('logo')">Logo</div>
+            <!-- 🆕 NUEVA PESTAÑA DE ESTADÍSTICAS -->
+            <div class="tab" id="adminTabEstadisticas" style="display:none;" onclick="switchTab('estadisticas')">📊 Estadísticas</div>
             <div class="tab" id="adminTabReinicio" style="display:none;" onclick="switchTab('reinicio')">🔄 Reinicio</div>
             <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
             <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
@@ -1096,11 +1103,53 @@
             </div>
             <!-- Contenido simplificado -->
         </div>
+
+        <!-- 🆕 NUEVA PESTAÑA DE ESTADÍSTICAS GLOBALES -->
+        <div id="tabEstadisticas" class="tab-content">
+            <div id="estadisticasContainer">
+                <!-- El contenido se renderizará dinámicamente desde estadisticas.js -->
+                <div style="text-align:center; padding:40px;">
+                    <i class="fa fa-chart-line" style="font-size:48px; color:#ccc;"></i>
+                    <p style="margin:20px 0; color:#666;">Cargando estadísticas...</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- ÚNICO SCRIPT: main.js -->
 <script type="module" src="js/main.js"></script>
+
+<!-- SCRIPT DE EMERGENCIA PARA FORZAR STATE -->
+<script>
+(function() {
+    console.log('🚨 SCRIPT DE EMERGENCIA ACTIVADO');
+    
+    // Verificar state cada 100ms
+    const checkState = setInterval(function() {
+        if (window.state) {
+            console.log('✅ state detectado por script de emergencia');
+            clearInterval(checkState);
+            
+            // Forzar carga de datos iniciales
+            if (window.publico && window.publico.cargarDatosIniciales) {
+                window.publico.cargarDatosIniciales();
+            }
+            
+            // Si hay usuario logueado, forzar renderizado
+            if (window.state.currentUser && typeof window.renderPatients === 'function') {
+                setTimeout(() => window.renderPatients(), 500);
+            }
+        }
+    }, 100);
+    
+    // Timeout de seguridad
+    setTimeout(function() {
+        clearInterval(checkState);
+        console.log('⚠️ Timeout esperando state');
+    }, 5000);
+})();
+</script>
 
 <!-- Funciones de vista previa (SOLO estas, que no pueden ir en módulos) -->
 <script>
@@ -1186,90 +1235,46 @@
     };
 </script>
 
-<!-- SCRIPT DE DIAGNÓSTICO UNIFICADO -->
+<!-- SCRIPT DE DIAGNÓSTICO CORREGIDO (espera a que state esté listo) -->
 <script>
-    (function() {
-        console.log('🔍 Iniciando diagnóstico de Vínculo Salud...');
-        
-        // Verificación inmediata
-        console.log('📊 Estado inicial - switchTab:', typeof window.switchTab);
-        
-        // Verificar después de 2 segundos
-        setTimeout(() => {
-            console.log('⏱️ Diagnóstico después de 2 segundos:');
-            console.log('- switchTab:', typeof window.switchTab);
-            console.log('- renderPatients:', typeof window.renderPatients);
-            console.log('- showNewPatientModal:', typeof window.showNewPatientModal);
-            console.log('- state disponible:', typeof window.state !== 'undefined');
-            
-            // Si estamos en dashboard, probar renderizado
-            const dashboard = document.getElementById('dashboard');
-            if (dashboard && dashboard.style.display === 'block') {
-                console.log('📋 Dashboard visible, ejecutando renderPatients...');
-                if (typeof window.renderPatients === 'function') {
-                    window.renderPatients();
-                }
-            }
-        }, 2000);
-        
-        // Verificar después de 4 segundos
-        setTimeout(() => {
-            console.log('⏱️ Diagnóstico después de 4 segundos:');
-            if (window.state) {
-                console.log('📊 Total pacientes:', window.state.patients?.length || 0);
-                console.log('📊 Total citas:', window.state.appointments?.length || 0);
-                console.log('👥 Total profesionales:', window.state.staff?.length || 0);
-            }
-        }, 4000);
-    })();
-
-    // Función de diagnóstico manual
-    window.diagnostico = function() {
-        console.log('🔍 DIAGNÓSTICO MANUAL');
-        console.log('=====================');
-        
+(function() {
+    console.log('🔍 Iniciando diagnóstico de Vínculo Salud...');
+    
+    function ejecutarDiagnostico() {
         if (!window.state) {
-            console.error('❌ state no disponible');
-            return;
+            console.log('⏳ Esperando state...');
+            return false;
         }
         
-        console.log('✅ state disponible');
-        console.log('👤 Current User:', window.state.currentUser);
-        console.log('📋 Pacientes:', window.state.patients?.length || 0);
-        console.log('📅 Citas:', window.state.appointments?.length || 0);
-        console.log('👥 Profesionales:', window.state.staff?.length || 0);
+        console.log('📊 DIAGNÓSTICO COMPLETO:');
+        console.log('- switchTab:', typeof window.switchTab);
+        console.log('- renderPatients:', typeof window.renderPatients);
+        console.log('- showNewPatientModal:', typeof window.showNewPatientModal);
+        console.log('- verFichaCompleta:', typeof window.verFichaCompleta);
+        console.log('- state.patients:', window.state.patients?.length || 0);
+        console.log('- state.currentUser:', window.state.currentUser ? 'Sí' : 'No');
+        console.log('- state.fichasIngreso:', window.state.fichasIngreso?.length || 0);
+        console.log('- state.sesiones:', window.state.sesiones?.length || 0);
         
-        // Buscar a Marcelo
-        const marcelo = window.state.staff?.find(s => s.name?.toLowerCase().includes('marcelo'));
-        if (marcelo) {
-            console.log('✅ Marcelo encontrado:', { id: marcelo.id, name: marcelo.name });
-            
-            const pacientesMarcelo = window.state.patients?.filter(p => p.psychId == marcelo.id) || [];
-            console.log('📋 Pacientes de Marcelo:', pacientesMarcelo.length);
-            
-            const citasMarcelo = window.state.appointments?.filter(a => a.psychId == marcelo.id) || [];
-            console.log('📅 Citas de Marcelo:', citasMarcelo.length);
-            
-            const ingresos = citasMarcelo.reduce((sum, a) => sum + (a.price || 0), 0);
-            console.log('💰 Ingresos de Marcelo:', ingresos);
-        } else {
-            console.log('❌ Marcelo no encontrado');
-        }
+        return true;
+    }
+    
+    // Intentar cada 500ms
+    let intentos = 0;
+    const intervalo = setInterval(function() {
+        intentos++;
         
-        console.log('=====================');
-    };
-
-    // Función para probar renderizado manual
-    window.probarPacientes = function() {
-        console.log('🧪 Renderizando pacientes manualmente...');
-        if (typeof window.renderPatients === 'function') {
-            window.renderPatients();
-            console.log('✅ renderPatients ejecutado');
-        } else {
-            console.error('❌ renderPatients no disponible');
+        if (ejecutarDiagnostico()) {
+            clearInterval(intervalo);
+            console.log('✅ Diagnóstico completado exitosamente');
+        } else if (intentos >= 20) { // 10 segundos máximo
+            clearInterval(intervalo);
+            console.error('❌ Diagnóstico falló después de 20 intentos');
         }
-    };
+    }, 500);
+})();
 </script>
+
 <!-- ESTILOS DE EMERGENCIA PARA VER LOS PACIENTES -->
 <style>
     /* Forzar visibilidad del contenedor de pacientes */
@@ -1343,22 +1348,34 @@
         padding: 8px 0 !important;
         color: #1e293b !important;
     }
+    
+    /* Botón de ficha clínica */
+    .btn-icon {
+        display: inline-block !important;
+        padding: 10px 16px !important;
+        border-radius: 8px !important;
+        border: none !important;
+        cursor: pointer !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        text-align: center !important;
+    }
 </style>
 
 <!-- SCRIPT DE VERIFICACIÓN VISUAL -->
 <script>
 (function() {
-    console.log('🔧 Aplicando estilos de emergencia...');
+    console.log('🔧 Aplicando verificación visual...');
     
     // Verificar cada 2 segundos si los pacientes se muestran
-    setTimeout(function verificar() {
+    function verificarPacientes() {
         const container = document.getElementById('patientsList');
         const cards = document.querySelectorAll('.patient-card');
         
-        console.log('📊 Verificación:', {
+        console.log('📊 Verificación visual:', {
             containerExiste: !!container,
             cantidadTarjetas: cards.length,
-            containerHTML: container ? container.innerHTML.substring(0, 100) : 'sin contenedor'
+            statePacientes: window.state?.patients?.length || 0
         });
         
         if (cards.length > 0) {
@@ -1367,83 +1384,73 @@
             // Resaltar las tarjetas
             cards.forEach((card, i) => {
                 card.style.boxShadow = '0 0 0 3px #ff3b30';
-                console.log(`   Tarjeta ${i+1}: ${card.querySelector('.patient-name')?.textContent}`);
+                const nombre = card.querySelector('.patient-name')?.textContent;
+                console.log(`   Tarjeta ${i+1}: ${nombre}`);
             });
-        } else {
-            console.log('❌ No se encontraron tarjetas de paciente');
+        } else if (window.state?.patients?.length > 0) {
+            console.log('❌ Hay pacientes en state pero no en el DOM');
             
             // Intentar renderizar manualmente
             if (typeof window.renderPatients === 'function') {
                 console.log('🔄 Re-renderizando...');
                 window.renderPatients();
-                
-                // Verificar nuevamente
-                setTimeout(verificar, 1000);
             }
         }
-    }, 3000);
+    }
+    
+    // Ejecutar después de 2 segundos
+    setTimeout(verificarPacientes, 2000);
+    setTimeout(verificarPacientes, 4000);
 })();
 </script>
 
-<!-- FIX PARA ESTADÍSTICAS Y CITAS -->
+<!-- FIX PARA ESTADÍSTICAS Y CITAS (CORREGIDO) -->
 <script>
 (function() {
     console.log('🔧 Instalando fix de estadísticas...');
     
-    // Forzar actualización cada vez que se carga una pestaña
-    const originalSwitch = window.switchTab;
-    window.switchTab = function(tabName) {
-        if (originalSwitch) originalSwitch(tabName);
-        
-        // Actualizar estadísticas después de cambiar de pestaña
-        setTimeout(() => {
-            if (tabName === 'citas' || tabName === 'solicitudes') {
-                if (typeof window.updateStats === 'function') {
-                    window.updateStats();
-                }
-            }
-        }, 200);
-    };
-    
-    // Forzar actualización inmediata
-    setTimeout(() => {
-        if (typeof window.updateStats === 'function') {
-            window.updateStats();
+    function instalarFix() {
+        if (!window.switchTab) {
+            setTimeout(instalarFix, 200);
+            return;
         }
-    }, 1000);
+        
+        // Guardar referencia original
+        const originalSwitch = window.switchTab;
+        
+        // Sobrescribir
+        window.switchTab = function(tabName) {
+            console.log('🔄 Cambiando a pestaña:', tabName);
+            
+            // Llamar original
+            if (originalSwitch) {
+                originalSwitch(tabName);
+            }
+            
+            // Actualizar después de cambiar
+            setTimeout(() => {
+                if (tabName === 'pacientes' && typeof window.renderPatients === 'function') {
+                    window.renderPatients();
+                }
+                if (tabName === 'citas' && typeof window.citas?.renderAppointments === 'function') {
+                    window.citas.renderAppointments();
+                }
+                if (tabName === 'solicitudes' && typeof window.citas?.renderPendingRequests === 'function') {
+                    window.citas.renderPendingRequests();
+                }
+                // 🆕 Renderizar estadísticas si es la pestaña correspondiente
+                if (tabName === 'estadisticas' && typeof window.estadisticas?.renderPanelEstadisticas === 'function') {
+                    window.estadisticas.renderPanelEstadisticas();
+                }
+            }, 300);
+        };
+        
+        console.log('✅ Fix de pestañas instalado con estadísticas');
+    }
     
-    console.log('✅ Fix instalado');
+    instalarFix();
 })();
 </script>
 
-// Al final de citas.js, después de todas las funciones existentes
-
-// Sobrescribir renderPendingRequests para asegurar botones visibles
-const originalRenderPendingRequests = renderPendingRequests;
-renderPendingRequests = function() {
-    if (originalRenderPendingRequests) {
-        originalRenderPendingRequests();
-        
-        // Asegurar que los botones tengan estilos
-        setTimeout(() => {
-            const table = document.getElementById('pendingRequestsTable');
-            if (!table) return;
-            
-            const confirmButtons = table.querySelectorAll('button[onclick*="showConfirmRequestModal"]');
-            confirmButtons.forEach(btn => {
-                btn.style.background = '#34c759';
-                btn.style.color = 'white';
-                btn.innerHTML = '<i class="fa fa-check"></i> Confirmar';
-            });
-            
-            const rejectButtons = table.querySelectorAll('button[onclick*="rejectRequest"]');
-            rejectButtons.forEach(btn => {
-                btn.style.background = '#ff3b30';
-                btn.style.color = 'white';
-                btn.innerHTML = '<i class="fa fa-times"></i> Rechazar';
-            });
-        }, 50);
-    }
-};
 </body>
 </html>

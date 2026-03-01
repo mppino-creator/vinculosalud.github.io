@@ -389,7 +389,7 @@ function guardarEspecialidades() {
 }
 
 // ============================================
-// CONFIGURACIÓN PERSONAL DEL PSICÓLOGO (CORREGIDA)
+// CONFIGURACIÓN PERSONAL DEL PSICÓLOGO
 // ============================================
 
 export function loadMyConfig() {
@@ -438,26 +438,182 @@ export function loadMyConfig() {
     if (myBankRut) myBankRut.value = bank.rut || '';
     if (myBankEmail) myBankEmail.value = bank.email || '';
 
-    // Métodos de pago (pueden no existir en el HTML)
-    const methods = psych.paymentMethods || state.globalPaymentMethods;
-    
-    // Verificar cada elemento antes de asignar
-    const myTransfer = document.getElementById('myTransfer');
-    const myCardPresencial = document.getElementById('myCardPresencial');
-    const myCardOnline = document.getElementById('myCardOnline');
-    const myCash = document.getElementById('myCash');
-    const myMercadoPago = document.getElementById('myMercadoPago');
-    const myWebpay = document.getElementById('myWebpay');
-
-    if (myTransfer) myTransfer.checked = methods.transfer !== false;
-    if (myCardPresencial) myCardPresencial.checked = methods.cardPresencial !== false;
-    if (myCardOnline) myCardOnline.checked = methods.cardOnline || false;
-    if (myCash) myCash.checked = methods.cash !== false;
-    if (myMercadoPago) myMercadoPago.checked = methods.mercadopago || false;
-    if (myWebpay) myWebpay.checked = methods.webpay || false;
+    // ============================================
+    // NUEVO: Mostrar estadísticas del psicólogo
+    // ============================================
+    mostrarEstadisticasPsicologo(psych.id);
 
     console.log('✅ Configuración cargada');
 }
+
+// ============================================
+// NUEVAS FUNCIONES PARA ESTADÍSTICAS PERSONALES
+// ============================================
+
+/**
+ * Muestra estadísticas del psicólogo en su configuración
+ * @param {string} psychId - ID del psicólogo
+ */
+function mostrarEstadisticasPsicologo(psychId) {
+    const statsContainer = document.getElementById('psychStatsContainer');
+    if (!statsContainer) return;
+
+    // Obtener pacientes del psicólogo
+    const misPacientes = state.patients.filter(p => p.psychId == psychId);
+    const misPatientIds = misPacientes.map(p => p.id);
+
+    // Obtener citas
+    const misCitas = state.appointments.filter(a => a.psychId == psychId);
+    const citasPagadas = misCitas.filter(a => a.paymentStatus === 'pagado');
+    
+    // ============================================
+    // Estadísticas de fichas clínicas
+    // ============================================
+    const fichasIngreso = state.fichasIngreso.filter(f => misPatientIds.includes(f.patientId));
+    const sesiones = state.sesiones.filter(s => misPatientIds.includes(s.patientId));
+    const informes = state.informes.filter(i => misPatientIds.includes(i.patientId));
+
+    // Calcular ingresos
+    const ingresosTotales = citasPagadas.reduce((sum, a) => sum + (a.price || 0), 0);
+    const ingresosMes = citasPagadas
+        .filter(a => {
+            const fecha = new Date(a.date);
+            const ahora = new Date();
+            return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
+        })
+        .reduce((sum, a) => sum + (a.price || 0), 0);
+
+    // Renderizar estadísticas
+    statsContainer.innerHTML = `
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 12px; margin: 20px 0;">
+            <h4 style="margin-bottom: 15px;">📊 Mis Estadísticas</h4>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: var(--azul-apple);">${misPacientes.length}</div>
+                    <div style="font-size: 12px; color: #666;">Pacientes</div>
+                </div>
+                
+                <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: var(--verde-exito);">${sesiones.length}</div>
+                    <div style="font-size: 12px; color: #666;">Sesiones Registradas</div>
+                </div>
+                
+                <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: var(--naranja-aviso);">${fichasIngreso.length}</div>
+                    <div style="font-size: 12px; color: #666;">Fichas de Ingreso</div>
+                </div>
+                
+                <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: var(--azul-medico);">${informes.length}</div>
+                    <div style="font-size: 12px; color: #666;">Informes</div>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 10px;">
+                    <div style="font-size: 14px; color: #666;">Ingresos Totales</div>
+                    <div style="font-size: 20px; font-weight: bold;">$${ingresosTotales.toLocaleString()}</div>
+                </div>
+                
+                <div style="background: white; padding: 15px; border-radius: 10px;">
+                    <div style="font-size: 14px; color: #666;">Ingresos este Mes</div>
+                    <div style="font-size: 20px; font-weight: bold;">$${ingresosMes.toLocaleString()}</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 10px;">
+                    <div style="font-size: 14px; color: #666;">Promedio de sesiones por paciente</div>
+                    <div style="font-size: 20px; font-weight: bold;">
+                        ${misPacientes.length > 0 ? (sesiones.length / misPacientes.length).toFixed(1) : 0}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Obtiene los últimos pacientes atendidos con sus últimas sesiones
+ * @param {string} psychId - ID del psicólogo
+ * @param {number} limit - Límite de resultados
+ * @returns {Array} Lista de pacientes con última sesión
+ */
+export function getRecentPatientsWithSessions(psychId, limit = 5) {
+    const misPacientes = state.patients.filter(p => p.psychId == psychId);
+    
+    return misPacientes
+        .map(patient => {
+            const sesiones = state.sesiones
+                .filter(s => s.patientId == patient.id)
+                .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion));
+            
+            return {
+                ...patient,
+                ultimaSesion: sesiones.length > 0 ? sesiones[0] : null,
+                totalSesiones: sesiones.length,
+                tieneFichaIngreso: state.fichasIngreso.some(f => f.patientId == patient.id)
+            };
+        })
+        .sort((a, b) => {
+            if (!a.ultimaSesion) return 1;
+            if (!b.ultimaSesion) return -1;
+            return new Date(b.ultimaSesion.fechaAtencion) - new Date(a.ultimaSesion.fechaAtencion);
+        })
+        .slice(0, limit);
+}
+
+/**
+ * Exporta la configuración personal del psicólogo
+ * @returns {Object} Configuración completa
+ */
+export function exportMyConfig() {
+    if (!state.currentUser?.data) return null;
+    
+    const psych = state.currentUser.data;
+    
+    return {
+        personal: {
+            nombre: psych.name,
+            email: psych.email,
+            especialidades: psych.spec,
+            whatsapp: psych.whatsapp,
+            instagram: psych.instagram
+        },
+        precios: {
+            online: psych.priceOnline,
+            presencial: psych.pricePresencial
+        },
+        bancarios: psych.bankDetails || {},
+        metodosPago: psych.paymentMethods || state.globalPaymentMethods,
+        estadisticas: {
+            totalPacientes: state.patients.filter(p => p.psychId == psych.id).length,
+            totalSesiones: state.sesiones.filter(s => {
+                const patient = state.patients.find(p => p.id == s.patientId);
+                return patient && patient.psychId == psych.id;
+            }).length
+        }
+    };
+}
+
+// ============================================
+// FUNCIÓN PARA ACTUALIZAR TODOS LOS DATOS DE PERSONALIZACIÓN
+// ============================================
+
+export function cargarTodaPersonalizacion() {
+    console.log('🎨 Cargando toda la personalización...');
+    cargarLogo();
+    cargarTextos();
+    cargarFondo();
+    cargarMetodosPago();
+    cargarEspecialidades();
+    console.log('✅ Personalización cargada');
+}
+
+// ============================================
+// CONFIGURACIÓN PERSONAL (continuación)
+// ============================================
 
 export function saveMyConfig() {
     console.log('💾 Guardando configuración personal...');
@@ -525,8 +681,22 @@ export function saveMyConfig() {
         main.save();
         console.log('✅ Configuración guardada en Firebase');
         showToast('Configuración guardada', 'success');
+        
+        // Actualizar estadísticas
+        mostrarEstadisticasPsicologo(psych.id);
     }).catch(err => {
         console.error('❌ Error al guardar:', err);
         showToast('Error al guardar la configuración', 'error');
     });
 }
+
+// ============================================
+// EXPORTAR FUNCIONES AL OBJETO WINDOW
+// ============================================
+if (typeof window !== 'undefined') {
+    window.getRecentPatientsWithSessions = getRecentPatientsWithSessions;
+    window.exportMyConfig = exportMyConfig;
+    window.cargarTodaPersonalizacion = cargarTodaPersonalizacion;
+}
+
+console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas');

@@ -74,8 +74,230 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
 }
 
 // ============================================
-// RESTO DE FUNCIONES (formatRut, validarRut, showToast, getPublicStaff)
+// FUNCIONES DE UTILIDAD PARA FICHAS CLÍNICAS
 // ============================================
+
+/**
+ * Formatea una fecha al formato DD-MM-YYYY
+ * @param {Date|string} date - Fecha a formatear
+ * @returns {string} Fecha formateada
+ */
+export function formatDate(date) {
+  if (!date) return '';
+  
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '';
+  
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  
+  return `${day}-${month}-${year}`;
+}
+
+/**
+ * Formatea una fecha al formato YYYY-MM-DD para inputs type="date"
+ * @param {Date|string} date - Fecha a formatear
+ * @returns {string} Fecha en formato YYYY-MM-DD
+ */
+export function formatDateForInput(date) {
+  if (!date) return '';
+  
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '';
+  
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Obtiene el nombre del profesional por su ID
+ * @param {string|number} psychId - ID del profesional
+ * @returns {string} Nombre del profesional o 'Desconocido'
+ */
+export function getPsychNameById(psychId) {
+  if (!psychId) return 'No asignado';
+  
+  const psych = state.staff.find(p => p.id == psychId);
+  return psych ? psych.name : 'Desconocido';
+}
+
+/**
+ * Obtiene el nombre del paciente por su ID
+ * @param {string|number} patientId - ID del paciente
+ * @returns {string} Nombre del paciente o 'Desconocido'
+ */
+export function getPatientNameById(patientId) {
+  if (!patientId) return 'Desconocido';
+  
+  const patient = state.patients.find(p => p.id == patientId);
+  return patient ? patient.name : 'Desconocido';
+}
+
+/**
+ * Calcula la edad a partir de la fecha de nacimiento
+ * @param {string} birthdate - Fecha de nacimiento
+ * @returns {number} Edad calculada
+ */
+export function calculateAge(birthdate) {
+  if (!birthdate) return 0;
+  
+  const today = new Date();
+  const birthDate = new Date(birthdate);
+  if (isNaN(birthDate.getTime())) return 0;
+  
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age;
+}
+
+/**
+ * Obtiene las iniciales de un nombre
+ * @param {string} name - Nombre completo
+ * @returns {string} Iniciales (máx 2 caracteres)
+ */
+export function getInitials(name) {
+  if (!name) return '??';
+  
+  const parts = name.split(' ').filter(p => p.length > 0);
+  if (parts.length === 0) return '??';
+  
+  if (parts.length === 1) {
+    return parts[0].substring(0, 2).toUpperCase();
+  }
+  
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+/**
+ * Trunca un texto a una longitud máxima
+ * @param {string} text - Texto a truncar
+ * @param {number} maxLength - Longitud máxima
+ * @returns {string} Texto truncado
+ */
+export function truncateText(text, maxLength = 100) {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  
+  return text.substring(0, maxLength) + '...';
+}
+
+/**
+ * Genera un ID único
+ * @returns {string} ID único
+ */
+export function generateId() {
+  return Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+}
+
+/**
+ * Verifica si un objeto está vacío
+ * @param {Object} obj - Objeto a verificar
+ * @returns {boolean} true si está vacío
+ */
+export function isEmpty(obj) {
+  return !obj || Object.keys(obj).length === 0;
+}
+
+/**
+ * Formatea un número como moneda CLP
+ * @param {number} amount - Monto a formatear
+ * @returns {string} Monto formateado
+ */
+export function formatCurrency(amount) {
+  if (amount === undefined || amount === null) return '$0';
+  
+  return '$' + amount.toLocaleString('es-CL');
+}
+
+/**
+ * Obtiene el color según el estado de pago
+ * @param {string} status - Estado del pago
+ * @returns {string} Color en CSS
+ */
+export function getPaymentStatusColor(status) {
+  switch(status) {
+    case 'pagado':
+      return 'var(--verde-exito)';
+    case 'pendiente':
+      return 'var(--naranja-aviso)';
+    case 'rechazado':
+      return 'var(--rojo-alerta)';
+    default:
+      return 'var(--text-light)';
+  }
+}
+
+/**
+ * Obtiene el icono según el estado de pago
+ * @param {string} status - Estado del pago
+ * @returns {string} Clase de Font Awesome
+ */
+export function getPaymentStatusIcon(status) {
+  switch(status) {
+    case 'pagado':
+      return 'fa-check-circle';
+    case 'pendiente':
+      return 'fa-clock';
+    case 'rechazado':
+      return 'fa-times-circle';
+    default:
+      return 'fa-question-circle';
+  }
+}
+
+/**
+ * Descarga un archivo JSON
+ * @param {Object} data - Datos a descargar
+ * @param {string} filename - Nombre del archivo
+ */
+export function downloadJSON(data, filename = 'datos.json') {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Abre un modal
+ * @param {string} modalId - ID del modal
+ */
+export function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+/**
+ * Cierra un modal
+ * @param {string} modalId - ID del modal
+ */
+export function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// ============================================
+// FUNCIONES ORIGINALES (SIN CAMBIOS)
+// ============================================
+
 export function formatRut(input) {
   let value = input.value.replace(/[^0-9kK]/g, '');
   if (value.length <= 1) {
@@ -126,3 +348,21 @@ export function showToast(message, type = 'success', duration = 3000) {
 export function getPublicStaff() {
   return state.staff.filter(s => s.spec && s.spec.length > 0 && !s.isHiddenAdmin);
 }
+
+// ============================================
+// EXPORTAR FUNCIONES AL OBJETO WINDOW
+// ============================================
+if (typeof window !== 'undefined') {
+  window.formatRut = formatRut;
+  window.validarRut = validarRut;
+  window.showToast = showToast;
+  window.formatCurrency = formatCurrency;
+  window.getInitials = getInitials;
+  window.truncateText = truncateText;
+  window.formatDate = formatDate;
+  window.calculateAge = calculateAge;
+  window.getPsychNameById = getPsychNameById;
+  window.getPatientNameById = getPatientNameById;
+}
+
+console.log('✅ utils.js cargado con funciones de fichas clínicas');

@@ -1,6 +1,9 @@
 // js/modules/state.js
 // Variables globales compartidas entre todos los módulos
 
+// ============================================
+// VARIABLES EXISTENTES
+// ============================================
 export let staff = [];
 export let patients = [];
 export let appointments = [];
@@ -37,7 +40,28 @@ export let selectedPatientForTherapist = null;
 export let dataLoaded = false;
 export const EDIT_HOURS = 24;
 
-// Funciones para actualizar las variables (cuando sea necesario)
+// ============================================
+// NUEVAS VARIABLES PARA FICHAS CLÍNICAS
+// ============================================
+export let fichasIngreso = [];           // Todas las fichas de ingreso
+export let sesiones = [];                // Todas las notas de evolución por sesión
+export let informes = [];                // Todos los informes (psicodiagnóstico/cierre)
+
+// Estado UI para fichas
+export let ui = {
+    fichas: {
+        pacienteSeleccionadoId: null,
+        fichaActivaId: null,
+        sesionActivaId: null,
+        informeActivoId: null,
+        modoEdicion: false,
+        pestanaActiva: 'perfil' // 'perfil' | 'fichaIngreso' | 'sesiones' | 'informes'
+    }
+};
+
+// ============================================
+// FUNCIONES PARA ACTUALIZAR VARIABLES EXISTENTES
+// ============================================
 export function setStaff(newStaff) { staff = newStaff; }
 export function setPatients(newPatients) { patients = newPatients; }
 export function setAppointments(newApps) { appointments = newApps; }
@@ -49,7 +73,15 @@ export function setHeroTexts(newTexts) { heroTexts = newTexts; }
 export function setGlobalPaymentMethods(newMethods) { globalPaymentMethods = newMethods; }
 export function setBackgroundImage(newImg) { backgroundImage = newImg; }
 export function setLogoImage(newLogo) { logoImage = newLogo; }
-export function setCurrentUser(user) { currentUser = user; }
+export function setCurrentUser(user) { 
+    currentUser = user; 
+    // Guardar en localStorage para persistencia
+    if (user) {
+        localStorage.setItem('vinculoCurrentUser', JSON.stringify(user));
+    } else {
+        localStorage.removeItem('vinculoCurrentUser');
+    }
+}
 export function setSelectedPsych(psych) { selectedPsych = psych; }
 export function setCurrentRating(rating) { currentRating = rating; }
 export function setGeneratedSlots(slots) { generatedSlots = slots; }
@@ -63,38 +95,276 @@ export function setTempQrData(data) { tempQrData = data; }
 export function setSelectedPatientForTherapist(patient) { selectedPatientForTherapist = patient; }
 export function setDataLoaded(loaded) { dataLoaded = loaded; }
 
-// js/modules/state.js - AÑADE ESTO AL FINAL
-
 // ============================================
-// NUEVAS VARIABLES DE ESTADO PARA FICHAS CLÍNICAS
+// NUEVAS FUNCIONES PARA FICHAS CLÍNICAS
 // ============================================
+export function setFichasIngreso(newFichas) { fichasIngreso = newFichas; }
+export function setSesiones(newSesiones) { sesiones = newSesiones; }
+export function setInformes(newInformes) { informes = newInformes; }
 
-// Colecciones nuevas
-state.fichasIngreso = [];           // Todas las fichas de ingreso
-state.sesiones = [];                // Todas las notas de evolución por sesión
-state.informes = [];                // Todos los informes (psicodiagnóstico/cierre)
+// Función para agregar una ficha de ingreso
+export function addFichaIngreso(ficha) {
+    fichasIngreso.push(ficha);
+    return ficha;
+}
 
-// Estado UI para fichas
-state.ui.fichas = {
-  pacienteSeleccionadoId: null,
-  fichaActivaId: null,
-  sesionActivaId: null,
-  informeActivoId: null,
-  modoEdicion: false,
-  pestanaActiva: 'perfil' // 'perfil' | 'fichaIngreso' | 'sesiones' | 'informes'
-};
+// Función para actualizar una ficha de ingreso
+export function updateFichaIngreso(id, updatedFicha) {
+    const index = fichasIngreso.findIndex(f => f.id === id);
+    if (index !== -1) {
+        fichasIngreso[index] = { ...fichasIngreso[index], ...updatedFicha };
+        return fichasIngreso[index];
+    }
+    return null;
+}
+
+// Función para agregar una sesión/nota de evolución
+export function addSesion(sesion) {
+    sesiones.push(sesion);
+    return sesion;
+}
+
+// Función para actualizar una sesión
+export function updateSesion(id, updatedSesion) {
+    const index = sesiones.findIndex(s => s.id === id);
+    if (index !== -1) {
+        sesiones[index] = { ...sesiones[index], ...updatedSesion };
+        return sesiones[index];
+    }
+    return null;
+}
+
+// Función para agregar un informe
+export function addInforme(informe) {
+    informes.push(informe);
+    return informe;
+}
+
+// Función para actualizar un informe
+export function updateInforme(id, updatedInforme) {
+    const index = informes.findIndex(i => i.id === id);
+    if (index !== -1) {
+        informes[index] = { ...informes[index], ...updatedInforme };
+        return informes[index];
+    }
+    return null;
+}
+
+// Función para obtener fichas de ingreso de un paciente específico
+export function getFichasIngresoByPatient(patientId) {
+    return fichasIngreso.filter(f => f.patientId == patientId);
+}
+
+// Función para obtener sesiones de un paciente específico (ordenadas por fecha)
+export function getSesionesByPatient(patientId) {
+    return sesiones
+        .filter(s => s.patientId == patientId)
+        .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion));
+}
+
+// Función para obtener informes de un paciente específico
+export function getInformesByPatient(patientId) {
+    return informes.filter(i => i.patientId == patientId);
+}
 
 // Función para limpiar estado de fichas (útil al cambiar de paciente)
-state.limpiarEstadoFichas = () => {
-  state.ui.fichas = {
-    pacienteSeleccionadoId: null,
-    fichaActivaId: null,
-    sesionActivaId: null,
-    informeActivoId: null,
-    modoEdicion: false,
-    pestanaActiva: 'perfil'
-  };
+export function limpiarEstadoFichas() {
+    ui.fichas = {
+        pacienteSeleccionadoId: null,
+        fichaActivaId: null,
+        sesionActivaId: null,
+        informeActivoId: null,
+        modoEdicion: false,
+        pestanaActiva: 'perfil'
+    };
+}
+
+// Función para establecer la pestaña activa
+export function setPestanaActiva(pestana) {
+    ui.fichas.pestanaActiva = pestana;
+}
+
+// Función para establecer el paciente seleccionado
+export function setPacienteSeleccionado(patientId) {
+    ui.fichas.pacienteSeleccionadoId = patientId;
+    limpiarEstadoFichas(); // Limpia el resto pero mantiene el paciente
+    ui.fichas.pacienteSeleccionadoId = patientId;
+}
+
+// ============================================
+// FUNCIONES DE UTILIDAD GENERAL
+// ============================================
+
+// Función para reiniciar todo el estado (útil para logout)
+export function resetAllState() {
+    staff = [];
+    patients = [];
+    appointments = [];
+    boxes = [];
+    messages = [];
+    pendingRequests = [];
+    specialties = [];
+    heroTexts = {
+        title: 'Bienestar a tu alcance',
+        subtitle: 'Encuentra al profesional ideal y agenda tu sesión'
+    };
+    globalPaymentMethods = {
+        transfer: true,
+        cardPresencial: true,
+        cardOnline: false,
+        cash: true,
+        mercadopago: false,
+        webpay: false
+    };
+    backgroundImage = { url: '', opacity: 10 };
+    logoImage = { url: '', text: 'Vínculo Salud' };
+    selectedPsych = null;
+    currentUser = null;
+    currentRating = 5;
+    generatedSlots = [];
+    selectedWeekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'];
+    selectedBoxId = null;
+    selectedTherapistBoxId = null;
+    tempImageData = null;
+    tempBackgroundImageData = null;
+    tempLogoData = null;
+    tempQrData = null;
+    selectedPatientForTherapist = null;
+    dataLoaded = false;
+    
+    // Nuevas variables
+    fichasIngreso = [];
+    sesiones = [];
+    informes = [];
+    ui = {
+        fichas: {
+            pacienteSeleccionadoId: null,
+            fichaActivaId: null,
+            sesionActivaId: null,
+            informeActivoId: null,
+            modoEdicion: false,
+            pestanaActiva: 'perfil'
+        }
+    };
+    
+    localStorage.removeItem('vinculoCurrentUser');
+}
+
+// Función para obtener un resumen del estado (útil para debugging)
+export function getStateSummary() {
+    return {
+        staff: staff.length,
+        patients: patients.length,
+        appointments: appointments.length,
+        boxes: boxes.length,
+        messages: messages.length,
+        pendingRequests: pendingRequests.length,
+        specialties: specialties.length,
+        fichasIngreso: fichasIngreso.length,
+        sesiones: sesiones.length,
+        informes: informes.length,
+        currentUser: currentUser ? `${currentUser.data?.name} (${currentUser.role})` : 'No logueado',
+        dataLoaded
+    };
+}
+
+// ============================================
+// EXPORTAR TODO COMO OBJETO ÚNICO (para compatibilidad)
+// ============================================
+const state = {
+    // Variables
+    staff,
+    patients,
+    appointments,
+    boxes,
+    messages,
+    pendingRequests,
+    specialties,
+    heroTexts,
+    globalPaymentMethods,
+    backgroundImage,
+    logoImage,
+    selectedPsych,
+    currentUser,
+    currentRating,
+    generatedSlots,
+    selectedWeekdays,
+    selectedBoxId,
+    selectedTherapistBoxId,
+    tempImageData,
+    tempBackgroundImageData,
+    tempLogoData,
+    tempQrData,
+    selectedPatientForTherapist,
+    dataLoaded,
+    EDIT_HOURS,
+    
+    // Nuevas variables
+    fichasIngreso,
+    sesiones,
+    informes,
+    ui,
+    
+    // Funciones existentes
+    setStaff,
+    setPatients,
+    setAppointments,
+    setBoxes,
+    setMessages,
+    setPendingRequests,
+    setSpecialties,
+    setHeroTexts,
+    setGlobalPaymentMethods,
+    setBackgroundImage,
+    setLogoImage,
+    setCurrentUser,
+    setSelectedPsych,
+    setCurrentRating,
+    setGeneratedSlots,
+    setSelectedWeekdays,
+    setSelectedBoxId,
+    setSelectedTherapistBoxId,
+    setTempImageData,
+    setTempBackgroundImageData,
+    setTempLogoData,
+    setTempQrData,
+    setSelectedPatientForTherapist,
+    setDataLoaded,
+    
+    // Nuevas funciones
+    setFichasIngreso,
+    setSesiones,
+    setInformes,
+    addFichaIngreso,
+    updateFichaIngreso,
+    addSesion,
+    updateSesion,
+    addInforme,
+    updateInforme,
+    getFichasIngresoByPatient,
+    getSesionesByPatient,
+    getInformesByPatient,
+    limpiarEstadoFichas,
+    setPestanaActiva,
+    setPacienteSeleccionado,
+    
+    // Utilidades
+    resetAllState,
+    getStateSummary
 };
 
-// Exportamos todo igual
 export default state;
+
+// ============================================
+// EXPONER ESTADO GLOBALMENTE PARA DEPURACIÓN
+// ============================================
+if (typeof window !== 'undefined') {
+    window.state = state;
+    console.log('📦 state.js cargado con fichas clínicas');
+    
+    // Función de ayuda en consola
+    window.estado = function() {
+        console.table(state.getStateSummary());
+        return state.getStateSummary();
+    };
+}

@@ -1,11 +1,14 @@
 // js/modules/pacientes.js
 import * as state from './state.js';
-import { showToast, validarRut, formatRut } from './utils.js';
-import { puedeAccederAPaciente } from './permisos.js';
+import { showToast, validarRut, formatRut, formatDate, calculateAge, getInitials } from './utils.js';
+import { puedeAccederAPaciente, puedeEditarFichas } from './permisos.js';
 import { obtenerSesionesDePaciente, obtenerFichaIngreso } from './fichasClinicas.js';
 import { obtenerInformesDePaciente } from './informes.js';
 
-// Renderizar lista de pacientes (función existente mejorada)
+// ============================================
+// RENDERIZAR LISTA DE PACIENTES (MEJORADA)
+// ============================================
+
 export function renderPatients() {
     const container = document.getElementById('patientsList');
     if (!container) return;
@@ -35,28 +38,51 @@ export function renderPatients() {
         const totalPaid = patientApps.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
         const totalAmount = patientApps.reduce((sum, a) => sum + a.price, 0);
         const recentApps = patientApps.slice(0, 3);
+        
+        // ============================================
+        // NUEVO: Obtener información de fichas clínicas
+        // ============================================
+        const tieneFichaIngreso = state.fichasIngreso.some(f => f.patientId == p.id);
+        const totalSesionesRegistradas = state.sesiones.filter(s => s.patientId == p.id).length;
+        const ultimaSesion = state.sesiones
+            .filter(s => s.patientId == p.id)
+            .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion))[0];
 
         return `
             <div class="patient-card">
                 <div class="patient-header">
                     <span class="patient-name">${p.name}</span>
-                    <span class="badge" style="background:var(--azul-medico); color:white;">${totalSessions} sesiones</span>
+                    <div style="display:flex; gap:5px;">
+                        ${tieneFichaIngreso ? '<span class="badge" style="background:var(--verde-exito);">📋 Ficha</span>' : ''}
+                        <span class="badge" style="background:var(--azul-medico);">${totalSessions} citas</span>
+                    </div>
                 </div>
+                
                 <div class="patient-contact">
                     <span><i class="fa fa-id-card"></i> ${p.rut || 'Sin RUT'}</span>
                     <span><i class="fa fa-envelope"></i> ${p.email}</span>
                     ${p.phone ? `<span><i class="fa fa-phone"></i> ${p.phone}</span>` : ''}
                 </div>
+                
                 <div style="display:flex; gap:15px; margin-top:10px; font-size:0.8rem;">
                     <span><i class="fa fa-credit-card"></i> Pagado: $${totalPaid.toLocaleString()}</span>
                     <span><i class="fa fa-clock"></i> Total: $${totalAmount.toLocaleString()}</span>
                 </div>
+                
+                ${totalSesionesRegistradas > 0 ? `
+                    <div style="background:#e6f7e6; padding:8px; border-radius:8px; margin-top:10px;">
+                        <i class="fa fa-file-text"></i> ${totalSesionesRegistradas} sesiones registradas
+                        ${ultimaSesion ? `<br><small>Última: ${formatDate(ultimaSesion.fechaAtencion)}</small>` : ''}
+                    </div>
+                ` : ''}
+                
                 ${nextAppt ? `
                     <div style="background:#e6f7e6; padding:8px; border-radius:8px; margin-top:10px;">
                         <i class="fa fa-calendar-check"></i> Próxima: ${nextAppt.date} ${nextAppt.time} con ${nextAppt.psych}
                         ${nextAppt.boxName ? `<span class="history-box">${nextAppt.boxName}</span>` : ''}
                     </div>
                 ` : ''}
+                
                 ${recentApps.length > 0 ? `
                     <div class="patient-history">
                         <strong>Últimas atenciones:</strong>
@@ -71,7 +97,8 @@ export function renderPatients() {
                         `).join('')}
                     </div>
                 ` : ''}
-                <!-- NUEVO BOTÓN PARA VER FICHA COMPLETA -->
+                
+                <!-- BOTONES DE ACCIÓN -->
                 <div style="margin-top:15px; display:flex; gap:10px;">
                     <button class="btn-icon" onclick="verFichaCompleta('${p.id}')" 
                             style="background: var(--azul-apple); color: white; flex:1;">
@@ -88,7 +115,7 @@ export function renderPatients() {
 }
 
 // ============================================
-// NUEVAS FUNCIONES PARA DETALLE DE PACIENTE
+// FUNCIONES PARA DETALLE DE PACIENTE CON PESTAÑAS
 // ============================================
 
 // Mostrar detalle completo del paciente con pestañas
@@ -104,6 +131,12 @@ export async function mostrarDetallePaciente(patientId) {
     state.ui.fichas.pacienteSeleccionadoId = patientId;
     state.ui.fichas.pestanaActiva = 'perfil';
     
+    // Mostrar loader
+    const container = document.getElementById('patientsList');
+    if (container) {
+        container.innerHTML = '<div style="text-align:center; padding:40px;">Cargando ficha del paciente...</div>';
+    }
+    
     // Cargar datos del paciente
     const sesiones = await obtenerSesionesDePaciente(patientId);
     const fichaIngreso = await obtenerFichaIngreso(patientId);
@@ -117,10 +150,22 @@ function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null, info
     const container = document.getElementById('patientsList');
     if (!container) return;
     
+    const edad = calculateAge(patient.birthdate);
+    const iniciales = getInitials(patient.name);
+    
     const html = `
         <div class="detalle-paciente">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h2>${patient.name}</h2>
+            <!-- HEADER -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:white; padding:20px; border-radius:12px;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="width:60px; height:60px; background:var(--azul-apple); border-radius:30px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:24px;">
+                        ${iniciales}
+                    </div>
+                    <div>
+                        <h2 style="margin:0;">${patient.name}</h2>
+                        <p style="margin:5px 0 0; color:#666;">${patient.rut} · ${edad} años</p>
+                    </div>
+                </div>
                 <button class="btn-icon" onclick="renderPatients()" 
                         style="background: var(--text-light); color: white;">
                     <i class="fa fa-arrow-left"></i> Volver
@@ -128,30 +173,26 @@ function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null, info
             </div>
             
             <!-- TABS -->
-            <div class="tabs-container" style="display:flex; gap:5px; margin-bottom:20px; border-bottom:2px solid #e2e8f0;">
+            <div class="tabs-container" style="display:flex; gap:5px; margin-bottom:20px; background:white; padding:10px; border-radius:12px;">
                 <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'perfil' ? 'active' : ''}" 
                         onclick="cambiarPestana('perfil')" 
-                        style="padding:10px 20px; border:none; background:none; cursor:pointer; 
-                               ${state.ui.fichas.pestanaActiva === 'perfil' ? 'border-bottom:3px solid var(--azul-apple); font-weight:bold;' : ''}">
-                    Perfil
+                        style="padding:10px 20px; border:none; background:${state.ui.fichas.pestanaActiva === 'perfil' ? 'var(--azul-apple)' : '#f0f0f0'}; color:${state.ui.fichas.pestanaActiva === 'perfil' ? 'white' : '#333'}; border-radius:8px; cursor:pointer; flex:1;">
+                    <i class="fa fa-user"></i> Perfil
                 </button>
                 <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'fichaIngreso' ? 'active' : ''}" 
                         onclick="cambiarPestana('fichaIngreso')"
-                        style="padding:10px 20px; border:none; background:none; cursor:pointer;
-                               ${state.ui.fichas.pestanaActiva === 'fichaIngreso' ? 'border-bottom:3px solid var(--azul-apple); font-weight:bold;' : ''}">
-                    Ficha Ingreso
+                        style="padding:10px 20px; border:none; background:${state.ui.fichas.pestanaActiva === 'fichaIngreso' ? 'var(--azul-apple)' : '#f0f0f0'}; color:${state.ui.fichas.pestanaActiva === 'fichaIngreso' ? 'white' : '#333'}; border-radius:8px; cursor:pointer; flex:1;">
+                    <i class="fa fa-file-text"></i> Ficha Ingreso
                 </button>
                 <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'sesiones' ? 'active' : ''}" 
                         onclick="cambiarPestana('sesiones')"
-                        style="padding:10px 20px; border:none; background:none; cursor:pointer;
-                               ${state.ui.fichas.pestanaActiva === 'sesiones' ? 'border-bottom:3px solid var(--azul-apple); font-weight:bold;' : ''}">
-                    Sesiones (${sesiones.length})
+                        style="padding:10px 20px; border:none; background:${state.ui.fichas.pestanaActiva === 'sesiones' ? 'var(--azul-apple)' : '#f0f0f0'}; color:${state.ui.fichas.pestanaActiva === 'sesiones' ? 'white' : '#333'}; border-radius:8px; cursor:pointer; flex:1;">
+                    <i class="fa fa-calendar"></i> Sesiones (${sesiones.length})
                 </button>
                 <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'informes' ? 'active' : ''}" 
                         onclick="cambiarPestana('informes')"
-                        style="padding:10px 20px; border:none; background:none; cursor:pointer;
-                               ${state.ui.fichas.pestanaActiva === 'informes' ? 'border-bottom:3px solid var(--azul-apple); font-weight:bold;' : ''}">
-                    Informes (${informes.length})
+                        style="padding:10px 20px; border:none; background:${state.ui.fichas.pestanaActiva === 'informes' ? 'var(--azul-apple)' : '#f0f0f0'}; color:${state.ui.fichas.pestanaActiva === 'informes' ? 'white' : '#333'}; border-radius:8px; cursor:pointer; flex:1;">
+                    <i class="fa fa-file-pdf"></i> Informes (${informes.length})
                 </button>
             </div>
             
@@ -169,7 +210,7 @@ function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null, info
 function renderPestanaActual(patient, sesiones, fichaIngreso, informes) {
     switch(state.ui.fichas.pestanaActiva) {
         case 'perfil':
-            return renderPerfil(patient);
+            return renderPerfil(patient, sesiones, informes);
         case 'fichaIngreso':
             return renderFichaIngreso(patient, fichaIngreso);
         case 'sesiones':
@@ -177,40 +218,80 @@ function renderPestanaActual(patient, sesiones, fichaIngreso, informes) {
         case 'informes':
             return renderInformes(patient, informes);
         default:
-            return renderPerfil(patient);
+            return renderPerfil(patient, sesiones, informes);
     }
 }
 
-// Renderizar perfil del paciente
-function renderPerfil(patient) {
+// ============================================
+// RENDERIZADO DE CADA PESTAÑA
+// ============================================
+
+// Renderizar perfil del paciente (MEJORADO)
+function renderPerfil(patient, sesiones = [], informes = []) {
+    const edad = calculateAge(patient.birthdate);
+    const totalSesiones = sesiones.length;
+    const totalInformes = informes.length;
+    const citas = state.appointments.filter(a => a.patientId == patient.id);
+    const totalPagado = citas.reduce((sum, a) => sum + (a.paymentStatus === 'pagado' ? a.price : 0), 0);
+    
     return `
-        <div class="perfil-paciente" style="background:#f8fafc; padding:20px; border-radius:12px;">
-            <h3>Datos Personales</h3>
+        <div class="perfil-paciente" style="background:white; padding:20px; border-radius:12px;">
+            <h3>📋 Datos Personales</h3>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:15px;">
                 <div><strong>RUT:</strong> ${patient.rut || '—'}</div>
                 <div><strong>Email:</strong> ${patient.email}</div>
                 <div><strong>Teléfono:</strong> ${patient.phone || '—'}</div>
-                <div><strong>Fecha Nac.:</strong> ${patient.birthdate || '—'}</div>
+                <div><strong>Fecha Nac.:</strong> ${patient.birthdate || '—'} (${edad} años)</div>
                 <div><strong>Notas:</strong> ${patient.notes || '—'}</div>
                 <div><strong>Registrado:</strong> ${patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : '—'}</div>
             </div>
-            <div style="margin-top:20px;">
+            
+            <h3 style="margin-top:30px;">📊 Estadísticas</h3>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-top:15px;">
+                <div style="background:#f8fafc; padding:15px; border-radius:10px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:var(--azul-apple);">${citas.length}</div>
+                    <div style="font-size:12px; color:#666;">Citas totales</div>
+                </div>
+                <div style="background:#f8fafc; padding:15px; border-radius:10px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:var(--verde-exito);">${totalSesiones}</div>
+                    <div style="font-size:12px; color:#666;">Sesiones registradas</div>
+                </div>
+                <div style="background:#f8fafc; padding:15px; border-radius:10px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:var(--naranja-aviso);">$${totalPagado.toLocaleString()}</div>
+                    <div style="font-size:12px; color:#666;">Total pagado</div>
+                </div>
+                <div style="background:#f8fafc; padding:15px; border-radius:10px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:var(--azul-medico);">${totalInformes}</div>
+                    <div style="font-size:12px; color:#666;">Informes</div>
+                </div>
+            </div>
+            
+            <div style="margin-top:20px; display:flex; gap:10px;">
                 <button class="btn-icon" onclick="viewPatientDetails(${patient.id})" 
                         style="background: var(--azul-apple); color: white;">
                     <i class="fa fa-edit"></i> Editar Datos
+                </button>
+                <button class="btn-icon" onclick="printPatientSummary()" 
+                        style="background: var(--text-light); color: white;">
+                    <i class="fa fa-print"></i> Imprimir Resumen
+                </button>
+                <button class="btn-icon" onclick="exportarFichaCompleta('${patient.id}')" 
+                        style="background: var(--verde-exito); color: white;">
+                    <i class="fa fa-download"></i> Exportar Todo
                 </button>
             </div>
         </div>
     `;
 }
 
-// Renderizar ficha de ingreso
+// Renderizar ficha de ingreso (MEJORADA)
 function renderFichaIngreso(patient, fichaIngreso) {
     if (!fichaIngreso) {
         return `
-            <div style="text-align:center; padding:40px;">
-                <p>No hay ficha de ingreso para este paciente.</p>
-                <button class="btn-icon" onclick="fichasClinicas.mostrarFormularioFichaIngreso('${patient.id}')" 
+            <div style="text-align:center; padding:40px; background:white; border-radius:12px;">
+                <i class="fa fa-file-text" style="font-size:48px; color:#ccc;"></i>
+                <p style="margin:20px 0; color:#666;">No hay ficha de ingreso para este paciente.</p>
+                <button class="btn-icon" onclick="window.fichasClinicas?.mostrarFormularioFichaIngreso('${patient.id}')" 
                         style="background: var(--verde-exito); color: white;">
                     <i class="fa fa-plus"></i> Crear Ficha de Ingreso
                 </button>
@@ -219,107 +300,168 @@ function renderFichaIngreso(patient, fichaIngreso) {
     }
     
     return `
-        <div class="ficha-ingreso" style="background:#f8fafc; padding:20px; border-radius:12px;">
-            <div style="display:flex; justify-content:space-between;">
-                <h3>Ficha de Ingreso</h3>
-                <button class="btn-icon" onclick="fichasClinicas.editarFichaIngreso('${fichaIngreso.id}')" 
-                        style="background: var(--azul-apple); color: white;">
-                    <i class="fa fa-edit"></i> Editar
-                </button>
+        <div class="ficha-ingreso" style="background:white; padding:20px; border-radius:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">📝 Ficha de Ingreso</h3>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-icon" onclick="window.fichasClinicas?.editarFichaIngreso('${fichaIngreso.id}')" 
+                            style="background: var(--azul-apple); color: white;">
+                        <i class="fa fa-edit"></i> Editar
+                    </button>
+                    <button class="btn-icon" onclick="window.pdfGenerator?.generarFichaIngresoPDF(${JSON.stringify(fichaIngreso).replace(/"/g, '&quot;')})" 
+                            style="background: var(--verde-exito); color: white;">
+                        <i class="fa fa-file-pdf"></i> PDF
+                    </button>
+                </div>
             </div>
             
-            <div style="margin-top:20px;">
-                <h4>Motivo de Consulta</h4>
-                <p>${fichaIngreso.motivoConsulta || '—'}</p>
+            <div style="display:grid; gap:20px;">
+                <div style="background:#f8fafc; padding:15px; border-radius:8px;">
+                    <h4 style="margin:0 0 10px 0; color:var(--azul-apple);">Motivo de Consulta</h4>
+                    <p style="margin:0;">${fichaIngreso.motivoConsulta || '—'}</p>
+                </div>
                 
-                <h4>Sintomatología</h4>
-                <p><strong>Inicio:</strong> ${fichaIngreso.sintomatologia?.fechaInicio || '—'}</p>
-                <p><strong>Progresión:</strong> ${fichaIngreso.sintomatologia?.progresion || '—'}</p>
-                <p><strong>Tratamientos previos:</strong> ${fichaIngreso.sintomatologia?.tratamientosPrevios || '—'}</p>
+                <div style="background:#f8fafc; padding:15px; border-radius:8px;">
+                    <h4 style="margin:0 0 10px 0; color:var(--azul-apple);">Sintomatología</h4>
+                    <p><strong>Inicio:</strong> ${fichaIngreso.sintomatologia?.fechaInicio || '—'}</p>
+                    <p><strong>Progresión:</strong> ${fichaIngreso.sintomatologia?.progresion || '—'}</p>
+                    <p><strong>Tratamientos previos:</strong> ${fichaIngreso.sintomatologia?.tratamientosPrevios || '—'}</p>
+                    <p><strong>Medicamentos:</strong> ${fichaIngreso.sintomatologia?.medicamentos || '—'}</p>
+                </div>
                 
-                <h4>Composición Familiar</h4>
-                <p>${fichaIngreso.composicionFamiliar || '—'}</p>
+                <div style="background:#f8fafc; padding:15px; border-radius:8px;">
+                    <h4 style="margin:0 0 10px 0; color:var(--azul-apple);">Composición Familiar</h4>
+                    <p>${fichaIngreso.composicionFamiliar || '—'}</p>
+                </div>
                 
-                <h4>Otros Antecedentes</h4>
-                <p>${fichaIngreso.otrosAntecedentes || '—'}</p>
+                <div style="background:#f8fafc; padding:15px; border-radius:8px;">
+                    <h4 style="margin:0 0 10px 0; color:var(--azul-apple);">Otros Antecedentes</h4>
+                    <p>${fichaIngreso.otrosAntecedentes || '—'}</p>
+                </div>
+                
+                ${fichaIngreso.criteriosExclusion ? `
+                    <div style="background:#f8fafc; padding:15px; border-radius:8px;">
+                        <h4 style="margin:0 0 10px 0; color:var(--azul-apple);">Criterios de Exclusión</h4>
+                        <ul style="margin:0;">
+                            <li>Trastornos psiquiátricos: ${fichaIngreso.criteriosExclusion.trastornosPsiquiatricos ? '✅' : '❌'}</li>
+                            <li>TCA grave: ${fichaIngreso.criteriosExclusion.tcaGrave ? '✅' : '❌'}</li>
+                            <li>Consumo de sustancias: ${fichaIngreso.criteriosExclusion.consumoSustancias ? '✅' : '❌'}</li>
+                            <li>Abuso/violencia: ${fichaIngreso.criteriosExclusion.abusoViolencia ? '✅' : '❌'}</li>
+                            <li>Ideación suicida activa: ${fichaIngreso.criteriosExclusion.ideacionSuicidaActiva ? '✅' : '❌'}</li>
+                        </ul>
+                    </div>
+                ` : ''}
             </div>
+            
+            <p style="margin-top:20px; font-size:12px; color:#999; text-align:right;">
+                Creado: ${new Date(fichaIngreso.fechaCreacion).toLocaleString()}
+            </p>
         </div>
     `;
 }
 
-// Renderizar sesiones
+// Renderizar sesiones (MEJORADA)
 function renderSesiones(patient, sesiones) {
     const sesionesHtml = sesiones.map(s => `
         <div class="sesion-item" style="background:white; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--azul-apple);">
-            <div style="display:flex; justify-content:space-between;">
-                <strong>${s.fechaAtencion} ${s.fechaAtencion ? '·' : ''} ${s.tipoAtencion || 'Sesión'}</strong>
-                <button class="btn-icon" onclick="fichasClinicas.verNotaSesion('${s.id}')" 
-                        style="background: var(--azul-apple); color: white; padding:5px 10px;">
-                    <i class="fa fa-eye"></i> Ver
-                </button>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong>${formatDate(s.fechaAtencion)} · ${s.tipoAtencion || 'Sesión'}</strong>
+                    <p style="margin:5px 0 0; color:#666; font-size:14px;">${s.notas?.substring(0, 200)}${s.notas?.length > 200 ? '...' : ''}</p>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-icon" onclick="window.fichasClinicas?.verNotaSesion('${s.id}')" 
+                            style="background: var(--azul-apple); color: white; padding:5px 10px;">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="btn-icon" onclick="window.pdfGenerator?.generarNotaSesionPDF(${JSON.stringify(s).replace(/"/g, '&quot;')})" 
+                            style="background: var(--verde-exito); color: white; padding:5px 10px;">
+                        <i class="fa fa-file-pdf"></i>
+                    </button>
+                </div>
             </div>
-            <p style="margin-top:10px;">${s.notas?.substring(0, 150)}${s.notas?.length > 150 ? '...' : ''}</p>
         </div>
     `).join('');
     
     return `
-        <div class="sesiones-container">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h3>Notas de Evolución</h3>
-                <button class="btn-icon" onclick="fichasClinicas.mostrarFormularioNotaSesion('${patient.id}')" 
+        <div class="sesiones-container" style="background:white; padding:20px; border-radius:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">📅 Notas de Evolución</h3>
+                <button class="btn-icon" onclick="window.fichasClinicas?.mostrarFormularioNotaSesion('${patient.id}')" 
                         style="background: var(--verde-exito); color: white;">
                     <i class="fa fa-plus"></i> Nueva Nota
                 </button>
             </div>
             
-            ${sesiones.length > 0 ? sesionesHtml : '<p style="text-align:center; padding:40px;">No hay sesiones registradas</p>'}
+            ${sesiones.length > 0 ? sesionesHtml : `
+                <div style="text-align:center; padding:40px;">
+                    <i class="fa fa-calendar" style="font-size:48px; color:#ccc;"></i>
+                    <p style="margin:20px 0; color:#666;">No hay sesiones registradas</p>
+                </div>
+            `}
         </div>
     `;
 }
 
-// Renderizar informes
+// Renderizar informes (MEJORADA)
 function renderInformes(patient, informes) {
     const informesHtml = informes.map(i => `
         <div class="informe-item" style="background:white; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--naranja-aviso);">
-            <div style="display:flex; justify-content:space-between;">
-                <strong>${i.tipo === 'psicodiagnostico' ? '📋 Psicodiagnóstico' : '📄 Cierre de Proceso'}</strong>
-                <span>${new Date(i.fechaCreacion).toLocaleDateString()}</span>
-            </div>
-            <div style="margin-top:10px;">
-                <button class="btn-icon" onclick="informes.verInforme('${i.id}')" 
-                        style="background: var(--azul-apple); color: white; margin-right:5px;">
-                    <i class="fa fa-eye"></i> Ver
-                </button>
-                ${i.pdfUrl ? `
-                    <button class="btn-icon" onclick="window.open('${i.pdfUrl}')" 
-                            style="background: var(--verde-exito); color: white;">
-                        <i class="fa fa-file-pdf"></i> PDF
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong>${i.tipo === 'psicodiagnostico' ? '📋 Psicodiagnóstico' : '📄 Cierre de Proceso'}</strong>
+                    <p style="margin:5px 0 0; color:#666; font-size:12px;">${new Date(i.fechaCreacion).toLocaleDateString()}</p>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-icon" onclick="window.informes?.verInforme('${i.id}')" 
+                            style="background: var(--azul-apple); color: white; padding:5px 10px;">
+                        <i class="fa fa-eye"></i>
                     </button>
-                ` : ''}
+                    ${i.pdfUrl ? `
+                        <button class="btn-icon" onclick="window.open('${i.pdfUrl}')" 
+                                style="background: var(--verde-exito); color: white; padding:5px 10px;">
+                            <i class="fa fa-file-pdf"></i>
+                        </button>
+                    ` : `
+                        <button class="btn-icon" onclick="window.informes?.generarPDFInforme('${i.id}')" 
+                                style="background: var(--verde-exito); color: white; padding:5px 10px;">
+                            <i class="fa fa-file-pdf"></i> Generar
+                        </button>
+                    `}
+                </div>
             </div>
         </div>
     `).join('');
     
     return `
-        <div class="informes-container">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h3>Informes</h3>
+        <div class="informes-container" style="background:white; padding:20px; border-radius:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">📄 Informes</h3>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-icon" onclick="informes.mostrarFormularioInforme('${patient.id}', 'psicodiagnostico')" 
+                    <button class="btn-icon" onclick="window.informes?.mostrarFormularioInforme('${patient.id}', 'psicodiagnostico')" 
                             style="background: var(--azul-apple); color: white;">
                         <i class="fa fa-file"></i> Nuevo Psicodiagnóstico
                     </button>
-                    <button class="btn-icon" onclick="informes.mostrarFormularioInforme('${patient.id}', 'cierre')" 
+                    <button class="btn-icon" onclick="window.informes?.mostrarFormularioInforme('${patient.id}', 'cierre')" 
                             style="background: var(--naranja-aviso); color: white;">
                         <i class="fa fa-file"></i> Cierre de Proceso
                     </button>
                 </div>
             </div>
             
-            ${informes.length > 0 ? informesHtml : '<p style="text-align:center; padding:40px;">No hay informes generados</p>'}
+            ${informes.length > 0 ? informesHtml : `
+                <div style="text-align:center; padding:40px;">
+                    <i class="fa fa-file-pdf" style="font-size:48px; color:#ccc;"></i>
+                    <p style="margin:20px 0; color:#666;">No hay informes generados</p>
+                </div>
+            `}
         </div>
     `;
 }
+
+// ============================================
+// FUNCIONES DE NAVEGACIÓN
+// ============================================
 
 // Cambiar pestaña
 export function cambiarPestana(pestana) {
@@ -327,8 +469,39 @@ export function cambiarPestana(pestana) {
     mostrarDetallePaciente(state.ui.fichas.pacienteSeleccionadoId);
 }
 
+// Volver a la lista de pacientes
+export function volverALista() {
+    renderPatients();
+}
+
 // ============================================
-// FUNCIONES EXISTENTES (SIN CAMBIOS)
+// FUNCIONES DE EXPORTACIÓN
+// ============================================
+
+// Exportar ficha completa del paciente
+export async function exportarFichaCompleta(patientId) {
+    if (!puedeAccederAPaciente(patientId)) {
+        showToast('No tienes permisos para exportar esta ficha', 'error');
+        return;
+    }
+    
+    showToast('Preparando exportación...', 'info');
+    
+    try {
+        const result = await window.pdfGenerator?.exportarFichaCompletaPaciente(patientId);
+        if (result?.success) {
+            showToast('Ficha exportada correctamente', 'success');
+        } else {
+            showToast('Error al exportar la ficha', 'error');
+        }
+    } catch (error) {
+        console.error('Error exportando ficha:', error);
+        showToast('Error al exportar la ficha', 'error');
+    }
+}
+
+// ============================================
+// FUNCIONES EXISTENTES (CON PEQUEÑAS MEJORAS)
 // ============================================
 
 export function showNewPatientModal() {
@@ -502,6 +675,8 @@ export function printPatientSummary() {
 
     const patientApps = state.appointments.filter(a => a.patientId == patientId)
         .sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sesiones = state.sesiones.filter(s => s.patientId == patientId);
+    const fichas = state.fichasIngreso.filter(f => f.patientId == patientId);
 
     let summaryHtml = `
         <html>
@@ -515,6 +690,7 @@ export function printPatientSummary() {
                 .table th { background: #3498db; color: white; padding: 10px; text-align: left; }
                 .table td { padding: 10px; border-bottom: 1px solid #ddd; }
                 .total { margin-top: 20px; font-size: 1.2em; font-weight: bold; }
+                .info-box { background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; }
             </style>
         </head>
         <body>
@@ -524,6 +700,13 @@ export function printPatientSummary() {
                 <p><strong>RUT:</strong> ${patient.rut}</p>
                 <p><strong>Email:</strong> ${patient.email}</p>
                 <p><strong>Teléfono:</strong> ${patient.phone || '—'}</p>
+            </div>
+            
+            <div class="info-box">
+                <h3>📊 Estadísticas Clínicas</h3>
+                <p><strong>Ficha de Ingreso:</strong> ${fichas.length > 0 ? '✓ Sí' : '✗ No'}</p>
+                <p><strong>Sesiones Registradas:</strong> ${sesiones.length}</p>
+                <p><strong>Citas Totales:</strong> ${patientApps.length}</p>
             </div>
             
             <table class="table">
@@ -573,3 +756,23 @@ export function printPatientSummary() {
     printWindow.document.close();
     printWindow.print();
 }
+
+// ============================================
+// EXPORTAR FUNCIONES AL OBJETO WINDOW
+// ============================================
+if (typeof window !== 'undefined') {
+    window.renderPatients = renderPatients;
+    window.showNewPatientModal = showNewPatientModal;
+    window.closePatientModal = closePatientModal;
+    window.savePatient = savePatient;
+    window.printPatientSummary = printPatientSummary;
+    window.searchPatientByRut = searchPatientByRut;
+    window.viewPatientDetails = viewPatientDetails;
+    window.mostrarDetallePaciente = mostrarDetallePaciente;
+    window.cambiarPestana = cambiarPestana;
+    window.verFichaCompleta = mostrarDetallePaciente;
+    window.exportarFichaCompleta = exportarFichaCompleta;
+    window.volverALista = volverALista;
+}
+
+console.log('✅ pacientes.js cargado con todas las funciones de fichas clínicas');

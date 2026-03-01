@@ -1,4 +1,4 @@
-// js/main.js - PRINCIPIO DEL ARCHIVO
+// js/main.js - VERSIÓN CORREGIDA
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -20,39 +20,39 @@ import * as mensajes from './modules/mensajes.js';
 import * as personalizacion from './modules/personalizacion.js';
 import * as publico from './modules/publico.js';
 
-// ============================================
-// NUEVOS MÓDULOS DE FICHAS CLÍNICAS
-// ============================================
+// Módulos de fichas clínicas
 import * as fichasClinicas from './modules/fichasClinicas.js';
 import * as informes from './modules/informes.js';
 import * as permisos from './modules/permisos.js';
 import * as pdfGenerator from './modules/pdfGenerator.js';
-
-// ============================================
-// 🆕 NUEVO MÓDULO DE ESTADÍSTICAS GLOBALES
-// ============================================
 import * as estadisticas from './modules/estadisticas.js';
 
 // ============================================
-// EXPONER FUNCIONES GLOBALES
+// EXPONER FUNCIONES GLOBALES - VERSIÓN CORREGIDA
 // ============================================
 console.log('🚀 Exponiendo funciones globales...');
 
-// Funciones de autenticación
+// ============================================
+// FUNCIONES DE AUTENTICACIÓN (CRÍTICAS)
+// ============================================
 window.showLoginModal = auth.showLoginModal;
 window.closeLoginModal = auth.closeLoginModal;
 window.processLogin = auth.processLogin;
 window.logout = auth.logout;
 window.switchTab = auth.switchTab;
 
-// Funciones de mensajes
+// ============================================
+// FUNCIONES DE MENSAJES
+// ============================================
 window.showMessageModal = mensajes.showMessageModal;
 window.closeMessageModal = mensajes.closeMessageModal;
 window.setRating = mensajes.setRating;
 window.saveMessage = mensajes.saveMessage;
 window.deleteMessage = mensajes.deleteMessage;
 
-// Funciones de profesionales
+// ============================================
+// FUNCIONES DE PROFESIONALES
+// ============================================
 window.showAddStaffModal = profesionales.showAddStaffModal;
 window.closeAddStaffModal = profesionales.closeAddStaffModal;
 window.addStaff = profesionales.addStaff;
@@ -61,7 +61,9 @@ window.closeEditTherapistModal = profesionales.closeEditTherapistModal;
 window.updateTherapist = profesionales.updateTherapist;
 window.deleteStaff = profesionales.deleteStaff;
 
-// Funciones de pacientes (originales + nuevas)
+// ============================================
+// FUNCIONES DE PACIENTES
+// ============================================
 window.showNewPatientModal = pacientes.showNewPatientModal;
 window.closePatientModal = pacientes.closePatientModal;
 window.savePatient = pacientes.savePatient;
@@ -72,7 +74,9 @@ window.renderPatients = pacientes.renderPatients;
 window.mostrarDetallePaciente = pacientes.mostrarDetallePaciente;
 window.cambiarPestana = pacientes.cambiarPestana;
 
-// Funciones de citas
+// ============================================
+// FUNCIONES DE CITAS
+// ============================================
 window.openBooking = citas.openBooking;
 window.executeBooking = citas.executeBooking;
 window.showTherapistBookingModal = citas.showTherapistBookingModal;
@@ -83,8 +87,12 @@ window.rejectRequest = citas.rejectRequest;
 window.editAppointment = citas.editAppointment;
 window.cancelAppointment = citas.cancelAppointment;
 window.markAsPaid = citas.markAsPaid;
+window.confirmPayment = citas.confirmPayment;
+window.rejectPayment = citas.rejectPayment;
 
-// Funciones de disponibilidad
+// ============================================
+// FUNCIONES DE DISPONIBILIDAD
+// ============================================
 window.showAvailabilityModal = disponibilidad.showAvailabilityModal;
 window.closeAvailabilityModal = disponibilidad.closeAvailabilityModal;
 window.generateTimeSlots = disponibilidad.generateTimeSlots;
@@ -96,7 +104,9 @@ window.saveAvailability = disponibilidad.saveAvailability;
 window.loadTimeSlots = disponibilidad.loadTimeSlots;
 window.addOvercupo = disponibilidad.addOvercupo;
 
-// Funciones de boxes
+// ============================================
+// FUNCIONES DE BOXES
+// ============================================
 window.showBoxModal = boxes.showBoxModal;
 window.closeBoxModal = boxes.closeBoxModal;
 window.saveBox = boxes.saveBox;
@@ -104,7 +114,9 @@ window.editBox = boxes.editBox;
 window.toggleBoxStatus = boxes.toggleBoxStatus;
 window.deleteBox = boxes.deleteBox;
 
-// Funciones de personalización
+// ============================================
+// FUNCIONES DE PERSONALIZACIÓN
+// ============================================
 window.showLogoModal = personalizacion.showLogoModal;
 window.closeLogoModal = personalizacion.closeLogoModal;
 window.saveLogo = personalizacion.saveLogo;
@@ -128,39 +140,37 @@ window.addSpecialty = personalizacion.addSpecialty;
 window.deleteSpecialty = personalizacion.deleteSpecialty;
 
 // ============================================
-// EXPONER FUNCIONES DE FICHAS CLÍNICAS
+// FUNCIONES DE FICHAS CLÍNICAS
 // ============================================
 window.fichasClinicas = fichasClinicas;
 window.informes = informes;
 window.permisos = permisos;
 window.pdfGenerator = pdfGenerator;
+window.estadisticas = estadisticas;
 
-// Funciones específicas de fichas clínicas
+// Funciones específicas
 window.guardarFichaIngreso = fichasClinicas.guardarFichaIngreso;
 window.guardarNotaSesion = fichasClinicas.guardarNotaSesion;
 window.obtenerSesionesDePaciente = fichasClinicas.obtenerSesionesDePaciente;
+window.obtenerFichasIngresoDePaciente = fichasClinicas.obtenerFichasIngresoDePaciente;
 window.guardarInforme = informes.guardarInforme;
 window.obtenerInformesDePaciente = informes.obtenerInformesDePaciente;
-window.verFichaCompleta = pacientes.mostrarDetallePaciente; // ATAJO
+window.verFichaCompleta = pacientes.mostrarDetallePaciente;
 
 // ============================================
-// 🆕 EXPONER FUNCIONES DE ESTADÍSTICAS
+// FUNCIONES DE UTILIDAD
 // ============================================
-window.estadisticas = estadisticas;
-window.getEstadisticasCompletas = estadisticas.getEstadisticasCompletas;
-window.renderPanelEstadisticas = estadisticas.renderPanelEstadisticas;
-window.exportarEstadisticasJSON = estadisticas.exportarEstadisticasJSON;
-window.exportarEstadisticasCSV = estadisticas.exportarEstadisticasCSV;
-window.imprimirEstadisticas = estadisticas.imprimirEstadisticas;
-
-// Funciones de utilidad
 window.filterProfessionals = publico.filterProfessionals;
 window.formatRut = utils.formatRut;
 window.validarRut = utils.validarRut;
 window.showToast = utils.showToast;
 
-// Verificar que las funciones principales se asignaron correctamente
-console.log('✅ switchTab asignada a window:', typeof window.switchTab);
+// ============================================
+// VERIFICACIÓN
+// ============================================
+console.log('✅ showLoginModal asignada:', typeof window.showLoginModal);
+console.log('✅ switchTab asignada:', typeof window.switchTab);
+console.log('✅ renderPatients asignada:', typeof window.renderPatients);
 console.log('✅ verFichaCompleta asignada:', typeof window.verFichaCompleta);
 console.log('✅ estadisticas asignada:', typeof window.estadisticas);
 
@@ -170,38 +180,25 @@ console.log('✅ estadisticas asignada:', typeof window.estadisticas);
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
     
-    // Preparar objetos para Firebase (convertir arrays a objetos con ID como clave)
+    // Preparar objetos para Firebase
     const staffObj = {};
-    state.staff.forEach(item => {
-        staffObj[item.id] = item;
-    });
+    state.staff.forEach(item => { staffObj[item.id] = item; });
 
     const boxesObj = {};
-    state.boxes.forEach(item => {
-        boxesObj[item.id] = item;
-    });
+    state.boxes.forEach(item => { boxesObj[item.id] = item; });
 
     const patientsObj = {};
-    state.patients.forEach(item => {
-        patientsObj[item.id] = item;
-    });
+    state.patients.forEach(item => { patientsObj[item.id] = item; });
 
     const appointmentsObj = {};
-    state.appointments.forEach(item => {
-        appointmentsObj[item.id] = item;
-    });
+    state.appointments.forEach(item => { appointmentsObj[item.id] = item; });
 
     const pendingRequestsObj = {};
-    state.pendingRequests.forEach(item => {
-        pendingRequestsObj[item.id] = item;
-    });
+    state.pendingRequests.forEach(item => { pendingRequestsObj[item.id] = item; });
 
     const messagesObj = {};
-    state.messages.forEach(item => {
-        messagesObj[item.id] = item;
-    });
+    state.messages.forEach(item => { messagesObj[item.id] = item; });
 
-    // Realizar todas las actualizaciones en una sola operación
     const updates = {
         '/Staff': staffObj,
         '/Boxes': boxesObj,
@@ -211,66 +208,60 @@ export function save() {
         '/Messages': messagesObj
     };
 
-    // Ejecutar la actualización
     db.ref().update(updates)
         .then(() => {
             console.log('✅ Datos guardados correctamente en Firebase');
             
-            // Guardar especialidades por separado
             const specialtiesObj = {};
-            state.specialties.forEach(item => {
-                specialtiesObj[item.id] = { name: item.name };
-            });
+            state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
             return db.ref('Specialties').set(specialtiesObj);
         })
         .then(() => {
             console.log('✅ Especialidades guardadas correctamente');
             
-            // Actualizar vistas si hay usuario logueado
             if (state.currentUser) {
-                auth.updateStats();
-                citas.renderPendingRequests();
+                if (typeof auth.updateStats === 'function') auth.updateStats();
+                if (typeof citas.renderPendingRequests === 'function') citas.renderPendingRequests();
                 
                 if (state.currentUser.role === 'admin') {
-                    profesionales.renderStaffTable();
-                    mensajes.renderMessagesTable();
-                    boxes.renderBoxesTable();
+                    if (typeof profesionales.renderStaffTable === 'function') profesionales.renderStaffTable();
+                    if (typeof mensajes.renderMessagesTable === 'function') mensajes.renderMessagesTable();
+                    if (typeof boxes.renderBoxesTable === 'function') boxes.renderBoxesTable();
                 }
                 if (state.currentUser.role === 'psych') {
-                    pacientes.renderPatients();
-                    boxes.renderBoxOccupancy();
-                    if (document.getElementById('tabDisponibilidad')?.classList.contains('active')) {
-                        disponibilidad.loadTimeSlots();
-                    }
+                    if (typeof pacientes.renderPatients === 'function') pacientes.renderPatients();
+                    if (typeof boxes.renderBoxOccupancy === 'function') boxes.renderBoxOccupancy();
                 }
             }
             
-            // Actualizar vista pública
-            publico.filterProfessionals();
-            mensajes.renderMessages();
-            mensajes.updateMarquee();
+            if (typeof publico.filterProfessionals === 'function') publico.filterProfessionals();
+            if (typeof mensajes.renderMessages === 'function') mensajes.renderMessages();
+            if (typeof mensajes.updateMarquee === 'function') mensajes.updateMarquee();
         })
         .catch(err => {
             console.error('❌ Error al guardar en Firebase:', err);
-            utils.showToast('Error al guardar los datos', 'error');
+            if (typeof utils.showToast === 'function') utils.showToast('Error al guardar los datos', 'error');
         });
 }
 
 // ============================================
 // INICIALIZAR LA APLICACIÓN
 // ============================================
-publico.cargarDatosIniciales();
+if (typeof publico.cargarDatosIniciales === 'function') {
+    publico.cargarDatosIniciales();
+}
 
-// Recuperar sesión guardada (si existe)
+// Recuperar sesión guardada
 const savedUser = localStorage.getItem('vinculoCurrentUser');
 if (savedUser) {
     try {
         state.setCurrentUser(JSON.parse(savedUser));
-        // Esperar a que los datos carguen y luego mostrar el dashboard
         const checkData = setInterval(() => {
             if (state.dataLoaded) {
                 clearInterval(checkData);
-                auth.cargarDashboard(state.currentUser.role);
+                if (typeof auth.cargarDashboard === 'function') {
+                    auth.cargarDashboard(state.currentUser.role);
+                }
             }
         }, 100);
     } catch (e) {
@@ -278,15 +269,15 @@ if (savedUser) {
     }
 }
 
-// Cargar fichas clínicas si hay usuario logueado
-if (state.currentUser) {
+// Cargar fichas clínicas
+if (state.currentUser && typeof fichasClinicas.cargarTodasLasFichas === 'function') {
     fichasClinicas.cargarTodasLasFichas().then(() => {
         console.log('📋 Fichas clínicas cargadas');
     });
 }
 
 // ============================================
-// OCULTAR LOADER CUANDO TODO ESTÉ CARGADO
+// OCULTAR LOADER
 // ============================================
 window.addEventListener('load', function() {
     setTimeout(() => {
@@ -301,23 +292,8 @@ window.addEventListener('load', function() {
 });
 
 // ============================================
-// IMPORTAR FUNCIONES DE ADMIN
+// IMPORTAR ADMIN
 // ============================================
 import './modules/admin.js';
 
-// Mejorar scroll en móviles
-document.addEventListener('touchstart', function(){}, {passive: true});
-
-// Desactivar zoom en inputs
-document.querySelectorAll('input, select, textarea').forEach(el => {
-    el.addEventListener('focus', () => {
-        document.querySelector('meta[name=viewport]').setAttribute('content', 
-            'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
-    });
-    el.addEventListener('blur', () => {
-        document.querySelector('meta[name=viewport]').setAttribute('content', 
-            'width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes');
-    });
-});
-
-console.log('✅ main.js cargado completamente con módulo de fichas clínicas y estadísticas');
+console.log('✅ main.js cargado completamente');

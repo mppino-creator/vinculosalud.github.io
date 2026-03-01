@@ -69,6 +69,7 @@ export function saveMessage() {
     };
 
     state.messages.push(newMessage);
+    // ✅ RUTA CORREGIDA: ahora usa '../main.js'
     import('../main.js').then(main => main.save());
     renderMessages();
     updateMarquee();
@@ -126,30 +127,25 @@ export function renderMessagesTable() {
     `).join('');
 }
 
-// ✅ FUNCIÓN CORREGIDA - Ahora guarda en Firebase y maneja correctamente los IDs
+// ✅ FUNCIÓN CORREGIDA - Ahora usa la ruta correcta '../main.js'
 export function deleteMessage(id) {
     console.log("🗑️ Intentando eliminar mensaje con ID:", id);
     console.log("📊 Tipo de ID:", typeof id);
     console.log("📊 Mensajes antes:", state.messages.length);
     
     if (confirm('¿Eliminar este mensaje permanentemente?')) {
-        // Asegurar que comparamos como strings
         const newMessages = state.messages.filter(m => String(m.id) !== String(id));
         
         console.log("📊 Mensajes después:", newMessages.length);
         
-        // Actualizar el estado global
         state.setMessages(newMessages);
         
-        // Guardar en Firebase
-        import('./main.js').then(main => {
+        // ✅ RUTA CORREGIDA: '../main.js' en lugar de './main.js'
+        import('../main.js').then(main => {
             main.save();
-            
-            // Actualizar las vistas
             renderMessagesTable();
             renderMessages();
             updateMarquee();
-            
             showToast('Mensaje eliminado permanentemente', 'success');
         }).catch(err => {
             console.error("❌ Error al guardar:", err);

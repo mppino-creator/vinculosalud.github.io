@@ -1452,5 +1452,67 @@
 })();
 </script>
 
+<style>
+    /* FORZAR VISIBILIDAD DE ICONOS FONT AWESOME */
+    .fa, .fas, .far, .fab {
+        display: inline-block !important;
+        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+        font-weight: 900 !important;
+        font-style: normal !important;
+        font-variant: normal !important;
+        text-rendering: auto !important;
+        line-height: 1 !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+    }
+    
+    /* Iconos específicos con fallback */
+    .fa-edit:before {
+        content: "\f044" !important; /* Código Unicode de fa-edit */
+        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+        font-weight: 900 !important;
+    }
+    
+    .fa-trash:before {
+        content: "\f1f8" !important; /* Código Unicode de fa-trash */
+        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+        font-weight: 900 !important;
+    }
+    
+    .fa-plus:before {
+        content: "\f067" !important;
+    }
+    
+    .fa-save:before {
+        content: "\f0c7" !important;
+    }
+    
+    .fa-check:before {
+        content: "\f00c" !important;
+    }
+    
+    .fa-times:before {
+        content: "\f00d" !important;
+    }
+    
+    /* Botones con iconos */
+    .btn-icon {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        padding: 8px 12px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        cursor: pointer !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+    }
+    
+    .btn-icon i {
+        margin-right: 5px !important;
+        font-size: 14px !important;
+    }
+</style>
 </body>
 </html>

@@ -367,7 +367,7 @@ export function updateAvailableTimes() {
         }
     } else if (!currentSelectedTime) {
         // Verificar si HAY un botón seleccionado aunque el select esté vacío
-        console.log('🔍 Select vacío, buscando botón seleccionado...');
+        console.log('🔍 Select vacío, buscando botón seleccionado (con retraso)...');
         
         // Pequeño retraso para asegurar que el DOM se actualizó
         setTimeout(() => {

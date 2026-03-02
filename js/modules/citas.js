@@ -366,9 +366,19 @@ export function updateAvailableTimes() {
             timeSelect.value = '';
         }
     } else if (!currentSelectedTime) {
-        // Solo si hay horarios pero no hay hora seleccionada, NO limpiar nada
-        // Mantener el select como está
-        console.log('📅 No hay hora seleccionada, mostrando horarios disponibles');
+        // Verificar si HAY un botón seleccionado aunque el select esté vacío
+        const selectedBtn = document.querySelector('.time-slot-btn.selected');
+        if (selectedBtn && selectedBtn.dataset.time) {
+            // Hay un botón seleccionado, restaurar el select
+            const horaDelBoton = selectedBtn.dataset.time;
+            console.log('🔄 Restaurando select desde botón seleccionado:', horaDelBoton);
+            if (timeSelect) {
+                timeSelect.value = horaDelBoton;
+            }
+        } else {
+            // Realmente no hay nada seleccionado
+            console.log('📅 No hay hora seleccionada, mostrando horarios disponibles');
+        }
     } else {
         // Verificar si la hora seleccionada sigue siendo válida
         const selectedTimeStillValid = availableTimes.some(slot => slot.time === currentSelectedTime);

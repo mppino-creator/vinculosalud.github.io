@@ -23,10 +23,13 @@ if (typeof window !== 'undefined') {
         const select = document.getElementById('custTime');
         if (select) select.value = time;
         
-        // Intentar llamar a la función real si ya cargó
-        if (window._realSelectTimeSlot) {
-            window._realSelectTimeSlot(time);
-        }
+        // NO llamar a la función real - el respaldo ya hace todo
+        // if (window._realSelectTimeSlot) {
+        //     window._realSelectTimeSlot(time);
+        // }
+        
+        // Marcar visualmente que está seleccionado
+        console.log('✅ [RESPALDO] Horario procesado completamente');
         
         return true;
     };

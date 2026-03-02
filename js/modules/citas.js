@@ -4,115 +4,71 @@ import * as state from './state.js';
 import { showToast, validarRut, sendEmailNotification, formatDate } from './utils.js';
 
 // ============================================
-// RESPALDO DE EMERGENCIA - SIEMPRE DISPONIBLE
+// FUNCIÓN ÚNICA PARA SELECCIONAR HORARIO - VERSIÓN DEFINITIVA
 // ============================================
-
-// Esta función se asigna inmediatamente y permanece
 if (typeof window !== 'undefined') {
-    window.selectTimeSlot = window.selectTimeSlot || function(time) {
-        console.log('🔄 [RESPALDO] Seleccionando horario:', time);
+    // Esta es la ÚNICA función que se ejecutará
+    window.selectTimeSlot = function(time) {
+        console.log('🎯 [SELECT] Seleccionando horario:', time);
         
-        // Buscar el botón y seleccionarlo
+        // Remover selección anterior de todos los botones
+        document.querySelectorAll('.time-slot-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        
+        // Seleccionar el nuevo botón
         const btn = document.querySelector(`.time-slot-btn[data-time="${time}"]`);
         if (btn) {
-            document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
+            console.log('✅ Botón marcado como seleccionado:', time);
+        } else {
+            console.warn('⚠️ Botón no encontrado para:', time);
         }
         
-        // Actualizar select
+        // Actualizar el select oculto
         const select = document.getElementById('custTime');
-        if (select) select.value = time;
+        if (select) {
+            select.value = time;
+            console.log('✅ Select actualizado a:', time);
+            
+            // Disparar evento change para cualquier listener
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+            console.error('❌ Elemento #custTime no encontrado');
+        }
         
-        // NO llamar a la función real - el respaldo ya hace todo
-        // if (window._realSelectTimeSlot) {
-        //     window._realSelectTimeSlot(time);
-        // }
+        // Actualizar detalles de la reserva
+        if (typeof window.updateBookingDetails === 'function') {
+            window.updateBookingDetails();
+        } else if (typeof updateBookingDetails === 'function') {
+            updateBookingDetails();
+        }
         
-        // Marcar visualmente que está seleccionado
-        console.log('✅ [RESPALDO] Horario procesado completamente');
-        
+        console.log('✅ Horario procesado completamente:', time);
         return true;
     };
     
-    window.selectTimePref = window.selectTimePref || function(pref) {
-        console.log('🔄 [RESPALDO] Preferencia:', pref);
+    // Función para preferencias AM/PM
+    window.selectTimePref = function(pref) {
+        console.log('📅 [PREF] Preferencia seleccionada:', pref);
         const panel = document.getElementById('bookingPanel');
-        if (panel) panel.dataset.timePref = pref;
+        if (panel) {
+            panel.dataset.timePref = pref;
+        }
         if (pref && window.showToast) {
             window.showToast(`Preferencia: ${pref === 'AM' ? 'Mañana' : 'Tarde'}`, 'info');
         }
     };
     
-    console.log('✅ Funciones de respaldo instaladas');
+    console.log('✅ Funciones de horarios instaladas (versión única)');
 }
 
-// ============================================
-// FUNCIÓN REAL (SE EJECUTA DESPUÉS)
-// ============================================
+// Eliminar posibles funciones residuales
+window._realSelectTimeSlot = undefined;
+window._realSelectTimePref = undefined;
 
-// Guardamos la función real con otro nombre
-window._realSelectTimeSlot = function(time) {
-    console.log('🔧 [REAL] Seleccionando horario:', time);
-    
-    // Verificar que los elementos existen
-    if (!document.querySelectorAll || !document.getElementById) {
-        console.error('❌ DOM no disponible');
-        return false;
-    }
-    
-    // Remover selección anterior
-    document.querySelectorAll('.time-slot-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
-    
-    // Seleccionar el nuevo horario
-    const selectedBtn = document.querySelector(`.time-slot-btn[data-time="${time}"]`);
-    if (selectedBtn) {
-        selectedBtn.classList.add('selected');
-    } else {
-        console.warn('⚠️ Botón no encontrado para:', time);
-    }
-    
-    // Actualizar el select oculto
-    const timeSelect = document.getElementById('custTime');
-    if (timeSelect) {
-        timeSelect.value = time;
-        console.log('✅ Select actualizado a:', time); // Mostrar el valor asignado, no el valor leído
-    } else {
-        console.error('❌ Elemento #custTime no encontrado en el DOM');
-    }
-    
-    // Actualizar detalles de la reserva (si existe la función)
-    if (typeof window.updateBookingDetails === 'function') {
-        window.updateBookingDetails();
-    } else if (typeof updateBookingDetails === 'function') {
-        updateBookingDetails();
-    }
-    
-    console.log('✅ Horario seleccionado y guardado:', time);
-    return true;
-};
-
-// Sobrescribir la función de respaldo con la real
-window.selectTimeSlot = window._realSelectTimeSlot;
-
-// Función real para preferencias
-window._realSelectTimePref = function(pref) {
-    console.log('📅 Preferencia seleccionada:', pref);
-    const bookingPanel = document.getElementById('bookingPanel');
-    if (bookingPanel) {
-        bookingPanel.dataset.timePref = pref;
-    }
-    if (pref) {
-        const toast = window.showToast || showToast;
-        if (toast) toast(`Preferencia: ${pref === 'AM' ? 'Mañana' : 'Tarde'}`, 'info');
-    }
-};
-
-window.selectTimePref = window._realSelectTimePref;
-
-// Verificar que quedó asignada
-console.log('✅ Funciones instaladas:', {
+// Verificar que quedó asignada correctamente
+console.log('✅ Verificación final:', {
     selectTimeSlot: typeof window.selectTimeSlot,
     selectTimePref: typeof window.selectTimePref
 });
@@ -627,7 +583,7 @@ export function executeBooking() {
     // Intentar obtener hora del select
     const timeSelect = document.getElementById('custTime');
     let time = timeSelect ? timeSelect.value : '';
-    console.log('⏰ Hora desde select:', time, '| Elemento existe:', !!timeSelect);
+    console.log('⏰ Hora desde select:', time ? time : '(vacío)', '| Elemento existe:', !!timeSelect);
     
     // Si no hay hora en el select, buscar botón seleccionado
     if (!time) {
@@ -637,7 +593,6 @@ export function executeBooking() {
             console.log('⏰ Hora desde botón seleccionado:', time);
             
             // Actualizar el select para mantener consistencia
-            const timeSelect = document.getElementById('custTime');
             if (timeSelect) {
                 timeSelect.value = time;
                 console.log('✅ Select actualizado desde botón a:', time);

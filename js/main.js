@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN CORREGIDA
+// js/main.js - VERSIÓN CORREGIDA Y OPTIMIZADA
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -75,7 +75,7 @@ window.mostrarDetallePaciente = pacientes.mostrarDetallePaciente;
 window.cambiarPestana = pacientes.cambiarPestana;
 
 // ============================================
-// FUNCIONES DE CITAS (INCLUYE selectTimeSlot)
+// FUNCIONES DE CITAS 
 // ============================================
 window.openBooking = citas.openBooking;
 window.executeBooking = citas.executeBooking;
@@ -96,6 +96,8 @@ window.checkOnlineAvailability = citas.checkOnlineAvailability;
 window.showPaymentDetails = citas.showPaymentDetails;
 window.renderPendingRequests = citas.renderPendingRequests;
 window.renderAppointments = citas.renderAppointments;
+// ❌ NO ASIGNAMOS selectTimeSlot NI selectTimePref AQUÍ
+// Ya son expuestas directamente por citas.js al final del archivo
 
 // ============================================
 // FUNCIONES DE DISPONIBILIDAD
@@ -180,8 +182,21 @@ console.log('✅ switchTab asignada:', typeof window.switchTab);
 console.log('✅ renderPatients asignada:', typeof window.renderPatients);
 console.log('✅ verFichaCompleta asignada:', typeof window.verFichaCompleta);
 console.log('✅ estadisticas asignada:', typeof window.estadisticas);
-console.log('✅ selectTimeSlot asignada:', typeof window.selectTimeSlot); // ✅ AHORA DEBERÍA FUNCIONAR
+// AHORA ESTO DEBERÍA MOSTRAR "function" PORQUE VIENEN DE citas.js
+console.log('✅ selectTimeSlot asignada:', typeof window.selectTimeSlot);
 console.log('✅ selectTimePref asignada:', typeof window.selectTimePref);
+
+// ============================================
+// RESPALDO DE EMERGENCIA (por si acaso)
+// ============================================
+setTimeout(() => {
+    if (typeof window.selectTimeSlot !== 'function' && typeof citas?.selectTimeSlot === 'function') {
+        console.log('🚨 Restaurando selectTimeSlot desde citas...');
+        window.selectTimeSlot = citas.selectTimeSlot;
+        window.selectTimePref = citas.selectTimePref;
+        console.log('✅ Funciones restauradas:', typeof window.selectTimeSlot);
+    }
+}, 500);
 
 // ============================================
 // FUNCIÓN PARA GUARDAR EN FIREBASE

@@ -4,12 +4,21 @@ import * as state from './state.js';
 import { showToast, validarRut, sendEmailNotification, formatDate } from './utils.js';
 
 // ============================================
+// VARIABLE GLOBAL PARA HORA SELECCIONADA (INMUNE A CAMBIOS DEL DOM)
+// ============================================
+window.horaSeleccionada = null;
+
+// ============================================
 // FUNCIÓN ÚNICA PARA SELECCIONAR HORARIO - VERSIÓN DEFINITIVA
 // ============================================
 if (typeof window !== 'undefined') {
     // Esta es la ÚNICA función que se ejecutará
     window.selectTimeSlot = function(time) {
         console.log('🎯 [SELECT] Seleccionando horario:', time);
+        
+        // GUARDAR EN VARIABLE GLOBAL (esto NO se pierde nunca)
+        window.horaSeleccionada = time;
+        console.log('✅ Hora guardada en variable global:', window.horaSeleccionada);
         
         // Remover selección anterior de todos los botones
         document.querySelectorAll('.time-slot-btn').forEach(btn => {
@@ -365,33 +374,35 @@ export function updateAvailableTimes() {
         if (timeSelect) {
             timeSelect.value = '';
         }
+        // También limpiar variable global
+        window.horaSeleccionada = null;
     } else if (!currentSelectedTime) {
-        // Verificar si HAY un botón seleccionado aunque el select esté vacío
-        console.log('🔍 Select vacío, buscando botón seleccionado (con retraso)...');
+        // Verificar si hay hora guardada en variable global
+        console.log('🔍 Select vacío, revisando variable global...');
         
-        // Pequeño retraso para asegurar que el DOM se actualizó
-        setTimeout(() => {
-            const selectedBtn = document.querySelector('.time-slot-btn.selected');
-            
-            if (selectedBtn) {
-                console.log('✅ Botón seleccionado ENCONTRADO (después de retraso):', selectedBtn.dataset.time);
-                
-                if (selectedBtn.dataset.time) {
-                    const horaDelBoton = selectedBtn.dataset.time;
-                    console.log('🔄 RESTAURANDO select desde botón seleccionado:', horaDelBoton);
-                    
-                    if (timeSelect) {
-                        timeSelect.value = horaDelBoton;
-                        console.log('✅ Select restaurado a:', timeSelect.value);
-                    }
-                } else {
-                    console.log('⚠️ Botón seleccionado no tiene data-time');
+        if (window.horaSeleccionada) {
+            console.log('✅ Hora encontrada en variable global:', window.horaSeleccionada);
+            // Verificar si la hora sigue siendo válida
+            const horaValida = availableTimes.some(slot => slot.time === window.horaSeleccionada);
+            if (horaValida) {
+                if (timeSelect) {
+                    timeSelect.value = window.horaSeleccionada;
+                    console.log('✅ Select restaurado desde variable global a:', window.horaSeleccionada);
+                }
+                // También restaurar la clase selected en el botón correspondiente
+                const btn = document.querySelector(`.time-slot-btn[data-time="${window.horaSeleccionada}"]`);
+                if (btn) {
+                    btn.classList.add('selected');
                 }
             } else {
-                console.log('❌ No hay ningún botón seleccionado (incluso después de retraso)');
+                console.log('⚠️ Hora en variable global ya no es válida, limpiando');
+                window.horaSeleccionada = null;
                 console.log('📅 No hay hora seleccionada, mostrando horarios disponibles');
             }
-        }, 100); // Esperar 50ms para que el DOM se actualice
+        } else {
+            console.log('❌ No hay hora en variable global');
+            console.log('📅 No hay hora seleccionada, mostrando horarios disponibles');
+        }
     } else {
         // Verificar si la hora seleccionada sigue siendo válida
         const selectedTimeStillValid = availableTimes.some(slot => slot.time === currentSelectedTime);
@@ -404,8 +415,11 @@ export function updateAvailableTimes() {
             if (timeSelect) {
                 timeSelect.value = '';
             }
+            window.horaSeleccionada = null;
         } else {
             console.log('✅ Hora seleccionada sigue siendo válida:', currentSelectedTime);
+            // Actualizar variable global para mantener consistencia
+            window.horaSeleccionada = currentSelectedTime;
         }
     }
 }
@@ -622,30 +636,41 @@ export function executeBooking() {
     }
 
     // ============================================
-    // ✅ OBTENER HORA (SIMPLIFICADO)
+    // ✅ OBTENER HORA - PRIMERO VARIABLE GLOBAL, LUEGO SELECT
     // ============================================
     
-    // Intentar obtener hora del select
-    const timeSelect = document.getElementById('custTime');
-    let time = timeSelect ? timeSelect.value : '';
-    console.log('⏰ Hora desde select:', time ? time : '(vacío)', '| Elemento existe:', !!timeSelect);
+    let time = '';
     
-    // Si no hay hora en el select, buscar botón seleccionado
+    // 1. Primero intentar con variable global (ES LO MÁS CONFIABLE)
+    if (window.horaSeleccionada) {
+        time = window.horaSeleccionada;
+        console.log('⏰ Hora desde variable global:', time);
+    }
+    
+    // 2. Si no hay variable global, intentar con el select
+    if (!time) {
+        const timeSelect = document.getElementById('custTime');
+        time = timeSelect ? timeSelect.value : '';
+        console.log('⏰ Hora desde select (fallback):', time ? time : '(vacío)');
+    }
+    
+    // 3. Si no hay hora en select, buscar botón seleccionado
     if (!time) {
         const selectedBtn = document.querySelector('.time-slot-btn.selected');
         if (selectedBtn && selectedBtn.dataset.time) {
             time = selectedBtn.dataset.time;
-            console.log('⏰ Hora desde botón seleccionado:', time);
+            console.log('⏰ Hora desde botón seleccionado (último recurso):', time);
             
-            // Actualizar el select para mantener consistencia
+            // Actualizar el select y variable global
+            const timeSelect = document.getElementById('custTime');
             if (timeSelect) {
                 timeSelect.value = time;
-                console.log('✅ Select actualizado desde botón a:', time);
             }
+            window.horaSeleccionada = time;
         }
     }
     
-    // Si aún no hay hora, buscar en el panel data
+    // 4. Si aún no hay hora, buscar en el panel data
     if (!time) {
         const bookingPanel = document.getElementById('bookingPanel');
         if (bookingPanel && bookingPanel.dataset.selectedTime) {

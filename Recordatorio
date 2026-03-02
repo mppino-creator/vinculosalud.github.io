@@ -1,5 +1,6 @@
-¡Perfecto! Aquí tienes el resumen ejecutivo actualizado con toda la información de tus archivos:
+## ✅ **¡AQUÍ TIENES EL RESUMEN EJECUTIVO COMPLETAMENTE ACTUALIZADO!**
 
+```markdown
 ## 📋 **RESUMEN EJECUTIVO - VÍNCULO SALUD v2.0**
 
 ### 🎯 **VISIÓN GENERAL DEL PROYECTO**
@@ -8,9 +9,47 @@ Vínculo Salud es una plataforma web integral para centros de bienestar y salud 
 
 | Usuario | Funcionalidades Principales |
 |---------|----------------------------|
-| **Pacientes** | Buscar profesionales, ver disponibilidad, agendar citas online/presenciales, pagar (transferencia/efectivo/tarjeta/online), dejar testimonios |
+| **Pacientes** | Buscar profesionales, ver disponibilidad, agendar citas online/presenciales, pagar (transferencia/efectivo/tarjeta/online), dejar testimonios, **teléfono con 3 campos (código + 9 + número)** |
 | **Psicólogos** | Gestionar agenda, confirmar pagos, ver pacientes, **gestionar fichas clínicas completas (EHR)**, notas de evolución, informes, estadísticas personales |
 | **Administradores** | Gestionar profesionales, boxes, personalización del sitio, **acceso total a fichas clínicas**, backup/restore, estadísticas globales, limpieza de datos |
+
+---
+
+### 📱 **MEJORA DE TELÉFONO - 3 CAMPOS (CORREGIDO)**
+
+```html
+<!-- TELÉFONO CON 3 CAMPOS: Código + 9 + Número -->
+<div class="form-group">
+    <label>Teléfono</label>
+    <div style="display: flex; gap: 8px; align-items: center;">
+        <!-- CÓDIGO DE PAÍS - 25% -->
+        <select id="countryCode" style="width: 25%; min-width: 70px; padding: 12px 5px; border-radius: 12px; border: 1px solid var(--gris-oscuro); background: white; font-size: 0.9rem;">
+            <option value="+56" selected>🇨🇱 +56</option>
+            <option value="+54">🇦🇷 +54</option>
+            <option value="+51">🇵🇪 +51</option>
+            <option value="+57">🇨🇴 +57</option>
+            <option value="+52">🇲🇽 +52</option>
+            <option value="+34">🇪🇸 +34</option>
+        </select>
+        
+        <!-- CAMPO 9 - 15% (AHORA EDITABLE - SIN readonly) -->
+        <input type="text" id="phoneNine" value="9" maxlength="1" style="width: 15%; min-width: 45px; padding: 12px 0; border-radius: 12px; border: 1px solid var(--gris-oscuro); text-align: center; font-size: 1rem;" pattern="[0-9]" inputmode="numeric">
+        
+        <!-- CAMPO NÚMERO - 60% (8 dígitos) -->
+        <input type="text" id="custPhone" placeholder="9135 7990" style="width: 60%; padding: 12px; border-radius: 12px; border: 1px solid var(--gris-oscuro);" maxlength="8" pattern="[0-9]*" inputmode="numeric">
+    </div>
+    <small style="color: var(--text-light); display: block; margin-top: 5px;">Ejemplo: +56 9 9135 7990</small>
+</div>
+```
+
+**En `citas.js`:**
+```javascript
+const countryCode = document.getElementById('countryCode')?.value || '+56';
+const phoneNine = document.getElementById('phoneNine')?.value || '9';
+const phoneNumber = document.getElementById('custPhone').value;
+const phone = countryCode + ' ' + phoneNine + ' ' + phoneNumber;
+console.log('📞 Teléfono completo:', phone);
+```
 
 ---
 
@@ -29,19 +68,19 @@ Vínculo Salud es una plataforma web integral para centros de bienestar y salud 
          ├── state.js         # ✅ CORAZÓN del sistema: variables globales
          ├── auth.js          # Login/logout y gestión de sesiones
          ├── pacientes.js     # CRUD pacientes + vista detalle con 4 pestañas
-         ├── profesionales.js # Gestión de psicólogos + estadísticas
+         ├── profesionales.js # Gestión de psicólogos + estadísticas + género
          ├── citas.js         # ✅ CRÍTICO: reservas, pagos, confirmaciones
          ├── disponibilidad.js # Horarios y sobrecupos
          ├── boxes.js         # Gestión de boxes/consultorios
          ├── mensajes.js      # Testimonios y gestión de mensajes
          ├── personalizacion.js # Logo, colores, textos, fondo
-         ├── publico.js       # Vista pública (filtros, grid de profesionales)
-         ├── admin.js         # Panel admin + backup/restore + limpieza
-         ├── fichasClinicas.js  # 🆕 CRUD de fichas de ingreso y sesiones
-         ├── informes.js        # 🆕 Informes psicodiagnóstico y cierre
-         ├── pdfGenerator.js    # 🆕 Exportación a PDF (con fallback)
-         ├── permisos.js        # 🆕 Control de acceso granular
-         └── estadisticas.js    # 🆕 Estadísticas globales (solo admin)
+         ├── publico.js       # Vista pública (filtros, grid de profesionales) con botón compartir
+         ├── admin.js         # Panel admin + backup/restore + limpieza + exportar Excel
+         ├── fichasClinicas.js  # CRUD de fichas de ingreso y sesiones
+         ├── informes.js        # Informes psicodiagnóstico y cierre
+         ├── pdfGenerator.js    # Exportación a PDF (con fallback)
+         ├── permisos.js        # Control de acceso granular
+         ├── estadisticas.js    # Estadísticas globales (solo admin)
          └── utils.js           # Utilidades compartidas (RUT, emails, fechas)
 ```
 
@@ -75,6 +114,7 @@ const firebaseConfig = {
 /Messages       # Testimonios
 /fichasIngreso  # Fichas clínicas de ingreso
 /sesiones       # Notas de evolución
+/informes       # Informes clínicos
 ```
 
 ---
@@ -89,7 +129,7 @@ FLUJO:
 1. PACIENTE AGENDA → Estado: pendiente
 2. PROFESIONAL CONFIRMA PAGO → Botón verde "Pagado"
 3. SISTEMA ACTUALIZA → Estado: confirmada
-4. EMAIL AUTOMÁTICO → Se envía al paciente
+4. EMAIL AUTOMÁTICO → Se envía al paciente (NO al profesional)
 ```
 
 **Métodos de pago soportados:**
@@ -114,11 +154,12 @@ EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
 ```
 
 **Emails automáticos:**
-- ✅ Confirmación de cita online
-- ✅ Solicitud de cita presencial
-- ✅ Confirmación de pago
-- ✅ Rechazo de solicitud
-- ✅ Cancelación de cita
+- ✅ Confirmación de cita online (solo al paciente)
+- ✅ Solicitud de cita presencial (solo al paciente)
+- ✅ Confirmación de pago (solo al paciente)
+- ✅ Rechazo de solicitud (solo al paciente)
+- ✅ Cancelación de cita (solo al paciente)
+- ❌ **PROFESIONAL NO RECIBE EMAILS** (solo en panel)
 
 ---
 
@@ -168,6 +209,7 @@ EXPORTACIÓN:
 8. PDF individual de cada documento
 9. Exportar ficha COMPLETA del paciente (ZIP)
 10. Backup global (admin) de TODAS las fichas (JSON)
+11. Exportar a Excel (Pacientes, Citas, Profesionales, Mensajes)
 ```
 
 ---
@@ -186,6 +228,7 @@ EXPORTACIÓN:
 | Crear/Editar informe | ✅ | ✅ | ❌ |
 | Exportar PDF individual | ✅ | ✅ | ❌ |
 | Exportar ficha completa | ✅ | ✅ | ❌ |
+| Exportar a Excel | ✅ | ❌ | ❌ |
 | Ver estadísticas personales | ✅ | ✅ | ❌ |
 | Ver estadísticas globales | ✅ | ❌ | ❌ |
 | Backup/Restore sistema | ✅ | ❌ | ❌ |
@@ -198,7 +241,7 @@ EXPORTACIÓN:
 ```javascript
 // Colecciones principales
 state.patients           // Array de pacientes
-state.staff              // Array de profesionales
+state.staff              // Array de profesionales (con campo genero)
 state.appointments       // Array de citas
 state.messages           // Array de testimonios
 state.boxes              // Array de boxes
@@ -231,7 +274,7 @@ state.ui.fichas = {
 ├─────────────────────────────────────┤
 │  RUT: 12.345.678-9                  │
 │  Email: maria@email.com             │
-│  Tel: +56912345678                   │
+│  Tel: +56 9 9135 7990                │
 ├─────────────────────────────────────┤
 │  Pagado: $150.000 · Total: $225.000 │
 │  📅 Próxima: 15-03-2026 16:00       │
@@ -256,18 +299,22 @@ state.ui.fichas = {
 
 ---
 
-### 📄 **EXPORTACIÓN A PDF**
+### 📄 **EXPORTACIÓN A PDF Y EXCEL**
 
 **Documentos exportables:**
 
-| Documento | Función | Campos |
-|-----------|---------|--------|
-| Ficha de Ingreso | `generarFichaIngresoPDF()` | 15+ campos |
-| Nota de Sesión | `generarNotaSesionPDF()` | Fecha, tipo, notas |
-| Informe Psicodiagnóstico | `generarInformePsicodiagnostico()` | 20+ campos |
-| Informe de Cierre | `generarInformeCierre()` | 15+ campos |
-| Ficha Completa | `exportarFichaCompletaPaciente()` | ZIP con todos |
-| Backup Global | `exportarTodasLasFichas()` | JSON completo |
+| Documento | Función | Formato |
+|-----------|---------|---------|
+| Ficha de Ingreso | `generarFichaIngresoPDF()` | PDF |
+| Nota de Sesión | `generarNotaSesionPDF()` | PDF |
+| Informe Psicodiagnóstico | `generarInformePsicodiagnostico()` | PDF |
+| Informe de Cierre | `generarInformeCierre()` | PDF |
+| Ficha Completa | `exportarFichaCompletaPaciente()` | ZIP con PDFs |
+| Backup Global | `exportarTodasLasFichas()` | JSON |
+| Exportar Pacientes | `exportarDatosExcel('pacientes')` | CSV/Excel |
+| Exportar Citas | `exportarDatosExcel('citas')` | CSV/Excel |
+| Exportar Profesionales | `exportarDatosExcel('profesionales')` | CSV/Excel |
+| Exportar Mensajes | `exportarDatosExcel('mensajes')` | CSV/Excel |
 
 **Modo simulado (fallback):**
 ```javascript
@@ -309,7 +356,7 @@ return `https://storage.vinculosalud.cl/informes/${id}_${Date.now()}.pdf`;
 • Citas: 89 pagadas · 23 pendientes · 4 rechazadas
 • Ingresos totales: $5.670.000
 
-[EXPORTAR JSON] [EXPORTAR CSV] [IMPRIMIR] [LIMPIAR HUÉRFANAS]
+[EXPORTAR JSON] [EXPORTAR CSV] [EXPORTAR EXCEL] [IMPRIMIR] [LIMPIAR HUÉRFANAS]
 ⚠️ ZONA DE PELIGRO: Eliminar Fichas/Sesiones/Informes
 ```
 
@@ -317,48 +364,44 @@ return `https://storage.vinculosalud.cl/informes/${id}_${Date.now()}.pdf`;
 
 ### 🆘 **PROBLEMAS COMUNES Y SOLUCIONES**
 
-#### **1. "No veo el botón de Ficha Clínica"**
+#### **1. "El campo 9 del teléfono no se puede editar"**
+```javascript
+// Verificar si tiene readonly
+const campo9 = document.getElementById('phoneNine');
+console.log('¿Tiene readonly?', campo9.hasAttribute('readonly'));
+campo9.removeAttribute('readonly'); // Solución
+```
+
+#### **2. "No veo el botón de Ficha Clínica"**
 ```javascript
 console.log(typeof window.verFichaCompleta); // Debe ser 'function'
 window.renderPatients(); // Forzar renderizado
 ```
 
-#### **2. "Error: No tengo permisos para ver este paciente"**
+#### **3. "Error: No tengo permisos para ver este paciente"**
 ```javascript
-// Verificar asignación
 console.log('Mi ID:', state.currentUser?.data?.id);
 console.log('psychId del paciente:', patient?.psychId);
-
 // SOLUCIÓN (admin): Asignar paciente al psicólogo
 patient.psychId = id_del_psicologo;
 window.save();
 ```
 
-#### **3. "El pago no se confirma automáticamente"**
+#### **4. "El pago no se confirma automáticamente"**
 ```javascript
 // ✅ ES CORRECTO - Así debe funcionar
-// Los pagos SIEMPRE comienzan como "pendiente"
-// El profesional debe confirmar manualmente con:
-window.confirmPayment(id_cita)
-```
-
-#### **4. "No puedo guardar la ficha de ingreso"**
-```javascript
-// Verificar permisos
-console.log(window.permisos.puedeEditarFichas(patientId));
-// Solo el psicólogo asignado o admin pueden editar
+window.confirmPayment(id_cita) // Confirmación manual
 ```
 
 #### **5. "El PDF no se genera"**
 ```javascript
 console.log('jsPDF disponible:', typeof window.jspdf !== 'undefined');
-// Si no está disponible, entra en modo simulado
 ```
 
 #### **6. "Error: db.collection is not a function"**
 ```javascript
-// Firebase usa Realtime Database, NO Firestore
 // Usar db.ref() en lugar de db.collection()
+db.ref('Staff').once('value', callback)
 ```
 
 #### **7. "QuotaExceededError (localStorage lleno)"**
@@ -417,6 +460,20 @@ window.estadisticas.exportarEstadisticasJSON()
 window.estadisticas.exportarEstadisticasCSV()
 
 // ============================================
+// EXPORTAR EXCEL (ADMIN)
+// ============================================
+window.exportarDatosExcel('pacientes')
+window.exportarDatosExcel('citas')
+window.exportarDatosExcel('profesionales')
+window.exportarDatosExcel('mensajes')
+
+// ============================================
+// COMPARTIR PERFIL
+// ============================================
+window.compartirPerfil(psychId, psychName)
+window.copiarAlPortapapeles(texto)
+
+// ============================================
 // UTILIDADES
 // ============================================
 window.formatRut()
@@ -424,23 +481,24 @@ window.validarRut()
 window.showToast()
 window.formatCurrency()
 window.calculateAge()
+window.limpiarStorage()
 ```
 
 ---
 
 ### 📝 **CHECKLIST DE IMPLEMENTACIÓN**
 
-#### **Módulos Completados (15+):**
+#### **Módulos Completados (16):**
 - [x] `state.js` - Estado global con fichas clínicas
 - [x] `auth.js` - Login/logout y gestión de sesiones
 - [x] `citas.js` - Reservas, pagos y confirmaciones
 - [x] `pacientes.js` - CRUD + vista detalle con 4 pestañas
-- [x] `profesionales.js` - Gestión + estadísticas
+- [x] `profesionales.js` - Gestión + estadísticas + género
 - [x] `boxes.js` - Gestión de boxes + disponibilidad
 - [x] `mensajes.js` - Testimonios + estadísticas
 - [x] `personalizacion.js` - Logo, textos, fondo
-- [x] `publico.js` - Vista pública y filtros
-- [x] `admin.js` - Backup/restore + limpieza
+- [x] `publico.js` - Vista pública, filtros, botón compartir
+- [x] `admin.js` - Backup/restore + limpieza + exportar Excel
 - [x] `fichasClinicas.js` - CRUD de fichas y sesiones
 - [x] `informes.js` - Informes psicodiagnóstico y cierre
 - [x] `pdfGenerator.js` - Exportación PDF con fallback
@@ -451,18 +509,14 @@ window.calculateAge()
 #### **Verificaciones UI:**
 - [x] Botón "Staff" para login
 - [x] Grid de profesionales con filtros
+- [x] Teléfono con 3 campos (código + 9 + número)
 - [x] Panel de reserva con selección de fecha/hora/box
 - [x] Dashboard con estadísticas
 - [x] Botón "Ver Ficha Clínica" en cada paciente
 - [x] Pestañas (Perfil, Ficha Ingreso, Sesiones, Informes)
-- [x] Formulario de Ficha de Ingreso (todos los campos)
-- [x] Formulario de Nota de Sesión
-- [x] Formulario de Informe Psicodiagnóstico (20+ campos)
-- [x] Formulario de Informe de Cierre (15+ campos)
-- [x] Botones de PDF en cada documento
+- [x] Botón "Compartir perfil" en cada profesional
+- [x] Botones de exportar Excel en admin
 - [x] Pestaña "📊 Estadísticas" solo para admin
-- [x] Botones de backup/restore en admin
-- [x] Checkbox de sobrecupo en disponibilidad
 
 ---
 
@@ -473,18 +527,20 @@ window.calculateAge()
 | **Core** | Firebase Auth, EmailJS, Diseño Apple | ✅ |
 | **Agenda** | Reservas online/presenciales, pagos | ✅ |
 | **Pacientes** | CRUD básico, historial de citas | ✅ |
-| **Profesionales** | CRUD, disponibilidad, precios | ✅ |
+| **Teléfono** | 3 campos (código + 9 + número) editable | ✅ |
+| **Profesionales** | CRUD, disponibilidad, género | ✅ |
 | **Boxes** | CRUD, disponibilidad, ocupación en tiempo real | ✅ |
 | **Mensajes** | Testimonios, calificaciones, exportación | ✅ |
 | **Personalización** | Logo, textos, fondo, métodos de pago | ✅ |
 | **Fichas Ingreso** | Formulario completo (15+ campos) | ✅ |
 | **Sesiones** | Notas de evolución por sesión | ✅ |
-| **Informes Psicodiagnóstico** | Formulario 20+ campos, PDF | ✅ |
-| **Informes de Cierre** | Formulario 15+ campos, PDF | ✅ |
+| **Informes** | Psicodiagnóstico y cierre (20+ campos) | ✅ |
 | **PDF** | Exportación individual, masiva, fallback | ✅ |
 | **Permisos** | Control granular por rol (15+ funciones) | ✅ |
 | **Estadísticas Psicólogo** | Pacientes, sesiones, ingresos | ✅ |
 | **Estadísticas Admin** | Globales, crecimiento, boxes | ✅ |
+| **Compartir** | Botón compartir perfil por WhatsApp/Email | ✅ |
+| **Exportar Excel** | Pacientes, citas, profesionales, mensajes | ✅ |
 | **Backup/Restore** | JSON de todas las fichas | ✅ |
 | **Limpieza** | Fichas huérfanas, reinicio selectivo | ✅ |
 
@@ -496,19 +552,27 @@ window.calculateAge()
 (function() {
   console.log('%c🔍 VÍNCULO SALUD v2.0 - DIAGNÓSTICO COMPLETO', 'font-size:16px');
   
+  const campo9 = document.getElementById('phoneNine');
+  const campoNumero = document.getElementById('custPhone');
+  
   const checks = {
     'state global': !!window.state,
     'auth': typeof window.showLoginModal === 'function',
+    'selectTimeSlot': typeof window.selectTimeSlot === 'function',
     'fichasClinicas': !!window.fichasClinicas,
     'informes': !!window.informes,
     'permisos': !!window.permisos,
     'estadisticas': !!window.estadisticas,
+    'exportarExcel': typeof window.exportarDatosExcel === 'function',
+    'compartirPerfil': typeof window.compartirPerfil === 'function',
     'verFichaCompleta': typeof window.verFichaCompleta === 'function',
     'pacientes': window.state?.patients?.length || 0,
     'fichasIngreso': window.state?.fichasIngreso?.length || 0,
     'sesiones': window.state?.sesiones?.length || 0,
     'informes': window.state?.informes?.length || 0,
-    'profesionales': window.state?.staff?.length || 0
+    'profesionales': window.state?.staff?.length || 0,
+    '📱 campo 9 editable': campo9 ? !campo9.readOnly : 'No existe',
+    '📱 campo número editable': campoNumero ? !campoNumero.readOnly : 'No existe'
   };
   
   console.table(checks);
@@ -531,15 +595,16 @@ window.calculateAge()
 | Versión | Características |
 |---------|-----------------|
 | **v1.0** | Agenda, pagos, pacientes básico |
-| **v2.0** | ✅ Fichas clínicas, sesiones, informes (20+ campos), PDF, permisos granulares, estadísticas globales y por profesional, boxes en tiempo real, sobrecupos, exportación CSV/JSON, backup/restore |
+| **v2.0** | ✅ Fichas clínicas, sesiones, informes (20+ campos), PDF, permisos granulares, estadísticas globales y por profesional, boxes en tiempo real, sobrecupos, exportación CSV/JSON/Excel, backup/restore, teléfono 3 campos, botón compartir |
 
 #### **Flujo completo del paciente:**
 ```
+📞 TELÉFONO → +56 9 9135 7990 (3 campos editables)
 📋 PREINGRESO → Ficha de Ingreso (antecedentes completos)
 📝 PROCESO → Notas de evolución por cada sesión
 📊 EVALUACIÓN → Informe Psicodiagnóstico (20+ campos)
 🏁 CIERRE → Informe de Cierre (alta/derivación/abandono)
-📦 EXPORTACIÓN → PDF individual, ficha completa ZIP, backup JSON
+📦 EXPORTACIÓN → PDF individual, ficha completa ZIP, backup JSON, Excel
 ```
 
 #### **Tres reglas de oro:**
@@ -551,14 +616,29 @@ window.calculateAge()
 - **Frontend:** HTML5, CSS3, JavaScript (ES6+), Font Awesome 6
 - **Backend:** Firebase Realtime Database
 - **Autenticación:** Firebase Auth
-- **Emails:** EmailJS + SendGrid
+- **Emails:** EmailJS + SendGrid (solo al paciente)
 - **PDF:** jsPDF (con fallback)
+- **Excel:** Exportación CSV
+- **Compartir:** Web Share API + fallback manual
 - **Diseño:** Apple-style, glassmorphism, responsivo
+
+---
+
+### 🎉 **ÚLTIMAS MEJORAS INCORPORADAS:**
+
+1. 📱 **Teléfono de 3 campos** - Código país + 9 + número (el 9 ahora es editable)
+2. 🔗 **Botón compartir perfil** - WhatsApp, Email, copiar enlace
+3. 📊 **Exportar a Excel** - Pacientes, citas, profesionales, mensajes
+4. 🚫 **Emails solo al paciente** - El profesional no recibe notificaciones
+5. 🎨 **Género en profesionales** - Psicólogo/Psicóloga según corresponda
 
 ---
 
 **¡Vínculo Salud v2.0 está COMPLETAMENTE OPERATIVO!** 🚀
 
-Agenda + Pagos + Fichas Clínicas + Informes Profesionales + PDF + Permisos Granulares + Estadísticas Globales + Backup + Boxes en Tiempo Real + Sobrecupos.
+Agenda + Pagos + Fichas Clínicas + Informes Profesionales + PDF + Permisos Granulares + Estadísticas Globales + Backup + Boxes en Tiempo Real + Sobrecupos + Teléfono 3 Campos + Compartir Perfil + Exportar Excel.
 
-**Todo lo que un centro de salud mental necesita en una sola plataforma.**
+**Todo lo que un centro de salud mental necesita en una sola plataforma.** 🎯
+```
+
+**¿Quieres que agregue o modifique algo más?**

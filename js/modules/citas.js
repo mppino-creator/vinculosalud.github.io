@@ -1130,5 +1130,6 @@ window.renderAppointments = renderAppointments;
 window.getAppointmentStats = getAppointmentStats;
 window.getUpcomingAppointments = getUpcomingAppointments;
 window.isTimeSlotAvailable = isTimeSlotAvailable;
+window.selectTimeSlot = selectTimeSlot;
 
 console.log('✅ citas.js cargado con agenda AM/PM y estadísticas');

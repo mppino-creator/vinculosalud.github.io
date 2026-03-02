@@ -482,7 +482,7 @@ export function confirmPresencialTime(requestId, date, time) {
 }
 
 // ============================================
-// FUNCIÓN EXECUTEBOOKING (ACTUALIZADA)
+// FUNCIÓN EXECUTEBOOKING (VERSIÓN CORREGIDA)
 // ============================================
 
 export function executeBooking() {
@@ -491,7 +491,20 @@ export function executeBooking() {
     const email = document.getElementById('custEmail').value;
     const phone = document.getElementById('custPhone').value;
     const date = document.getElementById('custDate').value;
-    const time = document.getElementById('custTime').value;
+    
+    // ✅ OBTENER HORA DESDE EL SELECT O DESDE EL BOTÓN SELECCIONADO
+    let time = document.getElementById('custTime').value;
+    
+    // Si el select está vacío pero hay un botón seleccionado, usar ese valor
+    if (!time) {
+        const selectedBtn = document.querySelector('.time-slot-btn.selected');
+        if (selectedBtn) {
+            time = selectedBtn.dataset.time;
+            // Actualizar el select para mantener consistencia
+            document.getElementById('custTime').value = time;
+        }
+    }
+    
     const type = document.getElementById('appointmentType').value;
     const paymentMethod = document.getElementById('paymentMethod')?.value;
     const msg = document.getElementById('custMsg').value;

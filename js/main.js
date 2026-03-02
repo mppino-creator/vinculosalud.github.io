@@ -96,8 +96,6 @@ window.checkOnlineAvailability = citas.checkOnlineAvailability;
 window.showPaymentDetails = citas.showPaymentDetails;
 window.renderPendingRequests = citas.renderPendingRequests;
 window.renderAppointments = citas.renderAppointments;
-window.selectTimeSlot = citas.selectTimeSlot; // ✅ AÑADIDO
-window.selectTimePref = citas.selectTimePref; // ✅ AÑADIDO
 
 // ============================================
 // FUNCIONES DE DISPONIBILIDAD

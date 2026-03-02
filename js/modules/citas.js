@@ -4,26 +4,52 @@ import * as state from './state.js';
 import { showToast, validarRut, sendEmailNotification, formatDate } from './utils.js';
 
 // ============================================
-// FUNCIÓN AUXILIAR PARA CLASIFICAR HORARIOS
+// RESPALDO DE EMERGENCIA - SIEMPRE DISPONIBLE
 // ============================================
 
-/**
- * Clasifica una hora en AM o PM
- * @param {string} time - Hora en formato HH:MM
- * @returns {string} 'AM' o 'PM'
- */
-function getTimePeriod(time) {
-    const hour = parseInt(time.split(':')[0]);
-    return hour < 12 ? 'AM' : 'PM';
+// Esta función se asigna inmediatamente y permanece
+if (typeof window !== 'undefined') {
+    window.selectTimeSlot = window.selectTimeSlot || function(time) {
+        console.log('🔄 [RESPALDO] Seleccionando horario:', time);
+        
+        // Buscar el botón y seleccionarlo
+        const btn = document.querySelector(`.time-slot-btn[data-time="${time}"]`);
+        if (btn) {
+            document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+        
+        // Actualizar select
+        const select = document.getElementById('custTime');
+        if (select) select.value = time;
+        
+        // Intentar llamar a la función real si ya cargó
+        if (window._realSelectTimeSlot) {
+            window._realSelectTimeSlot(time);
+        }
+        
+        return true;
+    };
+    
+    window.selectTimePref = window.selectTimePref || function(pref) {
+        console.log('🔄 [RESPALDO] Preferencia:', pref);
+        const panel = document.getElementById('bookingPanel');
+        if (panel) panel.dataset.timePref = pref;
+        if (pref && window.showToast) {
+            window.showToast(`Preferencia: ${pref === 'AM' ? 'Mañana' : 'Tarde'}`, 'info');
+        }
+    };
+    
+    console.log('✅ Funciones de respaldo instaladas');
 }
 
 // ============================================
-// FUNCIÓN PARA SELECCIONAR HORARIO - VERSIÓN GLOBAL DIRECTA
+// FUNCIÓN REAL (SE EJECUTA DESPUÉS)
 // ============================================
 
-// Esta función se asigna directamente a window para garantizar disponibilidad
-window.selectTimeSlot = function(time) {
-    console.log('🔧 [GLOBAL] Seleccionando horario:', time);
+// Guardamos la función real con otro nombre
+window._realSelectTimeSlot = function(time) {
+    console.log('🔧 [REAL] Seleccionando horario:', time);
     
     // Verificar que los elementos existen
     if (!document.querySelectorAll || !document.getElementById) {
@@ -62,8 +88,11 @@ window.selectTimeSlot = function(time) {
     return true;
 };
 
-// Exponer selectTimePref globalmente (UNA SOLA VEZ)
-window.selectTimePref = function(pref) {
+// Sobrescribir la función de respaldo con la real
+window.selectTimeSlot = window._realSelectTimeSlot;
+
+// Función real para preferencias
+window._realSelectTimePref = function(pref) {
     console.log('📅 Preferencia seleccionada:', pref);
     const bookingPanel = document.getElementById('bookingPanel');
     if (bookingPanel) {
@@ -75,8 +104,27 @@ window.selectTimePref = function(pref) {
     }
 };
 
+window.selectTimePref = window._realSelectTimePref;
+
 // Verificar que quedó asignada
-console.log('✅ selectTimeSlot asignada globalmente:', typeof window.selectTimeSlot);
+console.log('✅ Funciones instaladas:', {
+    selectTimeSlot: typeof window.selectTimeSlot,
+    selectTimePref: typeof window.selectTimePref
+});
+
+// ============================================
+// FUNCIÓN AUXILIAR PARA CLASIFICAR HORARIOS
+// ============================================
+
+/**
+ * Clasifica una hora en AM o PM
+ * @param {string} time - Hora en formato HH:MM
+ * @returns {string} 'AM' o 'PM'
+ */
+function getTimePeriod(time) {
+    const hour = parseInt(time.split(':')[0]);
+    return hour < 12 ? 'AM' : 'PM';
+}
 
 // ============================================
 // FUNCIONES EXPORTADAS

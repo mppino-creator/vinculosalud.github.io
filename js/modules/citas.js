@@ -17,11 +17,17 @@ function getTimePeriod(time) {
     return hour < 12 ? 'AM' : 'PM';
 }
 
+// ============================================
+// FUNCIÓN PARA SELECCIONAR HORARIO (MEJORADA)
+// ============================================
+
 /**
  * Función global para seleccionar horario
  * @param {string} time - Hora seleccionada
  */
 window.selectTimeSlot = function(time) {
+    console.log('🔧 Seleccionando horario:', time);
+    
     // Remover selección anterior
     document.querySelectorAll('.time-slot-btn').forEach(btn => {
         btn.classList.remove('selected');
@@ -33,24 +39,38 @@ window.selectTimeSlot = function(time) {
         selectedBtn.classList.add('selected');
     }
     
-    // Actualizar el select oculto (por compatibilidad)
+    // ✅ ACTUALIZAR EL SELECT OCULTO (siempre)
     const timeSelect = document.getElementById('custTime');
     if (timeSelect) {
         timeSelect.value = time;
+        console.log('✅ Select actualizado a:', timeSelect.value);
+        
+        // Disparar evento change
+        const event = new Event('change', { bubbles: true });
+        timeSelect.dispatchEvent(event);
+    }
+    
+    // ✅ GUARDAR EN UN ATRIBUTO DATA DEL PANEL (respaldo)
+    const bookingPanel = document.getElementById('bookingPanel');
+    if (bookingPanel) {
+        bookingPanel.dataset.selectedTime = time;
     }
     
     // Actualizar detalles de la reserva
-    updateBookingDetails();
+    if (typeof updateBookingDetails === 'function') {
+        updateBookingDetails();
+    }
     
     // Si es presencial, actualizar boxes disponibles
     if (document.getElementById('appointmentType').value === 'presencial') {
         const date = document.getElementById('custDate').value;
-        if (typeof updateBoxSelector === 'function') {
-            updateBoxSelector(date, time);
+        if (typeof window.updateBoxSelector === 'function') {
+            window.updateBoxSelector(date, time);
         }
     }
     
-    console.log('✅ Horario seleccionado:', time);
+    console.log('✅ Horario seleccionado y guardado:', time);
+    return true;
 };
 
 // ============================================
@@ -224,7 +244,27 @@ export function updateAvailableTimes() {
     if (noSlotsMessage) noSlotsMessage.style.display = 'none';
 
     if (type === 'presencial') {
-        if (presencialWarning) presencialWarning.style.display = 'block';
+        if (presencialWarning) {
+            presencialWarning.style.display = 'block';
+            presencialWarning.innerHTML = `
+                <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
+                <strong>Solicitud Presencial:</strong> El profesional confirmará la hora.
+                <div style="margin-top:15px; padding:10px; background:#f8fafc; border-radius:8px;">
+                    <label style="display:block; margin-bottom:8px; color:var(--texto-primario);">Preferencia de horario (opcional):</label>
+                    <div style="display:flex; gap:15px; justify-content:center;">
+                        <label style="display:flex; align-items:center; gap:5px;">
+                            <input type="radio" name="presencialTimePref" value="AM" onchange="selectTimePref('AM')"> Mañana (AM)
+                        </label>
+                        <label style="display:flex; align-items:center; gap:5px;">
+                            <input type="radio" name="presencialTimePref" value="PM" onchange="selectTimePref('PM')"> Tarde (PM)
+                        </label>
+                        <label style="display:flex; align-items:center; gap:5px;">
+                            <input type="radio" name="presencialTimePref" value="" checked> Sin preferencia
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
         if (onlineMsg) onlineMsg.style.display = 'none';
         return;
     }
@@ -307,6 +347,18 @@ export function updateAvailableTimes() {
         timeSelect.value = '';
     }
 }
+
+// Función para guardar preferencia de horario para presencial
+window.selectTimePref = function(pref) {
+    console.log('📅 Preferencia seleccionada:', pref);
+    const bookingPanel = document.getElementById('bookingPanel');
+    if (bookingPanel) {
+        bookingPanel.dataset.timePref = pref;
+    }
+    if (pref) {
+        showToast(`Preferencia: ${pref === 'AM' ? 'Mañana' : 'Tarde'}`, 'info');
+    }
+};
 
 export function updateBookingDetails() {
     const type = document.getElementById('appointmentType').value;
@@ -482,34 +534,23 @@ export function confirmPresencialTime(requestId, date, time) {
 }
 
 // ============================================
-// FUNCIÓN EXECUTEBOOKING (VERSIÓN CORREGIDA)
+// FUNCIÓN EXECUTEBOOKING (SIMPLIFICADA Y MEJORADA)
 // ============================================
 
 export function executeBooking() {
+    console.log('🚀 Ejecutando reserva...');
+    
     const rut = document.getElementById('custRut').value;
     const name = document.getElementById('custName').value;
     const email = document.getElementById('custEmail').value;
     const phone = document.getElementById('custPhone').value;
     const date = document.getElementById('custDate').value;
-    
-    // ✅ OBTENER HORA DESDE EL SELECT O DESDE EL BOTÓN SELECCIONADO
-    let time = document.getElementById('custTime').value;
-    
-    // Si el select está vacío pero hay un botón seleccionado, usar ese valor
-    if (!time) {
-        const selectedBtn = document.querySelector('.time-slot-btn.selected');
-        if (selectedBtn) {
-            time = selectedBtn.dataset.time;
-            // Actualizar el select para mantener consistencia
-            document.getElementById('custTime').value = time;
-        }
-    }
-    
     const type = document.getElementById('appointmentType').value;
     const paymentMethod = document.getElementById('paymentMethod')?.value;
     const msg = document.getElementById('custMsg').value;
     const acceptPolicy = document.getElementById('acceptPolicy').checked;
 
+    // ✅ VALIDACIONES BÁSICAS
     if (!rut || !name || !email || !date) {
         showToast('Completa todos los campos obligatorios', 'error');
         return;
@@ -530,9 +571,58 @@ export function executeBooking() {
         return;
     }
 
+    // ============================================
+    // ✅ OBTENER HORA (SIMPLIFICADO)
+    // ============================================
+    
+    // Intentar obtener hora del select
+    let time = document.getElementById('custTime').value;
+    console.log('⏰ Hora desde select:', time);
+    
+    // Si no hay hora en el select, buscar botón seleccionado
+    if (!time) {
+        const selectedBtn = document.querySelector('.time-slot-btn.selected');
+        if (selectedBtn && selectedBtn.dataset.time) {
+            time = selectedBtn.dataset.time;
+            console.log('⏰ Hora desde botón seleccionado:', time);
+            
+            // Actualizar el select para mantener consistencia
+            document.getElementById('custTime').value = time;
+        }
+    }
+    
+    // Si aún no hay hora, buscar en el panel data
+    if (!time) {
+        const bookingPanel = document.getElementById('bookingPanel');
+        if (bookingPanel && bookingPanel.dataset.selectedTime) {
+            time = bookingPanel.dataset.selectedTime;
+            console.log('⏰ Hora desde panel data:', time);
+        }
+    }
+
+    // ============================================
+    // ✅ VALIDACIÓN DE HORA SEGÚN TIPO
+    // ============================================
+    
     if (type === 'online' && !time) {
         showToast('Selecciona un horario para la cita online', 'error');
+        console.error('❌ No se pudo obtener la hora');
         return;
+    }
+
+    // Para presencial, la hora es opcional
+    let horaFinal = time || 'Pendiente';
+    
+    // Obtener preferencia AM/PM para presencial
+    let preferenciaAMPM = null;
+    if (type === 'presencial') {
+        const prefRadios = document.getElementsByName('presencialTimePref');
+        for (const radio of prefRadios) {
+            if (radio.checked && radio.value) {
+                preferenciaAMPM = radio.value;
+                break;
+            }
+        }
     }
 
     const bookBtn = document.getElementById('bookBtn');
@@ -542,6 +632,7 @@ export function executeBooking() {
 
     setTimeout(async () => {
         try {
+            // Buscar o crear paciente
             let patient = state.patients.find(p => p.rut === rut);
             if (!patient) {
                 patient = {
@@ -571,7 +662,7 @@ export function executeBooking() {
                 psych: state.selectedPsych.name,
                 psychId: state.selectedPsych.id,
                 date: date,
-                time: type === 'online' ? time : 'Pendiente',
+                time: horaFinal,
                 type: type,
                 boxId: null,
                 boxName: null,
@@ -583,7 +674,9 @@ export function executeBooking() {
                 msg: msg,
                 status: type === 'online' ? 'pendiente' : 'pendiente',
                 createdAt: new Date().toISOString(),
-                emailEnviado: false
+                emailEnviado: false,
+                preferredTime: time || null,
+                preferredAMPM: preferenciaAMPM
             };
 
             if (type === 'online') {
@@ -591,26 +684,39 @@ export function executeBooking() {
                 showToast('✅ Solicitud creada. El profesional confirmará el pago.', 'success');
             } else {
                 state.pendingRequests.push(appointment);
-                showToast('✅ Solicitud enviada. El profesional confirmará hora y pago.', 'success');
+                let mensaje = '✅ Solicitud enviada. El profesional confirmará hora y pago.';
+                if (time) mensaje += ` (Preferencia: ${time})`;
+                if (preferenciaAMPM) mensaje += ` ${preferenciaAMPM}`;
+                showToast(mensaje, 'success');
             }
 
+            // Enviar email
             if (email) {
                 console.log('📧 Enviando email de confirmación a:', email);
                 
+                let mensajeEmail = `Hola ${name},\n\nHemos recibido tu solicitud de cita ${type === 'online' ? 'online' : 'presencial'}.\n\n` +
+                    `📅 Fecha: ${date}\n`;
+                
+                if (type === 'online' && time) {
+                    mensajeEmail += `⏰ Hora: ${time}\n`;
+                } else if (type === 'presencial') {
+                    if (time) mensajeEmail += `⏰ Preferencia de horario: ${time}\n`;
+                    if (preferenciaAMPM) mensajeEmail += `⏰ Turno preferido: ${preferenciaAMPM === 'AM' ? 'Mañana' : 'Tarde'}\n`;
+                }
+                
+                mensajeEmail += `👨‍⚕️ Profesional: ${state.selectedPsych.name}\n` +
+                    `💰 Monto: $${price.toLocaleString()}\n` +
+                    `💳 Método de pago: ${paymentMethod}\n\n` +
+                    `El profesional confirmará el pago y la hora a la brevedad.\n\n` +
+                    `Vínculo Salud - Centro de Bienestar`;
+
                 setTimeout(() => {
                     sendEmailNotification(
                         email,
                         type === 'online' 
                             ? 'Solicitud de cita online - Vínculo Salud'
                             : 'Solicitud de cita presencial - Vínculo Salud',
-                        `Hola ${name},\n\nHemos recibido tu solicitud de cita ${type === 'online' ? 'online' : 'presencial'}.\n\n` +
-                        `📅 Fecha: ${date}\n` +
-                        `${type === 'online' ? `⏰ Hora: ${time}\n` : ''}` +
-                        `👨‍⚕️ Profesional: ${state.selectedPsych.name}\n` +
-                        `💰 Monto: $${price.toLocaleString()}\n` +
-                        `💳 Método de pago: ${paymentMethod}\n\n` +
-                        `El profesional confirmará el pago y la hora a la brevedad.\n\n` +
-                        `Vínculo Salud - Centro de Bienestar`,
+                        mensajeEmail,
                         'solicitud_recibida',
                         name,
                         appointment
@@ -1144,5 +1250,6 @@ window.getAppointmentStats = getAppointmentStats;
 window.getUpcomingAppointments = getUpcomingAppointments;
 window.isTimeSlotAvailable = isTimeSlotAvailable;
 window.selectTimeSlot = selectTimeSlot;
+window.selectTimePref = selectTimePref;
 
 console.log('✅ citas.js cargado con agenda AM/PM y estadísticas');

@@ -393,13 +393,16 @@ export function updateAvailableTimes() {
         onlineMsg.innerHTML = '<i class="fa fa-check-circle" style="color: var(--verde-exito);"></i> Horarios disponibles';
     }
 
-    // Limpiar selección anterior
-    const selectedSlot = document.querySelector('.time-slot-btn.selected');
-    if (selectedSlot) {
-        selectedSlot.classList.remove('selected');
-    }
-    if (timeSelect) {
-        timeSelect.value = '';
+    // No limpiar automáticamente - mantener selección si existe
+    // Solo limpiar si no hay horarios disponibles
+    if (availableTimes.length === 0) {
+        const selectedSlot = document.querySelector('.time-slot-btn.selected');
+        if (selectedSlot) {
+            selectedSlot.classList.remove('selected');
+        }
+        if (timeSelect) {
+            timeSelect.value = '';
+        }
     }
 }
 

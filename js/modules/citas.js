@@ -17,7 +17,7 @@ function getTimePeriod(time) {
     return hour < 12 ? 'AM' : 'PM';
 }
 
-/// ============================================
+// ============================================
 // FUNCIÓN PARA SELECCIONAR HORARIO - VERSIÓN GLOBAL DIRECTA
 // ============================================
 
@@ -62,7 +62,7 @@ window.selectTimeSlot = function(time) {
     return true;
 };
 
-// También exponer selectTimePref globalmente
+// Exponer selectTimePref globalmente (UNA SOLA VEZ)
 window.selectTimePref = function(pref) {
     console.log('📅 Preferencia seleccionada:', pref);
     const bookingPanel = document.getElementById('bookingPanel');
@@ -352,18 +352,6 @@ export function updateAvailableTimes() {
         timeSelect.value = '';
     }
 }
-
-// Función para guardar preferencia de horario para presencial
-window.selectTimePref = function(pref) {
-    console.log('📅 Preferencia seleccionada:', pref);
-    const bookingPanel = document.getElementById('bookingPanel');
-    if (bookingPanel) {
-        bookingPanel.dataset.timePref = pref;
-    }
-    if (pref) {
-        showToast(`Preferencia: ${pref === 'AM' ? 'Mañana' : 'Tarde'}`, 'info');
-    }
-};
 
 export function updateBookingDetails() {
     const type = document.getElementById('appointmentType').value;

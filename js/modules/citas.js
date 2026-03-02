@@ -305,15 +305,28 @@ export function updateAvailableTimes() {
         return;
     }
 
+    // DEBUG: Ver qué citas están ocupadas
     const bookedTimes = state.appointments
         .filter(a => a.psychId == state.selectedPsych.id && a.date === date && a.status === 'confirmada')
         .map(a => a.time);
-
+    
+    console.log('📊 ===== DIAGNÓSTICO DE DISPONIBILIDAD =====');
+    console.log('📅 Fecha:', date);
+    console.log('👤 Psicólogo:', state.selectedPsych.name);
+    console.log('📋 Horarios disponibles en agenda:', availableSlots.map(s => s.time));
+    console.log('🚫 Horarios ocupados (citas):', bookedTimes);
+    
+    // Filtrar horarios ocupados
+    let availableTimes = availableSlots.filter(slot => !bookedTimes.includes(slot.time));
+    console.log('⏳ Después de filtrar ocupados:', availableTimes.map(s => s.time));
+    
+    // Filtrar horarios pasados
     const now = new Date();
-    const availableTimes = availableSlots
-        .filter(slot => !bookedTimes.includes(slot.time))
-        .filter(slot => new Date(date + 'T' + slot.time) > now)
-        .sort((a, b) => a.time.localeCompare(b.time));
+    availableTimes = availableTimes.filter(slot => new Date(date + 'T' + slot.time) > now);
+    console.log('⏰ Después de filtrar pasados:', availableTimes.map(s => s.time));
+    console.log('✅ Horarios finales disponibles:', availableTimes.map(s => s.time));
+    
+    availableTimes.sort((a, b) => a.time.localeCompare(b.time));
 
     if (availableTimes.length === 0) {
         if (noSlotsMessage) {

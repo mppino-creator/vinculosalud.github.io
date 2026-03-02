@@ -854,11 +854,31 @@ export function executeBooking() {
 
             await import('../main.js').then(main => main.save());
 
+            // 🟢 FORZAR ACTUALIZACIÓN DE DISPONIBILIDAD PARA EVITAR DOBLE RESERVA
+            console.log('🔄 Actualizando disponibilidad después de reserva...');
+            
+            // Limpiar selección actual
+            window.horaSeleccionada = null;
+            
+            // Recargar horarios disponibles (esto marcará la hora como ocupada)
+            if (typeof updateAvailableTimes === 'function') {
+                updateAvailableTimes();
+                console.log('✅ Disponibilidad actualizada - la hora reservada ya no debería aparecer');
+            }
+            
+            // Segunda actualización para asegurar
+            setTimeout(() => {
+                if (typeof updateAvailableTimes === 'function') {
+                    updateAvailableTimes();
+                }
+            }, 300);
+
             bookBtn.innerHTML = originalText;
             bookBtn.disabled = false;
             
+            // Preguntar si quiere volver al listado
             setTimeout(() => {
-                if (confirm('¿Quieres ver el listado de profesionales?')) {
+                if (confirm('✅ Cita agendada correctamente. ¿Quieres ver el listado de profesionales?')) {
                     location.reload();
                 }
             }, 2000);

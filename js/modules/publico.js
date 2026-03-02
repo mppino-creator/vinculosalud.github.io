@@ -116,7 +116,9 @@ export function renderProfessionals(professionals) {
     grid.innerHTML = professionals.map(p => {
         const today = new Date().toISOString().split('T')[0];
         
-        // Calcular horarios ocupados hoy
+        // ============================================
+        // 🔥 MEJORA 1: Calcular disponibilidad REAL
+        // ============================================
         const citasHoy = window.state?.appointments?.filter(a => 
             a.psychId == p.id && 
             a.date === today && 
@@ -124,18 +126,26 @@ export function renderProfessionals(professionals) {
         ) || [];
         
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
-        const hasAvailability = slotsHoy.length > citasHoy.length;
+        const horasLibres = slotsHoy.length - citasHoy.length;
+        const disponibilidadTexto = horasLibres > 0 ? `${horasLibres} horarios` : 'Sin cupos';
+        const disponibilidadClase = horasLibres > 0 ? 'online' : 'offline';
+        const disponibilidadBadge = horasLibres > 0 ? 'DISPONIBLE' : 'COMPLETO';
         
-        // Especialidades limitadas a 3
+        // ============================================
+        // 🔥 MEJORA 2: Especialidades limitadas a 3
+        // ============================================
         const specialtiesList = Array.isArray(p.spec) ? p.spec : [p.spec];
-        const displaySpecialties = specialtiesList.slice(0, 3).join(' · ');
-        const hasMore = specialtiesList.length > 3;
-        const specialties = displaySpecialties + (hasMore ? ' · +' + (specialtiesList.length - 3) : '');
+        const specsMostrar = specialtiesList.slice(0, 3);
+        const specsRestantes = specialtiesList.length - 3;
+        const specialties = specsMostrar.join(' · ') + (specsRestantes > 0 ? ` +${specsRestantes}` : '');
         
-        // Estrellas
+        // ============================================
+        // 🔥 MEJORA 3: Estrellas con número de reseñas
+        // ============================================
         const avgRating = getAverageRating(p.id);
         const ratingDisplay = avgRating > 0 ? avgRating : 5;
         const starCount = Math.floor(ratingDisplay);
+        const totalReseñas = state.messages.filter(m => m.therapistId == p.id).length;
         
         const whatsappMessage = encodeURIComponent('Hola buenas tardes, necesito una hora para atención psicológica. ¿Podría ayudarme?');
         const whatsappUrl = p.whatsapp ? `https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${whatsappMessage}` : '#';
@@ -144,49 +154,65 @@ export function renderProfessionals(professionals) {
         return `
             <div class="therapist-card">
                 <div class="img-container">
-                    <div class="availability-badge ${hasAvailability ? 'online' : 'offline'}">
+                    <!-- MEJORA: Badge de disponibilidad real -->
+                    <div class="availability-badge ${disponibilidadClase}">
                         <div class="pulse"></div> 
-                        ${hasAvailability ? 'DISPONIBLE HOY' : 'VER HORARIOS'}
+                        ${horasLibres > 0 ? `${horasLibres} disponibles` : 'Sin cupos'}
                     </div>
+                    
                     ${p.whatsapp ? `
                         <a href="${whatsappUrl}" target="_blank" class="whatsapp-badge" onclick="event.stopPropagation()" title="Contactar por WhatsApp">
                             <i class="fab fa-whatsapp"></i>
                         </a>
                     ` : ''}
+                    
                     ${p.instagram ? `
                         <a href="${instagramUrl}" target="_blank" class="instagram-badge" onclick="event.stopPropagation()" title="Ver Instagram">
                             <i class="fab fa-instagram"></i>
                         </a>
                     ` : ''}
+                    
                     <img src="${p.img}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'">
                 </div>
+                
                 <div class="card-body" onclick="openBooking(${p.id})">
+                    <!-- MEJORA: Especialidades limitadas -->
                     <span class="tag">${specialties}</span>
+                    
                     <h3>${p.name}</h3>
+                    
                     ${p.genero ? `<small style="display:block; color:var(--text-light); font-size:0.8rem; margin-top:-5px;">${p.genero === 'M' ? 'Psicólogo' : p.genero === 'F' ? 'Psicóloga' : ''}</small>` : ''}
                     
-                    <!-- CAMBIO 3: Reseñas como número destacado -->
+                    <!-- MEJORA: Estrellas con número de reseñas -->
                     <div class="stars" style="display:flex; align-items:center; justify-content:space-between; margin:10px 0;">
                         <div>
                             ${'★'.repeat(starCount)}${'☆'.repeat(5-starCount)}
                         </div>
                         <div style="background:var(--azul-apple); color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; display:flex; align-items:center; gap:4px;">
                             <i class="fa fa-comment" style="font-size:0.7rem;"></i>
-                            ${state.messages.filter(m => m.therapistId == p.id).length}
+                            ${totalReseñas}
                         </div>
                     </div>
                     
+                    <!-- MEJORA: Precio y disponibilidad -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0; padding:8px; background:#f8fafc; border-radius:8px;">
+                        <span style="font-weight:600; color:var(--azul-apple);">$${p.priceOnline?.toLocaleString()}</span>
+                        <span style="color:${horasLibres > 0 ? 'var(--verde-exito)' : 'var(--rojo-alerta)'}; font-size:0.9rem;">
+                            <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${disponibilidadTexto}
+                        </span>
+                    </div>
+                    
                     <div class="price-box">
-                        <!-- Botón Agendar -->
+                        <!-- MEJORA: Botón Agendar (corregido) -->
                         <button class="btn-book" onclick="event.stopPropagation(); openBooking(${p.id})" 
                                 style="width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 600; background: var(--azul-apple); border: none; border-radius: 30px; color: white; cursor: pointer; transition: all 0.3s; margin-top: 10px;">
-                            📅 Agendar hora
+                            <i class="fa fa-calendar-check"></i> Agendar hora
                         </button>
                         
-                        <!-- CAMBIO 6: Botón Compartir Perfil -->
+                        <!-- MEJORA: Botón Compartir Perfil -->
                         <button class="btn-share" onclick="event.stopPropagation(); compartirPerfil('${p.id}', '${p.name}')" 
                                 style="width:100%; margin-top:8px; padding:8px; background:transparent; border:2px solid var(--azul-apple); border-radius:30px; color:var(--azul-apple); font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            <i class="fa fa-share-alt"></i> Compartir perfil
+                            <i class="fa fa-share-alt"></i> Compartir
                         </button>
                     </div>
                 </div>

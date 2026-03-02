@@ -89,7 +89,15 @@ window.cancelAppointment = citas.cancelAppointment;
 window.markAsPaid = citas.markAsPaid;
 window.confirmPayment = citas.confirmPayment;
 window.rejectPayment = citas.rejectPayment;
-window.selectTimeSlot = citas.selectTimeSlot; // ✅ AQUÍ ESTÁ LA LÍNEA CORRECTA
+window.updateAvailableTimes = citas.updateAvailableTimes;
+window.updateBookingDetails = citas.updateBookingDetails;
+window.searchPatientByRutBooking = citas.searchPatientByRutBooking;
+window.checkOnlineAvailability = citas.checkOnlineAvailability;
+window.showPaymentDetails = citas.showPaymentDetails;
+window.renderPendingRequests = citas.renderPendingRequests;
+window.renderAppointments = citas.renderAppointments;
+window.selectTimeSlot = citas.selectTimeSlot; // ✅ AÑADIDO
+window.selectTimePref = citas.selectTimePref; // ✅ AÑADIDO
 
 // ============================================
 // FUNCIONES DE DISPONIBILIDAD
@@ -167,14 +175,15 @@ window.validarRut = utils.validarRut;
 window.showToast = utils.showToast;
 
 // ============================================
-// VERIFICACIÓN
+// VERIFICACIÓN (DESPUÉS DE ASIGNAR TODO)
 // ============================================
 console.log('✅ showLoginModal asignada:', typeof window.showLoginModal);
 console.log('✅ switchTab asignada:', typeof window.switchTab);
 console.log('✅ renderPatients asignada:', typeof window.renderPatients);
 console.log('✅ verFichaCompleta asignada:', typeof window.verFichaCompleta);
 console.log('✅ estadisticas asignada:', typeof window.estadisticas);
-console.log('✅ selectTimeSlot asignada:', typeof window.selectTimeSlot); // ✅ NUEVA VERIFICACIÓN
+console.log('✅ selectTimeSlot asignada:', typeof window.selectTimeSlot); // ✅ AHORA DEBERÍA FUNCIONAR
+console.log('✅ selectTimePref asignada:', typeof window.selectTimePref);
 
 // ============================================
 // FUNCIÓN PARA GUARDAR EN FIREBASE

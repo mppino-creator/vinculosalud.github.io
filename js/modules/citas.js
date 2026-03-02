@@ -74,7 +74,9 @@ window._realSelectTimeSlot = function(time) {
     const timeSelect = document.getElementById('custTime');
     if (timeSelect) {
         timeSelect.value = time;
-        console.log('✅ Select actualizado a:', timeSelect.value);
+        console.log('✅ Select actualizado a:', time); // Mostrar el valor asignado, no el valor leído
+    } else {
+        console.error('❌ Elemento #custTime no encontrado en el DOM');
     }
     
     // Actualizar detalles de la reserva (si existe la función)

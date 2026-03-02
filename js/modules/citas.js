@@ -305,7 +305,11 @@ export function updateAvailableTimes() {
         return;
     }
 
-    // DEBUG: Ver qué citas están ocupadas
+    // ============================================
+    // 🔍 DIAGNÓSTICO Y FILTRADO DE HORARIOS
+    // ============================================
+    
+    // Obtener todas las citas confirmadas para esta fecha
     const bookedTimes = state.appointments
         .filter(a => a.psychId == state.selectedPsych.id && a.date === date && a.status === 'confirmada')
         .map(a => a.time);
@@ -314,19 +318,29 @@ export function updateAvailableTimes() {
     console.log('📅 Fecha:', date);
     console.log('👤 Psicólogo:', state.selectedPsych.name);
     console.log('📋 Horarios disponibles en agenda:', availableSlots.map(s => s.time));
-    console.log('🚫 Horarios ocupados (citas):', bookedTimes);
+    console.log('🚫 Horarios OCUPADOS (citas):', bookedTimes);
     
-    // Filtrar horarios ocupados
-    let availableTimes = availableSlots.filter(slot => !bookedTimes.includes(slot.time));
-    console.log('⏳ Después de filtrar ocupados:', availableTimes.map(s => s.time));
-    
-    // Filtrar horarios pasados
+    // Filtrar horarios ocupados y pasados
     const now = new Date();
-    availableTimes = availableTimes.filter(slot => new Date(date + 'T' + slot.time) > now);
-    console.log('⏰ Después de filtrar pasados:', availableTimes.map(s => s.time));
-    console.log('✅ Horarios finales disponibles:', availableTimes.map(s => s.time));
+    const availableTimes = availableSlots
+        .filter(slot => {
+            const isBooked = bookedTimes.includes(slot.time);
+            if (isBooked) {
+                console.log(`⛔ Horario ${slot.time} está OCUPADO - eliminado`);
+            }
+            return !isBooked;
+        })
+        .filter(slot => {
+            const isPast = new Date(date + 'T' + slot.time) <= now;
+            if (isPast) {
+                console.log(`⏰ Horario ${slot.time} ya pasó - eliminado`);
+            }
+            return !isPast;
+        })
+        .sort((a, b) => a.time.localeCompare(b.time));
     
-    availableTimes.sort((a, b) => a.time.localeCompare(b.time));
+    console.log('✅ Horarios FINALES disponibles:', availableTimes.map(s => s.time));
+    console.log('==========================================');
 
     if (availableTimes.length === 0) {
         if (noSlotsMessage) {
@@ -334,6 +348,13 @@ export function updateAvailableTimes() {
             noSlotsMessage.innerHTML = 'No hay horarios disponibles para esta fecha';
         }
         if (onlineMsg) onlineMsg.style.display = 'none';
+        
+        // Limpiar selección
+        const selectedSlot = document.querySelector('.time-slot-btn.selected');
+        if (selectedSlot) selectedSlot.classList.remove('selected');
+        if (timeSelect) timeSelect.value = '';
+        window.horaSeleccionada = null;
+        
         return;
     }
 

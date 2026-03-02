@@ -392,7 +392,6 @@ export function updateAvailableTimes() {
                 console.log('📅 No hay hora seleccionada, mostrando horarios disponibles');
             }
         }, 50); // Esperar 50ms para que el DOM se actualice
-    }
     } else {
         // Verificar si la hora seleccionada sigue siendo válida
         const selectedTimeStillValid = availableTimes.some(slot => slot.time === currentSelectedTime);

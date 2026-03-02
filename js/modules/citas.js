@@ -17,16 +17,19 @@ function getTimePeriod(time) {
     return hour < 12 ? 'AM' : 'PM';
 }
 
-// ============================================
-// FUNCIÓN PARA SELECCIONAR HORARIO (MEJORADA)
+/// ============================================
+// FUNCIÓN PARA SELECCIONAR HORARIO - VERSIÓN GLOBAL DIRECTA
 // ============================================
 
-/**
- * Función global para seleccionar horario
- * @param {string} time - Hora seleccionada
- */
+// Esta función se asigna directamente a window para garantizar disponibilidad
 window.selectTimeSlot = function(time) {
-    console.log('🔧 Seleccionando horario:', time);
+    console.log('🔧 [GLOBAL] Seleccionando horario:', time);
+    
+    // Verificar que los elementos existen
+    if (!document.querySelectorAll || !document.getElementById) {
+        console.error('❌ DOM no disponible');
+        return false;
+    }
     
     // Remover selección anterior
     document.querySelectorAll('.time-slot-btn').forEach(btn => {
@@ -37,41 +40,43 @@ window.selectTimeSlot = function(time) {
     const selectedBtn = document.querySelector(`.time-slot-btn[data-time="${time}"]`);
     if (selectedBtn) {
         selectedBtn.classList.add('selected');
+    } else {
+        console.warn('⚠️ Botón no encontrado para:', time);
     }
     
-    // ✅ ACTUALIZAR EL SELECT OCULTO (siempre)
+    // Actualizar el select oculto
     const timeSelect = document.getElementById('custTime');
     if (timeSelect) {
         timeSelect.value = time;
         console.log('✅ Select actualizado a:', timeSelect.value);
-        
-        // Disparar evento change
-        const event = new Event('change', { bubbles: true });
-        timeSelect.dispatchEvent(event);
     }
     
-    // ✅ GUARDAR EN UN ATRIBUTO DATA DEL PANEL (respaldo)
-    const bookingPanel = document.getElementById('bookingPanel');
-    if (bookingPanel) {
-        bookingPanel.dataset.selectedTime = time;
-    }
-    
-    // Actualizar detalles de la reserva
-    if (typeof updateBookingDetails === 'function') {
+    // Actualizar detalles de la reserva (si existe la función)
+    if (typeof window.updateBookingDetails === 'function') {
+        window.updateBookingDetails();
+    } else if (typeof updateBookingDetails === 'function') {
         updateBookingDetails();
-    }
-    
-    // Si es presencial, actualizar boxes disponibles
-    if (document.getElementById('appointmentType').value === 'presencial') {
-        const date = document.getElementById('custDate').value;
-        if (typeof window.updateBoxSelector === 'function') {
-            window.updateBoxSelector(date, time);
-        }
     }
     
     console.log('✅ Horario seleccionado y guardado:', time);
     return true;
 };
+
+// También exponer selectTimePref globalmente
+window.selectTimePref = function(pref) {
+    console.log('📅 Preferencia seleccionada:', pref);
+    const bookingPanel = document.getElementById('bookingPanel');
+    if (bookingPanel) {
+        bookingPanel.dataset.timePref = pref;
+    }
+    if (pref) {
+        const toast = window.showToast || showToast;
+        if (toast) toast(`Preferencia: ${pref === 'AM' ? 'Mañana' : 'Tarde'}`, 'info');
+    }
+};
+
+// Verificar que quedó asignada
+console.log('✅ selectTimeSlot asignada globalmente:', typeof window.selectTimeSlot);
 
 // ============================================
 // FUNCIONES EXPORTADAS

@@ -619,8 +619,9 @@ export function executeBooking() {
     // ============================================
     
     // Intentar obtener hora del select
-    let time = document.getElementById('custTime').value;
-    console.log('⏰ Hora desde select:', time);
+    const timeSelect = document.getElementById('custTime');
+    let time = timeSelect ? timeSelect.value : '';
+    console.log('⏰ Hora desde select:', time, '| Elemento existe:', !!timeSelect);
     
     // Si no hay hora en el select, buscar botón seleccionado
     if (!time) {
@@ -630,7 +631,11 @@ export function executeBooking() {
             console.log('⏰ Hora desde botón seleccionado:', time);
             
             // Actualizar el select para mantener consistencia
-            document.getElementById('custTime').value = time;
+            const timeSelect = document.getElementById('custTime');
+            if (timeSelect) {
+                timeSelect.value = time;
+                console.log('✅ Select actualizado desde botón a:', time);
+            }
         }
     }
     

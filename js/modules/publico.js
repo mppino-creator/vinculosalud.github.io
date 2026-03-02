@@ -194,13 +194,13 @@ export function renderProfessionals(professionals) {
                         </div>
                     </div>
                     
-                    <!-- MEJORA: Precio y disponibilidad -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0; padding:8px; background:#f8fafc; border-radius:8px;">
-                        <span style="font-weight:600; color:var(--azul-apple);">$${p.priceOnline?.toLocaleString()}</span>
-                        <span style="color:${horasLibres > 0 ? 'var(--verde-exito)' : 'var(--rojo-alerta)'}; font-size:0.9rem;">
-                            <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${disponibilidadTexto}
-                        </span>
-                    </div>
+                    <!-- MEJORA: Solo disponibilidad (el precio va dentro del botón) -->
+<div style="display:flex; justify-content:center; align-items:center; margin:10px 0;">
+    <span style="color:${horasLibres > 0 ? 'var(--verde-exito)' : 'var(--rojo-alerta)'}; font-size:0.9rem; font-weight:500;">
+        <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
+        ${horasLibres > 0 ? `${horasLibres} horario(s) disponible(s)` : 'Sin cupos disponibles'}
+    </span>
+</div>
                     
                     <div class="price-box">
                         <!-- MEJORA: Botón Agendar (corregido) -->

@@ -368,26 +368,31 @@ export function updateAvailableTimes() {
     } else if (!currentSelectedTime) {
         // Verificar si HAY un botón seleccionado aunque el select esté vacío
         console.log('🔍 Select vacío, buscando botón seleccionado...');
-        const selectedBtn = document.querySelector('.time-slot-btn.selected');
         
-        if (selectedBtn) {
-            console.log('✅ Botón seleccionado ENCONTRADO:', selectedBtn.dataset.time);
+        // Pequeño retraso para asegurar que el DOM se actualizó
+        setTimeout(() => {
+            const selectedBtn = document.querySelector('.time-slot-btn.selected');
             
-            if (selectedBtn.dataset.time) {
-                const horaDelBoton = selectedBtn.dataset.time;
-                console.log('🔄 RESTAURANDO select desde botón seleccionado:', horaDelBoton);
+            if (selectedBtn) {
+                console.log('✅ Botón seleccionado ENCONTRADO (después de retraso):', selectedBtn.dataset.time);
                 
-                if (timeSelect) {
-                    timeSelect.value = horaDelBoton;
-                    console.log('✅ Select restaurado a:', timeSelect.value);
+                if (selectedBtn.dataset.time) {
+                    const horaDelBoton = selectedBtn.dataset.time;
+                    console.log('🔄 RESTAURANDO select desde botón seleccionado:', horaDelBoton);
+                    
+                    if (timeSelect) {
+                        timeSelect.value = horaDelBoton;
+                        console.log('✅ Select restaurado a:', timeSelect.value);
+                    }
+                } else {
+                    console.log('⚠️ Botón seleccionado no tiene data-time');
                 }
             } else {
-                console.log('⚠️ Botón seleccionado no tiene data-time');
+                console.log('❌ No hay ningún botón seleccionado (incluso después de retraso)');
+                console.log('📅 No hay hora seleccionada, mostrando horarios disponibles');
             }
-        } else {
-            console.log('❌ No hay ningún botón seleccionado');
-            console.log('📅 No hay hora seleccionada, mostrando horarios disponibles');
-        }
+        }, 50); // Esperar 50ms para que el DOM se actualice
+    }
     } else {
         // Verificar si la hora seleccionada sigue siendo válida
         const selectedTimeStillValid = availableTimes.some(slot => slot.time === currentSelectedTime);

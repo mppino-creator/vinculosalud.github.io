@@ -567,3 +567,89 @@ if (typeof window !== 'undefined') {
 }
 
 console.log('✅ admin.js cargado con estadísticas integradas');
+
+// ============================================
+// EXPORTAR DATOS A EXCEL
+// ============================================
+
+window.exportarDatosExcel = function(tipo) {
+    if (!state.currentUser || state.currentUser.role !== 'admin') {
+        showToast('Solo administradores pueden exportar datos', 'error');
+        return;
+    }
+    
+    let datos = [];
+    let nombreArchivo = '';
+    let headers = [];
+    
+    switch(tipo) {
+        case 'pacientes':
+            datos = state.patients.filter(p => !p.isHiddenAdmin);
+            nombreArchivo = `pacientes_${new Date().toISOString().split('T')[0]}.csv`;
+            headers = ['RUT', 'Nombre', 'Email', 'Teléfono', 'Fecha Nacimiento', 'Profesional', 'Notas'];
+            
+            // Convertir a CSV
+            let csvPacientes = headers.join(',') + '\n';
+            datos.forEach(p => {
+                const profesional = state.staff.find(s => s.id == p.psychId)?.name || 'Sin asignar';
+                csvPacientes += `"${p.rut || ''}","${p.name || ''}","${p.email || ''}","${p.phone || ''}","${p.birthdate || ''}","${profesional}","${(p.notes || '').replace(/"/g, '""')}"\n`;
+            });
+            
+            descargarCSV(csvPacientes, nombreArchivo);
+            showToast(`✅ ${datos.length} pacientes exportados`, 'success');
+            break;
+            
+        case 'citas':
+            datos = state.appointments;
+            nombreArchivo = `citas_${new Date().toISOString().split('T')[0]}.csv`;
+            headers = ['Fecha', 'Hora', 'Paciente', 'RUT', 'Profesional', 'Tipo', 'Valor', 'Pago', 'Estado'];
+            
+            let csvCitas = headers.join(',') + '\n';
+            datos.forEach(c => {
+                csvCitas += `"${c.date || ''}","${c.time || ''}","${c.patient || ''}","${c.patientRut || ''}","${c.psych || ''}","${c.type || ''}",${c.price || 0},"${c.paymentStatus || ''}","${c.status || ''}"\n`;
+            });
+            
+            descargarCSV(csvCitas, nombreArchivo);
+            showToast(`✅ ${datos.length} citas exportadas`, 'success');
+            break;
+            
+        case 'profesionales':
+            datos = state.staff.filter(s => !s.isHiddenAdmin);
+            nombreArchivo = `profesionales_${new Date().toISOString().split('T')[0]}.csv`;
+            headers = ['Nombre', 'Email', 'Especialidades', 'WhatsApp', 'Instagram', 'Precio Online', 'Precio Presencial'];
+            
+            let csvProfesionales = headers.join(',') + '\n';
+            datos.forEach(p => {
+                const specs = Array.isArray(p.spec) ? p.spec.join(' | ') : p.spec;
+                csvProfesionales += `"${p.name || ''}","${p.email || ''}","${specs || ''}","${p.whatsapp || ''}","${p.instagram || ''}",${p.priceOnline || 0},${p.pricePresencial || 0}\n`;
+            });
+            
+            descargarCSV(csvProfesionales, nombreArchivo);
+            showToast(`✅ ${datos.length} profesionales exportados`, 'success');
+            break;
+            
+        case 'mensajes':
+            datos = state.messages;
+            nombreArchivo = `mensajes_${new Date().toISOString().split('T')[0]}.csv`;
+            headers = ['Fecha', 'Nombre', 'Profesional', 'Calificación', 'Mensaje'];
+            
+            let csvMensajes = headers.join(',') + '\n';
+            datos.forEach(m => {
+                csvMensajes += `"${m.date || ''}","${m.name || ''}","${m.therapistName || 'General'}",${m.rating || 0},"${(m.text || '').replace(/"/g, '""')}"\n`;
+            });
+            
+            descargarCSV(csvMensajes, nombreArchivo);
+            showToast(`✅ ${datos.length} mensajes exportados`, 'success');
+            break;
+    }
+};
+
+function descargarCSV(csv, nombreArchivo) {
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    a.click();
+    URL.revokeObjectURL(url);
+}

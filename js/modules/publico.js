@@ -9,6 +9,64 @@ import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
 import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
+// ============================================
+// FUNCIÓN PARA COMPARTIR PERFIL
+// ============================================
+window.compartirPerfil = function(psychId, psychName) {
+    const url = window.location.href.split('?')[0] + '?profesional=' + psychId;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `${psychName} - Vínculo Salud`,
+            text: `Conoce a ${psychName} y agenda tu cita`,
+            url: url,
+        }).catch(() => {
+            mostrarOpcionesCompartir(url, psychName);
+        });
+    } else {
+        mostrarOpcionesCompartir(url, psychName);
+    }
+};
+
+function mostrarOpcionesCompartir(url, psychName) {
+    const mensajeWhatsApp = `https://wa.me/?text=${encodeURIComponent(`📋 ${psychName} - Vínculo Salud\n${url}`)}`;
+    const mensajeEmail = `mailto:?subject=${encodeURIComponent(`Perfil de ${psychName} en Vínculo Salud`)}&body=${encodeURIComponent(`Te recomiendo este profesional:\n${url}`)}`;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); 
+        display:flex; justify-content:center; align-items:center; z-index:10000;
+    `;
+    modal.innerHTML = `
+        <div style="background:white; padding:25px; border-radius:20px; max-width:300px; text-align:center;">
+            <h3 style="margin-bottom:20px;">Compartir perfil</h3>
+            <div style="display:flex; gap:15px; justify-content:center; margin-bottom:20px;">
+                <a href="${mensajeWhatsApp}" target="_blank" style="background:#25D366; color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; text-decoration:none;">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <a href="${mensajeEmail}" style="background:#0071e3; color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; text-decoration:none;">
+                    <i class="fa fa-envelope"></i>
+                </a>
+                <button onclick="copiarAlPortapapeles('${url}')" style="background:#34c759; color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:none; cursor:pointer;">
+                    <i class="fa fa-link"></i>
+                </button>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="background:#ff3b30; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer;">
+                Cerrar
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+window.copiarAlPortapapeles = function(texto) {
+    navigator.clipboard.writeText(texto).then(() => {
+        showToast('✅ Enlace copiado al portapapeles', 'success');
+    }).catch(() => {
+        showToast('❌ Error al copiar', 'error');
+    });
+};
+
 export function filterProfessionals() {
     const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
@@ -58,25 +116,27 @@ export function renderProfessionals(professionals) {
     grid.innerHTML = professionals.map(p => {
         const today = new Date().toISOString().split('T')[0];
         
-        // Calcular horarios ocupados hoy (pendientes + confirmadas)
+        // Calcular horarios ocupados hoy
         const citasHoy = window.state?.appointments?.filter(a => 
             a.psychId == p.id && 
             a.date === today && 
             (a.status === 'confirmada' || a.status === 'pendiente')
         ) || [];
         
-        // Verificar si hay horarios disponibles (configurados - ocupados > 0)
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
         const hasAvailability = slotsHoy.length > citasHoy.length;
         
-        // Para debug (opcional)
-        if (p.name.includes('Marcelo')) {
-            console.log(`📊 ${p.name}: ${slotsHoy.length} slots configurados, ${citasHoy.length} ocupados → ${hasAvailability ? '✅ DISPONIBLE' : '❌ NO DISPONIBLE'}`);
-        }
+        // Especialidades limitadas a 3
+        const specialtiesList = Array.isArray(p.spec) ? p.spec : [p.spec];
+        const displaySpecialties = specialtiesList.slice(0, 3).join(' · ');
+        const hasMore = specialtiesList.length > 3;
+        const specialties = displaySpecialties + (hasMore ? ' · +' + (specialtiesList.length - 3) : '');
+        
+        // Estrellas
         const avgRating = getAverageRating(p.id);
-        const ratingDisplay = avgRating > 0 ? avgRating.toFixed(1) : p.stars;
-        const specialties = Array.isArray(p.spec) ? p.spec.join(' · ') : p.spec;
-
+        const ratingDisplay = avgRating > 0 ? avgRating : 5;
+        const starCount = Math.floor(ratingDisplay);
+        
         const whatsappMessage = encodeURIComponent('Hola buenas tardes, necesito una hora para atención psicológica. ¿Podría ayudarme?');
         const whatsappUrl = p.whatsapp ? `https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${whatsappMessage}` : '#';
         const instagramUrl = p.instagram ? `https://instagram.com/${p.instagram.replace('@', '')}` : '#';
@@ -103,13 +163,30 @@ export function renderProfessionals(professionals) {
                 <div class="card-body" onclick="openBooking(${p.id})">
                     <span class="tag">${specialties}</span>
                     <h3>${p.name}</h3>
-                    <div class="stars">
-                        ${'★'.repeat(Math.floor(ratingDisplay))}${'☆'.repeat(5-Math.floor(ratingDisplay))}
-                        <span style="color:var(--text-light); margin-left:5px;">(${state.messages.filter(m => m.therapistId == p.id).length})</span>
+                    ${p.genero ? `<small style="display:block; color:var(--text-light); font-size:0.8rem; margin-top:-5px;">${p.genero === 'M' ? 'Psicólogo' : p.genero === 'F' ? 'Psicóloga' : ''}</small>` : ''}
+                    
+                    <!-- CAMBIO 3: Reseñas como número destacado -->
+                    <div class="stars" style="display:flex; align-items:center; justify-content:space-between; margin:10px 0;">
+                        <div>
+                            ${'★'.repeat(starCount)}${'☆'.repeat(5-starCount)}
+                        </div>
+                        <div style="background:var(--azul-apple); color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; display:flex; align-items:center; gap:4px;">
+                            <i class="fa fa-comment" style="font-size:0.7rem;"></i>
+                            ${state.messages.filter(m => m.therapistId == p.id).length}
+                        </div>
                     </div>
+                    
                     <div class="price-box">
-                        <button class="btn-book" onclick="event.stopPropagation(); openBooking(${p.id})">
-                            Agendar
+                        <!-- Botón Agendar -->
+                        <button class="btn-book" onclick="event.stopPropagation(); openBooking(${p.id})" 
+                                style="width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 600; background: var(--azul-apple); border: none; border-radius: 30px; color: white; cursor: pointer; transition: all 0.3s; margin-top: 10px;">
+                            📅 Agendar hora
+                        </button>
+                        
+                        <!-- CAMBIO 6: Botón Compartir Perfil -->
+                        <button class="btn-share" onclick="event.stopPropagation(); compartirPerfil('${p.id}', '${p.name}')" 
+                                style="width:100%; margin-top:8px; padding:8px; background:transparent; border:2px solid var(--azul-apple); border-radius:30px; color:var(--azul-apple); font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            <i class="fa fa-share-alt"></i> Compartir perfil
                         </button>
                     </div>
                 </div>
@@ -149,6 +226,7 @@ export function cargarDatosIniciales() {
                         whatsapp: item.whatsapp || '',
                         instagram: item.instagram || '',
                         stars: item.stars || 5,
+                        genero: item.genero || '',
                         address: item.address || '',
                         phone: item.phone || '',
                         bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
@@ -171,6 +249,7 @@ export function cargarDatosIniciales() {
                         whatsapp: item.whatsapp || '',
                         instagram: item.instagram || '',
                         stars: item.stars || 5,
+                        genero: item.genero || '',
                         address: item.address || '',
                         phone: item.phone || '',
                         bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
@@ -186,7 +265,7 @@ export function cargarDatosIniciales() {
             state.setStaff([]);
         }
 
-        // Agregar administrador con isAdmin = true
+        // Agregar administrador
         state.staff.push({
             id: 9999,
             name: 'Administrador',
@@ -200,6 +279,7 @@ export function cargarDatosIniciales() {
             whatsapp: '',
             instagram: '',
             stars: 0,
+            genero: '',
             address: '',
             phone: '',
             bankDetails: {},
@@ -246,14 +326,10 @@ export function cargarDatosIniciales() {
             state.setAppointments([]);
         }
         if (state.currentUser) {
-            // ============================================
-            // LÍNEA 234 CORREGIDA - Verificar que updateStats existe
-            // ============================================
             if (typeof window.updateStats === 'function') {
                 window.updateStats();
             } else {
                 console.log('⏳ updateStats no disponible, se cargará después');
-                // Intentar cargar desde auth después
                 import('./auth.js').then(mod => {
                     if (typeof mod.updateStats === 'function') {
                         window.updateStats = mod.updateStats;
@@ -301,7 +377,6 @@ export function cargarDatosIniciales() {
     cargarLogo();
 }
 
-// Forzar carga de datos iniciales si no se hizo
 export function forzarCargaDatos() {
     console.log('🔄 Forzando carga de datos...');
     if (!window.state?.dataLoaded) {
@@ -309,5 +384,5 @@ export function forzarCargaDatos() {
     }
 }
 
-// Exponer función global
 window.forzarCargaDatos = forzarCargaDatos;
+console.log('✅ publico.js cargado con mejoras');

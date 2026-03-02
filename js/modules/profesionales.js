@@ -29,6 +29,11 @@ export function showAddStaffModal() {
     document.getElementById('addPaymentLinkPresencial').value = '';
     document.getElementById('addPhotoPreview').style.display = 'none';
     document.getElementById('addQrPreview').style.display = 'none';
+    
+    // Limpiar campo de género
+    const addGenero = document.getElementById('addGenero');
+    if (addGenero) addGenero.value = '';
+    
     state.setTempImageData(null);
     state.setTempQrData(null);
 }
@@ -47,9 +52,11 @@ export function renderStaffTable() {
     const visibleStaff = state.staff.filter(s => !s.isHiddenAdmin);
     tb.innerHTML = visibleStaff.map(p => {
         const specs = Array.isArray(p.spec) ? p.spec.join(', ') : p.spec;
+        const generoTexto = p.genero === 'M' ? '♂️' : p.genero === 'F' ? '♀️' : '';
+        
         return `
         <tr>
-            <td><strong>${p.name}</strong></td>
+            <td><strong>${p.name}</strong> ${generoTexto}</td>
             <td>${p.email || '—'}</td>
             <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
             <td>${p.usuario || p.name || '—'}</td>
@@ -96,6 +103,10 @@ export function addStaff() {
     const pricePresencial = document.getElementById('addPricePresencial').value;
     const usuario = document.getElementById('addUser').value;
     const pass = document.getElementById('addPass').value;
+    
+    // CAMBIO 1: Obtener género
+    const genero = document.getElementById('addGenero')?.value || '';
+    
     const whatsapp = document.getElementById('addWhatsapp')?.value || '';
     const instagram = document.getElementById('addInstagram')?.value || '';
     const address = document.getElementById('addAddress')?.value || '';
@@ -129,6 +140,7 @@ export function addStaff() {
         pricePresencial: parseInt(pricePresencial),
         usuario: usuario,
         pass: pass,
+        genero: genero,  // ← CAMBIO 2: Incluir género
         whatsapp: whatsapp,
         instagram: instagram,
         img: state.tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
@@ -186,6 +198,12 @@ export function editTherapist(id) {
     document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
     document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
     
+    // CAMBIO 3: Cargar género en edición
+    const editGenero = document.getElementById('editGenero');
+    if (editGenero) {
+        editGenero.value = therapist.genero || '';
+    }
+
     const bank = therapist.bankDetails || {};
     document.getElementById('editBank').value = bank.bank || '';
     document.getElementById('editAccountType').value = bank.accountType || 'corriente';
@@ -237,6 +255,12 @@ export function updateTherapist() {
     therapist.phone = document.getElementById('editPhone').value;
     therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
     therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
+    
+    // CAMBIO 4: Guardar género al actualizar
+    const editGenero = document.getElementById('editGenero');
+    if (editGenero) {
+        therapist.genero = editGenero.value;
+    }
     
     therapist.bankDetails = {
         bank: document.getElementById('editBank').value,
@@ -329,7 +353,8 @@ export function getPsychologistSummary(psychId) {
         profesional: {
             id: psych.id,
             nombre: psych.name,
-            email: psych.email
+            email: psych.email,
+            genero: psych.genero
         },
         pacientes: {
             total: misPacientes.length,

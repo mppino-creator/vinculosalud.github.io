@@ -641,10 +641,14 @@ export function executeBooking() {
     const rut = document.getElementById('custRut').value;
     const name = document.getElementById('custName').value;
     const email = document.getElementById('custEmail').value;
+    
+    // ✅ CAMBIO: Teléfono con 3 campos (código + 9 + número)
     const countryCode = document.getElementById('countryCode')?.value || '+56';
-const phoneNumber = document.getElementById('custPhone').value;
-const phone = countryCode + phoneNumber;
-console.log('📞 Teléfono completo:', phone);
+    const phoneNine = document.getElementById('phoneNine')?.value || '9';
+    const phoneNumber = document.getElementById('custPhone')?.value || '';
+    const phone = countryCode + ' ' + phoneNine + ' ' + phoneNumber;
+    console.log('📞 Teléfono completo:', phone);
+    
     const date = document.getElementById('custDate').value;
     const type = document.getElementById('appointmentType').value;
     const paymentMethod = document.getElementById('paymentMethod')?.value;

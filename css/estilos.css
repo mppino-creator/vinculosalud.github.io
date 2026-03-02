@@ -1598,4 +1598,117 @@ h3, h4, h5,
         padding: 6px 12px;
         font-size: 0.9rem;
     }
+
+}
+
+/* ============================================
+   AGENDA AM/PM - NUEVOS ESTILOS
+   ============================================ */
+
+.time-slots-container {
+    background: var(--fondo-secundario);
+    border-radius: var(--radius-lg);
+    padding: 15px;
+    border: 1px solid var(--gris-oscuro);
+}
+
+.time-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.time-slot-btn {
+    padding: 12px 8px;
+    border: 2px solid var(--gris-oscuro);
+    border-radius: var(--radius-md);
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 4px var(--sombra);
+}
+
+.time-slot-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 113, 227, 0.15);
+    border-color: var(--azul-apple);
+}
+
+.time-slot-btn.selected {
+    background: var(--azul-apple);
+    color: white;
+    border-color: var(--azul-apple);
+    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+}
+
+.time-slot-btn.booked {
+    background: var(--gris-apple);
+    color: var(--texto-secundario);
+    border-color: var(--gris-oscuro);
+    cursor: not-allowed;
+    opacity: 0.6;
+    text-decoration: line-through;
+    pointer-events: none;
+}
+
+.time-slot-btn.overcupo {
+    background: #fff3cd;
+    color: #856404;
+    border-color: #ffeeba;
+}
+
+.time-slot-btn.overcupo::after {
+    content: "⚠️";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 12px;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+}
+
+/* Encabezados de sección AM/PM */
+#amSlots h4, #pmSlots h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#amSlots h4 i {
+    color: var(--azul-medico);
+}
+
+#pmSlots h4 i {
+    color: var(--naranja-aviso);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .time-slot-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
+    
+    .time-slot-btn {
+        padding: 10px 5px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .time-slot-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .time-slots-container {
+        padding: 10px;
+    }
 }

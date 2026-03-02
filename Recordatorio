@@ -1,112 +1,178 @@
-## 📋 **RESUMEN EJECUTIVO PARA EL "TÚ DEL FUTURO"** (ACTUALIZADO CON TODOS LOS MÓDULOS COMPLETOS)
+¡Perfecto! Aquí tienes el resumen ejecutivo actualizado con toda la información de tus archivos:
 
-Aquí está todo lo que necesitas saber sobre **Vínculo Salud v2.0**, explicado de la forma más clara posible:
+## 📋 **RESUMEN EJECUTIVO - VÍNCULO SALUD v2.0**
 
----
+### 🎯 **VISIÓN GENERAL DEL PROYECTO**
 
-## 🎯 **VISIÓN GENERAL DEL PROYECTO**
+Vínculo Salud es una plataforma web integral para centros de bienestar y salud mental que permite:
 
-**Vínculo Salud** es una plataforma web para centros de bienestar que permite:
-
-| Usuario | Funcionalidades |
-|---------|-----------------|
-| **Pacientes** | Buscar profesionales, agendar citas online/presenciales, pagar con transferencia/efectivo/tarjeta/online |
-| **Psicólogos** | Gestionar agenda, confirmar pagos, ver pacientes, **📋 gestionar fichas clínicas, notas de evolución, informes**, ver estadísticas personales, disponibilidad, sobrecupos |
-| **Administradores** | Gestionar profesionales, boxes, personalizar el sitio, **acceso total a todas las fichas clínicas**, backup/restore, estadísticas globales, limpieza de datos |
+| Usuario | Funcionalidades Principales |
+|---------|----------------------------|
+| **Pacientes** | Buscar profesionales, ver disponibilidad, agendar citas online/presenciales, pagar (transferencia/efectivo/tarjeta/online), dejar testimonios |
+| **Psicólogos** | Gestionar agenda, confirmar pagos, ver pacientes, **gestionar fichas clínicas completas (EHR)**, notas de evolución, informes, estadísticas personales |
+| **Administradores** | Gestionar profesionales, boxes, personalización del sitio, **acceso total a fichas clínicas**, backup/restore, estadísticas globales, limpieza de datos |
 
 ---
 
-## 🏗️ **ARQUITECTURA - CÓMO ESTÁ CONSTRUIDO**
+### 🏗️ **ARQUITECTURA DEL SISTEMA**
 
 ```
 /
-├── index.html               # ÚNICO archivo HTML (carga todo)
+├── index.html               # ÚNICO archivo HTML (carga todo el sistema)
 ├── css/
-│   └── estilos.css          # Estilos Apple - muy bonito
+│   └── estilos.css          # Estilos Apple - diseño moderno y responsivo
 └── js/
     ├── main.js              # ✅ PUNTO DE ENTRADA (exporta save() y window funciones)
     ├── config/
-    │   └── firebase.js      # Firebase config
+    │   └── firebase.js      # Configuración de Firebase (Realtime Database)
     └── modules/
-         ├── state.js         # ✅ CORAZÓN: todas las variables globales + fichas clínicas
-         ├── auth.js          # Login/logout y switchTab con estadísticas
-         ├── citas.js         # ✅ CRÍTICO: reservas, pagos, confirmaciones, estadísticas
+         ├── state.js         # ✅ CORAZÓN del sistema: variables globales
+         ├── auth.js          # Login/logout y gestión de sesiones
          ├── pacientes.js     # CRUD pacientes + vista detalle con 4 pestañas
-         ├── profesionales.js # Gestión de psicólogos + estadísticas por profesional
-         ├── boxes.js         # Gestión de boxes + estadísticas de uso + disponibilidad
-         ├── disponibilidad.js # Horarios, sobrecupos, estadísticas de agenda
-         ├── mensajes.js      # Testimonios + estadísticas + exportación
-         ├── personalizacion.js # Logo, colores, textos + estadísticas personales
-         ├── publico.js       # Vista pública (filtros, grid)
-         ├── admin.js         # Panel admin + backup/restore + limpieza de fichas
-         ├── estadisticas.js  # 🆕 Módulo exclusivo de estadísticas globales
+         ├── profesionales.js # Gestión de psicólogos + estadísticas
+         ├── citas.js         # ✅ CRÍTICO: reservas, pagos, confirmaciones
+         ├── disponibilidad.js # Horarios y sobrecupos
+         ├── boxes.js         # Gestión de boxes/consultorios
+         ├── mensajes.js      # Testimonios y gestión de mensajes
+         ├── personalizacion.js # Logo, colores, textos, fondo
+         ├── publico.js       # Vista pública (filtros, grid de profesionales)
+         ├── admin.js         # Panel admin + backup/restore + limpieza
          ├── fichasClinicas.js  # 🆕 CRUD de fichas de ingreso y sesiones
-         ├── informes.js        # 🆕 Informes psicodiagnóstico y cierre (formularios completos)
-         ├── pdfGenerator.js    # 🆕 Exportar a PDF (con fallback simulado)
-         └── permisos.js        # 🆕 Control de acceso granular
+         ├── informes.js        # 🆕 Informes psicodiagnóstico y cierre
+         ├── pdfGenerator.js    # 🆕 Exportación a PDF (con fallback)
+         ├── permisos.js        # 🆕 Control de acceso granular
+         └── estadisticas.js    # 🆕 Estadísticas globales (solo admin)
+         └── utils.js           # Utilidades compartidas (RUT, emails, fechas)
 ```
 
 ---
 
-## 📋 **MÓDULO DE FICHAS CLÍNICAS (EHR) - COMPLETO**
+### 🔐 **SISTEMA DE AUTENTICACIÓN Y SEGURIDAD**
 
-### **Estructura de datos en Firestore**
+#### **Firebase Authentication (Realtime Database)**
+```javascript
+// Configuración Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyCj5jdc_FQ1H0l78VJj3qBmGYsGrSete3U",
+    authDomain: "vinculosaludapp.firebaseapp.com",
+    databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
+    projectId: "vinculosaludapp",
+    appId: "1:405876668483:web:8f19aef4dd63a70ecdbcf6"
+};
+
+// Admin por defecto:
+- Usuario: Admin
+- Contraseña: Nina2026
+```
+
+#### **Estructura de Datos en Firebase**
+```
+/Staff           # Profesionales y admin
+/Patients        # Pacientes
+/Appointments    # Citas confirmadas
+/PendingRequests # Solicitudes pendientes
+/Boxes          # Boxes/consultorios
+/Messages       # Testimonios
+/fichasIngreso  # Fichas clínicas de ingreso
+/sesiones       # Notas de evolución
+```
+
+---
+
+### 💰 **SISTEMA DE PAGOS - FLUJO CORRECTO**
+
+```javascript
+// TODAS las citas nacen con paymentStatus = 'pendiente'
+// El profesional SIEMPRE confirma manualmente
+
+FLUJO:
+1. PACIENTE AGENDA → Estado: pendiente
+2. PROFESIONAL CONFIRMA PAGO → Botón verde "Pagado"
+3. SISTEMA ACTUALIZA → Estado: confirmada
+4. EMAIL AUTOMÁTICO → Se envía al paciente
+```
+
+**Métodos de pago soportados:**
+- Transferencia bancaria (con datos bancarios del profesional)
+- Tarjeta presencial
+- Efectivo
+- Tarjeta online (links personalizados)
+- Mercado Pago / Webpay (integración futura)
+
+---
+
+### 📧 **SISTEMA DE EMAILS (EmailJS + SendGrid)**
+
+```javascript
+// Configuración EmailJS
+EMAILJS_SERVICE_ID = 'vinculo_salud';
+EMAILJS_TEMPLATE_ID = 'template_0cl1i1h';
+EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
+
+// Dominio verificado: em7234.vinculosalud.cl
+// Remitente: notificaciones@em7234.vinculosalud.cl
+```
+
+**Emails automáticos:**
+- ✅ Confirmación de cita online
+- ✅ Solicitud de cita presencial
+- ✅ Confirmación de pago
+- ✅ Rechazo de solicitud
+- ✅ Cancelación de cita
+
+---
+
+### 📋 **MÓDULO DE FICHAS CLÍNICAS (EHR) COMPLETO**
+
+#### **Estructura de datos en Firebase**
 
 ```
 /pacientes/{patientId}
-  ├── nombre, rut, email, phone, birthdate, psychId, createdAt
+  ├── nombre, rut, email, phone, birthdate, psychId
   │
-  ├── /fichasIngreso/{fichaIngresoId}     # Una por paciente (FICHA PREINGRESOS.docx)
+  ├── /fichasIngreso/{fichaIngresoId}     # FICHA PREINGRESOS.docx
   │    ├── motivoConsulta
-  │    ├── sintomatologia (fechaInicio, progresion, tratamientosPrevios, medicamentos)
+  │    ├── sintomatologia (fechaInicio, progresion, tratamientosPrevios)
   │    ├── composicionFamiliar
   │    ├── otrosAntecedentes
-  │    └── criteriosExclusion (checklist de 6 items)
+  │    └── criteriosExclusion (checklist)
   │
-  ├── /sesiones/{sesionId}                 # Múltiples (Detalle de la Atención.pdf)
+  ├── /sesiones/{sesionId}                 # Detalle de la Atención.pdf
   │    ├── fechaAtencion
-  │    ├── tipoAtencion (Psicodiagnóstico/Sesión)
+  │    ├── tipoAtencion
   │    ├── notas (texto enriquecido)
-  │    └── realizadoPor (ID del psicólogo)
+  │    └── realizadoPor
   │
-  └── /informes/{informeId} (referencia)   # Vinculados
-       └── tipo: "psicodiagnostico" | "cierre"
-
-/informes/{informeId}                       # Colección global
-  ├── patientId, patientName, patientRut
-  ├── tipo
-  ├── contenido (estructurado según documento - 20+ campos cada uno)
-  ├── realizadoPor
-  ├── fechaCreacion
-  └── pdfUrl (opcional, generado automáticamente)
+  └── /informes/{informeId}                 # Vinculados
+       ├── tipo: "psicodiagnostico" | "cierre"
+       ├── contenido estructurado (20+ campos)
+       └── pdfUrl (opcional)
 ```
 
-### **Flujo de trabajo clínico COMPLETO:**
-
+#### **Flujo de trabajo clínico:**
 ```
 PACIENTE NUEVO:
-1. Registrar datos básicos → Se crea en state.patients
-2. Crear FICHA DE INGRESO (con todos los antecedentes)
+1. Registro básico → Se crea en state.patients
+2. Crear FICHA DE INGRESO (antecedentes completos)
 3. Asignar psicólogo (psychId)
 
 DURANTE EL PROCESO:
-4. Cada sesión → Crear NOTA DE EVOLUCIÓN (con fecha, tipo, observaciones)
-5. Visualizar historial cronológico de sesiones
+4. Cada sesión → NOTA DE EVOLUCIÓN (fecha, tipo, observaciones)
+5. Visualizar historial cronológico
 
 EVALUACIÓN:
-6. Generar INFORME PSICODIAGNÓSTICO (20+ campos estructurados)
-7. Generar INFORME DE CIERRE (15+ campos con tipo de cierre)
+6. Generar INFORME PSICODIAGNÓSTICO (20+ campos)
+7. Generar INFORME DE CIERRE (alta/derivación/abandono)
 
 EXPORTACIÓN:
-8. PDF individual de cada documento (con plantillas profesionales)
-9. Exportar ficha COMPLETA del paciente (todos los documentos)
-10. Backup global (admin) de TODAS las fichas en JSON
-11. Estadísticas globales exportables a CSV
+8. PDF individual de cada documento
+9. Exportar ficha COMPLETA del paciente (ZIP)
+10. Backup global (admin) de TODAS las fichas (JSON)
 ```
 
 ---
 
-## 🔐 **MATRIZ DE PERMISOS COMPLETA**
+### 🔐 **MATRIZ DE PERMISOS COMPLETA**
 
 | Acción | Admin | Psicólogo (su paciente) | Psicólogo (otro paciente) |
 |--------|-------|-------------------------|---------------------------|
@@ -124,47 +190,40 @@ EXPORTACIÓN:
 | Ver estadísticas globales | ✅ | ❌ | ❌ |
 | Backup/Restore sistema | ✅ | ❌ | ❌ |
 | Limpiar fichas huérfanas | ✅ | ❌ | ❌ |
-| Ver estado boxes en tiempo real | ✅ | ✅ | ❌ |
 
 ---
 
-## 📊 **NUEVAS VARIABLES DE ESTADO (state.js)**
+### 📊 **VARIABLES DE ESTADO (state.js)**
 
 ```javascript
 // Colecciones principales
 state.patients           // Array de pacientes
 state.staff              // Array de profesionales
 state.appointments       // Array de citas
-state.messages           // Array de mensajes/testimonios
-state.boxes              // Array de boxes/consultorios
+state.messages           // Array de testimonios
+state.boxes              // Array de boxes
 
-// 🆕 COLECCIONES DE FICHAS CLÍNICAS
+// Colecciones de fichas clínicas
 state.fichasIngreso = []  // Todas las fichas de ingreso
 state.sesiones = []       // Todas las notas de evolución
 state.informes = []       // Todos los informes
 
 // UI State para fichas
 state.ui.fichas = {
-  pacienteSeleccionadoId: null,  // Paciente actual en vista detalle
-  fichaActivaId: null,            // Ficha de ingreso activa
-  sesionActivaId: null,           // Sesión activa
-  informeActivoId: null,          // Informe activo
-  modoEdicion: false,             // true si está editando
-  pestanaActiva: 'perfil'         // 'perfil'|'fichaIngreso'|'sesiones'|'informes'
+  pacienteSeleccionadoId: null,
+  fichaActivaId: null,
+  sesionActivaId: null,
+  informeActivoId: null,
+  modoEdicion: false,
+  pestanaActiva: 'perfil' // perfil|fichaIngreso|sesiones|informes
 }
-
-// Funciones de utilidad
-state.limpiarEstadoFichas()       // Resetear UI de fichas
-state.getFichasIngresoByPatient()  // Filtrar por paciente
-state.getSesionesByPatient()       // Filtrar por paciente
-state.getInformesByPatient()       // Filtrar por paciente
 ```
 
 ---
 
-## 🎨 **INTERFAZ DE PACIENTES - VISTA DETALLE COMPLETA**
+### 🎨 **INTERFAZ DE PACIENTES - VISTA DETALLE**
 
-### **Tarjeta de paciente (MEJORADA):**
+#### **Tarjeta de paciente:**
 ```
 ┌─────────────────────────────────────┐
 │  👤 María González                   │
@@ -182,63 +241,45 @@ state.getInformesByPatient()       // Filtrar por paciente
 └─────────────────────────────────────┘
 ```
 
-### **Vista detalle con 4 pestañas:**
-
+#### **Vista detalle con 4 pestañas:**
 ```
 ┌─────────────────────────────────────────────┐
 │  👤 María González · 12.345.678-9 · 35 años │
-│  ┌──────────┬──────────┬──────────┬────────┐ │
-│  │  PERFIL  │  FICHA   │ SESIONES │ INFORMES│ │
-│  │          │  INGRESO │ (8)      │ (2)     │ │
-│  └──────────┴──────────┴──────────┴────────┘ │
+│  [PERFIL] [FICHA INGRESO] [SESIONES] [INFORMES] │
 ├─────────────────────────────────────────────┤
 │  📋 PERFIL DEL PACIENTE                      │
-│  ┌─────────────────────────────────────┐    │
-│  │ Datos Personales:                    │    │
-│  │ • RUT: 12.345.678-9                  │    │
-│  │ • Email: maria@email.com             │    │
-│  │ • Teléfono: +56912345678             │    │
-│  │ • Fecha Nac: 15-03-1991 (35 años)    │    │
-│  │ • Notas: Paciente derivada por...    │    │
-│  └─────────────────────────────────────┘    │
-│                                             │
-│  📊 ESTADÍSTICAS                             │
-│  ┌──────┬──────┬──────┬──────┐             │
-│  │ 15   │ 8    │$150K │ 2    │             │
-│  │Citas │Sesión│Pagado│Inf.  │             │
-│  └──────┴──────┴──────┴──────┘             │
-│                                             │
-│  [EDITAR] [IMPRIMIR] [EXPORTAR TODO]       │
+│  • Datos personales                          │
+│  • Estadísticas: Citas:15 · Sesiones:8 · $150K │
+│  • Botones: [Editar] [Imprimir] [Exportar]   │
 └─────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📄 **EXPORTACIÓN A PDF - FUNCIONALIDAD COMPLETA**
+### 📄 **EXPORTACIÓN A PDF**
 
-### **Documentos exportables:**
+**Documentos exportables:**
 
-| Documento | Función | Formato | Campos |
-|-----------|---------|---------|--------|
-| Ficha de Ingreso | `generarFichaIngresoPDF()` | Plantilla estructurada | 15+ campos |
-| Nota de Sesión | `generarNotaSesionPDF()` | Formato libre con fecha | Fecha, tipo, notas |
-| Informe Psicodiagnóstico | `generarInformePsicodiagnostico()` | Plantilla profesional | 20+ campos |
-| Informe de Cierre | `generarInformeCierre()` | Plantilla profesional | 15+ campos |
-| Ficha Completa | `exportarFichaCompletaPaciente()` | ZIP con todos los PDFs | Todos los docs |
-| Backup Global | `exportarTodasLasFichas()` | JSON con todos los datos | Colección completa |
+| Documento | Función | Campos |
+|-----------|---------|--------|
+| Ficha de Ingreso | `generarFichaIngresoPDF()` | 15+ campos |
+| Nota de Sesión | `generarNotaSesionPDF()` | Fecha, tipo, notas |
+| Informe Psicodiagnóstico | `generarInformePsicodiagnostico()` | 20+ campos |
+| Informe de Cierre | `generarInformeCierre()` | 15+ campos |
+| Ficha Completa | `exportarFichaCompletaPaciente()` | ZIP con todos |
+| Backup Global | `exportarTodasLasFichas()` | JSON completo |
 
-### **Modo simulado (fallback):**
+**Modo simulado (fallback):**
 ```javascript
-// Siempre retorna una URL aunque no haya PDF
-// Ideal para pruebas o cuando jsPDF falla
+// Si jsPDF falla, retorna URL simulada
 return `https://storage.vinculosalud.cl/informes/${id}_${Date.now()}.pdf`;
 ```
 
 ---
 
-## 📊 **ESTADÍSTICAS POR ROL - VERSIÓN COMPLETA**
+### 📊 **ESTADÍSTICAS POR ROL**
 
-### **Psicólogo (en su configuración personal):**
+#### **Psicólogo (en su configuración):**
 ```
 📊 MIS ESTADÍSTICAS
 ┌──────────┬──────────┬──────────┬──────────┐
@@ -250,11 +291,9 @@ return `https://storage.vinculosalud.cl/informes/${id}_${Date.now()}.pdf`;
 │ $2.450.000          │ $380.000            │
 └─────────────────────┴─────────────────────┘
 📈 Promedio sesiones/paciente: 3.2
-📅 Próximas citas: 8 en 7 días
-🏢 Box más usado: Consultorio 101
 ```
 
-### **Administrador (panel de estadísticas globales):**
+#### **Administrador (panel global):**
 ```
 📊 ESTADÍSTICAS GLOBALES
 ┌──────────┬──────────┬──────────┬──────────┐
@@ -262,232 +301,40 @@ return `https://storage.vinculosalud.cl/informes/${id}_${Date.now()}.pdf`;
 │Pacientes │Fichas    │Sesiones  │Informes  │
 └──────────┴──────────┴──────────┴──────────┘
 
-📈 CRECIMIENTO VS MES ANTERIOR:
-┌─────────────────┬─────────────────┬─────────────────┐
-│ 📈 +12%         │ 📉 -3%          │ 📈 +8%          │
-│ Pacientes       │ Citas           │ Ingresos        │
-└─────────────────┴─────────────────┴─────────────────┘
+📈 CRECIMIENTO: Pacientes +12% · Citas -3% · Ingresos +8%
 
-📊 DETALLE POR CATEGORÍA:
-• Pacientes por edad: 0-18:5 · 19-30:15 · 31-45:18 · 46-60:5 · 61+:2
-• Género: Femenino:28 · Masculino:15 · Otro:2
-• Pacientes con ficha: 32 (71%)
+📊 DETALLE:
+• Pacientes por edad: 0-18:5 · 19-30:15 · 31-45:18
 • Informes: 12 Psicodiagnóstico · 6 Cierre
 • Citas: 89 pagadas · 23 pendientes · 4 rechazadas
 • Ingresos totales: $5.670.000
-• Promedio por cita: $48.800
-• Profesionales activos: 8/12
-• Método pago más usado: Transferencia
-
-🏥 ESTADO DE BOXES:
-• Total boxes: 5 · Activos: 4
-• Box más usado: Consultorio 101 (45 usos)
-• Ocupación próximas 24h: 3 citas
-• Disponibilidad por día: Lun:4 · Mar:4 · Mie:3 · Jue:4 · Vie:4
 
 [EXPORTAR JSON] [EXPORTAR CSV] [IMPRIMIR] [LIMPIAR HUÉRFANAS]
-
-⚠️ ZONA DE PELIGRO
-[Eliminar Fichas] [Eliminar Sesiones] [Eliminar Informes] [Reinicio Completo]
+⚠️ ZONA DE PELIGRO: Eliminar Fichas/Sesiones/Informes
 ```
 
 ---
 
-## 🔧 **TODAS LAS FUNCIONES GLOBALES POR MÓDULO**
+### 🆘 **PROBLEMAS COMUNES Y SOLUCIONES**
 
+#### **1. "No veo el botón de Ficha Clínica"**
 ```javascript
-// ============================================
-// FICHAS CLÍNICAS (fichasClinicas.js)
-// ============================================
-window.fichasClinicas.guardarFichaIngreso(patientId, data)
-window.fichasClinicas.guardarNotaSesion(patientId, data)
-window.fichasClinicas.obtenerSesionesDePaciente(patientId)
-window.fichasClinicas.mostrarFormularioFichaIngreso(patientId)
-window.fichasClinicas.mostrarFormularioNotaSesion(patientId)
-window.fichasClinicas.editarFichaIngreso(fichaIngresoId)
-window.fichasClinicas.verNotaSesion(sesionId)
-
-// ============================================
-// INFORMES (informes.js) - COMPLETO
-// ============================================
-window.informes.guardarInforme(patientId, tipo, data)
-window.informes.obtenerInformesDePaciente(patientId)
-window.informes.obtenerInformePorId(informeId)
-window.informes.mostrarFormularioInforme(patientId, tipo, informeId)
-window.informes.cerrarModalInforme()
-window.informes.guardarInformePsicodiagnostico(patientId, informeId)
-window.informes.guardarInformeCierre(patientId, informeId)
-window.informes.verInforme(informeId)
-window.informes.generarPDFInforme(informeId)
-window.informes.getInformeStats(psychId)
-
-// ============================================
-// PDF GENERATOR (pdfGenerator.js)
-// ============================================
-window.pdfGenerator.generarPDF(data, tipo)
-window.pdfGenerator.exportarFichaCompletaPaciente(patientId)
-window.pdfGenerator.generarNotaSesionPDF(sesion)
-window.pdfGenerator.generarFichaIngresoPDF(fichaIngreso)
-window.pdfGenerator.generarInformePsicodiagnostico(data)
-window.pdfGenerator.generarInformeCierre(data)
-
-// ============================================
-// PERMISOS (permisos.js)
-// ============================================
-window.permisos.puedeAccederAPaciente(patientId)
-window.permisos.puedeEditarFichas(patientId)
-window.permisos.puedeVerFichaIngreso(fichaIngresoId)
-window.permisos.puedeVerSesion(sesionId)
-window.permisos.puedeVerInforme(informeId)
-window.permisos.isAdmin()
-window.permisos.isPsychologist()
-window.permisos.getPermisosResumen()
-window.permisos.filtrarFichasIngresoVisibles()
-window.permisos.filtrarSesionesVisibles()
-window.permisos.filtrarInformesVisibles()
-window.permisos.psicologoPuedeAccederAPaciente(psychId, patientId)
-window.permisos.pacienteTieneFichas(patientId)
-
-// ============================================
-// PACIENTES (pacientes.js)
-// ============================================
-window.verFichaCompleta(patientId)
-window.cambiarPestana(pestana)
-window.exportarFichaCompleta(patientId)
-window.volverALista()
-window.renderPatients()
-window.showNewPatientModal()
-window.viewPatientDetails(id)
-window.savePatient()
-window.printPatientSummary()
-
-// ============================================
-// PROFESIONALES (profesionales.js)
-// ============================================
-window.getPsychologistSummary(psychId)
-window.getPatientsWithClinicalData(psychId)
-window.getRecentSessions(psychId)
-window.canPsychologistAccessPatient(psychId, patientId)
-
-// ============================================
-// CITAS (citas.js) - MEJORADO
-// ============================================
-window.openBooking(id)
-window.confirmPayment(appointmentId)
-window.rejectPayment(appointmentId)
-window.confirmPresencialTime(requestId, date, time)
-window.renderPendingRequests()
-window.renderAppointments()
-window.getAppointmentStats(psychId)
-window.getUpcomingAppointments(psychId, limit)
-window.isTimeSlotAvailable(psychId, date, time)
-window.cancelAppointment(id)
-
-// ============================================
-// DISPONIBILIDAD (disponibilidad.js)
-// ============================================
-window.getAvailabilityStats(psychId)
-window.getAvailableSlotsForDate(psychId, date)
-window.getNextAvailableSlot(psychId)
-
-// ============================================
-// BOXES (boxes.js) - COMPLETO
-// ============================================
-window.getBoxesStats()
-window.getBoxesCurrentStatus()
-window.getBoxHistory(boxId, dias)
-window.validateBoxAvailability(boxId, date, time)
-window.getAvailableBoxes(date, time)
-
-// ============================================
-// MENSAJES (mensajes.js)
-// ============================================
-window.getMessageStats()
-window.getMessagesByTherapist(therapistId)
-window.getFeaturedMessages(limit)
-window.searchMessages(searchTerm)
-window.deleteAllMessages()
-window.exportMessages()
-window.importMessages()
-window.restoreSampleMessages()
-
-// ============================================
-// PERSONALIZACIÓN (personalizacion.js)
-// ============================================
-window.getRecentPatientsWithSessions(psychId)
-window.exportMyConfig()
-
-// ============================================
-// ADMIN (admin.js)
-// ============================================
-window.getEstadisticasGlobales()
-window.exportarTodasLasFichas()
-window.importarFichas()
-window.limpiarFichasHuerfanas()
-window.eliminarTodasLasFichasIngreso()
-window.eliminarTodasLasSesiones()
-window.eliminarTodosLosInformes()
-window.renderAdminPanel()
-
-// ============================================
-// ESTADÍSTICAS (estadisticas.js) - NUEVO
-// ============================================
-window.estadisticas.getEstadisticasCompletas()
-window.estadisticas.renderPanelEstadisticas()
-window.estadisticas.exportarEstadisticasJSON()
-window.estadisticas.exportarEstadisticasCSV()
-window.estadisticas.imprimirEstadisticas()
-
-// ============================================
-// UTILS (utils.js)
-// ============================================
-window.formatDate()
-window.calculateAge()
-window.getInitials()
-window.formatCurrency()
-window.getPsychNameById()
-window.getPatientNameById()
-window.truncateText()
-window.generateId()
-window.downloadJSON()
+console.log(typeof window.verFichaCompleta); // Debe ser 'function'
+window.renderPatients(); // Forzar renderizado
 ```
 
----
-
-## 🆘 **PROBLEMAS COMUNES Y SOLUCIONES - VERSIÓN COMPLETA**
-
-### **1. "Error: Module name 'jspdf' does not resolve"**
+#### **2. "Error: No tengo permisos para ver este paciente"**
 ```javascript
-// CAUSA: Estás importando jspdf como módulo
-// SOLUCIÓN: Usar CDN global en index.html
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-// Y en código usar window.jspdf
-const { jsPDF } = window.jspdf;
-```
-
-### **2. "No veo el botón de Ficha Clínica"**
-```javascript
-// VERIFICAR:
-console.log(typeof window.verFichaCompleta)  // Debe ser 'function'
-console.log(document.querySelectorAll('.patient-card').length)  // ¿Hay pacientes?
-// SOLUCIÓN: Forzar renderizado
-window.renderPatients();
-```
-
-### **3. "Error: No tengo permisos para ver este paciente"**
-```javascript
-// DIAGNÓSTICO COMPLETO:
-console.log('Mi rol:', window.permisos.getCurrentUserRole());
+// Verificar asignación
 console.log('Mi ID:', state.currentUser?.data?.id);
-console.log('Paciente:', patient);
 console.log('psychId del paciente:', patient?.psychId);
 
-// SOLUCIÓN (admin): Asignar paciente al psicólogo correcto
+// SOLUCIÓN (admin): Asignar paciente al psicólogo
 patient.psychId = id_del_psicologo;
 window.save();
 ```
 
-### **4. "El pago no se confirma automáticamente"**
+#### **3. "El pago no se confirma automáticamente"**
 ```javascript
 // ✅ ES CORRECTO - Así debe funcionar
 // Los pagos SIEMPRE comienzan como "pendiente"
@@ -495,218 +342,181 @@ window.save();
 window.confirmPayment(id_cita)
 ```
 
-### **5. "No puedo guardar la ficha de ingreso"**
+#### **4. "No puedo guardar la ficha de ingreso"**
 ```javascript
-// VERIFICAR PERMISOS:
+// Verificar permisos
 console.log(window.permisos.puedeEditarFichas(patientId));
-console.log('¿Soy admin?', window.permisos.isAdmin());
-console.log('¿Soy el psicólogo asignado?', 
-  patient.psychId == state.currentUser?.data?.id);
-
-// SOLUCIÓN: Solo el psicólogo asignado o admin pueden editar
+// Solo el psicólogo asignado o admin pueden editar
 ```
 
-### **6. "El PDF no se genera o da error"**
+#### **5. "El PDF no se genera"**
 ```javascript
-// VERIFICAR:
 console.log('jsPDF disponible:', typeof window.jspdf !== 'undefined');
-// Si no está disponible, el sistema usa modo simulado
-// El PDF "falso" igual retorna una URL para no romper la UI
+// Si no está disponible, entra en modo simulado
 ```
 
-### **7. "No aparecen las estadísticas en mi perfil"**
+#### **6. "Error: db.collection is not a function"**
 ```javascript
-// VERIFICAR:
-console.log('Elemento statsContainer:', 
-  document.getElementById('psychStatsContainer'));
-// SOLUCIÓN: El div debe existir en el HTML
-// <div id="psychStatsContainer"></div>
+// Firebase usa Realtime Database, NO Firestore
+// Usar db.ref() en lugar de db.collection()
 ```
 
-### **8. "Los contadores del admin no se actualizan"**
+#### **7. "QuotaExceededError (localStorage lleno)"**
 ```javascript
-// FORZAR ACTUALIZACIÓN MANUAL:
-window.actualizarContadoresReinicio();
-// VERIFICAR elementos:
-console.log('totalFichas:', document.getElementById('totalFichas'));
-console.log('totalSesiones:', document.getElementById('totalSesiones'));
-console.log('totalInformes:', document.getElementById('totalInformes'));
-```
-
-### **9. "Error al importar backup"**
-```javascript
-// VERIFICAR estructura del JSON:
-// Debe tener: { datos: { fichasIngreso: [], sesiones: [], informes: [] } }
-console.log(backup.datos?.fichasIngreso?.length);
-console.log(backup.datos?.sesiones?.length);
-console.log(backup.datos?.informes?.length);
-```
-
-### **10. "Las fichas huérfanas no se limpian"**
-```javascript
-// VERIFICAR MANUALMENTE:
-const patientIds = new Set(state.patients.map(p => p.id));
-const huerfanas = state.fichasIngreso.filter(f => !patientIds.has(f.patientId));
-console.log('Fichas huérfanas:', huerfanas.length);
-// Ejecutar limpieza:
-window.limpiarFichasHuerfanas();
-```
-
-### **11. "No veo los boxes disponibles"**
-```javascript
-// VERIFICAR FUNCIÓN:
-console.log('getAvailableBoxes:', typeof window.getAvailableBoxes);
-// PROBAR MANUALMENTE:
-const boxes = window.getAvailableBoxes('2024-01-15', '10:00');
-console.log('Boxes disponibles:', boxes);
-```
-
-### **12. "El sobrecupo no aparece"**
-```javascript
-// VERIFICAR CONFIGURACIÓN:
-console.log('Show overcupo checkbox:', document.getElementById('showOvercupo')?.checked);
-// FORZAR VISIBILIDAD:
-document.getElementById('showOvercupo').checked = true;
-window.loadTimeSlots();
+window.limpiarStorage(); // Limpia solo items de Vínculo Salud
 ```
 
 ---
 
-## 📝 **CHECKLIST COMPLETO DE IMPLEMENTACIÓN**
+### 🔧 **FUNCIONES GLOBALES PRINCIPALES**
 
-### **Módulos nuevos (8 total):**
-- [x] `fichasClinicas.js` - CRUD de fichas de ingreso y sesiones
-- [x] `informes.js` - Informes psicodiagnóstico y cierre (formularios completos)
-- [x] `pdfGenerator.js` - Exportación a PDF (con fallback)
+```javascript
+// ============================================
+// AUTENTICACIÓN
+// ============================================
+window.showLoginModal()
+window.processLogin()
+window.logout()
+window.switchTab()
+
+// ============================================
+// PACIENTES Y FICHAS
+// ============================================
+window.verFichaCompleta(patientId)
+window.mostrarDetallePaciente(patientId)
+window.cambiarPestana('perfil'|'fichaIngreso'|'sesiones'|'informes')
+window.exportarFichaCompleta(patientId)
+
+// ============================================
+// FICHAS CLÍNICAS
+// ============================================
+window.fichasClinicas.guardarFichaIngreso(patientId, data)
+window.fichasClinicas.guardarNotaSesion(patientId, data)
+window.fichasClinicas.obtenerSesionesDePaciente(patientId)
+window.fichasClinicas.mostrarFormularioFichaIngreso(patientId)
+
+// ============================================
+// INFORMES
+// ============================================
+window.informes.guardarInforme(patientId, tipo, data)
+window.informes.verInforme(informeId)
+window.informes.generarPDFInforme(informeId)
+
+// ============================================
+// PERMISOS
+// ============================================
+window.permisos.puedeAccederAPaciente(patientId)
+window.permisos.isAdmin()
+window.permisos.isPsychologist()
+
+// ============================================
+// ESTADÍSTICAS
+// ============================================
+window.estadisticas.renderPanelEstadisticas()
+window.estadisticas.exportarEstadisticasJSON()
+window.estadisticas.exportarEstadisticasCSV()
+
+// ============================================
+// UTILIDADES
+// ============================================
+window.formatRut()
+window.validarRut()
+window.showToast()
+window.formatCurrency()
+window.calculateAge()
+```
+
+---
+
+### 📝 **CHECKLIST DE IMPLEMENTACIÓN**
+
+#### **Módulos Completados (15+):**
+- [x] `state.js` - Estado global con fichas clínicas
+- [x] `auth.js` - Login/logout y gestión de sesiones
+- [x] `citas.js` - Reservas, pagos y confirmaciones
+- [x] `pacientes.js` - CRUD + vista detalle con 4 pestañas
+- [x] `profesionales.js` - Gestión + estadísticas
+- [x] `boxes.js` - Gestión de boxes + disponibilidad
+- [x] `mensajes.js` - Testimonios + estadísticas
+- [x] `personalizacion.js` - Logo, textos, fondo
+- [x] `publico.js` - Vista pública y filtros
+- [x] `admin.js` - Backup/restore + limpieza
+- [x] `fichasClinicas.js` - CRUD de fichas y sesiones
+- [x] `informes.js` - Informes psicodiagnóstico y cierre
+- [x] `pdfGenerator.js` - Exportación PDF con fallback
 - [x] `permisos.js` - Control de acceso granular
-- [x] `estadisticas.js` - Módulo exclusivo de estadísticas globales
+- [x] `estadisticas.js` - Estadísticas globales admin
+- [x] `utils.js` - Utilidades (RUT, emails, fechas)
 
-### **Módulos actualizados (9 total):**
-- [x] `state.js` - Nuevas variables y funciones para fichas
-- [x] `pacientes.js` - Vista detalle con 4 pestañas y estadísticas
-- [x] `profesionales.js` - Estadísticas por profesional
-- [x] `personalizacion.js` - Estadísticas personales del psicólogo
-- [x] `admin.js` - Backup/restore y limpieza de fichas
-- [x] `utils.js` - Funciones de utilidad para fichas
-- [x] `citas.js` - Confirmaciones, emails y estadísticas
-- [x] `boxes.js` - Estadísticas de uso y disponibilidad
-- [x] `disponibilidad.js` - Estadísticas de agenda
-
-### **Verificaciones en UI:**
-- [ ] Botón "Ver Ficha Clínica" en cada paciente
-- [ ] Pestañas (Perfil, Ficha Ingreso, Sesiones, Informes)
-- [ ] Formulario de Ficha de Ingreso (todos los campos)
-- [ ] Formulario de Nota de Sesión
-- [ ] Formulario de Informe Psicodiagnóstico (20+ campos)
-- [ ] Formulario de Informe de Cierre (15+ campos)
-- [ ] Botones de PDF en cada documento
-- [ ] Estadísticas en perfil de psicólogo
-- [ ] Panel de admin con estadísticas globales
-- [ ] Pestaña "📊 Estadísticas" solo para admin
-- [ ] Botones de backup/restore en admin
-- [ ] Checkbox de sobrecupo en disponibilidad
+#### **Verificaciones UI:**
+- [x] Botón "Staff" para login
+- [x] Grid de profesionales con filtros
+- [x] Panel de reserva con selección de fecha/hora/box
+- [x] Dashboard con estadísticas
+- [x] Botón "Ver Ficha Clínica" en cada paciente
+- [x] Pestañas (Perfil, Ficha Ingreso, Sesiones, Informes)
+- [x] Formulario de Ficha de Ingreso (todos los campos)
+- [x] Formulario de Nota de Sesión
+- [x] Formulario de Informe Psicodiagnóstico (20+ campos)
+- [x] Formulario de Informe de Cierre (15+ campos)
+- [x] Botones de PDF en cada documento
+- [x] Pestaña "📊 Estadísticas" solo para admin
+- [x] Botones de backup/restore en admin
+- [x] Checkbox de sobrecupo en disponibilidad
 
 ---
 
-## ✅ **RESUMEN FINAL v2.0 - ESTADO COMPLETO**
+### ✅ **RESUMEN FINAL v2.0**
 
 | Módulo | Funcionalidades | Estado |
 |--------|-----------------|--------|
 | **Core** | Firebase Auth, EmailJS, Diseño Apple | ✅ |
-| **Agenda** | Reservas online/presenciales, pagos, confirmaciones | ✅ |
-| **Pacientes** | CRUD básico, historial de citas, estadísticas | ✅ |
-| **Profesionales** | CRUD, disponibilidad, precios, estadísticas | ✅ |
+| **Agenda** | Reservas online/presenciales, pagos | ✅ |
+| **Pacientes** | CRUD básico, historial de citas | ✅ |
+| **Profesionales** | CRUD, disponibilidad, precios | ✅ |
 | **Boxes** | CRUD, disponibilidad, ocupación en tiempo real | ✅ |
 | **Mensajes** | Testimonios, calificaciones, exportación | ✅ |
 | **Personalización** | Logo, textos, fondo, métodos de pago | ✅ |
-| **Fichas Ingreso** | Formulario completo (15+ campos), visualización | ✅ NUEVO |
-| **Sesiones** | Notas de evolución por sesión, historial | ✅ NUEVO |
-| **Informes Psicodiagnóstico** | Formulario 20+ campos, PDF, visualización | ✅ NUEVO |
-| **Informes de Cierre** | Formulario 15+ campos, PDF, visualización | ✅ NUEVO |
-| **PDF** | Exportación individual, masiva, con fallback | ✅ NUEVO |
-| **Permisos** | Control granular por rol (15+ funciones) | ✅ NUEVO |
-| **Estadísticas Psicólogo** | Pacientes, sesiones, ingresos, proyecciones | ✅ NUEVO |
-| **Estadísticas Admin** | Globales, crecimiento, boxes, exportación CSV/JSON | ✅ NUEVO |
-| **Backup/Restore** | JSON de todas las fichas, importación segura | ✅ NUEVO |
-| **Limpieza** | Fichas huérfanas, reinicio selectivo | ✅ NUEVO |
+| **Fichas Ingreso** | Formulario completo (15+ campos) | ✅ |
+| **Sesiones** | Notas de evolución por sesión | ✅ |
+| **Informes Psicodiagnóstico** | Formulario 20+ campos, PDF | ✅ |
+| **Informes de Cierre** | Formulario 15+ campos, PDF | ✅ |
+| **PDF** | Exportación individual, masiva, fallback | ✅ |
+| **Permisos** | Control granular por rol (15+ funciones) | ✅ |
+| **Estadísticas Psicólogo** | Pacientes, sesiones, ingresos | ✅ |
+| **Estadísticas Admin** | Globales, crecimiento, boxes | ✅ |
+| **Backup/Restore** | JSON de todas las fichas | ✅ |
+| **Limpieza** | Fichas huérfanas, reinicio selectivo | ✅ |
 
 ---
 
-## 🚀 **COMANDO DE VERIFICACIÓN COMPLETA**
+### 🚀 **COMANDO DE VERIFICACIÓN COMPLETA**
 
 ```javascript
-// Copiar y pegar en consola para verificar TODO el sistema
 (function() {
-  console.log('%c🔍 VÍNCULO SALUD v2.0 - DIAGNÓSTICO COMPLETO', 'font-size:16px; font-weight:bold');
-  console.log('==========================================');
+  console.log('%c🔍 VÍNCULO SALUD v2.0 - DIAGNÓSTICO COMPLETO', 'font-size:16px');
   
   const checks = {
-    // Core
     'state global': !!window.state,
-    'main.js': typeof window.save === 'function',
-    'Firebase': !!window.firebase,
-    
-    // Módulos principales
-    'auth': typeof window.switchTab === 'function',
-    'citas': typeof window.confirmPayment === 'function',
-    'pacientes': typeof window.renderPatients === 'function',
-    
-    // Módulos nuevos
+    'auth': typeof window.showLoginModal === 'function',
     'fichasClinicas': !!window.fichasClinicas,
     'informes': !!window.informes,
     'permisos': !!window.permisos,
-    'pdfGenerator': !!window.pdfGenerator,
     'estadisticas': !!window.estadisticas,
-    
-    // Funciones clave
     'verFichaCompleta': typeof window.verFichaCompleta === 'function',
-    'cambiarPestana': typeof window.cambiarPestana === 'function',
-    'exportarFichaCompleta': typeof window.exportarFichaCompleta === 'function',
-    'getEstadisticasGlobales': typeof window.getEstadisticasGlobales === 'function',
-    'getBoxesStats': typeof window.getBoxesStats === 'function',
-    
-    // Datos en state
     'pacientes': window.state?.patients?.length || 0,
     'fichasIngreso': window.state?.fichasIngreso?.length || 0,
     'sesiones': window.state?.sesiones?.length || 0,
     'informes': window.state?.informes?.length || 0,
-    'profesionales': window.state?.staff?.length || 0,
-    'boxes': window.state?.boxes?.length || 0,
-    'citas': window.state?.appointments?.length || 0
+    'profesionales': window.state?.staff?.length || 0
   };
   
   console.table(checks);
   
   if (window.state?.currentUser) {
-    console.log(`\n👤 USUARIO ACTUAL:`);
-    console.log(`   Nombre: ${window.state.currentUser.data?.name}`);
-    console.log(`   Rol: ${window.state.currentUser.role}`);
-    console.log(`   ID: ${window.state.currentUser.data?.id}`);
-    console.log(`   Admin: ${window.state.currentUser.data?.isAdmin ? '✅' : '❌'}`);
+    console.log(`\n👤 Usuario: ${window.state.currentUser.data?.name} (${window.state.currentUser.role})`);
+    console.log(`📋 Admin: ${window.state.currentUser.data?.isAdmin ? '✅' : '❌'}`);
   }
-  
-  console.log('\n📊 ESTADÍSTICAS RÁPIDAS:');
-  if (window.permisos?.isAdmin()) {
-    const stats = window.getEstadisticasGlobales?.() || {};
-    console.log(`   Pacientes: ${stats.pacientes?.total || 0} (${stats.pacientes?.conFicha || 0} con ficha)`);
-    console.log(`   Sesiones: ${stats.fichasClinicas?.sesiones || 0}`);
-    console.log(`   Informes: ${stats.fichasClinicas?.informes || 0}`);
-    console.log(`   Ingresos: $${stats.financiero?.ingresosTotales?.toLocaleString() || 0}`);
-    console.log(`   Boxes activos: ${stats.boxes?.activos || 0}/${stats.boxes?.total || 0}`);
-  } else {
-    const misPacientes = window.state?.patients?.filter(
-      p => p.psychId == window.state?.currentUser?.data?.id
-    ).length || 0;
-    console.log(`   Mis pacientes: ${misPacientes}`);
-    
-    const misCitas = window.state?.appointments?.filter(
-      a => a.psychId == window.state?.currentUser?.data?.id
-    ).length || 0;
-    console.log(`   Mis citas: ${misCitas}`);
-  }
-  
-  console.log('==========================================');
-  console.log('%c✅ SISTEMA V2.0 COMPLETAMENTE OPERATIVO', 'color:green; font-size:14px; font-weight:bold');
   
   return checks;
 })();
@@ -714,40 +524,41 @@ window.loadTimeSlots();
 
 ---
 
-## 🎯 **LO MÁS IMPORTANTE QUE DEBES RECORDAR**
+### 🎯 **LO MÁS IMPORTANTE QUE DEBES RECORDAR**
 
-### **Evolución del sistema:**
+#### **Evolución del sistema:**
 
 | Versión | Características |
 |---------|-----------------|
 | **v1.0** | Agenda, pagos, pacientes básico |
-| **v2.0** | ✅ Fichas clínicas, sesiones, informes (20+ campos), PDF, permisos, estadísticas globales y por profesional, boxes en tiempo real, sobrecupos, exportación CSV/JSON |
+| **v2.0** | ✅ Fichas clínicas, sesiones, informes (20+ campos), PDF, permisos granulares, estadísticas globales y por profesional, boxes en tiempo real, sobrecupos, exportación CSV/JSON, backup/restore |
 
-### **Flujo completo del paciente:**
+#### **Flujo completo del paciente:**
 ```
 📋 PREINGRESO → Ficha de Ingreso (antecedentes completos)
-📝 PROCESO → Notas de evolución por cada sesión (historial cronológico)
-📊 EVALUACIÓN → Informe Psicodiagnóstico (20+ campos estructurados)
+📝 PROCESO → Notas de evolución por cada sesión
+📊 EVALUACIÓN → Informe Psicodiagnóstico (20+ campos)
 🏁 CIERRE → Informe de Cierre (alta/derivación/abandono)
 📦 EXPORTACIÓN → PDF individual, ficha completa ZIP, backup JSON
 ```
 
-### **Tres reglas de oro:**
-1. **Los permisos SIEMPRE se verifican** - Nadie ve lo que no debe (15+ funciones de validación)
-2. **Los PDFs tienen fallback** - Nunca rompen la UI (modo simulado siempre disponible)
-3. **Todo se puede exportar** - Individual, completo, global (PDF, CSV, JSON, ZIP)
+#### **Tres reglas de oro:**
+1. **Los permisos SIEMPRE se verifican** - 15+ funciones de validación
+2. **Los pagos SIEMPRE comienzan como "pendiente"** - Confirmación manual
+3. **Los PDFs tienen fallback** - Modo simulado siempre disponible
 
-### **Estadísticas disponibles por módulo:**
-- **Pacientes:** Edad, género, nuevos vs recurrentes
-- **Citas:** Por estado, por tipo, por mes, próximas
-- **Financiero:** Ingresos totales, por mes, deuda, promedio
-- **Profesionales:** Pacientes, sesiones, informes, ingresos
-- **Fichas:** Cobertura, completitud, tipos de informe
-- **Boxes:** Ocupación, horarios, disponibilidad
-- **Crecimiento:** Variación mensual de todas las métricas
+#### **Tecnologías utilizadas:**
+- **Frontend:** HTML5, CSS3, JavaScript (ES6+), Font Awesome 6
+- **Backend:** Firebase Realtime Database
+- **Autenticación:** Firebase Auth
+- **Emails:** EmailJS + SendGrid
+- **PDF:** jsPDF (con fallback)
+- **Diseño:** Apple-style, glassmorphism, responsivo
 
 ---
 
-**¡Vínculo Salud v2.0 está COMPLETAMENTE OPERATIVO!** 🚀 
+**¡Vínculo Salud v2.0 está COMPLETAMENTE OPERATIVO!** 🚀
+
 Agenda + Pagos + Fichas Clínicas + Informes Profesionales + PDF + Permisos Granulares + Estadísticas Globales + Backup + Boxes en Tiempo Real + Sobrecupos.
+
 **Todo lo que un centro de salud mental necesita en una sola plataforma.**

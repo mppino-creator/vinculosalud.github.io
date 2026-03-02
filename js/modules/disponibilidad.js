@@ -44,7 +44,7 @@ export function toggleWeekday(day) {
 }
 
 // ============================================
-// FUNCIONES DE GENERACIÓN DE HORARIOS
+// FUNCIONES DE GENERACIÓN DE HORARIOS (MEJORADA)
 // ============================================
 
 export function generateTimeSlots() {
@@ -66,13 +66,21 @@ export function generateTimeSlots() {
     const slotDuration = duration + breakTime;
 
     const slots = [];
+    
+    // Generar horarios redondeados a horas y medias horas
     while (currentMinutes + duration <= endMinutes) {
         const hour = Math.floor(currentMinutes / 60);
         const minute = currentMinutes % 60;
-        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push({ time: timeStr, isOvercupo: false });
+        
+        // Generar solo horas en punto y medias horas
+        if (minute === 0 || minute === 30) {
+            const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            slots.push({ time: timeStr, isOvercupo: false });
+        }
+        
         currentMinutes += slotDuration;
     }
+    
     state.setGeneratedSlots(slots);
     renderGeneratedSlots();
 }
@@ -178,7 +186,7 @@ export function clearAllSlots() {
 }
 
 // ============================================
-// FUNCIONES DE CARGA DE HORARIOS (MEJORADAS)
+// FUNCIONES DE CARGA DE HORARIOS
 // ============================================
 
 export function loadTimeSlots() {
@@ -197,7 +205,6 @@ export function loadTimeSlots() {
         return;
     }
 
-    // Ordenar slots por hora
     selectedSlots.sort((a, b) => a.time.localeCompare(b.time));
 
     selectedSlots.forEach(slot => {
@@ -212,7 +219,6 @@ export function loadTimeSlots() {
             slotDiv.className = `time-slot ${slot.isOvercupo ? 'overcupo' : ''} ${isBooked ? 'booked' : ''}`;
             slotDiv.textContent = slot.time + (slot.isOvercupo ? ' (Sobrecupo)' : '');
 
-            // Tooltip con información de la cita si está reservada
             if (isBooked) {
                 const cita = state.appointments.find(a => 
                     a.psychId == state.currentUser.data.id && 
@@ -288,14 +294,9 @@ export function saveAvailability() {
 }
 
 // ============================================
-// NUEVAS FUNCIONES PARA ESTADÍSTICAS DE DISPONIBILIDAD
+// ESTADÍSTICAS DE DISPONIBILIDAD
 // ============================================
 
-/**
- * Obtiene estadísticas de disponibilidad del profesional
- * @param {string} psychId - ID del profesional
- * @returns {Object} Estadísticas de disponibilidad
- */
 export function getAvailabilityStats(psychId) {
     const psych = state.staff.find(s => s.id == psychId);
     if (!psych) return null;
@@ -305,16 +306,13 @@ export function getAvailabilityStats(psychId) {
     
     let totalSlots = 0;
     let overcupos = 0;
-    const slotsPorDia = {};
 
     fechas.forEach(fecha => {
         const slots = availability[fecha] || [];
         totalSlots += slots.length;
         overcupos += slots.filter(s => s.isOvercupo).length;
-        slotsPorDia[fecha] = slots.length;
     });
 
-    // Próximos 7 días
     const hoy = new Date();
     const proximos7Dias = [];
     for (let i = 0; i < 7; i++) {
@@ -339,12 +337,6 @@ export function getAvailabilityStats(psychId) {
     };
 }
 
-/**
- * Verifica disponibilidad para una fecha específica
- * @param {string} psychId - ID del profesional
- * @param {string} date - Fecha en formato YYYY-MM-DD
- * @returns {Array} Slots disponibles
- */
 export function getAvailableSlotsForDate(psychId, date) {
     const psych = state.staff.find(s => s.id == psychId);
     if (!psych || !psych.availability || !psych.availability[date]) return [];
@@ -357,11 +349,6 @@ export function getAvailableSlotsForDate(psychId, date) {
     return slots.filter(slot => !citasExistentes.includes(slot.time));
 }
 
-/**
- * Obtiene el próximo horario disponible
- * @param {string} psychId - ID del profesional
- * @returns {Object|null} Próximo horario disponible
- */
 export function getNextAvailableSlot(psychId) {
     const psych = state.staff.find(s => s.id == psychId);
     if (!psych || !psych.availability) return null;
@@ -394,4 +381,4 @@ if (typeof window !== 'undefined') {
     window.getNextAvailableSlot = getNextAvailableSlot;
 }
 
-console.log('✅ disponibilidad.js cargado con estadísticas');
+console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada');

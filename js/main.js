@@ -75,7 +75,7 @@ window.mostrarDetallePaciente = pacientes.mostrarDetallePaciente;
 window.cambiarPestana = pacientes.cambiarPestana;
 
 // ============================================
-// FUNCIONES DE CITAS
+// FUNCIONES DE CITAS (INCLUYE selectTimeSlot)
 // ============================================
 window.openBooking = citas.openBooking;
 window.executeBooking = citas.executeBooking;
@@ -89,6 +89,7 @@ window.cancelAppointment = citas.cancelAppointment;
 window.markAsPaid = citas.markAsPaid;
 window.confirmPayment = citas.confirmPayment;
 window.rejectPayment = citas.rejectPayment;
+window.selectTimeSlot = citas.selectTimeSlot; // ✅ AQUÍ ESTÁ LA LÍNEA CORRECTA
 
 // ============================================
 // FUNCIONES DE DISPONIBILIDAD
@@ -173,6 +174,7 @@ console.log('✅ switchTab asignada:', typeof window.switchTab);
 console.log('✅ renderPatients asignada:', typeof window.renderPatients);
 console.log('✅ verFichaCompleta asignada:', typeof window.verFichaCompleta);
 console.log('✅ estadisticas asignada:', typeof window.estadisticas);
+console.log('✅ selectTimeSlot asignada:', typeof window.selectTimeSlot); // ✅ NUEVA VERIFICACIÓN
 
 // ============================================
 // FUNCIÓN PARA GUARDAR EN FIREBASE

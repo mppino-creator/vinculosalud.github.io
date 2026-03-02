@@ -30,6 +30,121 @@
           emailjs.init('_LDTyGJlGKoOIWVJa');
        })();
     </script>
+    
+    <!-- Estilos adicionales para la agenda AM/PM -->
+    <style>
+        /* ============================================
+           AGENDA AM/PM - NUEVOS ESTILOS
+           ============================================ */
+        .time-slots-container {
+            background: var(--fondo-secundario);
+            border-radius: var(--radius-lg);
+            padding: 15px;
+            border: 1px solid var(--gris-oscuro);
+            margin-top: 10px;
+        }
+
+        .time-slot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .time-slot-btn {
+            padding: 12px 8px;
+            border: 2px solid var(--gris-oscuro);
+            border-radius: var(--radius-md);
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 2px 4px var(--sombra);
+        }
+
+        .time-slot-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 113, 227, 0.15);
+            border-color: var(--azul-apple);
+        }
+
+        .time-slot-btn.selected {
+            background: var(--azul-apple);
+            color: white;
+            border-color: var(--azul-apple);
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+        }
+
+        .time-slot-btn.booked {
+            background: var(--gris-apple);
+            color: var(--texto-secundario);
+            border-color: var(--gris-oscuro);
+            cursor: not-allowed;
+            opacity: 0.6;
+            text-decoration: line-through;
+            pointer-events: none;
+        }
+
+        .time-slot-btn.overcupo {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffeeba;
+        }
+
+        .time-slot-btn.overcupo::after {
+            content: "⚠️";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            font-size: 12px;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+        }
+
+        /* Encabezados de sección AM/PM */
+        #amSlots h4, #pmSlots h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #amSlots h4 i {
+            color: var(--azul-medico);
+        }
+
+        #pmSlots h4 i {
+            color: var(--naranja-aviso);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .time-slot-grid {
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            }
+            
+            .time-slot-btn {
+                padding: 10px 5px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .time-slot-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .time-slots-container {
+                padding: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -677,7 +792,7 @@
         </div>
     </main>
 
-    <!-- Panel de Reserva -->
+    <!-- Panel de Reserva (MODIFICADO CON AGENDA AM/PM) -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
             <h2>Solicitar Cita con <span id="psychName"></span></h2>
@@ -716,22 +831,43 @@
                     </select>
                 </div>
                 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <!-- NUEVA ESTRUCTURA DE HORARIOS AM/PM -->
+                <div style="display:grid; grid-template-columns: 1fr; gap:15px;">
                     <div class="form-group">
                         <label>Fecha *</label>
-                        <input type="date" id="custDate" onchange="updateAvailableTimes()">
+                        <input type="date" id="custDate" class="filter-input" onchange="updateAvailableTimes()">
                     </div>
+                    
                     <div class="form-group">
-                        <label>Hora *</label>
-                        <select id="custTime" onchange="checkOnlineAvailability()">
-                            <option value="">Primero selecciona fecha</option>
-                        </select>
+                        <label>Horario *</label>
+                        <div class="time-slots-container">
+                            <!-- Horarios AM -->
+                            <div id="amSlots" style="display:none;">
+                                <h4><i class="fa fa-sun"></i> Horarios AM</h4>
+                                <div class="time-slot-grid" id="amSlotsContainer"></div>
+                            </div>
+                            
+                            <!-- Horarios PM -->
+                            <div id="pmSlots" style="display:none;">
+                                <h4><i class="fa fa-moon"></i> Horarios PM</h4>
+                                <div class="time-slot-grid" id="pmSlotsContainer"></div>
+                            </div>
+                            
+                            <!-- Selector tradicional (como fallback) -->
+                            <select id="custTime" class="filter-input" style="display:none;">
+                                <option value="">Selecciona un horario</option>
+                            </select>
+                            
+                            <div id="noSlotsMessage" style="text-align:center; padding:20px; color:#666; display:none;">
+                                No hay horarios disponibles para esta fecha
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
                 <div id="onlineAvailabilityMsg" style="background:#e6f7e6; padding:15px; border-radius:12px; margin:15px 0; display:none;">
                     <i class="fa fa-check-circle" style="color: var(--verde-exito);"></i> 
-                    Horario disponible
+                    Horarios disponibles
                 </div>
                 
                 <div id="presencialWarning" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
@@ -835,7 +971,6 @@
             <div class="tab" id="adminTabFondo" style="display:none;" onclick="switchTab('fondo')">Fondo</div>
             <div class="tab" id="adminTabTextos" style="display:none;" onclick="switchTab('textos')">Textos</div>
             <div class="tab" id="adminTabLogo" style="display:none;" onclick="switchTab('logo')">Logo</div>
-            <!-- 🆕 NUEVA PESTAÑA DE ESTADÍSTICAS -->
             <div class="tab" id="adminTabEstadisticas" style="display:none;" onclick="switchTab('estadisticas')">📊 Estadísticas</div>
             <div class="tab" id="adminTabReinicio" style="display:none;" onclick="switchTab('reinicio')">🔄 Reinicio</div>
             <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
@@ -1107,7 +1242,6 @@
         <!-- 🆕 NUEVA PESTAÑA DE ESTADÍSTICAS GLOBALES -->
         <div id="tabEstadisticas" class="tab-content">
             <div id="estadisticasContainer">
-                <!-- El contenido se renderizará dinámicamente desde estadisticas.js -->
                 <div style="text-align:center; padding:40px;">
                     <i class="fa fa-chart-line" style="font-size:48px; color:#ccc;"></i>
                     <p style="margin:20px 0; color:#666;">Cargando estadísticas...</p>
@@ -1125,25 +1259,21 @@
 (function() {
     console.log('🚨 SCRIPT DE EMERGENCIA ACTIVADO');
     
-    // Verificar state cada 100ms
     const checkState = setInterval(function() {
         if (window.state) {
             console.log('✅ state detectado por script de emergencia');
             clearInterval(checkState);
             
-            // Forzar carga de datos iniciales
             if (window.publico && window.publico.cargarDatosIniciales) {
                 window.publico.cargarDatosIniciales();
             }
             
-            // Si hay usuario logueado, forzar renderizado
             if (window.state.currentUser && typeof window.renderPatients === 'function') {
                 setTimeout(() => window.renderPatients(), 500);
             }
         }
     }, 100);
     
-    // Timeout de seguridad
     setTimeout(function() {
         clearInterval(checkState);
         console.log('⚠️ Timeout esperando state');
@@ -1151,7 +1281,7 @@
 })();
 </script>
 
-<!-- Funciones de vista previa (SOLO estas, que no pueden ir en módulos) -->
+<!-- Funciones de vista previa -->
 <script>
     window.previewAddImage = function(input) {
         if (input.files && input.files[0]) {
@@ -1235,7 +1365,7 @@
     };
 </script>
 
-<!-- SCRIPT DE DIAGNÓSTICO CORREGIDO (espera a que state esté listo) -->
+<!-- SCRIPT DE DIAGNÓSTICO -->
 <script>
 (function() {
     console.log('🔍 Iniciando diagnóstico de Vínculo Salud...');
@@ -1259,7 +1389,6 @@
         return true;
     }
     
-    // Intentar cada 500ms
     let intentos = 0;
     const intervalo = setInterval(function() {
         intentos++;
@@ -1267,7 +1396,7 @@
         if (ejecutarDiagnostico()) {
             clearInterval(intervalo);
             console.log('✅ Diagnóstico completado exitosamente');
-        } else if (intentos >= 20) { // 10 segundos máximo
+        } else if (intentos >= 20) {
             clearInterval(intervalo);
             console.error('❌ Diagnóstico falló después de 20 intentos');
         }
@@ -1275,9 +1404,8 @@
 })();
 </script>
 
-<!-- ESTILOS DE EMERGENCIA PARA VER LOS PACIENTES -->
+<!-- ESTILOS DE EMERGENCIA -->
 <style>
-    /* Forzar visibilidad del contenedor de pacientes */
     #patientsList {
         display: block !important;
         visibility: visible !important;
@@ -1290,7 +1418,6 @@
         margin: 20px 0 !important;
     }
 
-    /* Forzar visibilidad de cada tarjeta de paciente */
     .patient-card {
         display: block !important;
         background-color: #f8fafc !important;
@@ -1299,10 +1426,8 @@
         padding: 20px !important;
         margin-bottom: 15px !important;
         color: #000000 !important;
-        font-family: Arial, sans-serif !important;
     }
 
-    /* Textos dentro de la tarjeta */
     .patient-name {
         font-size: 18px !important;
         font-weight: bold !important;
@@ -1323,7 +1448,6 @@
         margin-right: 15px !important;
     }
 
-    /* Badge de sesiones */
     .badge {
         display: inline-block !important;
         padding: 4px 12px !important;
@@ -1334,7 +1458,6 @@
         font-weight: bold !important;
     }
 
-    /* Historial */
     .patient-history {
         display: block !important;
         margin-top: 15px !important;
@@ -1349,7 +1472,6 @@
         color: #1e293b !important;
     }
     
-    /* Botón de ficha clínica */
     .btn-icon {
         display: inline-block !important;
         padding: 10px 16px !important;
@@ -1367,7 +1489,6 @@
 (function() {
     console.log('🔧 Aplicando verificación visual...');
     
-    // Verificar cada 2 segundos si los pacientes se muestran
     function verificarPacientes() {
         const container = document.getElementById('patientsList');
         const cards = document.querySelectorAll('.patient-card');
@@ -1381,7 +1502,6 @@
         if (cards.length > 0) {
             console.log('✅ ¡PACIENTES VISIBLES!');
             
-            // Resaltar las tarjetas
             cards.forEach((card, i) => {
                 card.style.boxShadow = '0 0 0 3px #ff3b30';
                 const nombre = card.querySelector('.patient-name')?.textContent;
@@ -1390,7 +1510,6 @@
         } else if (window.state?.patients?.length > 0) {
             console.log('❌ Hay pacientes en state pero no en el DOM');
             
-            // Intentar renderizar manualmente
             if (typeof window.renderPatients === 'function') {
                 console.log('🔄 Re-renderizando...');
                 window.renderPatients();
@@ -1398,13 +1517,12 @@
         }
     }
     
-    // Ejecutar después de 2 segundos
     setTimeout(verificarPacientes, 2000);
     setTimeout(verificarPacientes, 4000);
 })();
 </script>
 
-<!-- FIX PARA ESTADÍSTICAS Y CITAS (CORREGIDO) -->
+<!-- FIX PARA ESTADÍSTICAS Y CITAS -->
 <script>
 (function() {
     console.log('🔧 Instalando fix de estadísticas...');
@@ -1415,19 +1533,15 @@
             return;
         }
         
-        // Guardar referencia original
         const originalSwitch = window.switchTab;
         
-        // Sobrescribir
         window.switchTab = function(tabName) {
             console.log('🔄 Cambiando a pestaña:', tabName);
             
-            // Llamar original
             if (originalSwitch) {
                 originalSwitch(tabName);
             }
             
-            // Actualizar después de cambiar
             setTimeout(() => {
                 if (tabName === 'pacientes' && typeof window.renderPatients === 'function') {
                     window.renderPatients();
@@ -1438,7 +1552,6 @@
                 if (tabName === 'solicitudes' && typeof window.citas?.renderPendingRequests === 'function') {
                     window.citas.renderPendingRequests();
                 }
-                // 🆕 Renderizar estadísticas si es la pestaña correspondiente
                 if (tabName === 'estadisticas' && typeof window.estadisticas?.renderPanelEstadisticas === 'function') {
                     window.estadisticas.renderPanelEstadisticas();
                 }
@@ -1453,7 +1566,6 @@
 </script>
 
 <style>
-    /* SOLUCIÓN ESPECÍFICA - SOLO PARA TABLA DE PROFESIONALES */
     #staffTableBody button i.fa,
     #staffTableBody button i.fas {
         display: inline-block !important;
@@ -1463,22 +1575,20 @@
         vertical-align: middle !important;
     }
     
-    /* Forzar iconos específicos con Unicode */
     #staffTableBody .fa-edit:before,
     #staffTableBody .fa-pencil:before {
-        content: "\f044" !important; /* Unicode de edit */
+        content: "\f044" !important;
         font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
         font-weight: 900 !important;
     }
     
     #staffTableBody .fa-trash:before,
     #staffTableBody .fa-trash-o:before {
-        content: "\f1f8" !important; /* Unicode de trash */
+        content: "\f1f8" !important;
         font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
         font-weight: 900 !important;
     }
     
-    /* Restaurar colores originales de los botones */
     #staffTableBody button {
         background: var(--azul-medico) !important;
         color: white !important;

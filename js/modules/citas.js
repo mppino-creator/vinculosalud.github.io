@@ -311,7 +311,7 @@ export function updateAvailableTimes() {
     
     // Obtener todas las citas confirmadas para esta fecha
     const bookedTimes = state.appointments
-        .filter(a => a.psychId == state.selectedPsych.id && a.date === date && a.status === 'confirmada')
+        .filter(a => a.psychId == state.selectedPsych.id && a.date === date && (a.status === 'confirmada' || a.status === 'pendiente'))
         .map(a => a.time);
     
     console.log('📊 ===== DIAGNÓSTICO DE DISPONIBILIDAD =====');
@@ -641,7 +641,10 @@ export function executeBooking() {
     const rut = document.getElementById('custRut').value;
     const name = document.getElementById('custName').value;
     const email = document.getElementById('custEmail').value;
-    const phone = document.getElementById('custPhone').value;
+    const countryCode = document.getElementById('countryCode')?.value || '+56';
+const phoneNumber = document.getElementById('custPhone').value;
+const phone = countryCode + phoneNumber;
+console.log('📞 Teléfono completo:', phone);
     const date = document.getElementById('custDate').value;
     const type = document.getElementById('appointmentType').value;
     const paymentMethod = document.getElementById('paymentMethod')?.value;
@@ -844,47 +847,8 @@ export function executeBooking() {
                 }, 500);
             }
             
-            // Enviar email al PROFESIONAL
-            if (state.selectedPsych && state.selectedPsych.email) {
-                console.log('📧 Enviando notificación al PROFESIONAL:', state.selectedPsych.email);
-                
-                let mensajeEmailProfesional = `Hola ${state.selectedPsych.name},\n\n` +
-                    `Tienes una NUEVA SOLICITUD de cita.\n\n` +
-                    `👤 Paciente: ${name}\n` +
-                    `📧 Email paciente: ${email}\n` +
-                    `📞 Teléfono: ${phone || 'No registrado'}\n` +
-                    `📅 Fecha solicitada: ${date}\n`;
-                
-                if (type === 'online' && time) {
-                    mensajeEmailProfesional += `⏰ Hora: ${time}\n`;
-                } else if (type === 'presencial') {
-                    if (time) mensajeEmailProfesional += `⏰ Preferencia de horario: ${time}\n`;
-                    if (preferenciaAMPM) mensajeEmailProfesional += `⏰ Turno preferido: ${preferenciaAMPM === 'AM' ? 'Mañana' : 'Tarde'}\n`;
-                }
-                
-                mensajeEmailProfesional += `💳 Método de pago: ${paymentMethod}\n` +
-                    `💰 Monto: $${price.toLocaleString()}\n` +
-                    `📝 Motivo: ${msg || 'No especificado'}\n\n` +
-                    `Por favor, confirma esta solicitud a la brevedad desde el panel de administración.\n\n` +
-                    `Vínculo Salud - Centro de Bienestar`;
-
-                setTimeout(() => {
-                    sendEmailNotification(
-                        state.selectedPsych.email,
-                        '🔔 NUEVA SOLICITUD DE CITA - Vínculo Salud',
-                        mensajeEmailProfesional,
-                        'nueva_solicitud',
-                        name,
-                        appointment
-                    ).then(success => {
-                        if (success) {
-                            console.log('✅ Email enviado correctamente al PROFESIONAL:', state.selectedPsych.email);
-                        } else {
-                            console.warn('⚠️ No se pudo enviar el email al PROFESIONAL:', state.selectedPsych.email);
-                        }
-                    });
-                }, 700); // Un poco después para no saturar
-            }
+            // ✅ Email al PROFESIONAL DESACTIVADO - Solo se envía al paciente
+            // Esta sección ha sido eliminada intencionalmente
 
             await import('../main.js').then(main => main.save());
 

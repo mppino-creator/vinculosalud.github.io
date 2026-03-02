@@ -57,7 +57,22 @@ export function renderProfessionals(professionals) {
 
     grid.innerHTML = professionals.map(p => {
         const today = new Date().toISOString().split('T')[0];
-        const hasAvailability = p.availability && p.availability[today] && p.availability[today].length > 0;
+        
+        // Calcular horarios ocupados hoy (pendientes + confirmadas)
+        const citasHoy = window.state?.appointments?.filter(a => 
+            a.psychId == p.id && 
+            a.date === today && 
+            (a.status === 'confirmada' || a.status === 'pendiente')
+        ) || [];
+        
+        // Verificar si hay horarios disponibles (configurados - ocupados > 0)
+        const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
+        const hasAvailability = slotsHoy.length > citasHoy.length;
+        
+        // Para debug (opcional)
+        if (p.name.includes('Marcelo')) {
+            console.log(`📊 ${p.name}: ${slotsHoy.length} slots configurados, ${citasHoy.length} ocupados → ${hasAvailability ? '✅ DISPONIBLE' : '❌ NO DISPONIBLE'}`);
+        }
         const avgRating = getAverageRating(p.id);
         const ratingDisplay = avgRating > 0 ? avgRating.toFixed(1) : p.stars;
         const specialties = Array.isArray(p.spec) ? p.spec.join(' · ') : p.spec;

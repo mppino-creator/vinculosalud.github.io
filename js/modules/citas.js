@@ -352,15 +352,37 @@ export function updateAvailableTimes() {
         onlineMsg.innerHTML = '<i class="fa fa-check-circle" style="color: var(--verde-exito);"></i> Horarios disponibles';
     }
 
-    // No limpiar automáticamente - mantener selección si existe
-    // Solo limpiar si no hay horarios disponibles
+    // IMPORTANTE: No limpiar el select si ya hay una hora seleccionada
+    // Solo limpiar si no hay horarios disponibles Y no hay hora seleccionada
+    const currentSelectedTime = timeSelect ? timeSelect.value : '';
+    
     if (availableTimes.length === 0) {
+        // Si no hay horarios, limpiar todo
         const selectedSlot = document.querySelector('.time-slot-btn.selected');
         if (selectedSlot) {
             selectedSlot.classList.remove('selected');
         }
         if (timeSelect) {
             timeSelect.value = '';
+        }
+    } else if (!currentSelectedTime) {
+        // Solo si hay horarios pero no hay hora seleccionada, NO limpiar nada
+        // Mantener el select como está
+        console.log('📅 No hay hora seleccionada, mostrando horarios disponibles');
+    } else {
+        // Verificar si la hora seleccionada sigue siendo válida
+        const selectedTimeStillValid = availableTimes.some(slot => slot.time === currentSelectedTime);
+        if (!selectedTimeStillValid) {
+            console.log('⚠️ La hora seleccionada ya no está disponible, limpiando selección');
+            const selectedSlot = document.querySelector('.time-slot-btn.selected');
+            if (selectedSlot) {
+                selectedSlot.classList.remove('selected');
+            }
+            if (timeSelect) {
+                timeSelect.value = '';
+            }
+        } else {
+            console.log('✅ Hora seleccionada sigue siendo válida:', currentSelectedTime);
         }
     }
 }

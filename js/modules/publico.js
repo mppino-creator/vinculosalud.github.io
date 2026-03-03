@@ -117,7 +117,7 @@ export function renderProfessionals(professionals) {
         const today = new Date().toISOString().split('T')[0];
         
         // ============================================
-        // Calcular disponibilidad REAL
+        // 🔥 CORRECCIÓN: Calcular disponibilidad REAL considerando TODAS las ocupaciones
         // ============================================
         const citasHoy = window.state?.appointments?.filter(a => 
             a.psychId == p.id && 
@@ -125,8 +125,17 @@ export function renderProfessionals(professionals) {
             (a.status === 'confirmada' || a.status === 'pendiente')
         ) || [];
         
+        const solicitudesHoy = window.state?.pendingRequests?.filter(r => 
+            r.psychId == p.id && 
+            r.date === today && 
+            r.time && 
+            r.time !== 'Pendiente'
+        ) || [];
+        
+        const totalOcupadosHoy = citasHoy.length + solicitudesHoy.length;
+        
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
-        const horasLibres = slotsHoy.length - citasHoy.length;
+        const horasLibres = slotsHoy.length - totalOcupadosHoy;
         const disponibilidadClase = horasLibres > 0 ? 'online' : 'offline';
         
         // ============================================
@@ -192,7 +201,7 @@ export function renderProfessionals(professionals) {
                         </div>
                     </div>
                     
-                    <!-- Disponibilidad -->
+                    <!-- Disponibilidad CORREGIDA -->
                     <div style="display:flex; justify-content:center; align-items:center; margin:10px 0;">
                         <span style="color:${horasLibres > 0 ? 'var(--exito)' : 'var(--peligro)'}; font-size:0.9rem; font-weight:500;">
                             <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
@@ -333,7 +342,7 @@ export function cargarDatosIniciales() {
     });
 
     // ============================================
-    // 🔥 CORRECCIÓN: Cargar pacientes SIEMPRE, no solo cuando hay usuario
+    // Cargar pacientes SIEMPRE
     // ============================================
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -351,47 +360,39 @@ export function cargarDatosIniciales() {
             console.log('📋 No hay pacientes en Firebase');
         }
         
-        // Renderizar pacientes SOLO si hay un usuario logueado
+        // Renderizar pacientes si hay usuario
         if (state.currentUser) {
             renderPatients();
         }
+        
+        // 🔥 FORZAR RENDERIZADO DE PROFESIONALES
+        setTimeout(() => {
+            if (typeof filterProfessionals === 'function') {
+                filterProfessionals();
+            }
+        }, 100);
     });
 
     // ============================================
-    // 🔥 CORRECCIÓN: Listener de Appointments optimizado
+    // Listener de Appointments optimizado
     // ============================================
     db.ref('Appointments').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             const newAppointments = Object.keys(data).map(key => ({ id: key, ...data[key] }));
             
-            // Solo actualizar si hay cambios reales
             if (JSON.stringify(newAppointments) !== JSON.stringify(state.appointments)) {
                 state.setAppointments(newAppointments);
                 console.log('📅 Citas actualizadas en Firebase');
                 
                 if (state.currentUser) {
-                    if (typeof window.updateStats === 'function') {
-                        window.updateStats();
-                    } else {
-                        console.log('⏳ updateStats no disponible, se cargará después');
-                        import('./auth.js').then(mod => {
-                            if (typeof mod.updateStats === 'function') {
-                                window.updateStats = mod.updateStats;
-                                window.updateStats();
-                            }
-                        }).catch(err => console.warn('Error cargando updateStats:', err));
-                    }
+                    if (typeof window.updateStats === 'function') window.updateStats();
                     renderPendingRequests();
                 }
                 if (state.currentUser?.role === 'psych') renderBoxOccupancy();
-            } else {
-                console.log('📅 Sin cambios en citas, omitiendo render');
             }
         } else {
-            if (state.appointments.length > 0) {
-                state.setAppointments([]);
-            }
+            if (state.appointments.length > 0) state.setAppointments([]);
         }
     });
 
@@ -438,46 +439,11 @@ export function forzarCargaDatos() {
 }
 
 window.forzarCargaDatos = forzarCargaDatos;
-console.log('✅ publico.js cargado con mejoras');
-
-
-// ============================================
-// FUNCIÓN PARA FORZAR RENDERIZADO DE PROFESIONALES
-// ============================================
 window.forceRenderProfessionals = function() {
     console.log('🔄 Forzando renderizado de profesionales...');
     if (typeof filterProfessionals === 'function') {
         filterProfessionals();
-    } else {
-        console.warn('⚠️ filterProfessionals no disponible');
     }
 };
 
-// Llamar después de cargar pacientes
-db.ref('Patients').on('value', (snapshot) => {
-    const data = snapshot.val();
-    console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
-    
-    if (data) {
-        const patientsArray = Object.keys(data).map(key => ({ 
-            id: key, 
-            ...data[key] 
-        }));
-        state.setPatients(patientsArray);
-        console.log('✅ Pacientes cargados:', patientsArray.length);
-        
-        // 🔥 FORZAR RENDERIZADO DE PROFESIONALES
-        setTimeout(() => {
-            if (typeof filterProfessionals === 'function') {
-                filterProfessionals();
-            }
-        }, 100);
-    } else {
-        state.setPatients([]);
-        console.log('📋 No hay pacientes en Firebase');
-    }
-    
-    if (state.currentUser) {
-        renderPatients();
-    }
-});
+console.log('✅ publico.js cargado con mejoras (disponibilidad corregida)');

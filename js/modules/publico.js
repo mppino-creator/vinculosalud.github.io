@@ -39,7 +39,7 @@ function mostrarOpcionesCompartir(url, psychName) {
     `;
     modal.innerHTML = `
         <div style="background:white; padding:25px; border-radius:20px; max-width:300px; text-align:center;">
-            <h3 style="margin-bottom:20px; color:var(--texto-primario);">Compartir perfil</h3>
+            <h3 style="margin-bottom:20px; color:var(--texto-principal);">Compartir perfil</h3>
             <div style="display:flex; gap:15px; justify-content:center; margin-bottom:20px;">
                 <a href="${mensajeWhatsApp}" target="_blank" style="background:var(--whatsapp); color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; text-decoration:none;">
                     <i class="fab fa-whatsapp"></i>
@@ -162,8 +162,11 @@ export function renderProfessionals(professionals) {
         const whatsappUrl = p.whatsapp ? `https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${whatsappMessage}` : '#';
         const instagramUrl = p.instagram ? `https://instagram.com/${p.instagram.replace('@', '')}` : '#';
 
+        // ============================================
+        // 🎨 TARJETA CON CLASES CSS (estilo Puntoterapia)
+        // ============================================
         return `
-            <div class="therapist-card">
+            <div class="therapist-card" data-id="${p.id}">
                 <div class="img-container">
                     <!-- Badge de disponibilidad real -->
                     <div class="availability-badge ${disponibilidadClase}">
@@ -214,10 +217,9 @@ export function renderProfessionals(professionals) {
                     </div>
                     
                     <div class="price-box">
-                        <!-- Botón Agendar -->
-                        <button class="btn-book" onclick="event.stopPropagation(); openBooking(${p.id})" 
-                                style="width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 600; background: var(--primario); border: none; border-radius: 30px; color: white; cursor: pointer; transition: all 0.3s; margin-top: 10px;">
-                            <i class="fa fa-calendar-check"></i> Agendar hora
+                        <!-- 🆕 BOTÓN RESERVAR con clase btn-reservar -->
+                        <button class="btn-reservar" onclick="event.stopPropagation(); openBooking(${p.id})">
+                            <i class="fa fa-calendar-check"></i> Reservar hora
                         </button>
                         
                         <!-- Botón Compartir Perfil -->

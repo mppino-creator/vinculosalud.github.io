@@ -1,27 +1,37 @@
 /* ============================================
-   NUEVA PALETA DE COLORES - ESTILO APPLE
+   VÍNCULO SALUD v2.0 - ESTILOS PRINCIPALES
+   Diseño Apple - Paleta Cálida para Salud Mental
    ============================================ */
+
 :root {
-    --fondo: #f5f5f7;
-    --fondo-secundario: #ffffff;
-    --texto-primario: #1d1c1d;
-    --texto-secundario: #86868b;
-    --azul-apple: #0071e3;
-    --azul-apple-hover: #0077ed;
-    --verde-apple: #34c759;
-    --rojo-apple: #ff3b30;
-    --naranja-apple: #ff9500;
-    --gris-apple: #f2f2f2;
-    --gris-oscuro: #e5e5e5;
-    --sombra: rgba(0, 0, 0, 0.04);
-    --glass: rgba(255, 255, 255, 0.8);
-    --gold: #fbbf24;
-    --box-color: #af52de;
+    /* 🎨 NUEVA PALETA CÁLIDA - Profesional y Acogedora */
+    --fondo: #F5F2ED;           /* Beige cálido muy suave - fondo principal */
+    --fondo-secundario: #FFFFFF; /* Blanco puro para tarjetas */
+    --texto-primario: #2D3A3A;   /* Gris verdoso oscuro - máximo contraste */
+    --texto-secundario: #6B7B7B; /* Gris medio - textos secundarios */
     
+    /* Colores de acento - Salud mental */
+    --primario: #7C9A92;         /* Verde salvia - calma, crecimiento */
+    --primario-hover: #5E7E76;   /* Verde más profundo para hovers */
+    --primario-soft: #E8F0ED;    /* Verde muy suave para fondos */
+    
+    --exito: #5BA88C;            /* Verde menta - pagos, confirmaciones */
+    --atencion: #E9B87B;         /* Durazno - advertencias suaves */
+    --peligro: #D88C8C;          /* Terracota suave - errores, cancelaciones */
+    
+    --gris-claro: #E8E2DA;       /* Borde sutil */
+    --gris-oscuro: #D1CBC3;      /* Bordes más definidos */
+    --sombra: rgba(100, 90, 80, 0.08); /* Sombra cálida */
+    
+    --glass: rgba(255, 255, 255, 0.85); /* Efecto vidrio */
+    --gold: #E6B857;             /* Dorado cálido para estrellas */
+    --box-color: #A48A9C;        /* Lila grisáceo para boxes */
+    
+    /* Redes sociales (se mantienen) */
     --whatsapp: #25D366;
     --instagram: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);
     
-    /* Espaciado */
+    /* 📏 Espaciado consistente */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
@@ -29,7 +39,7 @@
     --spacing-xl: 32px;
     --spacing-xxl: 48px;
     
-    /* Bordes */
+    /* 🌀 Bordes redondeados - estilo Apple */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 20px;
@@ -37,6 +47,9 @@
     --radius-full: 999px;
 }
 
+/* ============================================
+   RESET Y BASE
+   ============================================ */
 * {
     margin: 0;
     padding: 0;
@@ -53,10 +66,14 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
+    
+    /* Patrón de fondo sútil (opcional) */
+    background-image: radial-gradient(var(--gris-claro) 0.8px, transparent 0.8px);
+    background-size: 40px 40px;
 }
 
-/* Fondo con efecto vidrio */
-body::before {
+/* Fondo con imagen (cuando se sube una) */
+body.has-background-image::before {
     content: '';
     position: fixed;
     top: 0;
@@ -64,23 +81,13 @@ body::before {
     right: 0;
     bottom: 0;
     background: inherit;
-    filter: blur(0px);
-    transition: filter 0.3s;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     z-index: -1;
 }
 
-body.has-background-image::before {
-    filter: blur(5px);
-}
-
-body.has-background-image {
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-}
-
 /* ============================================
-   TOAST SYSTEM
+   TOAST SYSTEM - Notificaciones
    ============================================ */
 .toast-container {
     position: fixed;
@@ -100,12 +107,12 @@ body.has-background-image {
     padding: 14px 20px;
     border-radius: var(--radius-full);
     margin-bottom: var(--spacing-sm);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 20px var(--sombra);
     display: flex;
     align-items: center;
     gap: 12px;
     animation: slideIn 0.3s ease;
-    border-left: 4px solid var(--verde-apple);
+    border-left: 4px solid var(--exito);
     font-size: 0.95rem;
     pointer-events: auto;
     backdrop-filter: blur(20px);
@@ -126,22 +133,17 @@ body.has-background-image {
     }
 }
 
-.toast.error { border-left-color: var(--rojo-apple); }
-.toast.warning { border-left-color: var(--naranja-apple); }
-.toast.info { border-left-color: var(--azul-apple); }
+.toast.error { border-left-color: var(--peligro); }
+.toast.warning { border-left-color: var(--atencion); }
+.toast.info { border-left-color: var(--primario); }
 
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
 
-@keyframes slideOut {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(100%); opacity: 0; }
-}
-
 /* ============================================
-   MODAL SYSTEM
+   MODAL SYSTEM - Ventanas modales
    ============================================ */
 .modal {
     display: none;
@@ -150,9 +152,9 @@ body.has-background-image {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 2000;
     justify-content: center;
     align-items: center;
@@ -169,7 +171,8 @@ body.has-background-image {
     overflow-y: auto;
     position: relative;
     animation: modalPop 0.3s ease;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--gris-claro);
 }
 
 @keyframes modalPop {
@@ -181,7 +184,7 @@ body.has-background-image {
     position: absolute;
     top: 15px;
     right: 15px;
-    background: var(--gris-apple);
+    background: var(--gris-claro);
     border: none;
     font-size: 1.2rem;
     cursor: pointer;
@@ -201,7 +204,7 @@ body.has-background-image {
 }
 
 /* ============================================
-   GLASS EFFECT - ESTILO APPLE
+   GLASS EFFECT - Estilo Apple
    ============================================ */
 .glass { 
     background: var(--glass); 
@@ -212,7 +215,7 @@ body.has-background-image {
 }
 
 /* ============================================
-   CONTAINER
+   CONTAINER - Contenedor principal
    ============================================ */
 .container { 
     width: 90%; 
@@ -222,7 +225,7 @@ body.has-background-image {
 }
 
 /* ============================================
-   NAVIGATION
+   NAVIGATION - Barra de navegación
    ============================================ */
 header.nav-container {
     padding: var(--spacing-md) 0;
@@ -241,6 +244,7 @@ nav {
     box-shadow: 0 4px 20px var(--sombra);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .logo-container {
@@ -260,7 +264,7 @@ nav {
 .logo-text { 
     font-weight: 700; 
     font-size: 2.5rem;
-    background: linear-gradient(135deg, #1d1c1d, #0071e3);
+    background: linear-gradient(135deg, var(--texto-primario), var(--primario));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -277,10 +281,10 @@ nav {
 }
 
 /* ============================================
-   BUTTONS - ESTILO APPLE
+   BUTTONS - Botones estilo Apple
    ============================================ */
 .btn-staff, .btn-book, .btn-new-message, .btn-icon {
-    background: var(--azul-apple);
+    background: var(--primario);
     color: white;
     padding: 10px 18px;
     border-radius: var(--radius-full);
@@ -294,13 +298,13 @@ nav {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 2px 8px rgba(0, 113, 227, 0.2);
+    box-shadow: 0 2px 8px rgba(124, 154, 146, 0.2);
 }
 
 .btn-staff:hover, .btn-book:hover, .btn-new-message:hover { 
-    background: var(--azul-apple-hover);
+    background: var(--primario-hover);
     transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+    box-shadow: 0 4px 12px rgba(124, 154, 146, 0.3);
 }
 
 .btn-staff:disabled, .btn-book:disabled { 
@@ -312,7 +316,7 @@ nav {
 
 .btn-icon {
     padding: 6px 12px;
-    background: var(--gris-apple);
+    background: var(--gris-claro);
     color: var(--texto-primario);
     box-shadow: none;
 }
@@ -323,7 +327,7 @@ nav {
 }
 
 /* ============================================
-   HERO SECTION
+   HERO SECTION - Sección principal
    ============================================ */
 .hero-section {
     padding: var(--spacing-xxl) var(--spacing-md) var(--spacing-xl);
@@ -348,16 +352,16 @@ nav {
 }
 
 /* ============================================
-   TESTIMONIALS MARQUEE
+   TESTIMONIALS MARQUEE - Testimonios animados
    ============================================ */
 .testimonials-marquee {
-    background: linear-gradient(90deg, var(--azul-apple), #002c5f);
+    background: var(--primario);
     padding: var(--spacing-md) 0;
     overflow: hidden;
     position: relative;
     margin: var(--spacing-xl) 0;
     border-radius: var(--radius-full);
-    box-shadow: 0 8px 24px rgba(0, 113, 227, 0.2);
+    box-shadow: 0 8px 24px rgba(124, 154, 146, 0.2);
 }
 
 .marquee-content {
@@ -393,7 +397,7 @@ nav {
 }
 
 /* ============================================
-   FILTERS
+   FILTERS - Filtros de búsqueda
    ============================================ */
 .filters {
     display: flex;
@@ -413,7 +417,7 @@ nav {
 
 .filter-input, .filter-select {
     padding: 14px 20px;
-    border: 1px solid var(--gris-oscuro);
+    border: 1px solid var(--gris-claro);
     border-radius: var(--radius-full);
     font-size: 1rem;
     background: var(--fondo-secundario);
@@ -434,12 +438,12 @@ nav {
 
 .filter-input:focus, .filter-select:focus {
     outline: none;
-    border-color: var(--azul-apple);
-    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+    border-color: var(--primario);
+    box-shadow: 0 0 0 4px rgba(124, 154, 146, 0.1);
 }
 
 /* ============================================
-   PROFESSIONAL GRID - ESTILO APPLE CARDS
+   PROFESSIONAL GRID - Grid de profesionales
    ============================================ */
 .grid {
     display: grid;
@@ -470,15 +474,14 @@ nav {
     transition: all 0.3s ease;
     position: relative;
     cursor: pointer;
-    border: none;
+    border: 1px solid var(--gris-claro);
     box-shadow: 0 4px 20px var(--sombra);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
 }
 
 .therapist-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 30px rgba(124, 154, 146, 0.15);
+    border-color: var(--primario);
 }
 
 .img-container {
@@ -486,7 +489,7 @@ nav {
     width: 100%;
     position: relative;
     overflow: hidden;
-    background: var(--gris-apple);
+    background: var(--primario-soft);
 }
 
 .img-container img {
@@ -501,7 +504,7 @@ nav {
 }
 
 /* ============================================
-   BADGES
+   BADGES - Insignias
    ============================================ */
 .availability-badge {
     position: absolute;
@@ -522,8 +525,8 @@ nav {
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.availability-badge.online { color: var(--verde-apple); }
-.availability-badge.busy { color: var(--naranja-apple); }
+.availability-badge.online { color: var(--exito); }
+.availability-badge.busy { color: var(--atencion); }
 .availability-badge.offline { color: var(--texto-secundario); }
 
 .whatsapp-badge {
@@ -597,11 +600,19 @@ nav {
 .tag {
     font-size: 0.7rem;
     font-weight: 600;
-    color: var(--azul-apple);
+    color: var(--primario);
     text-transform: uppercase;
     margin-bottom: var(--spacing-sm);
     display: block;
     letter-spacing: 0.5px;
+    
+    /* Para 2 líneas máximo */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+    max-height: 2.8em;
 }
 
 .card-body h3 {
@@ -624,7 +635,7 @@ nav {
     gap: var(--spacing-sm);
     margin-top: var(--spacing-md);
     padding-top: var(--spacing-md);
-    border-top: 1px solid var(--gris-oscuro);
+    border-top: 1px solid var(--gris-claro);
 }
 
 @media (min-width: 480px) {
@@ -644,13 +655,13 @@ nav {
 .price-details small {
     color: var(--texto-secundario);
     font-size: 0.8rem;
-    background: var(--gris-apple);
+    background: var(--primario-soft);
     padding: 4px 10px;
     border-radius: var(--radius-full);
 }
 
 /* ============================================
-   MESSAGES SECTION
+   MESSAGES SECTION - Sección de testimonios
    ============================================ */
 .messages-section {
     background: var(--fondo-secundario);
@@ -658,6 +669,7 @@ nav {
     padding: var(--spacing-xl) var(--spacing-lg);
     margin: var(--spacing-xxl) var(--spacing-md);
     box-shadow: 0 8px 30px var(--sombra);
+    border: 1px solid var(--gris-claro);
 }
 
 .messages-header {
@@ -694,10 +706,10 @@ nav {
 }
 
 .message-card {
-    background: var(--gris-apple);
+    background: var(--primario-soft);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
-    border-left: 4px solid var(--azul-apple);
+    border-left: 4px solid var(--primario);
     transition: all 0.2s;
 }
 
@@ -746,7 +758,7 @@ nav {
 }
 
 /* ============================================
-   BOOKING PANEL
+   BOOKING PANEL - Panel de reserva
    ============================================ */
 .panel { 
     display: none; 
@@ -755,6 +767,7 @@ nav {
     border-radius: var(--radius-xl);
     background: var(--fondo-secundario);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--gris-claro);
 }
 
 .booking-grid {
@@ -775,7 +788,7 @@ nav {
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
     padding-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--gris-oscuro);
+    border-bottom: 1px solid var(--gris-claro);
 }
 
 @media (min-width: 640px) {
@@ -787,7 +800,7 @@ nav {
 }
 
 /* ============================================
-   STATS GRID
+   STATS GRID - Grid de estadísticas
    ============================================ */
 .stat-grid {
     display: grid;
@@ -811,8 +824,8 @@ nav {
 .stat-item {
     padding: var(--spacing-lg);
     border-radius: var(--radius-lg);
-    background: var(--gris-apple);
-    border-bottom: 4px solid var(--azul-apple);
+    background: var(--primario-soft);
+    border-bottom: 4px solid var(--primario);
     transition: all 0.2s;
 }
 
@@ -837,13 +850,13 @@ nav {
 }
 
 /* ============================================
-   TABS
+   TABS - Pestañas
    ============================================ */
 .tabs {
     display: flex;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-lg);
-    border-bottom: 2px solid var(--gris-oscuro);
+    border-bottom: 2px solid var(--gris-claro);
     padding-bottom: var(--spacing-sm);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -865,12 +878,12 @@ nav {
 }
 
 .tab.active {
-    background: var(--azul-apple);
+    background: var(--primario);
     color: white;
 }
 
 .tab:hover:not(.active) {
-    background: var(--gris-apple);
+    background: var(--primario-soft);
     color: var(--texto-primario);
 }
 
@@ -883,10 +896,10 @@ nav {
 }
 
 /* ============================================
-   FORMS
+   FORMS - Formularios
    ============================================ */
 .admin-form, .availability-form {
-    background: var(--gris-apple);
+    background: var(--primario-soft);
     padding: var(--spacing-lg);
     border-radius: var(--radius-lg);
     margin-bottom: var(--spacing-lg);
@@ -918,7 +931,7 @@ nav {
 .form-group textarea {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid var(--gris-oscuro);
+    border: 1px solid var(--gris-claro);
     border-radius: var(--radius-md);
     font-size: 1rem;
     font-family: inherit;
@@ -931,31 +944,75 @@ nav {
 .form-group select:focus, 
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--azul-apple);
-    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+    border-color: var(--primario);
+    box-shadow: 0 0 0 4px rgba(124, 154, 146, 0.1);
 }
 
 /* ============================================
-   FILE UPLOAD
+   TELÉFONO - 3 CAMPOS (ESPECIAL)
+   ============================================ */
+.telefono-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.telefono-container select,
+.telefono-container input {
+    padding: 12px !important;
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--gris-claro) !important;
+    background: var(--fondo-secundario) !important;
+    font-size: 1rem !important;
+    color: var(--texto-primario) !important;
+}
+
+.telefono-container select {
+    width: 25%;
+    min-width: 70px;
+}
+
+.telefono-container .phone-nine {
+    width: 15%;
+    min-width: 45px;
+    text-align: center;
+}
+
+.telefono-container .phone-number {
+    width: 60%;
+}
+
+@media (max-width: 600px) {
+    .telefono-container select,
+    .telefono-container input {
+        width: 100% !important;
+        min-width: 100% !important;
+        text-align: left !important;
+    }
+}
+
+/* ============================================
+   FILE UPLOAD - Subida de archivos
    ============================================ */
 .file-upload {
-    border: 2px dashed var(--azul-apple);
+    border: 2px dashed var(--primario);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
-    background: var(--gris-apple);
+    background: var(--primario-soft);
 }
 
 .file-upload:hover {
-    background: #e8f0fe;
-    border-color: var(--azul-apple-hover);
+    background: #dde9e4;
+    border-color: var(--primario-hover);
 }
 
 .file-upload i {
     font-size: 2rem;
-    color: var(--azul-apple);
+    color: var(--primario);
     margin-bottom: var(--spacing-sm);
 }
 
@@ -974,17 +1031,17 @@ nav {
     border-radius: 50%;
     object-fit: cover;
     margin: var(--spacing-sm) auto;
-    border: 3px solid var(--azul-apple);
+    border: 3px solid var(--primario);
     display: block;
 }
 
 /* ============================================
-   TABLES
+   TABLES - Tablas
    ============================================ */
 .table-container { 
     border-radius: var(--radius-lg); 
     overflow-x: auto; 
-    border: 1px solid var(--gris-oscuro);
+    border: 1px solid var(--gris-claro);
     background: var(--fondo-secundario);
 }
 
@@ -995,7 +1052,7 @@ table {
 }
 
 th { 
-    background: var(--gris-apple); 
+    background: var(--primario-soft); 
     padding: 15px; 
     text-align: left; 
     font-size: 0.8rem; 
@@ -1007,26 +1064,26 @@ th {
 
 td { 
     padding: 15px; 
-    border-top: 1px solid var(--gris-oscuro); 
+    border-top: 1px solid var(--gris-claro); 
     color: var(--texto-primario);
 }
 
 /* ============================================
-   PATIENT CARDS
+   PATIENT CARDS - Tarjetas de pacientes
    ============================================ */
 .patient-card {
     background: var(--fondo-secundario);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-sm);
-    border: 1px solid var(--gris-oscuro);
+    border: 1px solid var(--gris-claro);
     transition: all 0.2s;
     cursor: pointer;
 }
 
 .patient-card:hover {
     transform: translateX(4px);
-    border-color: var(--azul-apple);
+    border-color: var(--primario);
     box-shadow: 0 4px 12px var(--sombra);
 }
 
@@ -1054,7 +1111,7 @@ td {
 }
 
 /* ============================================
-   TIME SLOTS
+   TIME SLOTS - Horarios
    ============================================ */
 .time-slots {
     display: flex;
@@ -1064,13 +1121,13 @@ td {
     max-height: 300px;
     overflow-y: auto;
     padding: var(--spacing-sm);
-    background: var(--gris-apple);
+    background: var(--primario-soft);
     border-radius: var(--radius-lg);
 }
 
 .time-slot {
     padding: 8px 12px;
-    border: 1px solid var(--gris-oscuro);
+    border: 1px solid var(--gris-claro);
     border-radius: var(--radius-full);
     background: var(--fondo-secundario);
     cursor: pointer;
@@ -1079,13 +1136,13 @@ td {
 }
 
 .time-slot.selected {
-    background: var(--azul-apple);
+    background: var(--primario);
     color: white;
-    border-color: var(--azul-apple);
+    border-color: var(--primario);
 }
 
 .time-slot.booked {
-    background: var(--gris-apple);
+    background: var(--gris-claro);
     color: var(--texto-secundario);
     text-decoration: line-through;
     cursor: not-allowed;
@@ -1093,13 +1150,88 @@ td {
 }
 
 .time-slot.overcupo {
-    background: #fff3cd;
-    color: #856404;
-    border-color: #ffeeba;
+    background: #fef3e2;
+    color: #8B6B4D;
+    border-color: var(--atencion);
+}
+
+.time-slot.overcupo::after {
+    content: "⚠️";
+    margin-left: 4px;
+    font-size: 10px;
 }
 
 /* ============================================
-   WEEKDAY SELECTOR
+   TIME SLOTS GRID - Grid de horarios (AM/PM)
+   ============================================ */
+.time-slots-container {
+    background: var(--fondo-secundario);
+    border-radius: var(--radius-lg);
+    padding: 15px;
+    border: 1px solid var(--gris-claro);
+    margin-bottom: var(--spacing-md);
+}
+
+.time-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.time-slot-btn {
+    padding: 12px 8px;
+    border: 2px solid var(--gris-claro);
+    border-radius: var(--radius-md);
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 4px var(--sombra);
+}
+
+.time-slot-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(124, 154, 146, 0.15);
+    border-color: var(--primario);
+}
+
+.time-slot-btn.selected {
+    background: var(--primario);
+    color: white;
+    border-color: var(--primario);
+    box-shadow: 0 4px 12px rgba(124, 154, 146, 0.3);
+}
+
+.time-slot-btn.booked {
+    background: var(--gris-claro);
+    color: var(--texto-secundario);
+    border-color: var(--gris-claro);
+    cursor: not-allowed;
+    opacity: 0.6;
+    text-decoration: line-through;
+    pointer-events: none;
+}
+
+.time-slot-btn.overcupo {
+    background: #fef3e2;
+    color: #8B6B4D;
+    border-color: var(--atencion);
+}
+
+.time-slot-btn.overcupo::after {
+    content: "⚠️";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 12px;
+}
+
+/* ============================================
+   WEEKDAY SELECTOR - Selector de días
    ============================================ */
 .weekday-selector {
     display: flex;
@@ -1110,7 +1242,7 @@ td {
 
 .weekday {
     padding: 8px 12px;
-    border: 1px solid var(--gris-oscuro);
+    border: 1px solid var(--gris-claro);
     border-radius: var(--radius-full);
     cursor: pointer;
     transition: all 0.2s;
@@ -1120,13 +1252,13 @@ td {
 }
 
 .weekday.selected {
-    background: var(--azul-apple);
+    background: var(--primario);
     color: white;
-    border-color: var(--azul-apple);
+    border-color: var(--primario);
 }
 
 /* ============================================
-   BADGES
+   BADGES GENERALES
    ============================================ */
 .badge {
     padding: 4px 8px;
@@ -1136,11 +1268,11 @@ td {
     display: inline-block;
 }
 
-.badge.online { background: #e6f7e6; color: var(--verde-apple); }
-.badge.presencial { background: #e6f0ff; color: var(--azul-apple); }
+.badge.online { background: #e2f0e9; color: var(--exito); }
+.badge.presencial { background: #e8f0ed; color: var(--primario); }
 
 /* ============================================
-   SPINNER
+   SPINNER - Cargando
    ============================================ */
 .spinner {
     width: 18px;
@@ -1157,7 +1289,7 @@ td {
 }
 
 /* ============================================
-   BOX SELECTOR
+   BOX SELECTOR - Selector de boxes
    ============================================ */
 .box-selector {
     display: flex;
@@ -1168,7 +1300,7 @@ td {
 
 .box-option {
     padding: 10px 20px;
-    border: 2px solid var(--gris-oscuro);
+    border: 2px solid var(--gris-claro);
     border-radius: var(--radius-full);
     cursor: pointer;
     transition: all 0.2s;
@@ -1184,19 +1316,18 @@ td {
 }
 
 .box-option.taken {
-    background: var(--gris-apple);
+    background: var(--gris-claro);
     color: var(--texto-secundario);
     border-color: var(--texto-secundario);
     cursor: not-allowed;
-    position: relative;
 }
 
 /* ============================================
-   EMAIL SIMULATION
+   EMAIL SIMULATION - Simulación de emails
    ============================================ */
 .email-simulation {
-    background: #e8f0fe;
-    border-left: 4px solid var(--azul-apple);
+    background: var(--primario-soft);
+    border-left: 4px solid var(--primario);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     margin: var(--spacing-lg) 0;
@@ -1204,11 +1335,11 @@ td {
 }
 
 .email-simulation strong {
-    color: var(--azul-apple);
+    color: var(--primario);
 }
 
 /* ============================================
-   PATIENT STATS
+   PATIENT STATS - Estadísticas de paciente
    ============================================ */
 .patient-stats {
     display: grid;
@@ -1216,7 +1347,7 @@ td {
     gap: var(--spacing-sm);
     margin: var(--spacing-md) 0;
     padding: var(--spacing-md);
-    background: var(--gris-apple);
+    background: var(--primario-soft);
     border-radius: var(--radius-lg);
 }
 
@@ -1231,7 +1362,7 @@ td {
 .stat-card .number {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--azul-apple);
+    color: var(--primario);
 }
 
 .stat-card .label {
@@ -1241,11 +1372,11 @@ td {
 }
 
 /* ============================================
-   SPECIALTIES
+   SPECIALTIES - Especialidades
    ============================================ */
 .specialty-tag {
     display: inline-block;
-    background: var(--azul-apple);
+    background: var(--primario);
     color: white;
     padding: 4px 10px;
     border-radius: var(--radius-full);
@@ -1262,7 +1393,7 @@ td {
 }
 
 .specialty-item {
-    background: var(--gris-apple);
+    background: var(--primario-soft);
     padding: 8px 15px;
     border-radius: var(--radius-full);
     display: flex;
@@ -1276,7 +1407,7 @@ td {
     width: 20px;
     height: 20px;
     padding: 0;
-    background: var(--rojo-apple);
+    background: var(--peligro);
     color: white;
     border: none;
     border-radius: 50%;
@@ -1288,10 +1419,10 @@ td {
 }
 
 /* ============================================
-   BANK DETAILS
+   BANK DETAILS - Detalles bancarios
    ============================================ */
 .bank-details {
-    background: var(--gris-apple);
+    background: var(--primario-soft);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     margin-top: var(--spacing-md);
@@ -1299,7 +1430,7 @@ td {
 
 .bank-details h4 {
     margin-bottom: var(--spacing-sm);
-    color: var(--azul-apple);
+    color: var(--primario);
 }
 
 .payment-method-item {
@@ -1314,7 +1445,7 @@ td {
 }
 
 /* ============================================
-   LOADER INICIAL
+   LOADER INICIAL - Carga inicial
    ============================================ */
 #initialLoader {
     position: fixed;
@@ -1337,8 +1468,8 @@ td {
 .loader-spinner {
     width: 50px;
     height: 50px;
-    border: 3px solid var(--gris-oscuro);
-    border-top: 3px solid var(--azul-apple);
+    border: 3px solid var(--gris-claro);
+    border-top: 3px solid var(--primario);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin: 0 auto 20px;
@@ -1351,20 +1482,20 @@ td {
 }
 
 /* ============================================
-   PANEL DE REINICIO
+   PANEL DE REINICIO - Admin
    ============================================ */
 .reinicio-card {
     background: var(--fondo-secundario);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-md);
-    border: 1px solid var(--gris-oscuro);
+    border: 1px solid var(--gris-claro);
     transition: all 0.2s;
 }
 
 .reinicio-card:hover {
     box-shadow: 0 8px 20px var(--sombra);
-    border-color: var(--azul-apple);
+    border-color: var(--primario);
 }
 
 .reinicio-card h4 {
@@ -1375,7 +1506,7 @@ td {
 }
 
 .reinicio-card .total-badge {
-    background: var(--azul-apple);
+    background: var(--primario);
     color: white;
     padding: 4px 10px;
     border-radius: var(--radius-full);
@@ -1389,12 +1520,12 @@ td {
 }
 
 .reinicio-card.warning {
-    background: #fff3cd;
-    border-color: var(--rojo-apple);
+    background: #fef3e2;
+    border-color: var(--peligro);
 }
 
 /* ============================================
-   FIX PARA INPUTS Y SELECTORS INVISIBLES
+   FIX PARA INPUTS Y SELECTORS
    ============================================ */
 #bookingPanel input,
 #bookingPanel select,
@@ -1407,7 +1538,7 @@ td {
 .modal textarea {
     color: var(--texto-primario) !important;
     background-color: var(--fondo-secundario) !important;
-    border: 1px solid var(--gris-oscuro) !important;
+    border: 1px solid var(--gris-claro) !important;
     padding: 12px 16px !important;
     border-radius: var(--radius-md) !important;
     font-size: 1rem !important;
@@ -1480,28 +1611,11 @@ h3, h4, h5,
 }
 
 /* ============================================
-   FIX PARA MENSAJES DE DISPONIBILIDAD
-   ============================================ */
-#onlineAvailabilityMsg,
-#presencialWarning {
-    color: var(--texto-primario) !important;
-}
-
-#onlineAvailabilityMsg i,
-#presencialWarning i {
-    color: inherit !important;
-}
-
-/* ============================================
    FIX PARA EL CHECKBOX DE POLÍTICA
    ============================================ */
 #acceptPolicy {
     width: auto !important;
     margin-right: 8px !important;
-}
-
-.glass label {
-    color: white !important;
 }
 
 /* ============================================
@@ -1510,16 +1624,16 @@ h3, h4, h5,
 #bookBtn,
 .btn-staff {
     color: white !important;
-    background: var(--azul-apple) !important;
+    background: var(--primario) !important;
 }
 
 #bookBtn:hover,
 .btn-staff:hover {
-    background: var(--azul-apple-hover) !important;
+    background: var(--primario-hover) !important;
 }
 
 /* ============================================
-   RESPONSIVE ADJUSTMENTS
+   RESPONSIVE ADJUSTMENTS - Ajustes móviles
    ============================================ */
 @media (max-width: 768px) {
     .container {
@@ -1569,6 +1683,10 @@ h3, h4, h5,
     .stat-grid {
         grid-template-columns: 1fr;
     }
+    
+    .time-slot-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
 }
 
 @media (max-width: 480px) {
@@ -1598,112 +1716,7 @@ h3, h4, h5,
         padding: 6px 12px;
         font-size: 0.9rem;
     }
-
-}
-
-/* ============================================
-   AGENDA AM/PM - NUEVOS ESTILOS
-   ============================================ */
-
-.time-slots-container {
-    background: var(--fondo-secundario);
-    border-radius: var(--radius-lg);
-    padding: 15px;
-    border: 1px solid var(--gris-oscuro);
-}
-
-.time-slot-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.time-slot-btn {
-    padding: 12px 8px;
-    border: 2px solid var(--gris-oscuro);
-    border-radius: var(--radius-md);
-    background: white;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    text-align: center;
-    position: relative;
-    box-shadow: 0 2px 4px var(--sombra);
-}
-
-.time-slot-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0, 113, 227, 0.15);
-    border-color: var(--azul-apple);
-}
-
-.time-slot-btn.selected {
-    background: var(--azul-apple);
-    color: white;
-    border-color: var(--azul-apple);
-    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
-}
-
-.time-slot-btn.booked {
-    background: var(--gris-apple);
-    color: var(--texto-secundario);
-    border-color: var(--gris-oscuro);
-    cursor: not-allowed;
-    opacity: 0.6;
-    text-decoration: line-through;
-    pointer-events: none;
-}
-
-.time-slot-btn.overcupo {
-    background: #fff3cd;
-    color: #856404;
-    border-color: #ffeeba;
-}
-
-.time-slot-btn.overcupo::after {
-    content: "⚠️";
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    font-size: 12px;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
-}
-
-/* Encabezados de sección AM/PM */
-#amSlots h4, #pmSlots h4 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-#amSlots h4 i {
-    color: var(--azul-medico);
-}
-
-#pmSlots h4 i {
-    color: var(--naranja-aviso);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .time-slot-grid {
-        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    }
     
-    .time-slot-btn {
-        padding: 10px 5px;
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 480px) {
     .time-slot-grid {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -1714,28 +1727,60 @@ h3, h4, h5,
 }
 
 /* ============================================
-   MEJORA: Especialidades en 2 líneas
+   ESTADÍSTICAS DEL PSICÓLOGO
    ============================================ */
-.therapist-card .tag {
-    display: block !important;
-    white-space: normal !important;
-    line-height: 1.4 !important;
-    max-height: 2.8em !important; /* 2 líneas (1.4 * 2) */
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    font-size: 0.7rem !important;
-    margin-bottom: 8px !important;
-    color: var(--azul-apple) !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
+#psychStatsContainer {
+    margin: 20px 0;
 }
 
-/* Para mantener consistencia en móviles */
-@media (max-width: 768px) {
-    .therapist-card .tag {
-        font-size: 0.65rem !important;
-        line-height: 1.3 !important;
-        max-height: 2.6em !important;
-    }
+#psychStatsContainer .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+#psychStatsContainer .stat-box {
+    background: var(--fondo-secundario);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    box-shadow: 0 4px 12px var(--sombra);
+    border: 1px solid var(--gris-claro);
+    transition: transform 0.2s;
+}
+
+#psychStatsContainer .stat-box:hover {
+    transform: translateY(-2px);
+    border-color: var(--primario);
+}
+
+#psychStatsContainer .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primario);
+    line-height: 1.2;
+}
+
+#psychStatsContainer .stat-label {
+    font-size: 0.8rem;
+    color: var(--texto-secundario);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#psychStatsContainer .ingresos-box {
+    background: linear-gradient(135deg, var(--primario), var(--primario-hover));
+    color: white;
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    margin-top: 15px;
+}
+
+#psychStatsContainer .ingresos-box .stat-number {
+    color: white;
+}
+
+#psychStatsContainer .ingresos-box .stat-label {
+    color: rgba(255, 255, 255, 0.9);
 }

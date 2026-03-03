@@ -439,7 +439,7 @@ export function loadMyConfig() {
     if (myBankEmail) myBankEmail.value = bank.email || '';
 
     // ============================================
-    // NUEVO: Mostrar estadísticas del psicólogo
+    // Mostrar estadísticas del psicólogo
     // ============================================
     mostrarEstadisticasPsicologo(psych.id);
 
@@ -447,7 +447,7 @@ export function loadMyConfig() {
 }
 
 // ============================================
-// NUEVAS FUNCIONES PARA ESTADÍSTICAS PERSONALES
+// FUNCIONES PARA ESTADÍSTICAS PERSONALES (ACTUALIZADAS)
 // ============================================
 
 /**
@@ -483,51 +483,49 @@ function mostrarEstadisticasPsicologo(psychId) {
         })
         .reduce((sum, a) => sum + (a.price || 0), 0);
 
-    // Renderizar estadísticas
+    // Renderizar estadísticas con la nueva paleta de colores
     statsContainer.innerHTML = `
-        <div style="background: #f0f9ff; padding: 20px; border-radius: 12px; margin: 20px 0;">
-            <h4 style="margin-bottom: 15px;">📊 Mis Estadísticas</h4>
+        <div class="stats-container" style="margin: 20px 0;">
+            <h4 style="margin-bottom: 15px; color: var(--texto-primario); font-size: 1.2rem;">📊 Mis Estadísticas</h4>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold; color: var(--azul-apple);">${misPacientes.length}</div>
-                    <div style="font-size: 12px; color: #666;">Pacientes</div>
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div class="stat-box" style="background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--primario);">${misPacientes.length}</div>
+                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Pacientes</div>
                 </div>
                 
-                <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold; color: var(--verde-exito);">${sesiones.length}</div>
-                    <div style="font-size: 12px; color: #666;">Sesiones Registradas</div>
+                <div class="stat-box" style="background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--exito);">${sesiones.length}</div>
+                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Sesiones</div>
                 </div>
                 
-                <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold; color: var(--naranja-aviso);">${fichasIngreso.length}</div>
-                    <div style="font-size: 12px; color: #666;">Fichas de Ingreso</div>
+                <div class="stat-box" style="background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--atencion);">${fichasIngreso.length}</div>
+                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Fichas Ingreso</div>
                 </div>
                 
-                <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold; color: var(--azul-medico);">${informes.length}</div>
-                    <div style="font-size: 12px; color: #666;">Informes</div>
+                <div class="stat-box" style="background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--box-color);">${informes.length}</div>
+                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Informes</div>
                 </div>
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                <div style="background: white; padding: 15px; border-radius: 10px;">
-                    <div style="font-size: 14px; color: #666;">Ingresos Totales</div>
-                    <div style="font-size: 20px; font-weight: bold;">$${ingresosTotales.toLocaleString()}</div>
+                <div style="background: linear-gradient(135deg, var(--primario), var(--primario-hover)); padding: 20px; border-radius: var(--radius-lg); color: white; box-shadow: var(--sombra);">
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Ingresos Totales</div>
+                    <div style="font-size: 1.8rem; font-weight: 700;">$${ingresosTotales.toLocaleString()}</div>
                 </div>
                 
-                <div style="background: white; padding: 15px; border-radius: 10px;">
-                    <div style="font-size: 14px; color: #666;">Ingresos este Mes</div>
-                    <div style="font-size: 20px; font-weight: bold;">$${ingresosMes.toLocaleString()}</div>
+                <div style="background: linear-gradient(135deg, var(--primario), var(--primario-hover)); padding: 20px; border-radius: var(--radius-lg); color: white; box-shadow: var(--sombra);">
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Ingresos este Mes</div>
+                    <div style="font-size: 1.8rem; font-weight: 700;">$${ingresosMes.toLocaleString()}</div>
                 </div>
             </div>
             
-            <div style="margin-top: 15px;">
-                <div style="background: white; padding: 15px; border-radius: 10px;">
-                    <div style="font-size: 14px; color: #666;">Promedio de sesiones por paciente</div>
-                    <div style="font-size: 20px; font-weight: bold;">
-                        ${misPacientes.length > 0 ? (sesiones.length / misPacientes.length).toFixed(1) : 0}
-                    </div>
+            <div style="margin-top: 15px; background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
+                <div style="font-size: 0.9rem; color: var(--texto-secundario);">Promedio de sesiones por paciente</div>
+                <div style="font-size: 1.8rem; font-weight: 700; color: var(--primario);">
+                    ${misPacientes.length > 0 ? (sesiones.length / misPacientes.length).toFixed(1) : 0}
                 </div>
             </div>
         </div>

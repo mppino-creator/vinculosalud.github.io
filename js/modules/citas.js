@@ -180,12 +180,12 @@ export function showPaymentDetails() {
         const bank = state.selectedPsych.bankDetails;
         detailsDiv.style.display = 'block';
         detailsDiv.innerHTML = `
-            <h4 style="margin-bottom:10px;">Datos para Transferencia</h4>
+            <h4 style="margin-bottom:10px; color:var(--texto-primario);">Datos para Transferencia</h4>
             <p><strong>Banco:</strong> ${bank.bank || 'No especificado'}</p>
             <p><strong>Cuenta:</strong> ${bank.accountType || ''} ${bank.accountNumber || ''}</p>
             <p><strong>RUT:</strong> ${bank.rut || ''}</p>
             <p><strong>Email:</strong> ${bank.email || ''}</p>
-            <p style="font-size:0.8rem; margin-top:10px; background:#fff3cd; padding:10px; border-radius:8px;">
+            <p style="font-size:0.8rem; margin-top:10px; background:var(--atencion); opacity:0.9; padding:10px; border-radius:8px;">
                 <i class="fa fa-info-circle"></i> 
                 💡 Realiza la transferencia. El profesional confirmará el pago antes de la cita.
             </p>
@@ -195,10 +195,10 @@ export function showPaymentDetails() {
     if (method === 'card-presencial') {
         detailsDiv.style.display = 'block';
         detailsDiv.innerHTML = `
-            <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
-                <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i>
+            <div style="background: var(--primario-soft); padding: 15px; border-radius: 8px;">
+                <i class="fa fa-info-circle" style="color: var(--primario);"></i>
                 <strong>Pago en consulta</strong>
-                <p style="margin-top:10px; font-size:0.9rem;">
+                <p style="margin-top:10px; font-size:0.9rem; color:var(--texto-primario);">
                     El pago se realizará en el consultorio. El profesional confirmará el pago después de la atención.
                 </p>
             </div>
@@ -208,10 +208,10 @@ export function showPaymentDetails() {
     if (method === 'cash') {
         detailsDiv.style.display = 'block';
         detailsDiv.innerHTML = `
-            <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
-                <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i>
+            <div style="background: var(--primario-soft); padding: 15px; border-radius: 8px;">
+                <i class="fa fa-info-circle" style="color: var(--primario);"></i>
                 <strong>Pago en efectivo</strong>
-                <p style="margin-top:10px; font-size:0.9rem;">
+                <p style="margin-top:10px; font-size:0.9rem; color:var(--texto-primario);">
                     El pago se realizará en efectivo en el consultorio.
                 </p>
             </div>
@@ -228,12 +228,12 @@ export function showPaymentDetails() {
             linkContainer.style.display = 'block';
             linkContainer.innerHTML = `
                 <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
-                    <h4 style="margin-bottom:15px;">💳 Pago Online</h4>
+                    <h4 style="margin-bottom:15px; color:var(--texto-primario);">💳 Pago Online</h4>
                     <p>Haz clic en el botón para realizar el pago:</p>
-                    <a href="${link}" target="_blank" class="btn-staff" style="display:inline-block; background:var(--verde-exito); color:white; padding:12px 30px; border-radius:30px; text-decoration:none; margin:15px 0;">
+                    <a href="${link}" target="_blank" class="btn-staff" style="display:inline-block; background:var(--exito); color:white; padding:12px 30px; border-radius:30px; text-decoration:none; margin:15px 0;">
                         <i class="fa fa-credit-card"></i> Ir a pagar
                     </a>
-                    <p style="font-size:0.8rem; color:#666;">Después del pago, vuelve a esta página para confirmar tu cita.</p>
+                    <p style="font-size:0.8rem; color:var(--texto-secundario);">Después del pago, vuelve a esta página para confirmar tu cita.</p>
                 </div>
             `;
         } else {
@@ -270,9 +270,9 @@ export function updateAvailableTimes() {
         if (presencialWarning) {
             presencialWarning.style.display = 'block';
             presencialWarning.innerHTML = `
-                <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
+                <i class="fa fa-info-circle" style="color: var(--primario);"></i> 
                 <strong>Solicitud Presencial:</strong> El profesional confirmará la hora.
-                <div style="margin-top:15px; padding:10px; background:#f8fafc; border-radius:8px;">
+                <div style="margin-top:15px; padding:10px; background:var(--primario-soft); border-radius:8px;">
                     <label style="display:block; margin-bottom:8px; color:var(--texto-primario);">Preferencia de horario (opcional):</label>
                     <div style="display:flex; gap:15px; justify-content:center;">
                         <label style="display:flex; align-items:center; gap:5px;">
@@ -392,7 +392,7 @@ export function updateAvailableTimes() {
 
     if (onlineMsg) {
         onlineMsg.style.display = 'block';
-        onlineMsg.innerHTML = '<i class="fa fa-check-circle" style="color: var(--verde-exito);"></i> Horarios disponibles';
+        onlineMsg.innerHTML = '<i class="fa fa-check-circle" style="color: var(--exito);"></i> Horarios disponibles';
     }
 
     // IMPORTANTE: No limpiar el select si ya hay una hora seleccionada
@@ -479,7 +479,16 @@ export function searchPatientByRutBooking() {
     if (patient) {
         document.getElementById('custName').value = patient.name || '';
         document.getElementById('custEmail').value = patient.email || '';
-        document.getElementById('custPhone').value = patient.phone || '';
+        // ✅ TELÉFONO - Mantener formato de 3 campos
+        const phoneParts = patient.phone ? patient.phone.split(' ') : ['+56', '9', ''];
+        const countryCode = document.getElementById('countryCode');
+        const phoneNine = document.getElementById('phoneNine');
+        const custPhone = document.getElementById('custPhone');
+        
+        if (countryCode && phoneParts[0]) countryCode.value = phoneParts[0];
+        if (phoneNine && phoneParts[1]) phoneNine.value = phoneParts[1];
+        if (custPhone && phoneParts[2]) custPhone.value = phoneParts[2];
+        
         showToast('Datos del paciente cargados', 'success');
         showPaymentDetails();
     }
@@ -642,7 +651,7 @@ export function executeBooking() {
     const name = document.getElementById('custName').value;
     const email = document.getElementById('custEmail').value;
     
-    // ✅ CAMBIO: Teléfono con 3 campos (código + 9 + número)
+    // ✅ TELÉFONO con 3 campos
     const countryCode = document.getElementById('countryCode')?.value || '+56';
     const phoneNine = document.getElementById('phoneNine')?.value || '9';
     const phoneNumber = document.getElementById('custPhone')?.value || '';
@@ -810,9 +819,11 @@ export function executeBooking() {
                 showToast(mensaje, 'success');
             }
 
-            // Enviar email al PACIENTE
-            if (email) {
-                console.log('📧 Enviando email de confirmación al PACIENTE:', email);
+            // ============================================
+            // 🔥 CORRECCIÓN: ENVIAR SOLO 1 EMAIL y MARCADO
+            // ============================================
+            if (email && !appointment.emailEnviado) {
+                console.log('📧 Enviando ÚNICO email de confirmación al PACIENTE:', email);
                 
                 let mensajeEmailPaciente = `Hola ${name},\n\nHemos recibido tu solicitud de cita ${type === 'online' ? 'online' : 'presencial'}.\n\n` +
                     `📅 Fecha: ${date}\n`;
@@ -830,45 +841,42 @@ export function executeBooking() {
                     `El profesional confirmará el pago y la hora a la brevedad.\n\n` +
                     `Vínculo Salud - Centro de Bienestar`;
 
-                setTimeout(() => {
-                    sendEmailNotification(
-                        email,
-                        type === 'online' 
-                            ? 'Solicitud de cita online - Vínculo Salud'
-                            : 'Solicitud de cita presencial - Vínculo Salud',
-                        mensajeEmailPaciente,
-                        'solicitud_recibida',
-                        name,
-                        appointment
-                    ).then(success => {
-                        if (success) {
-                            console.log('✅ Email enviado correctamente al PACIENTE:', email);
-                            appointment.emailEnviado = true;
-                        } else {
-                            console.warn('⚠️ No se pudo enviar el email al PACIENTE:', email);
-                        }
-                    });
-                }, 500);
+                // Enviar email y marcar como enviado
+                const success = await sendEmailNotification(
+                    email,
+                    type === 'online' 
+                        ? 'Solicitud de cita online - Vínculo Salud'
+                        : 'Solicitud de cita presencial - Vínculo Salud',
+                    mensajeEmailPaciente,
+                    'solicitud_recibida',
+                    name,
+                    appointment
+                );
+                
+                if (success) {
+                    console.log('✅ Email enviado correctamente al PACIENTE:', email);
+                    appointment.emailEnviado = true;
+                } else {
+                    console.warn('⚠️ No se pudo enviar el email al PACIENTE:', email);
+                }
             }
             
             // ✅ Email al PROFESIONAL DESACTIVADO - Solo se envía al paciente
-            // Esta sección ha sido eliminada intencionalmente
 
             await import('../main.js').then(main => main.save());
 
-            // 🟢 FORZAR ACTUALIZACIÓN DE DISPONIBILIDAD PARA EVITAR DOBLE RESERVA
+            // 🟢 FORZAR ACTUALIZACIÓN DE DISPONIBILIDAD
             console.log('🔄 Actualizando disponibilidad después de reserva...');
             
             // Limpiar selección actual
             window.horaSeleccionada = null;
             
-            // Recargar horarios disponibles (esto marcará la hora como ocupada)
+            // Recargar horarios disponibles
             if (typeof updateAvailableTimes === 'function') {
                 updateAvailableTimes();
-                console.log('✅ Disponibilidad actualizada - la hora reservada ya no debería aparecer');
+                console.log('✅ Disponibilidad actualizada');
             }
             
-            // Segunda actualización para asegurar
             setTimeout(() => {
                 if (typeof updateAvailableTimes === 'function') {
                     updateAvailableTimes();
@@ -919,9 +927,9 @@ export function renderAppointments() {
     tb.innerHTML = sortedApps.map(a => {
         const fechaHora = new Date(a.date + 'T' + a.time);
         const isPast = fechaHora < new Date();
-        const paymentStatusColor = a.paymentStatus === 'pagado' ? '#34c759' : '#ff9500';
+        const paymentStatusColor = a.paymentStatus === 'pagado' ? 'var(--exito)' : 'var(--atencion)';
         const paymentStatusText = a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
-        const statusColor = isPast ? '#86868b' : '#34c759';
+        const statusColor = isPast ? 'var(--texto-secundario)' : 'var(--exito)';
         const statusText = isPast ? 'Completada' : (a.status === 'confirmada' ? 'Confirmada' : 'Pendiente');
         
         return `
@@ -929,23 +937,23 @@ export function renderAppointments() {
                 <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
                 <td>${a.psych || '—'}</td>
                 <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
-                <td><span style="background:${a.type === 'online' ? '#34c759' : '#0071e3'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>${a.boxName ? `<span style="background:#af52de; color:white; padding:4px 8px; border-radius:6px;">${a.boxName}</span>` : '—'}</td>
+                <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+                <td>${a.boxName ? `<span style="background:var(--box-color); color:white; padding:4px 8px; border-radius:6px;">${a.boxName}</span>` : '—'}</td>
                 <td><span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span></td>
                 <td><span style="color:${statusColor};">${statusText}</span></td>
                 <td>
                     <div style="display:flex; gap:5px;">
                         ${a.paymentStatus !== 'pagado' ? `
-                            <button onclick="confirmPayment('${a.id}')" class="btn-icon" style="background:#34c759; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Confirmar pago">
+                            <button onclick="confirmPayment('${a.id}')" class="btn-icon" style="background:var(--exito); color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Confirmar pago">
                                 <i class="fa fa-dollar-sign"></i>
                             </button>
                         ` : ''}
-                        <button onclick="cancelAppointment('${a.id}')" class="btn-icon" style="background:#ff3b30; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Cancelar cita">
+                        <button onclick="cancelAppointment('${a.id}')" class="btn-icon" style="background:var(--peligro); color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Cancelar cita">
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
-                    ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
-                    ${a.emailEnviado ? `<br><small style="color:#34c759;">📧 Email enviado</small>` : ''}
+                    ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem; color:var(--texto-secundario);">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
+                    ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado</small>` : ''}
                 </td>
             </tr>
         `;
@@ -977,7 +985,7 @@ export function renderPendingRequests() {
             <td>
                 <strong>${r.patient}</strong><br>
                 <small>${r.patientRut}</small>
-                ${tieneFicha ? '<span style="color:#34c759; font-size:0.6rem;">📋 Ficha completa</span>' : ''}
+                ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha completa</span>' : ''}
             </td>
             <td>${r.psych}</td>
             <td>${r.date}</td>
@@ -987,34 +995,34 @@ export function renderPendingRequests() {
             <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
             <td>
                 <div style="display:flex; flex-direction:column; gap:5px;">
-                    <span style="font-size:0.8rem; padding:2px 5px; background:${r.paymentStatus === 'pagado' ? '#e6f7e6' : '#fff3cd'}; border-radius:4px;">
+                    <span style="font-size:0.8rem; padding:2px 5px; background:${r.paymentStatus === 'pagado' ? 'var(--exito)' : 'var(--atencion)'}; opacity:0.2; border-radius:4px;">
                         Pago: ${r.paymentStatus === 'pagado' ? '✅ Confirmado' : '⏳ Pendiente'}
                     </span>
                     
                     <div style="display:flex; gap:5px; flex-wrap:wrap;">
                         ${r.paymentStatus !== 'pagado' ? `
-                            <button onclick="confirmPayment('${r.id}')" class="btn-icon" style="background:#34c759; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                            <button onclick="confirmPayment('${r.id}')" class="btn-icon" style="background:var(--exito); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
                                 <i class="fa fa-dollar-sign"></i> Pagado
                             </button>
                         ` : ''}
                         
                         ${r.type === 'presencial' && r.paymentStatus === 'pagado' ? `
-                            <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:#0071e3; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                            <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--primario); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
                                 <i class="fa fa-check"></i> Confirmar
                             </button>
                         ` : ''}
                         
-                        <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:#ff3b30; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                        <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--peligro); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
                             <i class="fa fa-times"></i> Rechazar
                         </button>
                     </div>
                     
                     ${r.paymentConfirmedBy ? `
-                        <span style="font-size:0.7rem; color:#666;">
+                        <span style="font-size:0.7rem; color:var(--texto-secundario);">
                             Pago: ${r.paymentConfirmedBy}
                         </span>
                     ` : ''}
-                    ${r.emailEnviado ? `<span style="color:#34c759; font-size:0.7rem;">📧 Notificado</span>` : ''}
+                    ${r.emailEnviado ? `<span style="color:var(--exito); font-size:0.7rem;">📧 Notificado</span>` : ''}
                 </div>
             </td>
         </tr>
@@ -1161,7 +1169,7 @@ export function updateTherapistAvailableSlots() {
             const option = document.createElement('option');
             option.value = slot.time;
             option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
-            if (slot.isOvercupo) option.style.color = '#f59e0b';
+            if (slot.isOvercupo) option.style.color = 'var(--atencion)';
             timeSelect.appendChild(option);
         }
     });

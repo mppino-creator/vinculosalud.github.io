@@ -39,19 +39,19 @@ function mostrarOpcionesCompartir(url, psychName) {
     `;
     modal.innerHTML = `
         <div style="background:white; padding:25px; border-radius:20px; max-width:300px; text-align:center;">
-            <h3 style="margin-bottom:20px;">Compartir perfil</h3>
+            <h3 style="margin-bottom:20px; color:var(--texto-primario);">Compartir perfil</h3>
             <div style="display:flex; gap:15px; justify-content:center; margin-bottom:20px;">
-                <a href="${mensajeWhatsApp}" target="_blank" style="background:#25D366; color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; text-decoration:none;">
+                <a href="${mensajeWhatsApp}" target="_blank" style="background:var(--whatsapp); color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; text-decoration:none;">
                     <i class="fab fa-whatsapp"></i>
                 </a>
-                <a href="${mensajeEmail}" style="background:#0071e3; color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; text-decoration:none;">
+                <a href="${mensajeEmail}" style="background:var(--primario); color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; text-decoration:none;">
                     <i class="fa fa-envelope"></i>
                 </a>
-                <button onclick="copiarAlPortapapeles('${url}')" style="background:#34c759; color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:none; cursor:pointer;">
+                <button onclick="copiarAlPortapapeles('${url}')" style="background:var(--exito); color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:none; cursor:pointer;">
                     <i class="fa fa-link"></i>
                 </button>
             </div>
-            <button onclick="this.parentElement.parentElement.remove()" style="background:#ff3b30; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer;">
+            <button onclick="this.parentElement.parentElement.remove()" style="background:var(--peligro); color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer;">
                 Cerrar
             </button>
         </div>
@@ -117,7 +117,7 @@ export function renderProfessionals(professionals) {
         const today = new Date().toISOString().split('T')[0];
         
         // ============================================
-        // 🔥 MEJORA 1: Calcular disponibilidad REAL
+        // Calcular disponibilidad REAL
         // ============================================
         const citasHoy = window.state?.appointments?.filter(a => 
             a.psychId == p.id && 
@@ -127,12 +127,10 @@ export function renderProfessionals(professionals) {
         
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
         const horasLibres = slotsHoy.length - citasHoy.length;
-        const disponibilidadTexto = horasLibres > 0 ? `${horasLibres} horarios` : 'Sin cupos';
         const disponibilidadClase = horasLibres > 0 ? 'online' : 'offline';
-        const disponibilidadBadge = horasLibres > 0 ? 'DISPONIBLE' : 'COMPLETO';
         
         // ============================================
-        // 🔥 MEJORA 2: Especialidades limitadas a 3
+        // Especialidades limitadas a 3
         // ============================================
         const specialtiesList = Array.isArray(p.spec) ? p.spec : [p.spec];
         const specsMostrar = specialtiesList.slice(0, 3);
@@ -140,7 +138,7 @@ export function renderProfessionals(professionals) {
         const specialties = specsMostrar.join(' · ') + (specsRestantes > 0 ? ` +${specsRestantes}` : '');
         
         // ============================================
-        // 🔥 MEJORA 3: Estrellas con número de reseñas
+        // Estrellas con número de reseñas
         // ============================================
         const avgRating = getAverageRating(p.id);
         const ratingDisplay = avgRating > 0 ? avgRating : 5;
@@ -154,7 +152,7 @@ export function renderProfessionals(professionals) {
         return `
             <div class="therapist-card">
                 <div class="img-container">
-                    <!-- MEJORA: Badge de disponibilidad real -->
+                    <!-- Badge de disponibilidad real -->
                     <div class="availability-badge ${disponibilidadClase}">
                         <div class="pulse"></div> 
                         ${horasLibres > 0 ? `${horasLibres} disponibles` : 'Sin cupos'}
@@ -176,42 +174,42 @@ export function renderProfessionals(professionals) {
                 </div>
                 
                 <div class="card-body" onclick="openBooking(${p.id})">
-                    <!-- MEJORA: Especialidades limitadas -->
+                    <!-- Especialidades limitadas -->
                     <span class="tag">${specialties}</span>
                     
                     <h3>${p.name}</h3>
                     
-                    ${p.genero ? `<small style="display:block; color:var(--text-light); font-size:0.8rem; margin-top:-5px;">${p.genero === 'M' ? 'Psicólogo' : p.genero === 'F' ? 'Psicóloga' : ''}</small>` : ''}
+                    ${p.genero ? `<small style="display:block; color:var(--texto-secundario); font-size:0.8rem; margin-top:-5px;">${p.genero === 'M' ? 'Psicólogo' : p.genero === 'F' ? 'Psicóloga' : ''}</small>` : ''}
                     
-                    <!-- MEJORA: Estrellas con número de reseñas -->
+                    <!-- Estrellas con número de reseñas -->
                     <div class="stars" style="display:flex; align-items:center; justify-content:space-between; margin:10px 0;">
-                        <div>
+                        <div style="color:var(--gold);">
                             ${'★'.repeat(starCount)}${'☆'.repeat(5-starCount)}
                         </div>
-                        <div style="background:var(--azul-apple); color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; display:flex; align-items:center; gap:4px;">
+                        <div style="background:var(--primario); color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; display:flex; align-items:center; gap:4px;">
                             <i class="fa fa-comment" style="font-size:0.7rem;"></i>
                             ${totalReseñas}
                         </div>
                     </div>
                     
-                    <!-- MEJORA: Solo disponibilidad (el precio va dentro del botón) -->
-<div style="display:flex; justify-content:center; align-items:center; margin:10px 0;">
-    <span style="color:${horasLibres > 0 ? 'var(--verde-exito)' : 'var(--rojo-alerta)'}; font-size:0.9rem; font-weight:500;">
-        <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
-        ${horasLibres > 0 ? `${horasLibres} horario(s) disponible(s)` : 'Sin cupos disponibles'}
-    </span>
-</div>
+                    <!-- Disponibilidad -->
+                    <div style="display:flex; justify-content:center; align-items:center; margin:10px 0;">
+                        <span style="color:${horasLibres > 0 ? 'var(--exito)' : 'var(--peligro)'}; font-size:0.9rem; font-weight:500;">
+                            <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
+                            ${horasLibres > 0 ? `${horasLibres} horario(s) disponible(s)` : 'Sin cupos disponibles'}
+                        </span>
+                    </div>
                     
                     <div class="price-box">
-                        <!-- MEJORA: Botón Agendar (corregido) -->
+                        <!-- Botón Agendar -->
                         <button class="btn-book" onclick="event.stopPropagation(); openBooking(${p.id})" 
-                                style="width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 600; background: var(--azul-apple); border: none; border-radius: 30px; color: white; cursor: pointer; transition: all 0.3s; margin-top: 10px;">
+                                style="width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 600; background: var(--primario); border: none; border-radius: 30px; color: white; cursor: pointer; transition: all 0.3s; margin-top: 10px;">
                             <i class="fa fa-calendar-check"></i> Agendar hora
                         </button>
                         
-                        <!-- MEJORA: Botón Compartir Perfil -->
+                        <!-- Botón Compartir Perfil -->
                         <button class="btn-share" onclick="event.stopPropagation(); compartirPerfil('${p.id}', '${p.name}')" 
-                                style="width:100%; margin-top:8px; padding:8px; background:transparent; border:2px solid var(--azul-apple); border-radius:30px; color:var(--azul-apple); font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                style="width:100%; margin-top:8px; padding:8px; background:transparent; border:2px solid var(--primario); border-radius:30px; color:var(--primario); font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
                             <i class="fa fa-share-alt"></i> Compartir
                         </button>
                     </div>
@@ -230,7 +228,7 @@ function getAverageRating(psychId) {
 export function cargarDatosIniciales() {
     const grid = document.getElementById('publicGrid');
     if (grid) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Cargando profesionales...</p></div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x" style="color:var(--primario);"></i><p>Cargando profesionales...</p></div>';
     }
 
     db.ref('Staff').once('value', (snapshot) => {

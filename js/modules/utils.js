@@ -8,16 +8,56 @@ const EMAILJS_SERVICE_ID = 'vinculo_salud';
 const EMAILJS_TEMPLATE_ID = 'template_0cl1i1h';
 const EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
 
+// Inicializar EmailJS si está disponible
+if (typeof window !== 'undefined' && typeof emailjs !== 'undefined') {
+    try {
+        emailjs.init(EMAILJS_USER_ID);
+        console.log('✅ EmailJS inicializado correctamente');
+    } catch (error) {
+        console.warn('⚠️ Error al inicializar EmailJS:', error);
+    }
+} else {
+    console.warn('⚠️ EmailJS no disponible, usando modo simulación');
+}
+
 // ============================================
-// FUNCIÓN PARA ENVIAR EMAILS CON EMAILJS (VERSIÓN DEFINITIVA CON NOMBRE REAL)
+// VARIABLE GLOBAL PARA CONTROLAR EMAILS ENVIADOS (AGREGAR ESTO)
+// ============================================
+const emailsEnviados = new Set();
+
+// ============================================
+// FUNCIÓN PARA ENVIAR EMAILS CON EMAILJS (VERSIÓN CORREGIDA - SIN DUPLICADOS)
 // ============================================
 export async function sendEmailNotification(to, subject, message, tipo = 'general', patientName = null, appointmentData = {}) {
+  
+  // 🔥 CORRECCIÓN: Crear un ID único para este email
+  const emailId = `${to}_${tipo}_${appointmentData.id || Date.now()}`;
+  
+  // Verificar si ya se envió este mismo email
+  if (emailsEnviados.has(emailId)) {
+    console.log(`⏭️ Email ya enviado anteriormente (${emailId}), omitiendo duplicado`);
+    return true;
+  }
+  
   console.log(`📧 Enviando email a: ${to} (${tipo})`);
   
   try {
+    // Verificar que el destinatario sea válido
+    if (!to || to.trim() === '') {
+      console.warn('⚠️ No se puede enviar email: destinatario vacío');
+      return false;
+    }
+
     // Verificar que emailjs esté disponible
     if (typeof emailjs === 'undefined') {
-      throw new Error('EmailJS no está cargado. Verifica que el script esté en index.html');
+      console.warn('⚠️ EmailJS no está cargado. Usando modo simulación');
+      simulateEmail(to, subject, message);
+      
+      // Marcar como enviado en simulación
+      emailsEnviados.add(emailId);
+      setTimeout(() => emailsEnviados.delete(emailId), 5000); // Limpiar después de 5 seg
+      
+      return true;
     }
     
     // Limpiar el mensaje de caracteres problemáticos
@@ -28,24 +68,26 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
       .replace(/\s+/g, ' ')         // Múltiples espacios a uno
       .trim();
 
-    // Usar el nombre real del paciente o extraer del email como fallback
     const nombreReal = patientName || to.split('@')[0] || 'Paciente';
     
-    // Preparar parámetros con los datos reales de la cita
     const templateParams = {
       to_email: to,
-      patient_name: nombreReal,  // ← AHORA USA EL NOMBRE REAL
+      to_name: nombreReal,
+      reply_to: to,
+      from_name: 'Vínculo Salud',
+      patient_name: nombreReal,
+      patient_email: to,
       appointment_date: appointmentData.date || new Date().toLocaleDateString('es-CL'),
       appointment_time: appointmentData.time || '10:00',
-      professional_name: appointmentData.professional || 'Profesional',
-      appointment_type: appointmentData.type || 'online',
+      professional_name: appointmentData.psych || appointmentData.professional || 'Profesional',
+      appointment_type: appointmentData.type === 'online' ? 'Online' : 'Presencial',
       appointment_price: appointmentData.price || '25000',
-      message: mensajeLimpio
+      message: mensajeLimpio,
+      subject: subject
     };
 
     console.log('📤 Enviando con EmailJS...', templateParams);
 
-    // Enviar usando EmailJS
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
@@ -55,22 +97,61 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
 
     console.log('✅ Email enviado correctamente:', response);
     
+    // 🔥 Marcar como enviado para evitar duplicados
+    emailsEnviados.add(emailId);
+    setTimeout(() => emailsEnviados.delete(emailId), 10000); // Limpiar después de 10 seg
+    
     // Mostrar en la interfaz
-    const emailDiv = document.getElementById('emailSimulation');
-    if (emailDiv) {
-      emailDiv.innerHTML = `<strong>📧 Email enviado a ${to}</strong><br>${subject}`;
-      emailDiv.style.display = 'block';
-      setTimeout(() => { emailDiv.style.display = 'none'; }, 5000);
-    }
+    simulateEmail(to, subject, message, true);
     
     return true;
     
   } catch (error) {
     console.error('❌ Error enviando email:', error);
-    // Mostrar más detalles si existen
     if (error.text) console.error('Texto del error:', error.text);
+    
+    simulateEmail(to, subject, message);
     return false;
   }
+}
+
+/**
+ * Simula el envío de un email (para debugging)
+ * @param {string} to - Destinatario
+ * @param {string} subject - Asunto
+ * @param {string} message - Mensaje
+ * @param {boolean} isSuccess - Indica si fue exitoso
+ */
+function simulateEmail(to, subject, message, isSuccess = false) {
+  console.log(`📧 [${isSuccess ? '✅' : '🔧'} SIMULACIÓN] Email a:`, to);
+  console.log(`📧 [${isSuccess ? '✅' : '🔧'} SIMULACIÓN] Asunto:`, subject);
+  
+  const emailDiv = document.getElementById('emailSimulation');
+  if (emailDiv) {
+    const statusColor = isSuccess ? 'var(--exito)' : 'var(--atencion)';
+    emailDiv.innerHTML = `
+      <div style="background: ${statusColor}; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+        <strong>📧 ${isSuccess ? 'EMAIL ENVIADO' : 'SIMULACIÓN DE EMAIL'}</strong>
+      </div>
+      <strong>Para:</strong> ${to}<br>
+      <strong>Asunto:</strong> ${subject}<br>
+      <strong>Mensaje:</strong><br>${message.replace(/\n/g, '<br>')}
+    `;
+    emailDiv.style.display = 'block';
+    
+    // Ocultar después de 5 segundos
+    setTimeout(() => {
+      emailDiv.style.display = 'none';
+    }, 5000);
+  }
+}
+
+/**
+ * Envía email al profesional (DESACTIVADO - No se usa)
+ */
+export function sendEmailToProfessional(professional_email, subject, message, template, patient_name, appointment) {
+  console.log('📧 [DESACTIVADO] No se envía email al profesional:', professional_email);
+  return Promise.resolve(true);
 }
 
 // ============================================
@@ -226,13 +307,13 @@ export function formatCurrency(amount) {
 export function getPaymentStatusColor(status) {
   switch(status) {
     case 'pagado':
-      return 'var(--verde-exito)';
+      return 'var(--exito)';
     case 'pendiente':
-      return 'var(--naranja-aviso)';
+      return 'var(--atencion)';
     case 'rechazado':
-      return 'var(--rojo-alerta)';
+      return 'var(--peligro)';
     default:
-      return 'var(--text-light)';
+      return 'var(--texto-secundario)';
   }
 }
 
@@ -365,4 +446,4 @@ if (typeof window !== 'undefined') {
   window.getPatientNameById = getPatientNameById;
 }
 
-console.log('✅ utils.js cargado con funciones de fichas clínicas');
+console.log('✅ utils.js cargado con funciones de fichas clínicas y email corregido');

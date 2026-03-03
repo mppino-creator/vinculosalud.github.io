@@ -333,7 +333,7 @@ export function searchPatientByRutBooking() {
 }
 
 // ============================================
-// FUNCIÓN FALTANTE - checkOnlineAvailability
+// FUNCIÓN checkOnlineAvailability
 // ============================================
 export function checkOnlineAvailability() {
     const date = document.getElementById('custDate').value;
@@ -708,7 +708,7 @@ export function executeBooking() {
             bookingEnProceso = false;
         }
     }, 1500);
-}}
+}
 
 // ============================================
 // FUNCIONES DE RENDERIZADO
@@ -1172,7 +1172,7 @@ window.openBooking = openBooking;
 window.updateBookingDetails = updateBookingDetails;
 window.updateAvailableTimes = updateAvailableTimes;
 window.searchPatientByRutBooking = searchPatientByRutBooking;
-window.checkOnlineAvailability = checkOnlineAvailability; // ← AGREGADA
+window.checkOnlineAvailability = checkOnlineAvailability;
 window.executeBooking = executeBooking;
 window.showPaymentDetails = showPaymentDetails;
 window.confirmPayment = confirmPayment;

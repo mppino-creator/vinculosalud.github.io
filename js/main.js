@@ -20,9 +20,6 @@ import * as mensajes from './modules/mensajes.js';
 import * as personalizacion from './modules/personalizacion.js';
 import * as publico from './modules/publico.js';
 
-// 🔍 VERIFICAR QUÉ FUNCIONES EXPORTA personalizacion
-console.log('🔍 Funciones en personalizacion:', Object.keys(personalizacion));
-
 // Módulos de fichas clínicas
 import * as fichasClinicas from './modules/fichasClinicas.js';
 import * as informes from './modules/informes.js';
@@ -31,12 +28,22 @@ import * as pdfGenerator from './modules/pdfGenerator.js';
 import * as estadisticas from './modules/estadisticas.js';
 
 // ============================================
-// EXPONER FUNCIONES GLOBALES - VERSIÓN CORREGIDA
+// VERIFICAR QUE personalizacion CONTIENE loadMyConfig
+// ============================================
+console.log('🔍 Funciones disponibles en personalizacion:', Object.keys(personalizacion));
+if (typeof personalizacion.loadMyConfig !== 'function') {
+    console.error('❌ ERROR CRÍTICO: personalizacion.loadMyConfig NO es una función');
+} else {
+    console.log('✅ personalizacion.loadMyConfig disponible');
+}
+
+// ============================================
+// EXPONER FUNCIONES GLOBALES
 // ============================================
 console.log('🚀 Exponiendo funciones globales...');
 
 // ============================================
-// FUNCIONES DE AUTENTICACIÓN (CRÍTICAS)
+// FUNCIONES DE AUTENTICACIÓN
 // ============================================
 window.showLoginModal = auth.showLoginModal;
 window.closeLoginModal = auth.closeLoginModal;
@@ -99,8 +106,9 @@ window.checkOnlineAvailability = citas.checkOnlineAvailability;
 window.showPaymentDetails = citas.showPaymentDetails;
 window.renderPendingRequests = citas.renderPendingRequests;
 window.renderAppointments = citas.renderAppointments;
-// ❌ NO ASIGNAMOS selectTimeSlot NI selectTimePref AQUÍ
-// Ya son expuestas directamente por citas.js al final del archivo
+// Ya son expuestas directamente por citas.js
+window.selectTimeSlot = citas.selectTimeSlot;
+window.selectTimePref = citas.selectTimePref;
 
 // ============================================
 // FUNCIONES DE DISPONIBILIDAD
@@ -127,7 +135,7 @@ window.toggleBoxStatus = boxes.toggleBoxStatus;
 window.deleteBox = boxes.deleteBox;
 
 // ============================================
-// FUNCIONES DE PERSONALIZACIÓN
+// FUNCIONES DE PERSONALIZACIÓN (CORREGIDO)
 // ============================================
 window.showLogoModal = personalizacion.showLogoModal;
 window.closeLogoModal = personalizacion.closeLogoModal;
@@ -144,8 +152,11 @@ window.showPaymentMethodsModal = personalizacion.showPaymentMethodsModal;
 window.closePaymentMethodsModal = personalizacion.closePaymentMethodsModal;
 window.saveGlobalPaymentMethods = personalizacion.saveGlobalPaymentMethods;
 window.updatePaymentMethodsInfo = personalizacion.updatePaymentMethodsInfo;
+
+// 🔥 CORREGIDO: Asignación de loadMyConfig y saveMyConfig
 window.loadMyConfig = personalizacion.loadMyConfig;
 window.saveMyConfig = personalizacion.saveMyConfig;
+
 window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
 window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
 window.addSpecialty = personalizacion.addSpecialty;
@@ -178,7 +189,7 @@ window.validarRut = utils.validarRut;
 window.showToast = utils.showToast;
 
 // ============================================
-// VERIFICACIÓN (DESPUÉS DE ASIGNAR TODO) - VERSIÓN MEJORADA
+// VERIFICACIÓN FINAL
 // ============================================
 console.log('✅ showLoginModal asignada:', typeof window.showLoginModal);
 console.log('✅ switchTab asignada:', typeof window.switchTab);
@@ -187,25 +198,21 @@ console.log('✅ verFichaCompleta asignada:', typeof window.verFichaCompleta);
 console.log('✅ estadisticas asignada:', typeof window.estadisticas);
 console.log('✅ selectTimeSlot asignada:', typeof window.selectTimeSlot);
 console.log('✅ selectTimePref asignada:', typeof window.selectTimePref);
-console.log('✅ loadMyConfig asignada:', typeof window.loadMyConfig);
-
-// Verificar disponibilidad en personalizacion
-console.log('🔍 personalizacion.loadMyConfig existe:', typeof personalizacion.loadMyConfig);
+console.log('✅ loadMyConfig asignada:', typeof window.loadMyConfig); // ← DEBE SER "function"
 
 // ============================================
-// RESPALDO DE EMERGENCIA (por si acaso)
+// RESPALDO DE EMERGENCIA
 // ============================================
 setTimeout(() => {
     if (typeof window.selectTimeSlot !== 'function' && typeof citas?.selectTimeSlot === 'function') {
         console.log('🚨 Restaurando selectTimeSlot desde citas...');
         window.selectTimeSlot = citas.selectTimeSlot;
         window.selectTimePref = citas.selectTimePref;
-        console.log('✅ Funciones restauradas:', typeof window.selectTimeSlot);
     }
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA)
+// FUNCIÓN PARA GUARDAR EN FIREBASE
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -217,9 +224,6 @@ export function save() {
     const boxesObj = {};
     state.boxes.forEach(item => { boxesObj[item.id] = item; });
 
-    // ============================================
-    // 🔥 CORRECCIÓN: Guardar pacientes con verificación
-    // ============================================
     const patientsObj = {};
     state.patients.forEach(item => { 
         patientsObj[item.id] = item; 
@@ -277,7 +281,6 @@ export function save() {
         })
         .catch(err => {
             console.error('❌ Error al guardar en Firebase:', err);
-            console.error('❌ Error guardando pacientes específicamente');
             if (typeof utils.showToast === 'function') utils.showToast('Error al guardar los datos', 'error');
         });
 }

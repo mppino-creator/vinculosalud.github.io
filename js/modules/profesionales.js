@@ -43,7 +43,660 @@ export function closeAddStaffModal() {
 }
 
 // ============================================
-// RENDERIZAR TABLA DE PROFESIONALES (VERSIÓN CON EMOJIS)
+// 🆕 FUNCIÓN PARA QUE EL PROFESIONAL EDITE SU PERFIL
+// ============================================
+
+export function openMyProfileModal() {
+    // Verificar que hay un profesional logueado
+    if (!state.currentUser || state.currentUser.role !== 'psych') {
+        showToast('Debes iniciar sesión como profesional', 'error');
+        return;
+    }
+    
+    const psych = state.currentUser.data;
+    if (!psych) {
+        showToast('Error al cargar datos del profesional', 'error');
+        return;
+    }
+    
+    console.log('🔓 Abriendo edición de perfil para:', psych.name);
+    
+    // Crear modal si no existe
+    crearModalEdicionProfesional();
+    
+    // Llenar el modal con los datos actuales
+    document.getElementById('editMyName').value = psych.name || '';
+    document.getElementById('editMyEmail').value = psych.email || '';
+    document.getElementById('editMyTitle').value = psych.title || '';
+    
+    // Género
+    const editMyGenero = document.getElementById('editMyGenero');
+    if (editMyGenero) editMyGenero.value = psych.genero || '';
+    
+    // Especialidades
+    const editMySpec = document.getElementById('editMySpec');
+    if (editMySpec) {
+        const psychSpecs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
+        Array.from(editMySpec.options).forEach(opt => {
+            opt.selected = psychSpecs.includes(opt.value);
+        });
+    }
+    
+    // Biografía / Descripción
+    document.getElementById('editMyBio').value = psych.bio || '';
+    
+    // Registro profesional
+    document.getElementById('editMyProfessionalId').value = psych.professionalId || '';
+    document.getElementById('editMyExperience').value = psych.experience || '';
+    document.getElementById('editMyEducation').value = psych.education || '';
+    document.getElementById('editMyLanguages').value = psych.languages ? psych.languages.join(', ') : '';
+    
+    // Redes sociales
+    document.getElementById('editMyLinkedin').value = psych.socialLinks?.linkedin || '';
+    document.getElementById('editMyInstagram').value = psych.socialLinks?.instagram || '';
+    document.getElementById('editMyWebsite').value = psych.socialLinks?.website || '';
+    
+    // Precios
+    document.getElementById('editMyPriceOnline').value = psych.priceOnline || '';
+    document.getElementById('editMyPricePresencial').value = psych.pricePresencial || '';
+    document.getElementById('editMyDuration').value = psych.sessionDuration || 45;
+    
+    // Métodos de pago (checkboxes)
+    const methods = psych.paymentMethods || state.globalPaymentMethods;
+    document.getElementById('editMyPaymentTransfer').checked = methods.transfer || false;
+    document.getElementById('editMyPaymentCardPresencial').checked = methods.cardPresencial || false;
+    document.getElementById('editMyPaymentCash').checked = methods.cash || false;
+    document.getElementById('editMyPaymentCardOnline').checked = methods.cardOnline || false;
+    document.getElementById('editMyPaymentMercadopago').checked = methods.mercadopago || false;
+    document.getElementById('editMyPaymentWebpay').checked = methods.webpay || false;
+    
+    // Datos bancarios
+    const bank = psych.bankDetails || {};
+    document.getElementById('editMyBank').value = bank.bank || '';
+    document.getElementById('editMyAccountType').value = bank.accountType || 'corriente';
+    document.getElementById('editMyAccountNumber').value = bank.accountNumber || '';
+    document.getElementById('editMyBankRut').value = bank.rut || '';
+    document.getElementById('editMyBankEmail').value = bank.email || '';
+    
+    // Links de pago
+    document.getElementById('editMyPaymentLinkOnline').value = psych.paymentLinks?.online || '';
+    document.getElementById('editMyPaymentLinkPresencial').value = psych.paymentLinks?.presencial || '';
+    
+    // Foto de perfil
+    const photoPreview = document.getElementById('editMyPhotoPreview');
+    if (photoPreview) {
+        if (psych.img || psych.photoURL) {
+            photoPreview.src = psych.img || psych.photoURL;
+            photoPreview.style.display = 'block';
+        } else {
+            photoPreview.src = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
+            photoPreview.style.display = 'block';
+        }
+    }
+    
+    // QR
+    const qrPreview = document.getElementById('editMyQrPreview');
+    if (qrPreview) {
+        if (psych.paymentLinks?.qrCode) {
+            qrPreview.src = psych.paymentLinks.qrCode;
+            qrPreview.style.display = 'block';
+        } else {
+            qrPreview.style.display = 'none';
+        }
+    }
+    
+    // Mostrar modal
+    document.getElementById('editMyProfileModal').style.display = 'flex';
+}
+
+// ============================================
+// 🆕 FUNCIÓN PARA CREAR MODAL DE EDICIÓN (si no existe)
+// ============================================
+
+function crearModalEdicionProfesional() {
+    // Verificar si ya existe el modal
+    if (document.getElementById('editMyProfileModal')) return;
+    
+    // Obtener especialidades para los selects
+    const specialtiesHtml = state.specialties
+        .map(s => `<option value="${s.name}">${s.name}</option>`)
+        .join('');
+    
+    // Crear el modal HTML
+    const modalHTML = `
+    <div id="editMyProfileModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" onclick="document.getElementById('editMyProfileModal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 20px;">✏️ Editar Mi Perfil Profesional</h2>
+            
+            <!-- TABS PARA ORGANIZAR -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                <button class="tab-btn active" onclick="showMyProfileTab('basic')" id="tabBasicBtn">📋 Básico</button>
+                <button class="tab-btn" onclick="showMyProfileTab('prices')" id="tabPricesBtn">💰 Precios</button>
+                <button class="tab-btn" onclick="showMyProfileTab('payment')" id="tabPaymentBtn">💳 Pagos</button>
+                <button class="tab-btn" onclick="showMyProfileTab('social')" id="tabSocialBtn">🌐 Redes</button>
+            </div>
+            
+            <!-- TAB 1: DATOS BÁSICOS -->
+            <div id="tabBasic" class="profile-tab" style="display: block;">
+                <div style="display: flex; gap: 30px; margin-bottom: 20px;">
+                    <!-- Foto de perfil -->
+                    <div style="flex: 0 0 150px; text-align: center;">
+                        <div style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin-bottom: 10px; border: 3px solid var(--primario);">
+                            <img id="editMyPhotoPreview" src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <input type="file" id="editMyPhotoUpload" accept="image/*" style="display: none;" onchange="previewMyPhoto(this)">
+                        <button onclick="document.getElementById('editMyPhotoUpload').click()" class="btn-secondary" style="font-size: 12px;">
+                            <i class="fa fa-camera"></i> Cambiar foto
+                        </button>
+                    </div>
+                    
+                    <!-- Datos principales -->
+                    <div style="flex: 1;">
+                        <div class="form-group">
+                            <label>Nombre completo *</label>
+                            <input type="text" id="editMyName" class="filter-input" required>
+                        </div>
+                        
+                        <div class="form-row" style="display: flex; gap: 15px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Email *</label>
+                                <input type="email" id="editMyEmail" class="filter-input" required>
+                            </div>
+                            <div class="form-group" style="flex: 0.5;">
+                                <label>Género</label>
+                                <select id="editMyGenero" class="filter-input">
+                                    <option value="">Selecciona</option>
+                                    <option value="M">Masculino (Psicólogo)</option>
+                                    <option value="F">Femenino (Psicóloga)</option>
+                                    <option value="other">Otro / Prefiero no decir</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row" style="display: flex; gap: 15px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Título profesional</label>
+                                <input type="text" id="editMyTitle" class="filter-input" placeholder="Ej: Psicólogo Clínico">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Especialidades</label>
+                                <select id="editMySpec" class="filter-input" multiple size="4">
+                                    ${specialtiesHtml}
+                                </select>
+                                <small>Ctrl+click para múltiples</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Biografía / Descripción</label>
+                            <textarea id="editMyBio" rows="3" class="filter-input" placeholder="Cuéntales a tus pacientes sobre ti..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 10px;">
+                    <h4 style="margin-bottom: 15px;">📋 Información profesional</h4>
+                    
+                    <div class="form-row" style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Número de registro profesional</label>
+                            <input type="text" id="editMyProfessionalId" class="filter-input" placeholder="Ej: 12345">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Años de experiencia</label>
+                            <input type="number" id="editMyExperience" class="filter-input" placeholder="Ej: 10">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Formación académica</label>
+                        <input type="text" id="editMyEducation" class="filter-input" placeholder="Ej: Universidad de Chile, 2015">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Idiomas (separados por coma)</label>
+                        <input type="text" id="editMyLanguages" class="filter-input" placeholder="Ej: Español, Inglés, Portugués">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB 2: PRECIOS Y HORARIOS -->
+            <div id="tabPrices" class="profile-tab" style="display: none;">
+                <h4 style="margin-bottom: 15px;">💰 Precios de consulta</h4>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Precio consulta ONLINE ($)</label>
+                        <input type="number" id="editMyPriceOnline" class="filter-input" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Precio consulta PRESENCIAL ($)</label>
+                        <input type="number" id="editMyPricePresencial" class="filter-input" required>
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <label>Duración (min)</label>
+                        <input type="number" id="editMyDuration" class="filter-input" value="45">
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <h4 style="margin-bottom: 15px;">📅 Configurar mi disponibilidad</h4>
+                    <p style="margin-bottom: 15px;">
+                        <button onclick="openMyAvailabilityModal()" class="btn-primary" style="background: var(--primario);">
+                            <i class="fa fa-calendar-alt"></i> Gestionar horarios
+                        </button>
+                        <span style="margin-left: 15px; color: var(--texto-secundario);">
+                            Define tus horas disponibles por día
+                        </span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- TAB 3: MÉTODOS DE PAGO -->
+            <div id="tabPayment" class="profile-tab" style="display: none;">
+                <h4 style="margin-bottom: 15px;">💳 Métodos de pago que acepto</h4>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px;">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="editMyPaymentTransfer"> Transferencia bancaria
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="editMyPaymentCardPresencial"> Tarjeta (en consulta)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="editMyPaymentCash"> Efectivo
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="editMyPaymentCardOnline"> Tarjeta Online
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="editMyPaymentMercadopago"> Mercado Pago
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="editMyPaymentWebpay"> Webpay
+                    </label>
+                </div>
+                
+                <h4 style="margin-bottom: 15px;">🏦 Datos bancarios (para transferencias)</h4>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Banco</label>
+                        <input type="text" id="editMyBank" class="filter-input">
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <label>Tipo cuenta</label>
+                        <select id="editMyAccountType" class="filter-input">
+                            <option value="corriente">Corriente</option>
+                            <option value="vista">Vista</option>
+                            <option value="ahorros">Ahorros</option>
+                            <option value="rut">RUT</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Número de cuenta</label>
+                        <input type="text" id="editMyAccountNumber" class="filter-input">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>RUT asociado</label>
+                        <input type="text" id="editMyBankRut" class="filter-input" placeholder="12.345.678-9">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email para notificaciones de pago</label>
+                    <input type="email" id="editMyBankEmail" class="filter-input">
+                </div>
+                
+                <h4 style="margin: 30px 0 15px;">🔗 Links de pago online</h4>
+                
+                <div class="form-group">
+                    <label>Link de pago online (general)</label>
+                    <input type="url" id="editMyPaymentLinkOnline" class="filter-input" placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Link para pagos presenciales</label>
+                    <input type="url" id="editMyPaymentLinkPresencial" class="filter-input" placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Código QR de pago</label>
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="width: 100px; height: 100px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                            <img id="editMyQrPreview" src="" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+                        </div>
+                        <div>
+                            <input type="file" id="editMyQrUpload" accept="image/*" style="display: none;" onchange="previewMyQR(this)">
+                            <button onclick="document.getElementById('editMyQrUpload').click()" class="btn-secondary">
+                                <i class="fa fa-qrcode"></i> Subir QR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB 4: REDES SOCIALES -->
+            <div id="tabSocial" class="profile-tab" style="display: none;">
+                <h4 style="margin-bottom: 15px;">🌐 Redes sociales y contacto</h4>
+                
+                <div class="form-group">
+                    <label><i class="fa fa-linkedin" style="color: #0077B5;"></i> LinkedIn</label>
+                    <input type="url" id="editMyLinkedin" class="filter-input" placeholder="https://linkedin.com/in/...">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa fa-instagram" style="color: #E1306C;"></i> Instagram</label>
+                    <input type="text" id="editMyInstagram" class="filter-input" placeholder="@usuario o https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa fa-globe"></i> Sitio web personal</label>
+                    <input type="url" id="editMyWebsite" class="filter-input" placeholder="https://...">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa fa-whatsapp" style="color: #25D366;"></i> WhatsApp</label>
+                    <input type="text" id="editMyWhatsapp" class="filter-input" placeholder="+56 9 1234 5678">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa fa-phone"></i> Teléfono de contacto</label>
+                    <input type="text" id="editMyPhone" class="filter-input" placeholder="+56 2 1234 5678">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fa fa-map-marker-alt"></i> Dirección consulta</label>
+                    <input type="text" id="editMyAddress" class="filter-input" placeholder="Dirección de tu consulta presencial">
+                </div>
+            </div>
+            
+            <!-- BOTONES -->
+            <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                <button onclick="document.getElementById('editMyProfileModal').style.display='none'" class="btn-secondary">
+                    Cancelar
+                </button>
+                <button onclick="saveMyProfile()" class="btn-primary" style="background: var(--exito);">
+                    <i class="fa fa-save"></i> Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    // Agregar al DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Agregar estilos para tabs si no existen
+    if (!document.getElementById('profileTabStyles')) {
+        const styles = document.createElement('style');
+        styles.id = 'profileTabStyles';
+        styles.textContent = `
+            .tab-btn {
+                padding: 10px 20px;
+                background: none;
+                border: none;
+                border-bottom: 2px solid transparent;
+                cursor: pointer;
+                font-size: 14px;
+                color: var(--texto-secundario);
+                transition: all 0.3s;
+            }
+            .tab-btn:hover {
+                color: var(--primario);
+            }
+            .tab-btn.active {
+                border-bottom-color: var(--primario);
+                color: var(--primario);
+                font-weight: 500;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+}
+
+// ============================================
+// 🆕 FUNCIÓN PARA CAMBIAR TABS
+// ============================================
+
+window.showMyProfileTab = function(tabName) {
+    // Ocultar todos los tabs
+    document.querySelectorAll('.profile-tab').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    // Mostrar el tab seleccionado
+    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).style.display = 'block';
+    
+    // Actualizar botones activos
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Btn`).classList.add('active');
+};
+
+// ============================================
+// 🆕 FUNCIÓN PARA PREVISUALIZAR FOTO
+// ============================================
+
+window.previewMyPhoto = function(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('editMyPhotoPreview').src = e.target.result;
+            state.setTempImageData(e.target.result);
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+// ============================================
+// 🆕 FUNCIÓN PARA PREVISUALIZAR QR
+// ============================================
+
+window.previewMyQR = function(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('editMyQrPreview').src = e.target.result;
+            document.getElementById('editMyQrPreview').style.display = 'block';
+            state.setTempQrData(e.target.result);
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+// ============================================
+// 🆕 FUNCIÓN PARA GUARDAR PERFIL PROFESIONAL
+// ============================================
+
+export function saveMyProfile() {
+    if (!state.currentUser || state.currentUser.role !== 'psych') {
+        showToast('No autorizado', 'error');
+        return;
+    }
+    
+    const psych = state.currentUser.data;
+    if (!psych) return;
+    
+    try {
+        // 📝 DATOS BÁSICOS
+        psych.name = document.getElementById('editMyName').value;
+        psych.email = document.getElementById('editMyEmail').value;
+        psych.genero = document.getElementById('editMyGenero').value;
+        psych.title = document.getElementById('editMyTitle').value;
+        
+        // Especialidades
+        const editMySpec = document.getElementById('editMySpec');
+        if (editMySpec) {
+            psych.spec = Array.from(editMySpec.selectedOptions).map(opt => opt.value);
+        }
+        
+        // Biografía
+        psych.bio = document.getElementById('editMyBio').value;
+        
+        // Información profesional
+        psych.professionalId = document.getElementById('editMyProfessionalId').value;
+        psych.experience = parseInt(document.getElementById('editMyExperience').value) || 0;
+        psych.education = document.getElementById('editMyEducation').value;
+        
+        // Idiomas
+        const languagesInput = document.getElementById('editMyLanguages').value;
+        psych.languages = languagesInput ? languagesInput.split(',').map(l => l.trim()) : [];
+        
+        // 💰 PRECIOS
+        psych.priceOnline = parseInt(document.getElementById('editMyPriceOnline').value) || 0;
+        psych.pricePresencial = parseInt(document.getElementById('editMyPricePresencial').value) || 0;
+        psych.sessionDuration = parseInt(document.getElementById('editMyDuration').value) || 45;
+        
+        // 💳 MÉTODOS DE PAGO
+        if (!psych.paymentMethods) psych.paymentMethods = {};
+        psych.paymentMethods.transfer = document.getElementById('editMyPaymentTransfer').checked;
+        psych.paymentMethods.cardPresencial = document.getElementById('editMyPaymentCardPresencial').checked;
+        psych.paymentMethods.cash = document.getElementById('editMyPaymentCash').checked;
+        psych.paymentMethods.cardOnline = document.getElementById('editMyPaymentCardOnline').checked;
+        psych.paymentMethods.mercadopago = document.getElementById('editMyPaymentMercadopago').checked;
+        psych.paymentMethods.webpay = document.getElementById('editMyPaymentWebpay').checked;
+        
+        // 🏦 DATOS BANCARIOS
+        if (!psych.bankDetails) psych.bankDetails = {};
+        psych.bankDetails.bank = document.getElementById('editMyBank').value;
+        psych.bankDetails.accountType = document.getElementById('editMyAccountType').value;
+        psych.bankDetails.accountNumber = document.getElementById('editMyAccountNumber').value;
+        psych.bankDetails.rut = document.getElementById('editMyBankRut').value;
+        psych.bankDetails.email = document.getElementById('editMyBankEmail').value;
+        
+        // 🔗 LINKS DE PAGO
+        if (!psych.paymentLinks) psych.paymentLinks = {};
+        psych.paymentLinks.online = document.getElementById('editMyPaymentLinkOnline').value;
+        psych.paymentLinks.presencial = document.getElementById('editMyPaymentLinkPresencial').value;
+        
+        // QR
+        if (state.tempQrData) {
+            psych.paymentLinks.qrCode = state.tempQrData;
+        }
+        
+        // 📸 FOTO
+        if (state.tempImageData) {
+            psych.img = state.tempImageData;
+            psych.photoURL = state.tempImageData;
+        }
+        
+        // 🌐 REDES SOCIALES
+        if (!psych.socialLinks) psych.socialLinks = {};
+        psych.socialLinks.linkedin = document.getElementById('editMyLinkedin').value;
+        psych.socialLinks.instagram = document.getElementById('editMyInstagram').value;
+        psych.socialLinks.website = document.getElementById('editMyWebsite').value;
+        
+        // Contacto
+        psych.whatsapp = document.getElementById('editMyWhatsapp').value;
+        psych.phone = document.getElementById('editMyPhone').value;
+        psych.address = document.getElementById('editMyAddress').value;
+        
+        // Guardar en Firebase
+        import('../main.js').then(main => {
+            main.save();
+            showToast('✅ Perfil actualizado correctamente', 'success');
+            
+            // Limpiar datos temporales
+            state.setTempImageData(null);
+            state.setTempQrData(null);
+            
+            // Cerrar modal
+            document.getElementById('editMyProfileModal').style.display = 'none';
+            
+            // Actualizar vista si es necesario
+            if (typeof window.filterProfessionals === 'function') {
+                window.filterProfessionals();
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error guardando perfil:', error);
+        showToast('Error al guardar: ' + error.message, 'error');
+    }
+}
+
+// ============================================
+// 🆕 FUNCIÓN PARA ABRIR MODAL DE DISPONIBILIDAD
+// ============================================
+
+export function openMyAvailabilityModal() {
+    if (!state.currentUser || state.currentUser.role !== 'psych') {
+        showToast('Debes iniciar sesión', 'error');
+        return;
+    }
+    
+    // Verificar que existe la función en disponibilidad.js
+    if (typeof window.openAvailabilityModal === 'function') {
+        window.openAvailabilityModal(state.currentUser.data.id);
+    } else {
+        showToast('Módulo de disponibilidad no disponible', 'error');
+    }
+}
+
+// ============================================
+// 🆕 FUNCIÓN PARA VER MI PERFIL PÚBLICO
+// ============================================
+
+export function viewMyPublicProfile() {
+    if (!state.currentUser || state.currentUser.role !== 'psych') {
+        showToast('Debes iniciar sesión', 'error');
+        return;
+    }
+    
+    const psychId = state.currentUser.data.id;
+    
+    // Cambiar a vista pública y seleccionar este profesional
+    document.getElementById('clientView').style.display = 'block';
+    document.getElementById('bookingPanel').style.display = 'none';
+    document.getElementById('loginPanel').style.display = 'none';
+    
+    // Seleccionar el profesional en la vista pública
+    setTimeout(() => {
+        const psychCard = document.querySelector(`.staff-card[data-id="${psychId}"]`);
+        if (psychCard) {
+            psychCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            psychCard.style.boxShadow = '0 0 0 3px var(--exito)';
+            setTimeout(() => {
+                psychCard.style.boxShadow = '';
+            }, 2000);
+        }
+        
+        showToast('Vista previa de tu perfil público', 'info');
+    }, 500);
+}
+
+// ============================================
+// 🆕 FUNCIÓN PARA CARGAR ESPECIALIDADES EN SELECTS
+// ============================================
+
+export function loadSpecialtiesInProfileSelects() {
+    const editMySpec = document.getElementById('editMySpec');
+    if (!editMySpec) return;
+    
+    const specialtiesHtml = state.specialties
+        .map(s => `<option value="${s.name}">${s.name}</option>`)
+        .join('');
+    
+    editMySpec.innerHTML = specialtiesHtml;
+    
+    // Si hay un profesional logueado, seleccionar sus especialidades
+    if (state.currentUser?.role === 'psych' && state.currentUser.data) {
+        const psych = state.currentUser.data;
+        const psychSpecs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
+        Array.from(editMySpec.options).forEach(opt => {
+            opt.selected = psychSpecs.includes(opt.value);
+        });
+    }
+}
+
+// ============================================
+// RENDERIZAR TABLA DE PROFESIONALES (EXISTENTE)
 // ============================================
 export function renderStaffTable() {
     const tb = document.getElementById('staffTableBody');
@@ -104,7 +757,6 @@ export function addStaff() {
     const usuario = document.getElementById('addUser').value;
     const pass = document.getElementById('addPass').value;
     
-    // CAMBIO 1: Obtener género
     const genero = document.getElementById('addGenero')?.value || '';
     
     const whatsapp = document.getElementById('addWhatsapp')?.value || '';
@@ -130,7 +782,6 @@ export function addStaff() {
         return;
     }
 
-    // Crear nuevo profesional
     const nuevoProfesional = {
         id: String(Date.now()),
         name: name,
@@ -140,7 +791,7 @@ export function addStaff() {
         pricePresencial: parseInt(pricePresencial),
         usuario: usuario,
         pass: pass,
-        genero: genero,  // ← CAMBIO 2: Incluir género
+        genero: genero,
         whatsapp: whatsapp,
         instagram: instagram,
         img: state.tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
@@ -198,7 +849,6 @@ export function editTherapist(id) {
     document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
     document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
     
-    // CAMBIO 3: Cargar género en edición
     const editGenero = document.getElementById('editGenero');
     if (editGenero) {
         editGenero.value = therapist.genero || '';
@@ -256,7 +906,6 @@ export function updateTherapist() {
     therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
     therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
     
-    // CAMBIO 4: Guardar género al actualizar
     const editGenero = document.getElementById('editGenero');
     if (editGenero) {
         therapist.genero = editGenero.value;
@@ -297,23 +946,15 @@ export function deleteStaff(id) {
     }
     
     if (confirm('¿Eliminar profesional y todos sus datos?')) {
-        // Obtener IDs de pacientes que tenía este profesional
         const patientIds = state.patients
             .filter(p => p.psychId == id)
             .map(p => p.id);
         
-        // Eliminar citas asociadas
         state.appointments = state.appointments.filter(a => a.psychId != id);
-        
-        // Eliminar pacientes asociados
         state.patients = state.patients.filter(p => p.psychId != id);
-        
-        // Eliminar fichas clínicas
         state.fichasIngreso = state.fichasIngreso.filter(f => !patientIds.includes(f.patientId));
         state.sesiones = state.sesiones.filter(s => !patientIds.includes(s.patientId));
         state.informes = state.informes.filter(i => !patientIds.includes(i.patientId));
-        
-        // Eliminar al profesional
         state.staff = state.staff.filter(s => s.id != id);
         
         import('../main.js').then(main => main.save());
@@ -447,6 +1088,31 @@ export function loadSpecialtiesInSelects() {
 }
 
 // ============================================
+// 🆕 AGREGAR BOTÓN DE EDICIÓN EN EL DASHBOARD
+// ============================================
+
+export function addProfileButtonToDashboard() {
+    // Buscar el header del dashboard
+    const dashboardHeader = document.querySelector('.dashboard-header');
+    if (!dashboardHeader) return;
+    
+    // Verificar si ya existe el botón
+    if (document.getElementById('editProfileButton')) return;
+    
+    // Crear botón
+    const button = document.createElement('button');
+    button.id = 'editProfileButton';
+    button.className = 'btn-staff';
+    button.style.marginLeft = '15px';
+    button.style.background = 'var(--primario)';
+    button.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil';
+    button.onclick = openMyProfileModal;
+    
+    // Agregar al header
+    dashboardHeader.appendChild(button);
+}
+
+// ============================================
 // EXPORTAR FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {
@@ -463,6 +1129,17 @@ if (typeof window !== 'undefined') {
     window.canPsychologistAccessPatient = canPsychologistAccessPatient;
     window.getRecentSessions = getRecentSessions;
     window.loadSpecialtiesInSelects = loadSpecialtiesInSelects;
+    
+    // NUEVAS FUNCIONES EXPORTADAS
+    window.openMyProfileModal = openMyProfileModal;
+    window.saveMyProfile = saveMyProfile;
+    window.openMyAvailabilityModal = openMyAvailabilityModal;
+    window.viewMyPublicProfile = viewMyPublicProfile;
+    window.loadSpecialtiesInProfileSelects = loadSpecialtiesInProfileSelects;
+    window.addProfileButtonToDashboard = addProfileButtonToDashboard;
+    
+    // Agregar botón al dashboard cuando se carga
+    setTimeout(addProfileButtonToDashboard, 2000);
 }
 
-console.log('✅ profesionales.js cargado con funciones de fichas clínicas');
+console.log('✅ profesionales.js cargado con funciones de fichas clínicas y edición de perfil profesional');

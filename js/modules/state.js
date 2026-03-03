@@ -92,6 +92,8 @@ export function setCurrentUser(user) {
                     email: user.data.email,
                     isAdmin: user.data.isAdmin || false,
                     usuario: user.data.usuario || '',
+                    // Incluir género para mostrarlo correctamente
+                    genero: user.data.genero || '',
                     // No guardar datos grandes como availability, paymentLinks, etc.
                 }
             };
@@ -244,6 +246,37 @@ export function setPacienteSeleccionado(patientId) {
     ui.fichas.pacienteSeleccionadoId = patientId;
     limpiarEstadoFichas(); // Limpia el resto pero mantiene el paciente
     ui.fichas.pacienteSeleccionadoId = patientId;
+}
+
+// ============================================
+// FUNCIÓN PARA OBTENER PROFESIONAL ACTUAL CON TODOS SUS DATOS
+// ============================================
+export function getCurrentPsychFullData() {
+    if (!currentUser || currentUser.role !== 'psych') return null;
+    
+    // Buscar en staff por ID para obtener todos los datos (incluyendo los que no se guardan en currentUser)
+    const psychFullData = staff.find(s => s.id == currentUser.data.id);
+    return psychFullData || currentUser.data;
+}
+
+// ============================================
+// FUNCIÓN PARA ACTUALIZAR DATOS DE PROFESIONAL EN STAFF
+// ============================================
+export function updatePsychData(psychId, updatedData) {
+    const index = staff.findIndex(s => s.id == psychId);
+    if (index !== -1) {
+        staff[index] = { ...staff[index], ...updatedData };
+        
+        // Si el profesional actualizado es el usuario actual, actualizar también currentUser
+        if (currentUser && currentUser.role === 'psych' && currentUser.data.id == psychId) {
+            currentUser.data = { ...currentUser.data, ...updatedData };
+            // Actualizar localStorage con datos básicos actualizados
+            setCurrentUser(currentUser);
+        }
+        
+        return staff[index];
+    }
+    return null;
 }
 
 // ============================================
@@ -408,6 +441,10 @@ const state = {
     setPestanaActiva,
     setPacienteSeleccionado,
     
+    // NUEVAS FUNCIONES PARA PROFESIONALES
+    getCurrentPsychFullData,
+    updatePsychData,
+    
     // Utilidades
     resetAllState,
     getStateSummary
@@ -420,12 +457,29 @@ export default state;
 // ============================================
 if (typeof window !== 'undefined') {
     window.state = state;
-    console.log('📦 state.js cargado con fichas clínicas');
+    console.log('📦 state.js cargado con fichas clínicas y datos completos de profesionales');
     
     // Función de ayuda en consola
     window.estado = function() {
         console.table(state.getStateSummary());
         return state.getStateSummary();
+    };
+    
+    // Función para ver datos del profesional actual
+    window.miPerfil = function() {
+        if (!state.currentUser) {
+            console.log('❌ No hay usuario logueado');
+            return null;
+        }
+        
+        if (state.currentUser.role === 'psych') {
+            const fullData = state.getCurrentPsychFullData();
+            console.log('👤 Mi perfil completo:', fullData);
+            return fullData;
+        } else {
+            console.log('👑 Usuario admin:', state.currentUser.data);
+            return state.currentUser.data;
+        }
     };
     
     // Función para limpiar localStorage manualmente si es necesario

@@ -1784,3 +1784,51 @@ h3, h4, h5,
 #psychStatsContainer .ingresos-box .stat-label {
     color: rgba(255, 255, 255, 0.9);
 }
+
+/* Estilos para el modal de edición de perfil */
+.profile-tab {
+    padding: 20px 0;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.3s;
+}
+
+.tab-btn:hover {
+    color: var(--primario);
+}
+
+.tab-btn.active {
+    border-bottom-color: var(--primario);
+    color: var(--primario);
+    font-weight: 500;
+}
+
+/* Vista previa de foto */
+#editMyPhotoPreview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primario);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 10px auto;
+    }
+    
+    .tab-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}

@@ -68,6 +68,7 @@ window.copiarAlPortapapeles = function(texto) {
 };
 
 export function filterProfessionals() {
+    console.log('🔄 filterProfessionals ejecutándose...');
     const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
     const availabilityFilter = document.getElementById('availabilityFilter')?.value || '';
@@ -137,6 +138,9 @@ export function renderProfessionals(professionals) {
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
         const horasLibres = slotsHoy.length - totalOcupadosHoy;
         const disponibilidadClase = horasLibres > 0 ? 'online' : 'offline';
+        
+        // 🔥 LOG PARA DEPURAR DISPONIBILIDAD
+        console.log(`📊 ${p.name}: slotsHoy=${slotsHoy.length}, citasHoy=${citasHoy.length}, solicitudesHoy=${solicitudesHoy.length}, totalOcupados=${totalOcupadosHoy}, horasLibres=${horasLibres}`);
         
         // ============================================
         // Especialidades limitadas a 3

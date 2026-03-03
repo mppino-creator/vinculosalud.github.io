@@ -630,17 +630,29 @@ export function executeBooking() {
                 preferredAMPM: preferenciaAMPM
             };
 
+            // ============================================
+            // 🔥 AGREGAR AL ARRAY LOCAL Y ACTUALIZAR VISTA INMEDIATAMENTE
+            // ============================================
             if (type === 'online') {
                 state.appointments.push(appointment);
                 showToast('✅ Solicitud creada', 'success');
+                // Forzar actualización de disponibilidad ahora mismo
+                if (typeof updateAvailableTimes === 'function') {
+                    updateAvailableTimes();
+                }
             } else {
                 state.pendingRequests.push(appointment);
                 let mensaje = '✅ Solicitud enviada';
                 if (time) mensaje += ` (Preferencia: ${time})`;
                 if (preferenciaAMPM) mensaje += ` ${preferenciaAMPM}`;
                 showToast(mensaje, 'success');
+                // También actualizar disponibilidad (por si acaso)
+                if (typeof updateAvailableTimes === 'function') {
+                    updateAvailableTimes();
+                }
             }
 
+            // Enviar email al paciente
             if (email && !appointment.emailEnviado) {
                 let mensaje = `Hola ${name},\n\nHemos recibido tu solicitud de cita.\n\n` +
                     `📅 Fecha: ${date}\n` +
@@ -662,9 +674,13 @@ export function executeBooking() {
                 }
             }
 
+            // Guardar en Firebase
             await import('../main.js').then(main => main.save());
 
+            // Limpiar selección
             window.horaSeleccionada = null;
+            
+            // Actualizar disponibilidad nuevamente (por si acaso)
             if (typeof updateAvailableTimes === 'function') {
                 updateAvailableTimes();
             }
@@ -692,7 +708,7 @@ export function executeBooking() {
             bookingEnProceso = false;
         }
     }, 1500);
-}
+}}
 
 // ============================================
 // FUNCIONES DE RENDERIZADO

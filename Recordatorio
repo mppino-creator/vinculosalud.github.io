@@ -1,20 +1,55 @@
-## 📋 **RESUMEN EJECUTIVO ACTUALIZADO - VÍNCULO SALUD v2.2**
+## 📋 **RESUMEN EJECUTIVO ACTUALIZADO - VÍNCULO SALUD v3.0**
 
-He actualizado el resumen ejecutivo para incluir **la nueva funcionalidad de Edad y Tutor Legal** que acabas de implementar. Aquí está la versión final:
+He actualizado el resumen ejecutivo para incluir **todas las nuevas funcionalidades de diseño, menú de navegación y secciones adicionales** inspiradas en Puntoterapia. Aquí está la versión final:
 
 ---
 
-## 📋 **RESUMEN EJECUTIVO - VÍNCULO SALUD v2.2**
+## 📋 **RESUMEN EJECUTIVO - VÍNCULO SALUD v3.0**
 
 ### 🎯 **VISIÓN GENERAL DEL PROYECTO**
 
-Vínculo Salud es una plataforma web integral para centros de bienestar y salud mental que permite:
+Vínculo Salud es una plataforma web integral para centros de bienestar y salud mental que combina **funcionalidades clínicas avanzadas** con un **diseño moderno y acogedor** inspirado en las mejores prácticas de UX/UI.
 
 | Usuario | Funcionalidades Principales |
 |---------|----------------------------|
-| **Pacientes** | Buscar profesionales, ver disponibilidad, agendar citas online/presenciales, pagar (transferencia/efectivo/tarjeta/online), dejar testimonios, **teléfono con 3 campos (código + 9 + número)**, **registro de edad y tutor legal para menores** |
-| **Psicólogos** | Gestionar agenda, confirmar pagos, ver pacientes, **gestionar fichas clínicas completas (EHR)**, notas de evolución, informes, estadísticas personales, **ver datos de tutor de pacientes menores** |
+| **Pacientes** | Buscar profesionales, ver disponibilidad, agendar citas online/presenciales, pagar (transferencia/efectivo/tarjeta/online), dejar testimonios, **menú de navegación completo**, secciones informativas (Inicio, Quiénes Somos, Equipo, Tipo de Atención, Punto de Interés, Contacto), **teléfono con 3 campos**, **registro de edad y tutor legal para menores** |
+| **Psicólogos** | Gestionar agenda, confirmar pagos, ver pacientes, **gestionar fichas clínicas completas (EHR)**, notas de evolución, informes, estadísticas personales, **editar perfil profesional completo** (foto, título, biografía, formación, precios), **ver datos de tutor de pacientes menores** |
 | **Administradores** | Gestionar profesionales, boxes, personalización del sitio, **acceso total a fichas clínicas**, backup/restore, estadísticas globales, limpieza de datos |
+
+---
+
+### 🎨 **NUEVO DISEÑO - ESTILO PUNTOTERAPIA (v3.0)**
+
+#### **Menú de navegación superior funcional:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Vínculo Salud  [Inicio] [Quienes Somos] [Equipo] [Tipo de Atención] [Punto de Interés] [Contacto]  [AGENDA TU HORA] │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### **Paleta de colores personalizada:**
+```css
+:root {
+    --verde-azulado-profundo: #1E7A8A;  /* Títulos, acentos principales */
+    --verde-azulado-claro: #63B0C7;     /* Botones, enlaces */
+    --ocre-calido: #C8A161;              /* Detalles, hovers */
+    --verde-grisaceo-claro: #E5EADF;     /* Fondos de secciones */
+    --crema-fondo: #FAF5EC;               /* Fondo principal */
+    --texto-principal: #2D3E4F;           /* Texto principal */
+    --texto-secundario: #5A6B7A;          /* Texto secundario */
+}
+```
+
+#### **Nuevas secciones incorporadas:**
+
+| Sección | Descripción |
+|---------|-------------|
+| **Inicio** | Hero section con título "Terapia de Familia y Parejas" |
+| **Quienes Somos** | Texto institucional sobre el equipo y valores |
+| **Equipo** | Grid de profesionales con tarjetas estilo Puntoterapia |
+| **Tipo de Atención** | 4 tipos: Online, Presencial, Pareja, Familiar |
+| **Punto de Interés** | Blog con artículos de interés |
+| **Contacto** | Formulario de contacto funcional |
 
 ---
 
@@ -24,9 +59,9 @@ Vínculo Salud es una plataforma web integral para centros de bienestar y salud 
 <!-- TELÉFONO CON 3 CAMPOS: Código + 9 + Número -->
 <div class="form-group">
     <label>Teléfono</label>
-    <div style="display: flex; gap: 8px; align-items: center;">
-        <!-- CÓDIGO DE PAÍS - 25% -->
-        <select id="countryCode" style="width: 25%; min-width: 70px; padding: 12px 5px; border-radius: 12px; border: 1px solid var(--gris-oscuro); background: white; font-size: 0.9rem;">
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <!-- CÓDIGO DE PAÍS -->
+        <select id="countryCode" style="width: 25%; min-width: 70px; padding: 12px 5px; border-radius: 12px;">
             <option value="+56" selected>🇨🇱 +56</option>
             <option value="+54">🇦🇷 +54</option>
             <option value="+51">🇵🇪 +51</option>
@@ -35,13 +70,13 @@ Vínculo Salud es una plataforma web integral para centros de bienestar y salud 
             <option value="+34">🇪🇸 +34</option>
         </select>
         
-        <!-- CAMPO 9 - 15% (AHORA EDITABLE - SIN readonly) -->
-        <input type="text" id="phoneNine" value="9" maxlength="1" style="width: 15%; min-width: 45px; padding: 12px 0; border-radius: 12px; border: 1px solid var(--gris-oscuro); text-align: center; font-size: 1rem;" pattern="[0-9]" inputmode="numeric">
+        <!-- CAMPO 9 - EDITABLE -->
+        <input type="text" id="phoneNine" value="9" maxlength="1" style="width: 15%; min-width: 45px; padding: 12px 0; border-radius: 12px; text-align: center;">
         
-        <!-- CAMPO NÚMERO - 60% (8 dígitos) -->
-        <input type="text" id="custPhone" placeholder="9135 7990" style="width: 60%; padding: 12px; border-radius: 12px; border: 1px solid var(--gris-oscuro);" maxlength="8" pattern="[0-9]*" inputmode="numeric">
+        <!-- CAMPO NÚMERO -->
+        <input type="text" id="custPhone" placeholder="9135 7990" style="width: 60%; min-width: 150px; padding: 12px; border-radius: 12px;" maxlength="8">
     </div>
-    <small style="color: var(--text-light); display: block; margin-top: 5px;">Ejemplo: +56 9 9135 7990</small>
+    <small>Ejemplo: +56 9 9135 7990</small>
 </div>
 ```
 
@@ -56,7 +91,7 @@ console.log('📞 Teléfono completo:', phone);
 
 ---
 
-### 👶 **NUEVA FUNCIONALIDAD: EDAD Y TUTOR LEGAL (v2.2)**
+### 👶 **FUNCIONALIDAD: EDAD Y TUTOR LEGAL (v2.2)**
 
 #### **En el formulario de reserva:**
 ```html
@@ -144,23 +179,23 @@ window.calcularEdad = function() {
 /
 ├── index.html               # ÚNICO archivo HTML (carga todo el sistema)
 ├── css/
-│   └── estilos.css          # Estilos Apple - diseño moderno y responsivo
+│   └── estilos.css          # Estilos Apple + paleta Puntoterapia
 └── js/
-    ├── main.js              # ✅ PUNTO DE ENTRADA (exporta save() y window funciones)
+    ├── main.js              # ✅ PUNTO DE ENTRADA (exporta todas las funciones)
     ├── config/
     │   └── firebase.js      # Configuración de Firebase (Realtime Database)
     └── modules/
          ├── state.js         # ✅ CORAZÓN del sistema: variables globales
          ├── auth.js          # Login/logout y gestión de sesiones
          ├── pacientes.js     # CRUD pacientes + vista detalle con 4 pestañas
-         ├── profesionales.js # Gestión de psicólogos + estadísticas + género
+         ├── profesionales.js # Gestión de psicólogos + PERFIL EDITABLE
          ├── citas.js         # ✅ CRÍTICO: reservas, pagos, confirmaciones
          ├── disponibilidad.js # Horarios y sobrecupos
          ├── boxes.js         # Gestión de boxes/consultorios
          ├── mensajes.js      # Testimonios y gestión de mensajes
          ├── personalizacion.js # Logo, colores, textos, fondo
-         ├── publico.js       # Vista pública (filtros, grid de profesionales) con botón compartir
-         ├── admin.js         # Panel admin + backup/restore + limpieza + exportar Excel
+         ├── publico.js       # Vista pública con menú funcional y tarjetas Puntoterapia
+         ├── admin.js         # Panel admin + backup/restore + exportar Excel
          ├── fichasClinicas.js  # CRUD de fichas de ingreso y sesiones
          ├── informes.js        # Informes psicodiagnóstico y cierre
          ├── pdfGenerator.js    # Exportación a PDF (con fallback)
@@ -191,8 +226,8 @@ const firebaseConfig = {
 
 #### **Estructura de Datos en Firebase**
 ```
-/Staff           # Profesionales y admin
-/Patients        # Pacientes (incluye birthdate y tutor)
+/Staff           # Profesionales y admin (con campos: nombre, email, genero, title, bio, education, experience, languages)
+/Patients        # Pacientes (incluye birthdate, edad, tutor)
 /Appointments    # Citas confirmadas
 /PendingRequests # Solicitudes pendientes
 /Boxes          # Boxes/consultorios
@@ -266,20 +301,20 @@ EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
   │    ├── rut
   │    └── parentesco
   │
-  ├── /fichasIngreso/{fichaIngresoId}     # FICHA PREINGRESOS.docx
+  ├── /fichasIngreso/{fichaIngresoId}     # FICHA DE INGRESO
   │    ├── motivoConsulta
   │    ├── sintomatologia (fechaInicio, progresion, tratamientosPrevios)
   │    ├── composicionFamiliar
   │    ├── otrosAntecedentes
   │    └── criteriosExclusion (checklist)
   │
-  ├── /sesiones/{sesionId}                 # Detalle de la Atención.pdf
+  ├── /sesiones/{sesionId}                 # NOTAS DE EVOLUCIÓN
   │    ├── fechaAtencion
   │    ├── tipoAtencion
   │    ├── notas (texto enriquecido)
   │    └── realizadoPor
   │
-  └── /informes/{informeId}                 # Vinculados
+  └── /informes/{informeId}                 # INFORMES CLÍNICOS
        ├── tipo: "psicodiagnostico" | "cierre"
        ├── contenido estructurado (20+ campos)
        └── pdfUrl (opcional)
@@ -309,6 +344,35 @@ EXPORTACIÓN:
 
 ---
 
+### 👤 **PERFIL PROFESIONAL COMPLETO (NUEVO v3.0)**
+
+#### **Campos editables por el profesional:**
+
+| Categoría | Campos |
+|-----------|--------|
+| **Básico** | Foto, nombre, email, género, título, biografía |
+| **Profesional** | Especialidades, registro profesional, años de experiencia, formación, idiomas |
+| **Precios** | Online, presencial, duración de sesión |
+| **Pagos** | Métodos de pago, datos bancarios, links de pago, QR |
+| **Redes** | LinkedIn, Instagram, sitio web, WhatsApp, teléfono, dirección |
+
+#### **Modal de edición con 5 pestañas:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ✏️ EDITAR MI PERFIL PROFESIONAL                             │
+│  [📋 Básico] [🎓 Profesional] [💰 Precios] [💳 Pagos] [🌐 Redes] │
+├─────────────────────────────────────────────────────────────┤
+│  📸 Foto de perfil                                           │
+│  📝 Nombre completo *                                        │
+│  📧 Email *                                                   │
+│  ⚥ Género                                                     │
+│  🏷️ Título profesional                                        │
+│  📄 Biografía                                                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ### 🔐 **MATRIZ DE PERMISOS COMPLETA**
 
 | Acción | Admin | Psicólogo (su paciente) | Psicólogo (otro paciente) |
@@ -323,6 +387,7 @@ EXPORTACIÓN:
 | Crear/Editar informe | ✅ | ✅ | ❌ |
 | Exportar PDF individual | ✅ | ✅ | ❌ |
 | Exportar ficha completa | ✅ | ✅ | ❌ |
+| **Editar su propio perfil** | ✅ | ✅ | ❌ |
 | Exportar a Excel | ✅ | ❌ | ❌ |
 | Ver estadísticas personales | ✅ | ✅ | ❌ |
 | Ver estadísticas globales | ✅ | ❌ | ❌ |
@@ -335,8 +400,8 @@ EXPORTACIÓN:
 
 ```javascript
 // Colecciones principales
-state.patients           // Array de pacientes (con birthdate y tutor)
-state.staff              // Array de profesionales (con campo genero)
+state.patients           // Array de pacientes (con birthdate, edad, tutor)
+state.staff              // Array de profesionales (con todos los campos del perfil)
 state.appointments       // Array de citas
 state.messages           // Array de testimonios
 state.boxes              // Array de boxes
@@ -346,54 +411,33 @@ state.fichasIngreso = []  // Todas las fichas de ingreso
 state.sesiones = []       // Todas las notas de evolución
 state.informes = []       // Todos los informes
 
-// UI State para fichas
-state.ui.fichas = {
-  pacienteSeleccionadoId: null,
-  fichaActivaId: null,
-  sesionActivaId: null,
-  informeActivoId: null,
-  modoEdicion: false,
-  pestanaActiva: 'perfil' // perfil|fichaIngreso|sesiones|informes
-}
+// Funciones de utilidad
+state.getCurrentPsychFullData()  // Obtiene datos completos del profesional
+state.updatePsychData()          // Actualiza datos del profesional
 ```
 
 ---
 
-### 🎨 **INTERFAZ DE PACIENTES - VISTA DETALLE**
+### 🎨 **TARJETAS DE PROFESIONALES - ESTILO PUNTOTERAPIA**
 
-#### **Tarjeta de paciente:**
 ```
 ┌─────────────────────────────────────┐
-│  👤 María González                   │
-│  📋 Ficha · 15 citas · 8 sesiones    │
-├─────────────────────────────────────┤
-│  RUT: 12.345.678-9                  │
-│  Email: maria@email.com             │
-│  Tel: +56 9 9135 7990                │
-│  📅 Edad: 16 años (menor de edad)    │
-├─────────────────────────────────────┤
-│  Pagado: $150.000 · Total: $225.000 │
-│  📅 Próxima: 15-03-2026 16:00       │
-│  📝 Última sesión: 10-03-2026       │
-├─────────────────────────────────────┤
-│  [VER FICHA CLÍNICA] [EDITAR]      │
+│  ┌─────────────────────────────┐   │
+│  │        [FOTO 280px]         │   │
+│  └─────────────────────────────┘   │
+│  RODRIGO CORDERO B.                 │
+│                                     │
+│  Psicólogo Clínico de Adultos y     │
+│  Adolescentes, Terapeuta Familiar   │
+│                                     │
+│  ┌─────────────┐ ┌─────────────┐   │
+│  │ Más Info    │ │ AGENDA HORA │   │
+│  └─────────────┘ └─────────────┘   │
+│                                     │
+│  📍 Juan Antonio Coloma 0350        │
+│                                     │
+│  📞 Contactar por WhatsApp          │
 └─────────────────────────────────────┘
-```
-
-#### **Vista detalle con 4 pestañas:**
-```
-┌─────────────────────────────────────────────┐
-│  👤 María González · 12.345.678-9 · 16 años │
-│  ⚠️ MENOR DE EDAD - Tutor: Juan González     │
-│  [PERFIL] [FICHA INGRESO] [SESIONES] [INFORMES] │
-├─────────────────────────────────────────────┤
-│  📋 PERFIL DEL PACIENTE                      │
-│  • Datos personales                          │
-│  • Estadísticas: Citas:15 · Sesiones:8 · $150K │
-│  • Tutor: Juan González (RUT: 12.345.678-5) │
-│  • Parentesco: Padre                         │
-│  • Botones: [Editar] [Imprimir] [Exportar]   │
-└─────────────────────────────────────────────┘
 ```
 
 ---
@@ -415,55 +459,9 @@ state.ui.fichas = {
 | Exportar Profesionales | `exportarDatosExcel('profesionales')` | CSV/Excel |
 | Exportar Mensajes | `exportarDatosExcel('mensajes')` | CSV/Excel |
 
-**Modo simulado (fallback):**
-```javascript
-// Si jsPDF falla, retorna URL simulada
-return `https://storage.vinculosalud.cl/informes/${id}_${Date.now()}.pdf`;
-```
-
 ---
 
-### 📊 **ESTADÍSTICAS POR ROL**
-
-#### **Psicólogo (en su configuración):**
-```
-📊 MIS ESTADÍSTICAS
-┌──────────┬──────────┬──────────┬──────────┐
-│ 15       │ 48       │ 12       │ 5        │
-│Pacientes │Sesiones  │Fichas    │Informes  │
-├──────────┴──────────┴──────────┴──────────┤
-│ Pacientes menores de edad: 3                │
-└────────────────────────────────────────────┘
-┌─────────────────────┬─────────────────────┐
-│ Ingresos Totales    │ Ingresos este Mes   │
-│ $2.450.000          │ $380.000            │
-└─────────────────────┴─────────────────────┘
-📈 Promedio sesiones/paciente: 3.2
-```
-
-#### **Administrador (panel global):**
-```
-📊 ESTADÍSTICAS GLOBALES
-┌──────────┬──────────┬──────────┬──────────┐
-│ 45       │ 32       │ 156      │ 18       │
-│Pacientes │Fichas    │Sesiones  │Informes  │
-└──────────┴──────────┴──────────┴──────────┘
-
-📈 CRECIMIENTO: Pacientes +12% · Citas -3% · Ingresos +8%
-
-📊 DETALLE:
-• Pacientes por edad: 0-18:8 · 19-30:15 · 31-45:18 · 46+:4
-• Informes: 12 Psicodiagnóstico · 6 Cierre
-• Citas: 89 pagadas · 23 pendientes · 4 rechazadas
-• Ingresos totales: $5.670.000
-
-[EXPORTAR JSON] [EXPORTAR CSV] [EXPORTAR EXCEL] [IMPRIMIR] [LIMPIAR HUÉRFANAS]
-⚠️ ZONA DE PELIGRO: Eliminar Fichas/Sesiones/Informes
-```
-
----
-
-### 🆘 **PROBLEMAS COMUNES Y SOLUCIONES - ACTUALIZADO**
+### 🆘 **PROBLEMAS COMUNES Y SOLUCIONES - ACTUALIZADO v3.0**
 
 #### **1. "El email llega al profesional en lugar del paciente"**
 ```javascript
@@ -481,10 +479,12 @@ console.log('¿Tiene readonly?', campo9.hasAttribute('readonly'));
 campo9.removeAttribute('readonly'); // Solución
 ```
 
-#### **3. "No veo el botón de Ficha Clínica"**
+#### **3. "No veo el botón de Editar Mi Perfil"**
 ```javascript
-console.log(typeof window.verFichaCompleta); // Debe ser 'function'
-window.renderPatients(); // Forzar renderizado
+// Verificar que el usuario es psicólogo
+console.log('Rol:', state.currentUser?.role);
+console.log('Función disponible:', typeof window.openMyProfileModal);
+// Solución: Debe hacer login como psicólogo
 ```
 
 #### **4. "Error: No tengo permisos para ver este paciente"**
@@ -543,11 +543,25 @@ console.log(typeof window.calcularEdad); // Debe ser 'function'
 document.getElementById('custBirthdate').setAttribute('onchange', 'calcularEdad()');
 ```
 
+#### **12. "El menú no cambia de sección"**
+```javascript
+// Verificar que showSection está definida
+console.log('showSection:', typeof window.showSection);
+// Solución: Actualizar publico.js con las nuevas funciones
+```
+
 ---
 
 ### 🔧 **FUNCIONES GLOBALES PRINCIPALES**
 
 ```javascript
+// ============================================
+// NAVEGACIÓN PÚBLICA (NUEVO v3.0)
+// ============================================
+window.showSection(sectionId)      // Muestra/oculta secciones del menú
+window.abrirAgenda()                // Abre la sección equipo para agendar
+window.enviarContacto()             // Procesa formulario de contacto
+
 // ============================================
 // AUTENTICACIÓN
 // ============================================
@@ -555,6 +569,15 @@ window.showLoginModal()
 window.processLogin()
 window.logout()
 window.switchTab()
+
+// ============================================
+// PERFIL PROFESIONAL (NUEVO v3.0)
+// ============================================
+window.openMyProfileModal()          // Abre modal de edición de perfil
+window.saveMyProfile()               // Guarda cambios del perfil
+window.openMyAvailabilityModal()     // Abre modal de disponibilidad
+window.viewMyPublicProfile()         // Ve perfil público
+window.miPerfil()                    // Muestra datos en consola
 
 // ============================================
 // PACIENTES Y FICHAS
@@ -619,6 +642,8 @@ window.limpiarStorage()
 window.selectTimeSlot(time)      // Seleccionar horario en agenda
 window.selectTimePref(pref)      // Preferencia AM/PM
 window.calcularEdad()             // Calcular edad desde fecha de nacimiento
+window.getCurrentPsychFullData()  // Obtener datos completos del profesional
+window.updatePsychData()          // Actualizar datos del profesional
 ```
 
 ---
@@ -626,54 +651,64 @@ window.calcularEdad()             // Calcular edad desde fecha de nacimiento
 ### 📝 **CHECKLIST DE IMPLEMENTACIÓN**
 
 #### **Módulos Completados (16):**
-- [x] `state.js` - Estado global con fichas clínicas
-- [x] `auth.js` - Login/logout y gestión de sesiones
-- [x] `citas.js` - Reservas, pagos y confirmaciones **(CORREGIDO: emails solo al paciente)**
+- [x] `state.js` - Estado global con fichas clínicas y funciones de perfil
+- [x] `auth.js` - Login/logout y gestión de sesiones con datos completos
+- [x] `citas.js` - Reservas, pagos y confirmaciones + edad y tutor
 - [x] `pacientes.js` - CRUD + vista detalle con 4 pestañas
-- [x] `profesionales.js` - Gestión + estadísticas + género
+- [x] `profesionales.js` - Gestión + PERFIL EDITABLE COMPLETO
 - [x] `boxes.js` - Gestión de boxes + disponibilidad
 - [x] `mensajes.js` - Testimonios + estadísticas
 - [x] `personalizacion.js` - Logo, textos, fondo
-- [x] `publico.js` - Vista pública, filtros, botón compartir **(CORREGIDO: carga de pacientes)**
+- [x] `publico.js` - Vista pública con menú funcional y tarjetas Puntoterapia
 - [x] `admin.js` - Backup/restore + limpieza + exportar Excel
 - [x] `fichasClinicas.js` - CRUD de fichas y sesiones
 - [x] `informes.js` - Informes psicodiagnóstico y cierre
 - [x] `pdfGenerator.js` - Exportación PDF con fallback
 - [x] `permisos.js` - Control de acceso granular
 - [x] `estadisticas.js` - Estadísticas globales admin
-- [x] `utils.js` - Utilidades (RUT, emails, fechas) **(CORREGIDO: control de duplicados)**
+- [x] `utils.js` - Utilidades (RUT, emails, fechas) con control de duplicados
 
 #### **Funcionalidades Especiales:**
+- [x] **Menú de navegación funcional** - 7 secciones interactivas
+- [x] **Tarjetas estilo Puntoterapia** - Con botones "Más Info" y "AGENDA TU HORA"
+- [x] **Perfil profesional editable** - 5 pestañas con todos los campos
 - [x] **Teléfono 3 campos** - Código + 9 + número (editable)
 - [x] **Edad y Tutor Legal** - Cálculo automático y campos condicionales
-- [x] **Parentesco parametrizado** - Selector con opciones predefinidas
+- [x] **Parentesco parametrizado** - Selector con 5 opciones
 
 #### **Verificaciones UI:**
 - [x] Botón "Staff" para login
+- [x] Menú público con 7 opciones
 - [x] Grid de profesionales con filtros
-- [x] Teléfono con 3 campos (código + 9 + número) editable
+- [x] Tarjetas con botones "Más Información" y "AGENDA TU HORA"
+- [x] Sección "Quienes Somos"
+- [x] Sección "Tipo de Atención" con 4 opciones
+- [x] Sección "Punto de Interés" (blog)
+- [x] Sección "Contacto" con formulario
 - [x] Panel de reserva con selección de fecha/hora/box
-- [x] **Campo de fecha de nacimiento** en formulario de reserva
-- [x] **Sección de tutor** que aparece automáticamente para menores
+- [x] Campo de fecha de nacimiento en formulario de reserva
+- [x] Sección de tutor que aparece automáticamente para menores
 - [x] Dashboard con estadísticas
-- [x] Botón "Ver Ficha Clínica" en cada paciente
-- [x] Pestañas (Perfil, Ficha Ingreso, Sesiones, Informes)
+- [x] Botón "Editar Mi Perfil" para psicólogos
 - [x] Botón "Compartir perfil" en cada profesional
 - [x] Botones de exportar Excel en admin
 - [x] Pestaña "📊 Estadísticas" solo para admin
 
 ---
 
-### ✅ **RESUMEN FINAL v2.2**
+### ✅ **RESUMEN FINAL v3.0**
 
 | Módulo | Funcionalidades | Estado |
 |--------|-----------------|--------|
 | **Core** | Firebase Auth, EmailJS, Diseño Apple | ✅ |
+| **Menú Público** | 7 secciones interactivas con navegación | ✅ NUEVO v3.0 |
+| **Tarjetas** | Estilo Puntoterapia con botones duales | ✅ NUEVO v3.0 |
+| **Perfil Profesional** | Edición completa con 5 pestañas | ✅ NUEVO v3.0 |
 | **Agenda** | Reservas online/presenciales, pagos | ✅ |
 | **Email System** | Envío SOLO al paciente, sin duplicados | ✅ CORREGIDO |
 | **Disponibilidad** | Horarios se ocupan correctamente | ✅ CORREGIDO |
 | **Pacientes** | CRUD básico, historial de citas | ✅ |
-| **Edad y Tutor** | Cálculo automático, campos condicionales | ✅ NUEVO v2.2 |
+| **Edad y Tutor** | Cálculo automático, campos condicionales | ✅ |
 | **Teléfono** | 3 campos (código + 9 + número) editable | ✅ |
 | **Profesionales** | CRUD, disponibilidad, género | ✅ |
 | **Boxes** | CRUD, disponibilidad, ocupación en tiempo real | ✅ |
@@ -693,11 +728,11 @@ window.calcularEdad()             // Calcular edad desde fecha de nacimiento
 
 ---
 
-### 🚀 **COMANDO DE VERIFICACIÓN COMPLETA**
+### 🚀 **COMANDO DE VERIFICACIÓN COMPLETA v3.0**
 
 ```javascript
 (function() {
-  console.log('%c🔍 VÍNCULO SALUD v2.2 - DIAGNÓSTICO COMPLETO', 'font-size:16px');
+  console.log('%c🔍 VÍNCULO SALUD v3.0 - DIAGNÓSTICO COMPLETO', 'font-size:16px;color:#1E7A8A');
   
   const campo9 = document.getElementById('phoneNine');
   const campoNumero = document.getElementById('custPhone');
@@ -706,6 +741,10 @@ window.calcularEdad()             // Calcular edad desde fecha de nacimiento
   const checks = {
     'state global': !!window.state,
     'auth': typeof window.showLoginModal === 'function',
+    'showSection': typeof window.showSection === 'function',
+    'abrirAgenda': typeof window.abrirAgenda === 'function',
+    'enviarContacto': typeof window.enviarContacto === 'function',
+    'openMyProfileModal': typeof window.openMyProfileModal === 'function',
     'selectTimeSlot': typeof window.selectTimeSlot === 'function',
     'fichasClinicas': !!window.fichasClinicas,
     'informes': !!window.informes,
@@ -715,6 +754,7 @@ window.calcularEdad()             // Calcular edad desde fecha de nacimiento
     'compartirPerfil': typeof window.compartirPerfil === 'function',
     'verFichaCompleta': typeof window.verFichaCompleta === 'function',
     'calcularEdad': typeof window.calcularEdad === 'function',
+    'miPerfil': typeof window.miPerfil === 'function',
     'pacientes': window.state?.patients?.length || 0,
     'fichasIngreso': window.state?.fichasIngreso?.length || 0,
     'sesiones': window.state?.sesiones?.length || 0,
@@ -729,9 +769,24 @@ window.calcularEdad()             // Calcular edad desde fecha de nacimiento
   
   console.table(checks);
   
+  // Verificar secciones del menú
+  const secciones = ['inicio', 'about', 'equipo', 'atencion', 'blog', 'contacto'];
+  console.log('\n📋 SECCIONES DEL MENÚ:');
+  secciones.forEach(id => {
+    const el = document.getElementById(id);
+    console.log(`- ${id}: ${el ? '✅' : '❌'}`);
+  });
+  
   if (window.state?.currentUser) {
     console.log(`\n👤 Usuario: ${window.state.currentUser.data?.name} (${window.state.currentUser.role})`);
     console.log(`📋 Admin: ${window.state.currentUser.data?.isAdmin ? '✅' : '❌'}`);
+    
+    if (window.state.currentUser.role === 'psych') {
+      console.log(`\n🎓 Datos del profesional:`);
+      console.log(`- Título: ${window.state.currentUser.data?.title || 'No especificado'}`);
+      console.log(`- Experiencia: ${window.state.currentUser.data?.experience || 0} años`);
+      console.log(`- Bio: ${window.state.currentUser.data?.bio?.substring(0, 50)}...`);
+    }
   }
   
   return checks;
@@ -749,10 +804,13 @@ window.calcularEdad()             // Calcular edad desde fecha de nacimiento
 | **v1.0** | Agenda, pagos, pacientes básico |
 | **v2.0** | Fichas clínicas, sesiones, informes (20+ campos), PDF, permisos granulares |
 | **v2.1** | Emails corregidos, disponibilidad, renderizado, bloqueo doble clic |
-| **v2.2** | ✅ **EDAD Y TUTOR LEGAL** - Cálculo automático y campos condicionales |
+| **v2.2** | Edad y Tutor Legal - Cálculo automático y campos condicionales |
+| **v3.0** | ✅ **DISEÑO PUNTOTERAPIA** - Menú funcional, tarjetas profesionales, perfil editable, secciones informativas |
 
 #### **Flujo completo del paciente:**
 ```
+🌐 MENÚ → Inicio · Quienes Somos · Equipo · Tipo de Atención · Blog · Contacto
+👥 EQUIPO → Ver profesionales con tarjetas estilo Puntoterapia
 📞 TELÉFONO → +56 9 9135 7990 (3 campos editables)
 📅 FECHA NACIMIENTO → Cálculo automático de edad
 👤 SI ES MENOR → Se solicita tutor legal
@@ -764,7 +822,7 @@ window.calcularEdad()             // Calcular edad desde fecha de nacimiento
 📧 EMAIL → Siempre al paciente, nunca duplicado
 ```
 
-#### **Tres reglas de oro:**
+#### **Cinco reglas de oro:**
 1. **Los permisos SIEMPRE se verifican** - 15+ funciones de validación
 2. **Los pagos SIEMPRE comienzan como "pendiente"** - Confirmación manual
 3. **Los emails SIEMPRE van al paciente** - Nunca al profesional
@@ -779,27 +837,32 @@ window.calcularEdad()             // Calcular edad desde fecha de nacimiento
 - **PDF:** jsPDF (con fallback)
 - **Excel:** Exportación CSV
 - **Compartir:** Web Share API + fallback manual
-- **Diseño:** Apple-style, glassmorphism, responsivo
+- **Diseño:** Apple-style + Puntoterapia, glassmorphism, responsivo
 
 ---
 
-### 🎉 **ÚLTIMAS MEJORAS INCORPORADAS (v2.2):**
+### 🎉 **ÚLTIMAS MEJORAS INCORPORADAS (v3.0):**
 
-1. 📱 **Teléfono de 3 campos** - Código país + 9 + número (el 9 ahora es editable)
-2. 🔗 **Botón compartir perfil** - WhatsApp, Email, copiar enlace
-3. 📊 **Exportar a Excel** - Pacientes, citas, profesionales, mensajes
-4. 🚫 **Emails solo al paciente** - El profesional no recibe notificaciones **(CORREGIDO)**
-5. 🚫 **Control de emails duplicados** - Usando `Set()` y flags
-6. 🚫 **Bloqueo de doble clic** - Variable `bookingEnProceso`
-7. 📅 **Disponibilidad corregida** - Considera `appointments` y `pendingRequests`
-8. 👥 **Renderizado de pacientes** - Siempre se cargan, incluso sin login
-9. 🎨 **Género en profesionales** - Psicólogo/Psicóloga según corresponda
-10. 👶 **Edad y Tutor Legal** - Cálculo automático y campos condicionales **(NUEVO)**
+1. 🌐 **Menú de navegación funcional** - 7 secciones interactivas con navegación suave
+2. 🎨 **Tarjetas estilo Puntoterapia** - Con botones "Más Información" y "AGENDA TU HORA"
+3. 👤 **Perfil profesional editable** - Modal con 5 pestañas para edición completa
+4. 📝 **Sección "Tipo de Atención"** - 4 tipos con íconos y descripciones
+5. 📧 **Formulario de contacto** - Funcional con validación
+6. 📱 **Teléfono de 3 campos** - Código país + 9 + número (el 9 ahora es editable)
+7. 🔗 **Botón compartir perfil** - WhatsApp, Email, copiar enlace
+8. 📊 **Exportar a Excel** - Pacientes, citas, profesionales, mensajes
+9. 🚫 **Emails solo al paciente** - El profesional no recibe notificaciones
+10. 🚫 **Control de emails duplicados** - Usando `Set()` y flags
+11. 🚫 **Bloqueo de doble clic** - Variable `bookingEnProceso`
+12. 📅 **Disponibilidad corregida** - Considera `appointments` y `pendingRequests`
+13. 👥 **Renderizado de pacientes** - Siempre se cargan, incluso sin login
+14. 🎨 **Género en profesionales** - Psicólogo/Psicóloga según corresponda
+15. 👶 **Edad y Tutor Legal** - Cálculo automático y campos condicionales
 
 ---
 
-**¡Vínculo Salud v2.2 está COMPLETAMENTE OPERATIVO Y CORREGIDO!** 🚀
+**¡Vínculo Salud v3.0 está COMPLETAMENTE OPERATIVO CON NUEVO DISEÑO PUNTOTERAPIA!** 🚀
 
-Agenda + Pagos + Fichas Clínicas + Informes Profesionales + PDF + Permisos Granulares + Estadísticas Globales + Backup + Boxes en Tiempo Real + Sobrecupos + Teléfono 3 Campos + Compartir Perfil + Exportar Excel + **EMAILS CORREGIDOS + DISPONIBILIDAD CORREGIDA + SIN DUPLICADOS + EDAD Y TUTOR LEGAL**.
+Agenda + Pagos + Fichas Clínicas + Informes Profesionales + PDF + Permisos Granulares + Estadísticas Globales + Backup + Boxes en Tiempo Real + Sobrecupos + **MENÚ FUNCIONAL + TARJETAS ESTILO PUNTOTERAPIA + PERFIL PROFESIONAL EDITABLE + SECCIONES INFORMATIVAS** + Teléfono 3 Campos + Compartir Perfil + Exportar Excel + Emails Corregidos + Disponibilidad Corregida + Sin Duplicados + Edad y Tutor Legal.
 
-**Todo lo que un centro de salud mental necesita en una sola plataforma, ahora funcionando perfectamente con soporte para pacientes menores de edad.** 🎯
+**Todo lo que un centro de salud mental necesita en una sola plataforma, ahora con un diseño moderno, acogedor y completamente funcional.** 🎯

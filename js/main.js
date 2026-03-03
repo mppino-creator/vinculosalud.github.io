@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN CORREGIDA Y OPTIMIZADA
+// js/main.js - VERSIÓN CORREGIDA Y OPTIMIZADA CON PERFIL PROFESIONAL
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -70,6 +70,16 @@ window.editTherapist = profesionales.editTherapist;
 window.closeEditTherapistModal = profesionales.closeEditTherapistModal;
 window.updateTherapist = profesionales.updateTherapist;
 window.deleteStaff = profesionales.deleteStaff;
+
+// ============================================
+// 🆕 NUEVAS FUNCIONES DE PERFIL PROFESIONAL
+// ============================================
+window.openMyProfileModal = profesionales.openMyProfileModal;
+window.saveMyProfile = profesionales.saveMyProfile;
+window.openMyAvailabilityModal = profesionales.openMyAvailabilityModal;
+window.viewMyPublicProfile = profesionales.viewMyPublicProfile;
+window.loadSpecialtiesInProfileSelects = profesionales.loadSpecialtiesInProfileSelects;
+window.addProfileButtonToDashboard = profesionales.addProfileButtonToDashboard;
 
 // ============================================
 // FUNCIONES DE PACIENTES
@@ -189,6 +199,40 @@ window.validarRut = utils.validarRut;
 window.showToast = utils.showToast;
 
 // ============================================
+// 🆕 FUNCIONES DE ESTADO (para acceso global)
+// ============================================
+window.getCurrentPsychFullData = state.getCurrentPsychFullData;
+window.updatePsychData = state.updatePsychData;
+window.miPerfil = function() {
+    if (!state.currentUser) {
+        console.log('❌ No hay usuario logueado');
+        return null;
+    }
+    
+    if (state.currentUser.role === 'psych') {
+        const fullData = state.getCurrentPsychFullData?.() || state.currentUser.data;
+        console.log('👤 Mi perfil completo:', fullData);
+        return fullData;
+    } else {
+        console.log('👑 Usuario admin:', state.currentUser.data);
+        return state.currentUser.data;
+    }
+};
+
+// ============================================
+// 🆕 FUNCIÓN PARA ACTUALIZAR EL BOTÓN DE PERFIL EN EL DASHBOARD
+// ============================================
+window.updateProfileButton = function() {
+    const profileBtn = document.getElementById('editProfileButton');
+    if (profileBtn && state.currentUser?.role === 'psych') {
+        profileBtn.style.display = 'inline-flex';
+        profileBtn.onclick = window.openMyProfileModal;
+    } else if (profileBtn) {
+        profileBtn.style.display = 'none';
+    }
+};
+
+// ============================================
 // VERIFICACIÓN FINAL
 // ============================================
 console.log('✅ showLoginModal asignada:', typeof window.showLoginModal);
@@ -198,7 +242,10 @@ console.log('✅ verFichaCompleta asignada:', typeof window.verFichaCompleta);
 console.log('✅ estadisticas asignada:', typeof window.estadisticas);
 console.log('✅ selectTimeSlot asignada:', typeof window.selectTimeSlot);
 console.log('✅ selectTimePref asignada:', typeof window.selectTimePref);
-console.log('✅ loadMyConfig asignada:', typeof window.loadMyConfig); // ← DEBE SER "function"
+console.log('✅ loadMyConfig asignada:', typeof window.loadMyConfig);
+console.log('✅ openMyProfileModal asignada:', typeof window.openMyProfileModal);
+console.log('✅ saveMyProfile asignada:', typeof window.saveMyProfile);
+console.log('✅ miPerfil asignada:', typeof window.miPerfil);
 
 // ============================================
 // RESPALDO DE EMERGENCIA
@@ -208,6 +255,12 @@ setTimeout(() => {
         console.log('🚨 Restaurando selectTimeSlot desde citas...');
         window.selectTimeSlot = citas.selectTimeSlot;
         window.selectTimePref = citas.selectTimePref;
+    }
+    
+    if (typeof window.openMyProfileModal !== 'function' && typeof profesionales?.openMyProfileModal === 'function') {
+        console.log('🚨 Restaurando openMyProfileModal desde profesionales...');
+        window.openMyProfileModal = profesionales.openMyProfileModal;
+        window.saveMyProfile = profesionales.saveMyProfile;
     }
 }, 500);
 
@@ -239,13 +292,26 @@ export function save() {
     const messagesObj = {};
     state.messages.forEach(item => { messagesObj[item.id] = item; });
 
+    // Guardar fichas clínicas
+    const fichasIngresoObj = {};
+    state.fichasIngreso.forEach(item => { fichasIngresoObj[item.id] = item; });
+
+    const sesionesObj = {};
+    state.sesiones.forEach(item => { sesionesObj[item.id] = item; });
+
+    const informesObj = {};
+    state.informes.forEach(item => { informesObj[item.id] = item; });
+
     const updates = {
         '/Staff': staffObj,
         '/Boxes': boxesObj,
         '/Patients': patientsObj,
         '/Appointments': appointmentsObj,
         '/PendingRequests': pendingRequestsObj,
-        '/Messages': messagesObj
+        '/Messages': messagesObj,
+        '/FichasIngreso': fichasIngresoObj,
+        '/Sesiones': sesionesObj,
+        '/Informes': informesObj
     };
 
     db.ref().update(updates)
@@ -278,6 +344,9 @@ export function save() {
             if (typeof publico.filterProfessionals === 'function') publico.filterProfessionals();
             if (typeof mensajes.renderMessages === 'function') mensajes.renderMessages();
             if (typeof mensajes.updateMarquee === 'function') mensajes.updateMarquee();
+            
+            // Mostrar toast de éxito
+            if (typeof utils.showToast === 'function') utils.showToast('✅ Datos guardados', 'success');
         })
         .catch(err => {
             console.error('❌ Error al guardar en Firebase:', err);
@@ -302,6 +371,11 @@ if (savedUser) {
                 clearInterval(checkData);
                 if (typeof auth.cargarDashboard === 'function') {
                     auth.cargarDashboard(state.currentUser.role);
+                }
+                
+                // Actualizar botón de perfil
+                if (typeof window.updateProfileButton === 'function') {
+                    setTimeout(window.updateProfileButton, 1000);
                 }
             }
         }, 100);

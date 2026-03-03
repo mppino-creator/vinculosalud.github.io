@@ -46,6 +46,9 @@ if (typeof window !== 'undefined') {
     };
 }
 
+// ============================================
+// FUNCIÓN AUXILIAR
+// ============================================
 function getTimePeriod(time) {
     const hour = parseInt(time.split(':')[0]);
     return hour < 12 ? 'AM' : 'PM';
@@ -330,7 +333,21 @@ export function searchPatientByRutBooking() {
 }
 
 // ============================================
-// FUNCIONES DE PAGOS (CON TODOS LOS FLAGS)
+// FUNCIÓN FALTANTE - checkOnlineAvailability
+// ============================================
+export function checkOnlineAvailability() {
+    const date = document.getElementById('custDate').value;
+    const time = document.getElementById('custTime').value;
+    const type = document.getElementById('appointmentType').value;
+    
+    if (type === 'online' && date && time) {
+        return new Date(date + 'T' + time) > new Date();
+    }
+    return true;
+}
+
+// ============================================
+// FUNCIONES DE PAGOS
 // ============================================
 
 export function confirmPayment(appointmentId) {
@@ -464,7 +481,7 @@ export function confirmPresencialTime(requestId, date, time) {
 }
 
 // ============================================
-// FUNCIÓN EXECUTEBOOKING - VERSIÓN FINAL CORREGIDA
+// FUNCIÓN EXECUTEBOOKING
 // ============================================
 
 let bookingEnProceso = false;
@@ -582,13 +599,12 @@ export function executeBooking() {
 
             const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
 
-            // Objeto appointment con TODOS los flags de email
             const appointment = {
                 id: Date.now(),
                 patientId: patient.id,
                 patient: name,
                 patientRut: rut,
-                patientEmail: email,  // ← EMAIL DEL PACIENTE
+                patientEmail: email,
                 patientPhone: phone,
                 psych: state.selectedPsych.name,
                 psychId: state.selectedPsych.id,
@@ -605,7 +621,6 @@ export function executeBooking() {
                 msg: msg,
                 status: type === 'online' ? 'pendiente' : 'pendiente',
                 createdAt: new Date().toISOString(),
-                // Flags para controlar emails
                 emailEnviado: false,
                 emailPagoEnviado: false,
                 emailRechazoEnviado: false,
@@ -626,7 +641,6 @@ export function executeBooking() {
                 showToast(mensaje, 'success');
             }
 
-            // ENVIAR EMAIL SOLO AL PACIENTE
             if (email && !appointment.emailEnviado) {
                 let mensaje = `Hola ${name},\n\nHemos recibido tu solicitud de cita.\n\n` +
                     `📅 Fecha: ${date}\n` +
@@ -681,7 +695,7 @@ export function executeBooking() {
 }
 
 // ============================================
-// FUNCIONES DE RENDERIZADO (COMPLETAS)
+// FUNCIONES DE RENDERIZADO
 // ============================================
 
 export function renderAppointments() {
@@ -722,11 +736,11 @@ export function renderAppointments() {
                 <td>
                     <div style="display:flex; gap:5px;">
                         ${a.paymentStatus !== 'pagado' ? `
-                            <button onclick="confirmPayment('${a.id}')" class="btn-icon" style="background:var(--exito); color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Confirmar pago">
+                            <button onclick="confirmPayment('${a.id}')" class="btn-icon" style="background:var(--exito); color:white; border:none; padding:5px 8px; border-radius:4px;" title="Confirmar pago">
                                 <i class="fa fa-dollar-sign"></i>
                             </button>
                         ` : ''}
-                        <button onclick="cancelAppointment('${a.id}')" class="btn-icon" style="background:var(--peligro); color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Cancelar cita">
+                        <button onclick="cancelAppointment('${a.id}')" class="btn-icon" style="background:var(--peligro); color:white; border:none; padding:5px 8px;" title="Cancelar cita">
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
@@ -1142,7 +1156,7 @@ window.openBooking = openBooking;
 window.updateBookingDetails = updateBookingDetails;
 window.updateAvailableTimes = updateAvailableTimes;
 window.searchPatientByRutBooking = searchPatientByRutBooking;
-window.checkOnlineAvailability = checkOnlineAvailability;
+window.checkOnlineAvailability = checkOnlineAvailability; // ← AGREGADA
 window.executeBooking = executeBooking;
 window.showPaymentDetails = showPaymentDetails;
 window.confirmPayment = confirmPayment;
@@ -1165,4 +1179,4 @@ window.isTimeSlotAvailable = isTimeSlotAvailable;
 window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
 
-console.log('✅ citas.js cargado (versión final corregida)');
+console.log('✅ citas.js cargado (versión final optimizada)');

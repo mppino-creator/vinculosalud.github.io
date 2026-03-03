@@ -1,7 +1,10 @@
-## ✅ **¡AQUÍ TIENES EL RESUMEN EJECUTIVO COMPLETAMENTE ACTUALIZADO!**
+## 📋 **RESUMEN EJECUTIVO ACTUALIZADO - VÍNCULO SALUD v2.1**
 
-```markdown
-## 📋 **RESUMEN EJECUTIVO - VÍNCULO SALUD v2.0**
+He actualizado el resumen ejecutivo con **TODAS las mejoras y correcciones** que hemos implementado en esta larga sesión. Aquí está la versión final:
+
+---
+
+## 📋 **RESUMEN EJECUTIVO - VÍNCULO SALUD v2.1**
 
 ### 🎯 **VISIÓN GENERAL DEL PROYECTO**
 
@@ -141,7 +144,7 @@ FLUJO:
 
 ---
 
-### 📧 **SISTEMA DE EMAILS (EmailJS + SendGrid)**
+### 📧 **SISTEMA DE EMAILS (EmailJS + SendGrid) - CORREGIDO**
 
 ```javascript
 // Configuración EmailJS
@@ -153,13 +156,19 @@ EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
 // Remitente: notificaciones@em7234.vinculosalud.cl
 ```
 
-**Emails automáticos:**
-- ✅ Confirmación de cita online (solo al paciente)
-- ✅ Solicitud de cita presencial (solo al paciente)
-- ✅ Confirmación de pago (solo al paciente)
-- ✅ Rechazo de solicitud (solo al paciente)
-- ✅ Cancelación de cita (solo al paciente)
+**Emails automáticos (SOLO al paciente):**
+- ✅ Confirmación de cita online
+- ✅ Solicitud de cita presencial
+- ✅ Confirmación de pago
+- ✅ Rechazo de solicitud
+- ✅ Cancelación de cita
 - ❌ **PROFESIONAL NO RECIBE EMAILS** (solo en panel)
+
+**Mejoras implementadas:**
+- ✅ **Control de emails duplicados** con `Set()`
+- ✅ **Bloqueo de doble clic** en reserva
+- ✅ **Verificación de destinatario** antes de enviar
+- ✅ **Simulación de email** cuando EmailJS no está disponible
 
 ---
 
@@ -362,9 +371,17 @@ return `https://storage.vinculosalud.cl/informes/${id}_${Date.now()}.pdf`;
 
 ---
 
-### 🆘 **PROBLEMAS COMUNES Y SOLUCIONES**
+### 🆘 **PROBLEMAS COMUNES Y SOLUCIONES - ACTUALIZADO**
 
-#### **1. "El campo 9 del teléfono no se puede editar"**
+#### **1. "El email llega al profesional en lugar del paciente"**
+```javascript
+// Verificar que el email en el appointment sea el del paciente
+console.log('Email en cita:', appointment.patientEmail);
+console.log('Email del profesional:', state.selectedPsych.email);
+// SOLUCIÓN: Ya implementada en executeBooking con patientEmail: email
+```
+
+#### **2. "El campo 9 del teléfono no se puede editar"**
 ```javascript
 // Verificar si tiene readonly
 const campo9 = document.getElementById('phoneNine');
@@ -372,13 +389,13 @@ console.log('¿Tiene readonly?', campo9.hasAttribute('readonly'));
 campo9.removeAttribute('readonly'); // Solución
 ```
 
-#### **2. "No veo el botón de Ficha Clínica"**
+#### **3. "No veo el botón de Ficha Clínica"**
 ```javascript
 console.log(typeof window.verFichaCompleta); // Debe ser 'function'
 window.renderPatients(); // Forzar renderizado
 ```
 
-#### **3. "Error: No tengo permisos para ver este paciente"**
+#### **4. "Error: No tengo permisos para ver este paciente"**
 ```javascript
 console.log('Mi ID:', state.currentUser?.data?.id);
 console.log('psychId del paciente:', patient?.psychId);
@@ -387,26 +404,43 @@ patient.psychId = id_del_psicologo;
 window.save();
 ```
 
-#### **4. "El pago no se confirma automáticamente"**
+#### **5. "El pago no se confirma automáticamente"**
 ```javascript
 // ✅ ES CORRECTO - Así debe funcionar
 window.confirmPayment(id_cita) // Confirmación manual
 ```
 
-#### **5. "El PDF no se genera"**
+#### **6. "El PDF no se genera"**
 ```javascript
 console.log('jsPDF disponible:', typeof window.jspdf !== 'undefined');
 ```
 
-#### **6. "Error: db.collection is not a function"**
+#### **7. "Error: db.collection is not a function"**
 ```javascript
 // Usar db.ref() en lugar de db.collection()
 db.ref('Staff').once('value', callback)
 ```
 
-#### **7. "QuotaExceededError (localStorage lleno)"**
+#### **8. "QuotaExceededError (localStorage lleno)"**
 ```javascript
 window.limpiarStorage(); // Limpia solo items de Vínculo Salud
+```
+
+#### **9. "Se puede agendar dos veces la misma hora"**
+```javascript
+// ✅ YA CORREGIDO - updateAvailableTimes ahora considera
+// tanto appointments como pendingRequests
+const bookedTimes = [...new Set([...bookedAppointments, ...bookedRequests])];
+```
+
+#### **10. "Llegan dos emails iguales"**
+```javascript
+// ✅ YA CORREGIDO - Control con Set() y flags emailEnviado
+const emailsEnviados = new Set();
+if (emailsEnviados.has(emailId)) {
+  console.log('⏭️ Email ya enviado, omitiendo');
+  return true;
+}
 ```
 
 ---
@@ -482,6 +516,8 @@ window.showToast()
 window.formatCurrency()
 window.calculateAge()
 window.limpiarStorage()
+window.selectTimeSlot(time)      // Seleccionar horario en agenda
+window.selectTimePref(pref)      // Preferencia AM/PM
 ```
 
 ---
@@ -491,25 +527,25 @@ window.limpiarStorage()
 #### **Módulos Completados (16):**
 - [x] `state.js` - Estado global con fichas clínicas
 - [x] `auth.js` - Login/logout y gestión de sesiones
-- [x] `citas.js` - Reservas, pagos y confirmaciones
+- [x] `citas.js` - Reservas, pagos y confirmaciones **(CORREGIDO: emails solo al paciente)**
 - [x] `pacientes.js` - CRUD + vista detalle con 4 pestañas
 - [x] `profesionales.js` - Gestión + estadísticas + género
 - [x] `boxes.js` - Gestión de boxes + disponibilidad
 - [x] `mensajes.js` - Testimonios + estadísticas
 - [x] `personalizacion.js` - Logo, textos, fondo
-- [x] `publico.js` - Vista pública, filtros, botón compartir
+- [x] `publico.js` - Vista pública, filtros, botón compartir **(CORREGIDO: carga de pacientes)**
 - [x] `admin.js` - Backup/restore + limpieza + exportar Excel
 - [x] `fichasClinicas.js` - CRUD de fichas y sesiones
 - [x] `informes.js` - Informes psicodiagnóstico y cierre
 - [x] `pdfGenerator.js` - Exportación PDF con fallback
 - [x] `permisos.js` - Control de acceso granular
 - [x] `estadisticas.js` - Estadísticas globales admin
-- [x] `utils.js` - Utilidades (RUT, emails, fechas)
+- [x] `utils.js` - Utilidades (RUT, emails, fechas) **(CORREGIDO: control de duplicados)**
 
 #### **Verificaciones UI:**
 - [x] Botón "Staff" para login
 - [x] Grid de profesionales con filtros
-- [x] Teléfono con 3 campos (código + 9 + número)
+- [x] Teléfono con 3 campos (código + 9 + número) editable
 - [x] Panel de reserva con selección de fecha/hora/box
 - [x] Dashboard con estadísticas
 - [x] Botón "Ver Ficha Clínica" en cada paciente
@@ -520,12 +556,14 @@ window.limpiarStorage()
 
 ---
 
-### ✅ **RESUMEN FINAL v2.0**
+### ✅ **RESUMEN FINAL v2.1**
 
 | Módulo | Funcionalidades | Estado |
 |--------|-----------------|--------|
 | **Core** | Firebase Auth, EmailJS, Diseño Apple | ✅ |
 | **Agenda** | Reservas online/presenciales, pagos | ✅ |
+| **Email System** | Envío SOLO al paciente, sin duplicados | ✅ CORREGIDO |
+| **Disponibilidad** | Horarios se ocupan correctamente | ✅ CORREGIDO |
 | **Pacientes** | CRUD básico, historial de citas | ✅ |
 | **Teléfono** | 3 campos (código + 9 + número) editable | ✅ |
 | **Profesionales** | CRUD, disponibilidad, género | ✅ |
@@ -550,7 +588,7 @@ window.limpiarStorage()
 
 ```javascript
 (function() {
-  console.log('%c🔍 VÍNCULO SALUD v2.0 - DIAGNÓSTICO COMPLETO', 'font-size:16px');
+  console.log('%c🔍 VÍNCULO SALUD v2.1 - DIAGNÓSTICO COMPLETO', 'font-size:16px');
   
   const campo9 = document.getElementById('phoneNine');
   const campoNumero = document.getElementById('custPhone');
@@ -572,7 +610,9 @@ window.limpiarStorage()
     'informes': window.state?.informes?.length || 0,
     'profesionales': window.state?.staff?.length || 0,
     '📱 campo 9 editable': campo9 ? !campo9.readOnly : 'No existe',
-    '📱 campo número editable': campoNumero ? !campoNumero.readOnly : 'No existe'
+    '📱 campo número editable': campoNumero ? !campoNumero.readOnly : 'No existe',
+    '📧 control duplicados': typeof window.emailsEnviados !== 'undefined',
+    '🚫 doble clic': typeof window.bookingEnProceso !== 'undefined'
   };
   
   console.table(checks);
@@ -595,7 +635,11 @@ window.limpiarStorage()
 | Versión | Características |
 |---------|-----------------|
 | **v1.0** | Agenda, pagos, pacientes básico |
-| **v2.0** | ✅ Fichas clínicas, sesiones, informes (20+ campos), PDF, permisos granulares, estadísticas globales y por profesional, boxes en tiempo real, sobrecupos, exportación CSV/JSON/Excel, backup/restore, teléfono 3 campos, botón compartir |
+| **v2.0** | Fichas clínicas, sesiones, informes (20+ campos), PDF, permisos granulares |
+| **v2.1** | ✅ **EMAILS CORREGIDOS** (solo al paciente, sin duplicados) |
+|           | ✅ **DISPONIBILIDAD CORREGIDA** (no más dobles reservas) |
+|           | ✅ **RENDERIZADO CORREGIDO** (pacientes siempre visibles) |
+|           | ✅ **BLOQUEO DE DOBLE CLIC** (evita reservas duplicadas) |
 
 #### **Flujo completo del paciente:**
 ```
@@ -605,18 +649,20 @@ window.limpiarStorage()
 📊 EVALUACIÓN → Informe Psicodiagnóstico (20+ campos)
 🏁 CIERRE → Informe de Cierre (alta/derivación/abandono)
 📦 EXPORTACIÓN → PDF individual, ficha completa ZIP, backup JSON, Excel
+📧 EMAIL → Siempre al paciente, nunca duplicado
 ```
 
 #### **Tres reglas de oro:**
 1. **Los permisos SIEMPRE se verifican** - 15+ funciones de validación
 2. **Los pagos SIEMPRE comienzan como "pendiente"** - Confirmación manual
-3. **Los PDFs tienen fallback** - Modo simulado siempre disponible
+3. **Los emails SIEMPRE van al paciente** - Nunca al profesional
+4. **Los PDFs tienen fallback** - Modo simulado siempre disponible
 
 #### **Tecnologías utilizadas:**
 - **Frontend:** HTML5, CSS3, JavaScript (ES6+), Font Awesome 6
 - **Backend:** Firebase Realtime Database
 - **Autenticación:** Firebase Auth
-- **Emails:** EmailJS + SendGrid (solo al paciente)
+- **Emails:** EmailJS + SendGrid **(solo al paciente, control de duplicados)**
 - **PDF:** jsPDF (con fallback)
 - **Excel:** Exportación CSV
 - **Compartir:** Web Share API + fallback manual
@@ -624,21 +670,37 @@ window.limpiarStorage()
 
 ---
 
-### 🎉 **ÚLTIMAS MEJORAS INCORPORADAS:**
+### 🎉 **ÚLTIMAS MEJORAS INCORPORADAS (v2.1):**
 
 1. 📱 **Teléfono de 3 campos** - Código país + 9 + número (el 9 ahora es editable)
 2. 🔗 **Botón compartir perfil** - WhatsApp, Email, copiar enlace
 3. 📊 **Exportar a Excel** - Pacientes, citas, profesionales, mensajes
-4. 🚫 **Emails solo al paciente** - El profesional no recibe notificaciones
-5. 🎨 **Género en profesionales** - Psicólogo/Psicóloga según corresponda
+4. 🚫 **Emails solo al paciente** - El profesional no recibe notificaciones **(CORREGIDO)**
+5. 🚫 **Control de emails duplicados** - Usando `Set()` y flags
+6. 🚫 **Bloqueo de doble clic** - Variable `bookingEnProceso`
+7. 📅 **Disponibilidad corregida** - Considera `appointments` y `pendingRequests`
+8. 👥 **Renderizado de pacientes** - Siempre se cargan, incluso sin login
+9. 🎨 **Género en profesionales** - Psicólogo/Psicóloga según corresponda
 
 ---
 
-**¡Vínculo Salud v2.0 está COMPLETAMENTE OPERATIVO!** 🚀
+**¡Vínculo Salud v2.1 está COMPLETAMENTE OPERATIVO Y CORREGIDO!** 🚀
 
-Agenda + Pagos + Fichas Clínicas + Informes Profesionales + PDF + Permisos Granulares + Estadísticas Globales + Backup + Boxes en Tiempo Real + Sobrecupos + Teléfono 3 Campos + Compartir Perfil + Exportar Excel.
+Agenda + Pagos + Fichas Clínicas + Informes Profesionales + PDF + Permisos Granulares + Estadísticas Globales + Backup + Boxes en Tiempo Real + Sobrecupos + Teléfono 3 Campos + Compartir Perfil + Exportar Excel + **EMAILS CORREGIDOS + DISPONIBILIDAD CORREGIDA + SIN DUPLICADOS**.
 
-**Todo lo que un centro de salud mental necesita en una sola plataforma.** 🎯
+**Todo lo que un centro de salud mental necesita en una sola plataforma, ahora funcionando perfectamente.** 🎯
 ```
 
-**¿Quieres que agregue o modifique algo más?**
+---
+
+## ✅ **RESUMEN DE LO QUE HEMOS LOGRADO**
+
+| Problema | Estado | Solución |
+|----------|--------|----------|
+| Emails al profesional | ✅ CORREGIDO | `patientEmail: email` en `citas.js` |
+| Emails duplicados | ✅ CORREGIDO | `Set()` y flags en `utils.js` |
+| Doble reserva misma hora | ✅ CORREGIDO | `bookingEnProceso` y `bookedTimes` |
+| Pacientes no se cargan | ✅ CORREGIDO | Listener en `publico.js` siempre activo |
+| Disponibilidad no se actualiza | ✅ CORREGIDO | `bookedAppointments + bookedRequests` |
+
+¡Tu plataforma está lista! 🚀

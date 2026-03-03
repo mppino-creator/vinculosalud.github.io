@@ -1123,13 +1123,38 @@
         <div class="marquee-content" id="marqueeContent"></div>
     </div>
 
-    <!-- Vista Pública -->
+    <!-- ============================================ -->
+    <!-- VISTA PÚBLICA - ESTILO PUNTOTERAPIA -->
+    <!-- ============================================ -->
     <main id="clientView">
+        <!-- HERO SECTION con texto emotivo -->
         <section class="hero-section">
-            <h1 id="heroTitleDisplay">Tu bienestar comienza con un buen vínculo</h1>
-            <p id="heroSubtitleDisplay">Atención psicológica profesional, ética y cercana</p>
+            <h1 id="heroTitleDisplay">Un espacio seguro para <span>sanar</span>, comprender y crecer</h1>
+            <p id="heroSubtitleDisplay">En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.</p>
+            <div style="margin-top: 30px;">
+                <span style="background: var(--verde-grisaceo-claro); padding: 8px 30px; border-radius: 40px; color: var(--verde-azulado-profundo); font-weight: 500; display: inline-block;">
+                    Estamos para acompañarte
+                </span>
+            </div>
         </section>
 
+        <!-- SECCIÓN "SOBRE NOSOTROS" (Estilo Puntoterapia) -->
+        <section class="about-section" style="margin: 60px 0; padding: 40px; background: white; border-radius: 48px; box-shadow: 0 8px 30px var(--sombra);">
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <h2 style="color: var(--verde-azulado-profundo); font-size: 2.2rem; margin-bottom: 20px;">Estamos para acompañarte</h2>
+                <p style="color: var(--texto-secundario); line-height: 1.8; font-size: 1.1rem;">
+                    Contamos con un equipo de terapeutas con amplia formación en terapia individual, 
+                    familiar y de pareja, con un sistema de abordaje colaborativo dentro del equipo Vínculo Salud, 
+                    así como con otros profesionales.
+                </p>
+                <p style="color: var(--texto-secundario); line-height: 1.8; font-size: 1.1rem; margin-top: 20px;">
+                    Cada profesional se compromete con el proceso terapéutico desde una mirada humana, 
+                    ética y especializada.
+                </p>
+            </div>
+        </section>
+
+        <!-- FILTROS DE BÚSQUEDA -->
         <div class="filters">
             <input type="text" class="filter-input" id="searchFilter" placeholder="🔍 Buscar profesional..." oninput="filterProfessionals()">
             <select class="filter-select" id="specialtyFilter" onchange="filterProfessionals()">
@@ -1143,8 +1168,74 @@
             </select>
         </div>
 
+        <!-- GRID DE PROFESIONALES -->
         <div class="grid" id="publicGrid"></div>
 
+        <!-- SECCIÓN BLOG - PUNTO DE INTERÉS (Estilo Puntoterapia) -->
+        <section class="blog-section" style="margin: 80px 0;">
+            <h2 style="color: var(--verde-azulado-profundo); font-size: 2.5rem; text-align: center;">Punto de Interés</h2>
+            <p style="color: var(--texto-secundario); text-align: center; max-width: 600px; margin: 10px auto 50px; font-size: 1.1rem;">
+                Reflexiones, ideas y recursos para tu bienestar emocional
+            </p>
+            
+            <div class="blog-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px;">
+                <!-- Artículo 1 -->
+                <article class="blog-card" style="background: white; border-radius: 32px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.05); transition: all 0.3s;">
+                    <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500" alt="Ansiedad" style="width: 100%; height: 220px; object-fit: cover;">
+                    <div style="padding: 25px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 30px; font-size: 0.8rem;">5 Enero, 2026</span>
+                            <span style="color: var(--texto-secundario);">📚 5 min lectura</span>
+                        </div>
+                        <h3 style="color: var(--verde-azulado-profundo); font-size: 1.4rem; margin-bottom: 12px;">PAES 2025: Cómo enfrentar la frustración, ansiedad y decisiones en resultados</h3>
+                        <p style="color: var(--texto-secundario); line-height: 1.6; margin-bottom: 20px;">
+                            Con los resultados de la PAES Regular a punto de publicarse (5 de enero de 2026), miles de estudiantes enfrentan...
+                        </p>
+                        <a href="#" style="color: var(--ocre-calido); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                            Leer más <span style="font-size: 1.2rem;">→</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Artículo 2 -->
+                <article class="blog-card" style="background: white; border-radius: 32px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.05);">
+                    <img src="https://images.unsplash.com/photo-1516585427167-9f4af9627e6c?w=500" alt="Infidelidad" style="width: 100%; height: 220px; object-fit: cover;">
+                    <div style="padding: 25px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 30px; font-size: 0.8rem;">Nov 07, 2025</span>
+                            <span style="color: var(--texto-secundario);">📚 8 min lectura</span>
+                        </div>
+                        <h3 style="color: var(--verde-azulado-profundo); font-size: 1.4rem; margin-bottom: 12px;">¿Qué se puede hacer ante una infidelidad?</h3>
+                        <p style="color: var(--texto-secundario); line-height: 1.6; margin-bottom: 20px;">
+                            Actualmente, el 31% de los chilenos admite haber sido infiel alguna vez en la vida. La infidelidad es una experiencia...
+                        </p>
+                        <a href="#" style="color: var(--ocre-calido); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                            Leer más <span style="font-size: 1.2rem;">→</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Artículo 3 -->
+                <article class="blog-card" style="background: white; border-radius: 32px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.05);">
+                    <img src="https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=500" alt="Familia" style="width: 100%; height: 220px; object-fit: cover;">
+                    <div style="padding: 25px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 30px; font-size: 0.8rem;">Nov 07, 2025</span>
+                            <span style="color: var(--texto-secundario);">📚 6 min lectura</span>
+                        </div>
+                        <h3 style="color: var(--verde-azulado-profundo); font-size: 1.4rem; margin-bottom: 12px;">Familias Reconstituidas: Un Camino de Adaptación y Resiliencia</h3>
+                        <p style="color: var(--texto-secundario); line-height: 1.6; margin-bottom: 20px;">
+                            Las familias reconstituidas, también conocidas como familias ensambladas, representan nuevos desafíos y oportunidades...
+                        </p>
+                        <a href="#" style="color: var(--ocre-calido); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                            Leer más <span style="font-size: 1.2rem;">→</span>
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE MENSAJES (Testimonios) -->
         <div class="messages-section">
             <div class="messages-header">
                 <h2>💬 Experiencias de pacientes</h2>
@@ -1154,6 +1245,17 @@
             </div>
             <div class="messages-grid" id="messagesGrid"></div>
         </div>
+
+        <!-- SECCIÓN CTA - LLAMADO A LA ACCIÓN (Estilo Puntoterapia) -->
+        <section class="cta-section" style="background: linear-gradient(135deg, var(--verde-grisaceo-claro) 0%, #d4e3d9 100%); border-radius: 48px; padding: 60px 40px; text-align: center; margin: 60px 0;">
+            <h2 style="color: var(--verde-azulado-profundo); font-size: 2.5rem; margin-bottom: 20px;">Queremos escucharte</h2>
+            <p style="color: var(--texto-secundario); max-width: 600px; margin: 0 auto 30px; font-size: 1.2rem;">
+                Si estás buscando orientación o necesitas apoyo, nuestro equipo de profesionales está aquí para ti.
+            </p>
+            <button onclick="showMessageModal()" class="btn-cta" style="background: var(--ocre-calido); color: white; border: none; padding: 18px 50px; border-radius: 50px; font-size: 1.2rem; font-weight: 600; cursor: pointer; box-shadow: 0 15px 25px -8px rgba(200, 161, 97, 0.4); transition: all 0.3s;">
+                <i class="fa fa-comment"></i> Contáctanos
+            </button>
+        </section>
     </main>
 
     <!-- Panel de Reserva - VERSIÓN OPTIMIZADA CON EDAD Y TUTOR -->

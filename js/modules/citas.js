@@ -668,8 +668,22 @@ export function confirmPresencialTime(requestId, date, time) {
 // FUNCIÓN EXECUTEBOOKING (CORREGIDA - EMAIL SOLO AL PACIENTE)
 // ============================================
 
+// ============================================
+// FUNCIÓN EXECUTEBOOKING - CON BLOQUEO DE DOBLE CLIC
+// ============================================
+
+// Variable para evitar doble ejecución (DEFINIR FUERA DE LA FUNCIÓN)
+let bookingEnProceso = false;
+
 export function executeBooking() {
+    // 🔥 EVITAR DOBLE CLIC
+    if (bookingEnProceso) {
+        console.log('⏳ Reserva ya en proceso, ignorando...');
+        return;
+    }
+    
     console.log('🚀 Ejecutando reserva...');
+    bookingEnProceso = true;
     
     const rut = document.getElementById('custRut').value;
     const name = document.getElementById('custName').value;
@@ -691,21 +705,25 @@ export function executeBooking() {
     // ✅ VALIDACIONES BÁSICAS
     if (!rut || !name || !email || !date) {
         showToast('Completa todos los campos obligatorios', 'error');
+        bookingEnProceso = false;
         return;
     }
 
     if (!validarRut(rut)) {
         showToast('RUT inválido', 'error');
+        bookingEnProceso = false;
         return;
     }
 
     if (!paymentMethod) {
         showToast('Selecciona un método de pago', 'error');
+        bookingEnProceso = false;
         return;
     }
 
     if (!acceptPolicy) {
         showToast('Debes aceptar la política de cancelación', 'error');
+        bookingEnProceso = false;
         return;
     }
 
@@ -743,6 +761,7 @@ export function executeBooking() {
     if (type === 'online' && !time) {
         showToast('Selecciona un horario para la cita online', 'error');
         console.error('❌ No se pudo obtener la hora');
+        bookingEnProceso = false;
         return;
     }
 
@@ -900,6 +919,9 @@ export function executeBooking() {
             bookBtn.innerHTML = originalText;
             bookBtn.disabled = false;
             
+            // Liberar bloqueo de doble clic
+            bookingEnProceso = false;
+            
             // Preguntar si quiere volver al listado (SIN RECARGAR)
             setTimeout(() => {
                 if (confirm('✅ Cita agendada correctamente. ¿Quieres volver al listado de profesionales?')) {
@@ -917,6 +939,7 @@ export function executeBooking() {
             showToast('Error al procesar la solicitud', 'error');
             bookBtn.innerHTML = originalText;
             bookBtn.disabled = false;
+            bookingEnProceso = false;
         }
     }, 1500);
 }

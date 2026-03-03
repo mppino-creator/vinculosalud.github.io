@@ -439,3 +439,45 @@ export function forzarCargaDatos() {
 
 window.forzarCargaDatos = forzarCargaDatos;
 console.log('✅ publico.js cargado con mejoras');
+
+
+// ============================================
+// FUNCIÓN PARA FORZAR RENDERIZADO DE PROFESIONALES
+// ============================================
+window.forceRenderProfessionals = function() {
+    console.log('🔄 Forzando renderizado de profesionales...');
+    if (typeof filterProfessionals === 'function') {
+        filterProfessionals();
+    } else {
+        console.warn('⚠️ filterProfessionals no disponible');
+    }
+};
+
+// Llamar después de cargar pacientes
+db.ref('Patients').on('value', (snapshot) => {
+    const data = snapshot.val();
+    console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
+    
+    if (data) {
+        const patientsArray = Object.keys(data).map(key => ({ 
+            id: key, 
+            ...data[key] 
+        }));
+        state.setPatients(patientsArray);
+        console.log('✅ Pacientes cargados:', patientsArray.length);
+        
+        // 🔥 FORZAR RENDERIZADO DE PROFESIONALES
+        setTimeout(() => {
+            if (typeof filterProfessionals === 'function') {
+                filterProfessionals();
+            }
+        }, 100);
+    } else {
+        state.setPatients([]);
+        console.log('📋 No hay pacientes en Firebase');
+    }
+    
+    if (state.currentUser) {
+        renderPatients();
+    }
+});

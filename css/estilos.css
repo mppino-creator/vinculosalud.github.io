@@ -1,31 +1,36 @@
 /* ============================================
    VÍNCULO SALUD v2.0 - ESTILOS PRINCIPALES
-   Diseño Apple - Paleta Cálida para Salud Mental
+   Diseño Apple con paleta Puntoterapia
    ============================================ */
 
 :root {
-    /* 🎨 NUEVA PALETA CÁLIDA - Profesional y Acogedora */
-    --fondo: #F5F2ED;           /* Beige cálido muy suave - fondo principal */
-    --fondo-secundario: #FFFFFF; /* Blanco puro para tarjetas */
-    --texto-primario: #2D3A3A;   /* Gris verdoso oscuro - máximo contraste */
-    --texto-secundario: #6B7B7B; /* Gris medio - textos secundarios */
+    /* 🎨 NUEVA PALETA - Inspirada en Puntoterapia y tus colores */
+    --verde-azulado-profundo: #1E7A8A;  /* Turquesa profundo - títulos, acentos */
+    --verde-azulado-claro: #63B0C7;     /* Turquesa claro - botones, enlaces */
+    --ocre-calido: #C8A161;              /* Ocre cálido - detalles, hovers */
+    --verde-grisaceo-claro: #E5EADF;     /* Verde grisáceo suave - fondos de secciones */
+    --crema-fondo: #FAF5EC;               /* Crema - fondo principal */
+    
+    /* Textos */
+    --texto-principal: #2D3E4F;           /* Gris azulado oscuro - máximo contraste */
+    --texto-secundario: #5A6B7A;          /* Gris medio - textos secundarios */
     
     /* Colores de acento - Salud mental */
-    --primario: #7C9A92;         /* Verde salvia - calma, crecimiento */
-    --primario-hover: #5E7E76;   /* Verde más profundo para hovers */
-    --primario-soft: #E8F0ED;    /* Verde muy suave para fondos */
+    --primario: var(--verde-azulado-profundo);
+    --primario-hover: #166374;            /* Versión más oscura para hovers */
+    --primario-soft: var(--verde-grisaceo-claro);
     
-    --exito: #5BA88C;            /* Verde menta - pagos, confirmaciones */
-    --atencion: #E9B87B;         /* Durazno - advertencias suaves */
-    --peligro: #D88C8C;          /* Terracota suave - errores, cancelaciones */
+    --exito: #5BA88C;                      /* Verde menta - pagos, confirmaciones */
+    --atencion: var(--ocre-calido);        /* Ocre - advertencias suaves */
+    --peligro: #D88C8C;                    /* Terracota suave - errores, cancelaciones */
     
-    --gris-claro: #E8E2DA;       /* Borde sutil */
-    --gris-oscuro: #D1CBC3;      /* Bordes más definidos */
-    --sombra: rgba(100, 90, 80, 0.08); /* Sombra cálida */
+    --gris-claro: #E0D9D0;                  /* Borde sutil */
+    --gris-oscuro: #C9C0B5;                 /* Bordes más definidos */
+    --sombra: rgba(30, 122, 138, 0.08);     /* Sombra con tono turquesa */
     
-    --glass: rgba(255, 255, 255, 0.85); /* Efecto vidrio */
-    --gold: #E6B857;             /* Dorado cálido para estrellas */
-    --box-color: #A48A9C;        /* Lila grisáceo para boxes */
+    --glass: rgba(255, 255, 255, 0.85);      /* Efecto vidrio */
+    --gold: #E6B857;                          /* Dorado cálido para estrellas */
+    --box-color: #A48A9C;                     /* Lila grisáceo para boxes */
     
     /* Redes sociales (se mantienen) */
     --whatsapp: #25D366;
@@ -57,9 +62,9 @@
 }
 
 body {
-    background-color: var(--fondo);
+    background-color: var(--crema-fondo);
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: var(--texto-primario);
+    color: var(--texto-principal);
     overflow-x: hidden;
     min-height: 100vh;
     line-height: 1.5;
@@ -67,7 +72,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
     position: relative;
     
-    /* Patrón de fondo sútil (opcional) */
+    /* Patrón de fondo sútil */
     background-image: radial-gradient(var(--gris-claro) 0.8px, transparent 0.8px);
     background-size: 40px 40px;
 }
@@ -102,8 +107,8 @@ body.has-background-image::before {
 }
 
 .toast {
-    background: var(--fondo-secundario);
-    color: var(--texto-primario);
+    background: white;
+    color: var(--texto-principal);
     padding: 14px 20px;
     border-radius: var(--radius-full);
     margin-bottom: var(--spacing-sm);
@@ -162,7 +167,7 @@ body.has-background-image::before {
 }
 
 .modal-content {
-    background: var(--fondo-secundario);
+    background: white;
     padding: var(--spacing-xl) var(--spacing-lg);
     border-radius: var(--radius-xl);
     width: 100%;
@@ -200,7 +205,7 @@ body.has-background-image::before {
 
 .modal-close:hover {
     background: var(--gris-oscuro);
-    color: var(--texto-primario);
+    color: var(--texto-principal);
 }
 
 /* ============================================
@@ -264,7 +269,7 @@ nav {
 .logo-text { 
     font-weight: 700; 
     font-size: 2.5rem;
-    background: linear-gradient(135deg, var(--texto-primario), var(--primario));
+    background: linear-gradient(135deg, var(--texto-principal), var(--primario));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -298,13 +303,13 @@ nav {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 2px 8px rgba(124, 154, 146, 0.2);
+    box-shadow: 0 2px 8px rgba(30, 122, 138, 0.2);
 }
 
 .btn-staff:hover, .btn-book:hover, .btn-new-message:hover { 
     background: var(--primario-hover);
     transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(124, 154, 146, 0.3);
+    box-shadow: 0 4px 12px rgba(30, 122, 138, 0.3);
 }
 
 .btn-staff:disabled, .btn-book:disabled { 
@@ -317,7 +322,7 @@ nav {
 .btn-icon {
     padding: 6px 12px;
     background: var(--gris-claro);
-    color: var(--texto-primario);
+    color: var(--texto-principal);
     box-shadow: none;
 }
 
@@ -332,15 +337,20 @@ nav {
 .hero-section {
     padding: var(--spacing-xxl) var(--spacing-md) var(--spacing-xl);
     text-align: center;
+    background-color: var(--crema-fondo);
 }
 
 .hero-section h1 {
     font-size: clamp(2rem, 6vw, 3.5rem);
     font-weight: 700;
-    color: var(--texto-primario);
+    color: var(--texto-principal);
     letter-spacing: -0.02em;
     margin-bottom: var(--spacing-md);
     line-height: 1.1;
+}
+
+.hero-section h1 span {
+    color: var(--ocre-calido);
 }
 
 .hero-section p {
@@ -361,7 +371,7 @@ nav {
     position: relative;
     margin: var(--spacing-xl) 0;
     border-radius: var(--radius-full);
-    box-shadow: 0 8px 24px rgba(124, 154, 146, 0.2);
+    box-shadow: 0 8px 24px rgba(30, 122, 138, 0.2);
 }
 
 .marquee-content {
@@ -420,11 +430,11 @@ nav {
     border: 1px solid var(--gris-claro);
     border-radius: var(--radius-full);
     font-size: 1rem;
-    background: var(--fondo-secundario);
+    background: white;
     width: 100%;
     box-shadow: 0 2px 8px var(--sombra);
     transition: all 0.2s;
-    color: var(--texto-primario);
+    color: var(--texto-principal);
     -webkit-appearance: none;
     appearance: none;
 }
@@ -439,7 +449,7 @@ nav {
 .filter-input:focus, .filter-select:focus {
     outline: none;
     border-color: var(--primario);
-    box-shadow: 0 0 0 4px rgba(124, 154, 146, 0.1);
+    box-shadow: 0 0 0 4px rgba(30, 122, 138, 0.1);
 }
 
 /* ============================================
@@ -467,21 +477,24 @@ nav {
     }
 }
 
+/* ============================================
+   TARJETAS DE PROFESIONALES - Estilo Puntoterapia
+   ============================================ */
 .therapist-card {
-    background: var(--fondo-secundario);
-    border-radius: var(--radius-xl);
+    background: white;
+    border-radius: 24px;
     overflow: hidden;
     transition: all 0.3s ease;
     position: relative;
     cursor: pointer;
     border: 1px solid var(--gris-claro);
-    box-shadow: 0 4px 20px var(--sombra);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .therapist-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 20px 30px rgba(124, 154, 146, 0.15);
-    border-color: var(--primario);
+    box-shadow: 0 20px 25px -5px rgba(30, 122, 138, 0.1), 0 10px 10px -5px rgba(0,0,0,0.02);
+    border-color: var(--verde-azulado-claro);
 }
 
 .img-container {
@@ -501,6 +514,82 @@ nav {
 
 .therapist-card:hover .img-container img {
     transform: scale(1.05);
+}
+
+.card-body {
+    padding: var(--spacing-lg);
+}
+
+.card-body h3 {
+    font-size: 1.3rem;
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.3;
+    color: var(--texto-principal);
+    font-weight: 600;
+}
+
+.tag {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--verde-azulado-claro);
+    margin-bottom: var(--spacing-sm);
+    display: block;
+}
+
+.card-body p {
+    color: var(--texto-secundario);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+    font-size: 0.95rem;
+}
+
+.price-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--gris-claro);
+}
+
+@media (min-width: 480px) {
+    .price-box {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.price-details {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.price-details small {
+    color: var(--texto-secundario);
+    font-size: 0.8rem;
+    background: var(--primario-soft);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+}
+
+.btn-reservar {
+    background: var(--verde-azulado-claro);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 40px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+}
+
+.btn-reservar:hover {
+    background: var(--ocre-calido);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(200, 161, 97, 0.3);
 }
 
 /* ============================================
@@ -593,79 +682,12 @@ nav {
     100% { box-shadow: 0 0 0 10px transparent; }
 }
 
-.card-body {
-    padding: var(--spacing-lg);
-}
-
-.tag {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--primario);
-    text-transform: uppercase;
-    margin-bottom: var(--spacing-sm);
-    display: block;
-    letter-spacing: 0.5px;
-    
-    /* Para 2 líneas máximo */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.4;
-    max-height: 2.8em;
-}
-
-.card-body h3 {
-    font-size: 1.3rem;
-    margin-bottom: var(--spacing-sm);
-    line-height: 1.3;
-    color: var(--texto-primario);
-    font-weight: 600;
-}
-
-.stars {
-    color: var(--gold);
-    margin-bottom: var(--spacing-sm);
-    font-size: 0.9rem;
-}
-
-.price-box {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--gris-claro);
-}
-
-@media (min-width: 480px) {
-    .price-box {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
-}
-
-.price-details {
-    display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-}
-
-.price-details small {
-    color: var(--texto-secundario);
-    font-size: 0.8rem;
-    background: var(--primario-soft);
-    padding: 4px 10px;
-    border-radius: var(--radius-full);
-}
-
 /* ============================================
    MESSAGES SECTION - Sección de testimonios
    ============================================ */
 .messages-section {
-    background: var(--fondo-secundario);
-    border-radius: var(--radius-xl);
+    background: white;
+    border-radius: 24px;
     padding: var(--spacing-xl) var(--spacing-lg);
     margin: var(--spacing-xxl) var(--spacing-md);
     box-shadow: 0 8px 30px var(--sombra);
@@ -690,7 +712,7 @@ nav {
 .messages-header h2 {
     font-size: 1.8rem;
     font-weight: 600;
-    color: var(--texto-primario);
+    color: var(--texto-principal);
 }
 
 .messages-grid {
@@ -706,8 +728,8 @@ nav {
 }
 
 .message-card {
-    background: var(--primario-soft);
-    border-radius: var(--radius-lg);
+    background: var(--verde-grisaceo-claro);
+    border-radius: 20px;
     padding: var(--spacing-lg);
     border-left: 4px solid var(--primario);
     transition: all 0.2s;
@@ -729,7 +751,7 @@ nav {
 
 .message-author {
     font-weight: 600;
-    color: var(--texto-primario);
+    color: var(--texto-principal);
 }
 
 .message-rating {
@@ -737,7 +759,7 @@ nav {
 }
 
 .message-text {
-    color: var(--texto-primario);
+    color: var(--texto-principal);
     line-height: 1.5;
     margin-bottom: var(--spacing-md);
     font-size: 0.95rem;
@@ -758,6 +780,139 @@ nav {
 }
 
 /* ============================================
+   SECCIÓN BLOG - Punto de encuentro
+   ============================================ */
+.blog-section {
+    margin-top: 80px;
+    padding: 40px 0;
+}
+
+.blog-section h2 {
+    color: var(--verde-azulado-profundo);
+    font-size: 2.2rem;
+    text-align: center;
+}
+
+.blog-section > p {
+    color: var(--texto-secundario);
+    text-align: center;
+    max-width: 600px;
+    margin: 10px auto 40px;
+}
+
+.blog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.blog-card {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--gris-claro);
+    transition: all 0.3s ease;
+}
+
+.blog-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(30, 122, 138, 0.1);
+}
+
+.blog-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.blog-card:hover img {
+    transform: scale(1.05);
+}
+
+.blog-card > div {
+    padding: 25px;
+}
+
+.blog-card span {
+    color: var(--ocre-calido);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.blog-card h3 {
+    color: var(--verde-azulado-profundo);
+    font-size: 1.3rem;
+    margin: 10px 0;
+}
+
+.blog-card p {
+    color: var(--texto-secundario);
+    line-height: 1.6;
+}
+
+.blog-card a {
+    color: var(--verde-azulado-claro);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 15px;
+}
+
+.blog-card a:hover {
+    color: var(--ocre-calido);
+}
+
+/* ============================================
+   SECCIÓN CTA - Llamado a la acción
+   ============================================ */
+.cta-section {
+    background: linear-gradient(135deg, var(--verde-grisaceo-claro) 0%, #d4e3d9 100%);
+    border-radius: 48px;
+    padding: 60px 40px;
+    text-align: center;
+    margin: 60px 0;
+}
+
+.cta-section h2 {
+    color: var(--verde-azulado-profundo);
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.cta-section p {
+    color: var(--texto-secundario);
+    max-width: 600px;
+    margin: 0 auto 30px;
+    font-size: 1.2rem;
+}
+
+.btn-cta {
+    background: var(--ocre-calido);
+    color: white;
+    border: none;
+    padding: 18px 50px;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 15px 25px -8px rgba(200, 161, 97, 0.4);
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-cta:hover {
+    background: var(--verde-azulado-claro);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 30px -8px rgba(99, 176, 199, 0.5);
+}
+
+/* ============================================
    BOOKING PANEL - Panel de reserva
    ============================================ */
 .panel { 
@@ -765,7 +920,7 @@ nav {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-xl) var(--spacing-lg); 
     border-radius: var(--radius-xl);
-    background: var(--fondo-secundario);
+    background: white;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--gris-claro);
 }
@@ -824,7 +979,7 @@ nav {
 .stat-item {
     padding: var(--spacing-lg);
     border-radius: var(--radius-lg);
-    background: var(--primario-soft);
+    background: var(--verde-grisaceo-claro);
     border-bottom: 4px solid var(--primario);
     transition: all 0.2s;
 }
@@ -836,7 +991,7 @@ nav {
 
 .stat-item h4 { 
     font-size: 2rem; 
-    color: var(--texto-primario); 
+    color: var(--texto-principal); 
     font-weight: 600;
     margin-top: var(--spacing-sm);
 }
@@ -883,8 +1038,8 @@ nav {
 }
 
 .tab:hover:not(.active) {
-    background: var(--primario-soft);
-    color: var(--texto-primario);
+    background: var(--verde-grisaceo-claro);
+    color: var(--texto-principal);
 }
 
 .tab-content {
@@ -899,9 +1054,9 @@ nav {
    FORMS - Formularios
    ============================================ */
 .admin-form, .availability-form {
-    background: var(--primario-soft);
+    background: var(--verde-grisaceo-claro);
     padding: var(--spacing-lg);
-    border-radius: var(--radius-lg);
+    border-radius: 20px;
     margin-bottom: var(--spacing-lg);
     display: grid;
     grid-template-columns: 1fr;
@@ -923,7 +1078,7 @@ nav {
     margin-bottom: var(--spacing-sm);
     font-weight: 500;
     font-size: 0.9rem;
-    color: var(--texto-primario);
+    color: var(--texto-principal);
 }
 
 .form-group input, 
@@ -936,8 +1091,8 @@ nav {
     font-size: 1rem;
     font-family: inherit;
     transition: all 0.2s;
-    color: var(--texto-primario);
-    background: var(--fondo-secundario);
+    color: var(--texto-principal);
+    background: white;
 }
 
 .form-group input:focus, 
@@ -945,7 +1100,7 @@ nav {
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primario);
-    box-shadow: 0 0 0 4px rgba(124, 154, 146, 0.1);
+    box-shadow: 0 0 0 4px rgba(30, 122, 138, 0.1);
 }
 
 /* ============================================
@@ -963,9 +1118,9 @@ nav {
     padding: 12px !important;
     border-radius: var(--radius-md) !important;
     border: 1px solid var(--gris-claro) !important;
-    background: var(--fondo-secundario) !important;
+    background: white !important;
     font-size: 1rem !important;
-    color: var(--texto-primario) !important;
+    color: var(--texto-principal) !important;
 }
 
 .telefono-container select {
@@ -1002,11 +1157,11 @@ nav {
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
-    background: var(--primario-soft);
+    background: var(--verde-grisaceo-claro);
 }
 
 .file-upload:hover {
-    background: #dde9e4;
+    background: #d4e3d9;
     border-color: var(--primario-hover);
 }
 
@@ -1042,7 +1197,7 @@ nav {
     border-radius: var(--radius-lg); 
     overflow-x: auto; 
     border: 1px solid var(--gris-claro);
-    background: var(--fondo-secundario);
+    background: white;
 }
 
 table { 
@@ -1052,12 +1207,12 @@ table {
 }
 
 th { 
-    background: var(--primario-soft); 
+    background: var(--verde-grisaceo-claro); 
     padding: 15px; 
     text-align: left; 
     font-size: 0.8rem; 
     text-transform: uppercase; 
-    color: var(--texto-primario);
+    color: var(--texto-principal);
     font-weight: 600;
     letter-spacing: 0.5px;
 }
@@ -1065,15 +1220,15 @@ th {
 td { 
     padding: 15px; 
     border-top: 1px solid var(--gris-claro); 
-    color: var(--texto-primario);
+    color: var(--texto-principal);
 }
 
 /* ============================================
    PATIENT CARDS - Tarjetas de pacientes
    ============================================ */
 .patient-card {
-    background: var(--fondo-secundario);
-    border-radius: var(--radius-lg);
+    background: white;
+    border-radius: 20px;
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-sm);
     border: 1px solid var(--gris-claro);
@@ -1099,7 +1254,7 @@ td {
 .patient-name {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--texto-primario);
+    color: var(--texto-principal);
 }
 
 .patient-contact {
@@ -1121,15 +1276,15 @@ td {
     max-height: 300px;
     overflow-y: auto;
     padding: var(--spacing-sm);
-    background: var(--primario-soft);
-    border-radius: var(--radius-lg);
+    background: var(--verde-grisaceo-claro);
+    border-radius: 20px;
 }
 
 .time-slot {
     padding: 8px 12px;
     border: 1px solid var(--gris-claro);
     border-radius: var(--radius-full);
-    background: var(--fondo-secundario);
+    background: white;
     cursor: pointer;
     transition: all 0.2s;
     font-size: 0.85rem;
@@ -1165,7 +1320,7 @@ td {
    TIME SLOTS GRID - Grid de horarios (AM/PM)
    ============================================ */
 .time-slots-container {
-    background: var(--fondo-secundario);
+    background: white;
     border-radius: var(--radius-lg);
     padding: 15px;
     border: 1px solid var(--gris-claro);
@@ -1195,7 +1350,7 @@ td {
 
 .time-slot-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(124, 154, 146, 0.15);
+    box-shadow: 0 6px 12px rgba(30, 122, 138, 0.15);
     border-color: var(--primario);
 }
 
@@ -1203,7 +1358,7 @@ td {
     background: var(--primario);
     color: white;
     border-color: var(--primario);
-    box-shadow: 0 4px 12px rgba(124, 154, 146, 0.3);
+    box-shadow: 0 4px 12px rgba(30, 122, 138, 0.3);
 }
 
 .time-slot-btn.booked {
@@ -1247,8 +1402,8 @@ td {
     cursor: pointer;
     transition: all 0.2s;
     font-size: 0.9rem;
-    color: var(--texto-primario);
-    background: var(--fondo-secundario);
+    color: var(--texto-principal);
+    background: white;
 }
 
 .weekday.selected {
@@ -1305,8 +1460,8 @@ td {
     cursor: pointer;
     transition: all 0.2s;
     font-weight: 500;
-    background: var(--fondo-secundario);
-    color: var(--texto-primario);
+    background: white;
+    color: var(--texto-principal);
 }
 
 .box-option.selected {
@@ -1326,7 +1481,7 @@ td {
    EMAIL SIMULATION - Simulación de emails
    ============================================ */
 .email-simulation {
-    background: var(--primario-soft);
+    background: var(--verde-grisaceo-claro);
     border-left: 4px solid var(--primario);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -1347,14 +1502,14 @@ td {
     gap: var(--spacing-sm);
     margin: var(--spacing-md) 0;
     padding: var(--spacing-md);
-    background: var(--primario-soft);
-    border-radius: var(--radius-lg);
+    background: var(--verde-grisaceo-claro);
+    border-radius: 20px;
 }
 
 .stat-card {
     text-align: center;
     padding: var(--spacing-sm);
-    background: var(--fondo-secundario);
+    background: white;
     border-radius: var(--radius-md);
     box-shadow: 0 2px 4px var(--sombra);
 }
@@ -1393,14 +1548,14 @@ td {
 }
 
 .specialty-item {
-    background: var(--primario-soft);
+    background: var(--verde-grisaceo-claro);
     padding: 8px 15px;
     border-radius: var(--radius-full);
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     font-size: 0.9rem;
-    color: var(--texto-primario);
+    color: var(--texto-principal);
 }
 
 .specialty-item button {
@@ -1422,7 +1577,7 @@ td {
    BANK DETAILS - Detalles bancarios
    ============================================ */
 .bank-details {
-    background: var(--primario-soft);
+    background: var(--verde-grisaceo-claro);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     margin-top: var(--spacing-md);
@@ -1434,14 +1589,14 @@ td {
 }
 
 .payment-method-item {
-    background: var(--fondo-secundario);
+    background: white;
     padding: 10px;
     border-radius: var(--radius-md);
     margin-bottom: 4px;
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    color: var(--texto-primario);
+    color: var(--texto-principal);
 }
 
 /* ============================================
@@ -1453,7 +1608,7 @@ td {
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--fondo);
+    background: var(--crema-fondo);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1476,7 +1631,7 @@ td {
 }
 
 .loader-text {
-    color: var(--texto-primario);
+    color: var(--texto-principal);
     font-size: 1.1rem;
     font-weight: 500;
 }
@@ -1485,8 +1640,8 @@ td {
    PANEL DE REINICIO - Admin
    ============================================ */
 .reinicio-card {
-    background: var(--fondo-secundario);
-    border-radius: var(--radius-lg);
+    background: white;
+    border-radius: 20px;
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-md);
     border: 1px solid var(--gris-claro);
@@ -1499,7 +1654,7 @@ td {
 }
 
 .reinicio-card h4 {
-    color: var(--texto-primario);
+    color: var(--texto-principal);
     margin-bottom: var(--spacing-md);
     font-size: 1.2rem;
     font-weight: 600;
@@ -1536,8 +1691,8 @@ td {
 .modal input,
 .modal select,
 .modal textarea {
-    color: var(--texto-primario) !important;
-    background-color: var(--fondo-secundario) !important;
+    color: var(--texto-principal) !important;
+    background-color: white !important;
     border: 1px solid var(--gris-claro) !important;
     padding: 12px 16px !important;
     border-radius: var(--radius-md) !important;
@@ -1569,8 +1724,8 @@ td {
 #bookingPanel option,
 .panel option,
 .modal option {
-    color: var(--texto-primario) !important;
-    background: var(--fondo-secundario) !important;
+    color: var(--texto-principal) !important;
+    background: white !important;
 }
 
 /* ============================================
@@ -1592,7 +1747,7 @@ td {
 #bookingDuration,
 #bookingType,
 #acceptPolicy + span {
-    color: var(--texto-primario) !important;
+    color: var(--texto-principal) !important;
 }
 
 /* ============================================
@@ -1606,7 +1761,7 @@ h3, h4, h5,
 #psychName,
 #psychSelectedName,
 #psychSelectedSpec {
-    color: var(--texto-primario) !important;
+    color: var(--texto-principal) !important;
     font-weight: 500 !important;
 }
 
@@ -1630,6 +1785,102 @@ h3, h4, h5,
 #bookBtn:hover,
 .btn-staff:hover {
     background: var(--primario-hover) !important;
+}
+
+/* ============================================
+   ESTADÍSTICAS DEL PSICÓLOGO
+   ============================================ */
+#psychStatsContainer {
+    margin: 20px 0;
+}
+
+#psychStatsContainer .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+#psychStatsContainer .stat-box {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 4px 12px var(--sombra);
+    border: 1px solid var(--gris-claro);
+    transition: transform 0.2s;
+}
+
+#psychStatsContainer .stat-box:hover {
+    transform: translateY(-2px);
+    border-color: var(--primario);
+}
+
+#psychStatsContainer .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primario);
+    line-height: 1.2;
+}
+
+#psychStatsContainer .stat-label {
+    font-size: 0.8rem;
+    color: var(--texto-secundario);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#psychStatsContainer .ingresos-box {
+    background: linear-gradient(135deg, var(--primario), var(--primario-hover));
+    color: white;
+    padding: 20px;
+    border-radius: 20px;
+    margin-top: 15px;
+}
+
+#psychStatsContainer .ingresos-box .stat-number {
+    color: white;
+}
+
+#psychStatsContainer .ingresos-box .stat-label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ============================================
+   MODAL DE EDICIÓN DE PERFIL PROFESIONAL
+   ============================================ */
+.profile-tab {
+    padding: 20px 0;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--texto-secundario);
+    transition: all 0.3s;
+}
+
+.tab-btn:hover {
+    color: var(--primario);
+}
+
+.tab-btn.active {
+    border-bottom-color: var(--primario);
+    color: var(--primario);
+    font-weight: 500;
+}
+
+/* Vista previa de foto */
+#editMyPhotoPreview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primario);
 }
 
 /* ============================================
@@ -1687,6 +1938,24 @@ h3, h4, h5,
     .time-slot-grid {
         grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     }
+    
+    .tab-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    .cta-section {
+        padding: 40px 20px;
+    }
+    
+    .cta-section h2 {
+        font-size: 2rem;
+    }
+    
+    .btn-cta {
+        padding: 15px 30px;
+        font-size: 1rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1724,111 +1993,12 @@ h3, h4, h5,
     .time-slots-container {
         padding: 10px;
     }
-}
-
-/* ============================================
-   ESTADÍSTICAS DEL PSICÓLOGO
-   ============================================ */
-#psychStatsContainer {
-    margin: 20px 0;
-}
-
-#psychStatsContainer .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-#psychStatsContainer .stat-box {
-    background: var(--fondo-secundario);
-    padding: 20px;
-    border-radius: var(--radius-lg);
-    text-align: center;
-    box-shadow: 0 4px 12px var(--sombra);
-    border: 1px solid var(--gris-claro);
-    transition: transform 0.2s;
-}
-
-#psychStatsContainer .stat-box:hover {
-    transform: translateY(-2px);
-    border-color: var(--primario);
-}
-
-#psychStatsContainer .stat-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primario);
-    line-height: 1.2;
-}
-
-#psychStatsContainer .stat-label {
-    font-size: 0.8rem;
-    color: var(--texto-secundario);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-#psychStatsContainer .ingresos-box {
-    background: linear-gradient(135deg, var(--primario), var(--primario-hover));
-    color: white;
-    padding: 20px;
-    border-radius: var(--radius-lg);
-    margin-top: 15px;
-}
-
-#psychStatsContainer .ingresos-box .stat-number {
-    color: white;
-}
-
-#psychStatsContainer .ingresos-box .stat-label {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-/* Estilos para el modal de edición de perfil */
-.profile-tab {
-    padding: 20px 0;
-}
-
-.tab-btn {
-    padding: 10px 20px;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    font-size: 14px;
-    color: #666;
-    transition: all 0.3s;
-}
-
-.tab-btn:hover {
-    color: var(--primario);
-}
-
-.tab-btn.active {
-    border-bottom-color: var(--primario);
-    color: var(--primario);
-    font-weight: 500;
-}
-
-/* Vista previa de foto */
-#editMyPhotoPreview {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--primario);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .modal-content {
-        width: 95%;
-        margin: 10px auto;
+    
+    .blog-grid {
+        grid-template-columns: 1fr;
     }
     
-    .tab-btn {
-        padding: 8px 10px;
-        font-size: 12px;
+    .blog-card img {
+        height: 180px;
     }
 }

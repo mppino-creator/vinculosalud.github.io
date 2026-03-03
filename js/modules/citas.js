@@ -55,6 +55,58 @@ function getTimePeriod(time) {
 }
 
 // ============================================
+// FUNCIÓN PARA CALCULAR EDAD
+// ============================================
+window.calcularEdad = function() {
+    const birthdate = document.getElementById('custBirthdate')?.value;
+    const edadDisplay = document.getElementById('edadDisplay');
+    const tutorSection = document.getElementById('tutorSection');
+    
+    if (!birthdate) {
+        if (edadDisplay) edadDisplay.innerHTML = '';
+        if (tutorSection) tutorSection.style.display = 'none';
+        return;
+    }
+    
+    const hoy = new Date();
+    const nacimiento = new Date(birthdate);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
+    
+    if (edadDisplay) {
+        edadDisplay.innerHTML = `<strong>Edad:</strong> ${edad} años`;
+    }
+    
+    if (tutorSection) {
+        if (edad < 18) {
+            tutorSection.style.display = 'block';
+            const tutorName = document.getElementById('tutorName');
+            const tutorRut = document.getElementById('tutorRut');
+            const tutorRelationship = document.getElementById('tutorRelationship');
+            
+            if (tutorName) tutorName.required = true;
+            if (tutorRut) tutorRut.required = true;
+            if (tutorRelationship) tutorRelationship.required = true;
+        } else {
+            tutorSection.style.display = 'none';
+            const tutorName = document.getElementById('tutorName');
+            const tutorRut = document.getElementById('tutorRut');
+            const tutorRelationship = document.getElementById('tutorRelationship');
+            
+            if (tutorName) tutorName.required = false;
+            if (tutorRut) tutorRut.required = false;
+            if (tutorRelationship) tutorRelationship.required = false;
+        }
+    }
+    
+    return edad;
+};
+
+// ============================================
 // FUNCIONES EXPORTADAS
 // ============================================
 
@@ -81,6 +133,33 @@ export function openBooking(id) {
     document.getElementById('custDate').min = today;
     document.getElementById('custDate').value = today;
     document.getElementById('bookingDuration').innerText = (psych.sessionDuration || 45) + ' minutos';
+    
+    // Limpiar campos de edad y tutor
+    const birthdate = document.getElementById('custBirthdate');
+    if (birthdate) birthdate.value = '';
+    
+    const edadDisplay = document.getElementById('edadDisplay');
+    if (edadDisplay) edadDisplay.innerHTML = '';
+    
+    const tutorSection = document.getElementById('tutorSection');
+    if (tutorSection) tutorSection.style.display = 'none';
+    
+    const tutorName = document.getElementById('tutorName');
+    const tutorRut = document.getElementById('tutorRut');
+    const tutorRelationship = document.getElementById('tutorRelationship');
+    
+    if (tutorName) {
+        tutorName.value = '';
+        tutorName.required = false;
+    }
+    if (tutorRut) {
+        tutorRut.value = '';
+        tutorRut.required = false;
+    }
+    if (tutorRelationship) {
+        tutorRelationship.value = '';
+        tutorRelationship.required = false;
+    }
     
     loadPaymentMethods();
     
@@ -318,6 +397,15 @@ export function searchPatientByRutBooking() {
         document.getElementById('custName').value = patient.name || '';
         document.getElementById('custEmail').value = patient.email || '';
         
+        // Cargar fecha de nacimiento si existe
+        const birthdate = document.getElementById('custBirthdate');
+        if (birthdate && patient.birthdate) {
+            birthdate.value = patient.birthdate;
+            if (typeof window.calcularEdad === 'function') {
+                window.calcularEdad();
+            }
+        }
+        
         const phoneParts = patient.phone ? patient.phone.split(' ') : ['+56', '9', ''];
         const countryCode = document.getElementById('countryCode');
         const phoneNine = document.getElementById('phoneNine');
@@ -481,7 +569,25 @@ export function confirmPresencialTime(requestId, date, time) {
 }
 
 // ============================================
-// FUNCIÓN EXECUTEBOOKING
+// FUNCIÓN AUXILIAR PARA CALCULAR EDAD DESDE FECHA
+// ============================================
+function calcularEdadDesdeFecha(birthdate) {
+    if (!birthdate) return 0;
+    
+    const hoy = new Date();
+    const nacimiento = new Date(birthdate);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
+    
+    return edad;
+}
+
+// ============================================
+// FUNCIÓN EXECUTEBOOKING - VERSIÓN CORREGIDA CON EDAD Y TUTOR
 // ============================================
 
 let bookingEnProceso = false;
@@ -497,6 +603,25 @@ export function executeBooking() {
     const rut = document.getElementById('custRut').value;
     const name = document.getElementById('custName').value;
     const email = document.getElementById('custEmail').value;
+    const birthdate = document.getElementById('custBirthdate')?.value || '';
+    
+    // Obtener datos del tutor si existen
+    const tutorSection = document.getElementById('tutorSection');
+    let tutorData = null;
+    
+    if (tutorSection && tutorSection.style.display === 'block') {
+        const tutorName = document.getElementById('tutorName')?.value;
+        const tutorRut = document.getElementById('tutorRut')?.value;
+        const tutorRelationship = document.getElementById('tutorRelationship')?.value;
+        
+        if (tutorName && tutorRut && tutorRelationship) {
+            tutorData = {
+                nombre: tutorName,
+                rut: tutorRut,
+                parentesco: tutorRelationship
+            };
+        }
+    }
     
     const countryCode = document.getElementById('countryCode')?.value || '+56';
     const phoneNine = document.getElementById('phoneNine')?.value || '9';
@@ -531,6 +656,16 @@ export function executeBooking() {
         showToast('Debes aceptar la política', 'error');
         bookingEnProceso = false;
         return;
+    }
+
+    // Validar tutor si es menor de edad
+    if (birthdate) {
+        const edad = calcularEdadDesdeFecha(birthdate);
+        if (edad < 18 && !tutorData) {
+            showToast('Debes completar datos del tutor para menores de edad', 'error');
+            bookingEnProceso = false;
+            return;
+        }
     }
 
     let time = '';
@@ -580,21 +715,73 @@ export function executeBooking() {
 
     setTimeout(async () => {
         try {
+            // BUSCAR O CREAR PACIENTE - VERSIÓN CORREGIDA
             let patient = state.patients.find(p => p.rut === rut);
+            
             if (!patient) {
+                // Calcular edad si hay fecha de nacimiento
+                const edad = birthdate ? calcularEdadDesdeFecha(birthdate) : 0;
+                
+                // Crear nuevo paciente CON TODOS LOS DATOS
                 patient = {
                     id: Date.now(),
                     rut,
                     name,
                     email,
                     phone,
-                    birthdate: '',
-                    notes: '',
+                    birthdate: birthdate,
+                    edad: edad,
+                    tutor: (edad < 18 && tutorData) ? tutorData : null,
+                    notes: msg || '',
+                    // 🔥 ASIGNAR AUTOMÁTICAMENTE AL PSICÓLOGO DE LA RESERVA
                     psychId: state.selectedPsych.id,
                     createdAt: new Date().toISOString(),
                     appointments: []
                 };
+                
+                // Agregar a state.patients
                 state.patients.push(patient);
+                console.log('🆕 NUEVO PACIENTE CREADO:', patient);
+                
+                // 💾 ¡GUARDAR INMEDIATAMENTE EN FIREBASE!
+                try {
+                    await import('../main.js').then(main => main.save());
+                    console.log('💾✅ Paciente guardado en Firebase');
+                } catch (saveError) {
+                    console.error('❌ Error guardando paciente:', saveError);
+                }
+            } else {
+                console.log('✅ Paciente existente encontrado:', patient.id);
+                
+                // Actualizar datos del paciente existente si es necesario
+                let datosActualizados = false;
+                
+                if (!patient.birthdate && birthdate) {
+                    patient.birthdate = birthdate;
+                    patient.edad = calcularEdadDesdeFecha(birthdate);
+                    datosActualizados = true;
+                }
+                
+                if (!patient.tutor && tutorData && patient.edad < 18) {
+                    patient.tutor = tutorData;
+                    datosActualizados = true;
+                }
+                
+                // Si no tiene psychId asignado, asignarlo ahora
+                if (!patient.psychId && state.selectedPsych) {
+                    patient.psychId = state.selectedPsych.id;
+                    datosActualizados = true;
+                    console.log('📌 PsychId asignado a paciente existente:', state.selectedPsych.id);
+                }
+                
+                if (datosActualizados) {
+                    try {
+                        await import('../main.js').then(main => main.save());
+                        console.log('💾✅ Paciente actualizado en Firebase');
+                    } catch (saveError) {
+                        console.error('❌ Error actualizando paciente:', saveError);
+                    }
+                }
             }
 
             const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
@@ -627,7 +814,9 @@ export function executeBooking() {
                 emailConfirmacionEnviado: false,
                 emailCancelacionEnviado: false,
                 preferredTime: time || null,
-                preferredAMPM: preferenciaAMPM
+                preferredAMPM: preferenciaAMPM,
+                patientBirthdate: birthdate,
+                patientTutor: patient.tutor
             };
 
             // ============================================
@@ -674,7 +863,7 @@ export function executeBooking() {
                 }
             }
 
-            // Guardar en Firebase
+            // Guardar TODO en Firebase (cita + paciente actualizado)
             await import('../main.js').then(main => main.save());
 
             // Limpiar selección
@@ -701,8 +890,8 @@ export function executeBooking() {
             }, 2000);
 
         } catch (error) {
-            console.error('❌ Error:', error);
-            showToast('Error al procesar', 'error');
+            console.error('❌ Error en executeBooking:', error);
+            showToast('Error al procesar: ' + error.message, 'error');
             bookBtn.innerHTML = originalText;
             bookBtn.disabled = false;
             bookingEnProceso = false;
@@ -794,6 +983,8 @@ export function renderPendingRequests() {
                 <strong>${r.patient}</strong><br>
                 <small>${r.patientRut}</small>
                 ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
+                ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
+                ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
             </td>
             <td>${r.psych}</td>
             <td>${r.date}</td>
@@ -1194,5 +1385,6 @@ window.getUpcomingAppointments = getUpcomingAppointments;
 window.isTimeSlotAvailable = isTimeSlotAvailable;
 window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
+window.calcularEdad = calcularEdad;
 
-console.log('✅ citas.js cargado (versión final optimizada)');
+console.log('✅ citas.js cargado (versión final con edad y tutor legal)');

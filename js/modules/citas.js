@@ -57,6 +57,21 @@ function getTimePeriod(time) {
 // ============================================
 // FUNCIÓN PARA CALCULAR EDAD
 // ============================================
+function calcularEdadDesdeFecha(birthdate) {
+    if (!birthdate) return 0;
+    
+    const hoy = new Date();
+    const nacimiento = new Date(birthdate);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
+    
+    return edad;
+}
+
 window.calcularEdad = function() {
     const birthdate = document.getElementById('custBirthdate')?.value;
     const edadDisplay = document.getElementById('edadDisplay');
@@ -566,24 +581,6 @@ export function confirmPresencialTime(requestId, date, time) {
             });
         }, 100);
     }
-}
-
-// ============================================
-// FUNCIÓN AUXILIAR PARA CALCULAR EDAD DESDE FECHA
-// ============================================
-function calcularEdadDesdeFecha(birthdate) {
-    if (!birthdate) return 0;
-    
-    const hoy = new Date();
-    const nacimiento = new Date(birthdate);
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();
-    const mes = hoy.getMonth() - nacimiento.getMonth();
-    
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-        edad--;
-    }
-    
-    return edad;
 }
 
 // ============================================

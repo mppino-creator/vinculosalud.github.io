@@ -332,38 +332,67 @@ export function cargarDatosIniciales() {
         if (state.currentUser?.role === 'psych') renderBoxOccupancy();
     });
 
+    // ============================================
+    // 🔥 CORRECCIÓN: Cargar pacientes SIEMPRE, no solo cuando hay usuario
+    // ============================================
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
+        console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
+        
         if (data) {
-            state.setPatients(Object.keys(data).map(key => ({ id: key, ...data[key] })));
+            const patientsArray = Object.keys(data).map(key => ({ 
+                id: key, 
+                ...data[key] 
+            }));
+            state.setPatients(patientsArray);
+            console.log('✅ Pacientes cargados:', patientsArray.length);
         } else {
             state.setPatients([]);
+            console.log('📋 No hay pacientes en Firebase');
         }
-        if (state.currentUser) renderPatients();
+        
+        // Renderizar pacientes SOLO si hay un usuario logueado
+        if (state.currentUser) {
+            renderPatients();
+        }
     });
 
+    // ============================================
+    // 🔥 CORRECCIÓN: Listener de Appointments optimizado
+    // ============================================
     db.ref('Appointments').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            state.setAppointments(Object.keys(data).map(key => ({ id: key, ...data[key] })));
-        } else {
-            state.setAppointments([]);
-        }
-        if (state.currentUser) {
-            if (typeof window.updateStats === 'function') {
-                window.updateStats();
-            } else {
-                console.log('⏳ updateStats no disponible, se cargará después');
-                import('./auth.js').then(mod => {
-                    if (typeof mod.updateStats === 'function') {
-                        window.updateStats = mod.updateStats;
+            const newAppointments = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            
+            // Solo actualizar si hay cambios reales
+            if (JSON.stringify(newAppointments) !== JSON.stringify(state.appointments)) {
+                state.setAppointments(newAppointments);
+                console.log('📅 Citas actualizadas en Firebase');
+                
+                if (state.currentUser) {
+                    if (typeof window.updateStats === 'function') {
                         window.updateStats();
+                    } else {
+                        console.log('⏳ updateStats no disponible, se cargará después');
+                        import('./auth.js').then(mod => {
+                            if (typeof mod.updateStats === 'function') {
+                                window.updateStats = mod.updateStats;
+                                window.updateStats();
+                            }
+                        }).catch(err => console.warn('Error cargando updateStats:', err));
                     }
-                }).catch(err => console.warn('Error cargando updateStats:', err));
+                    renderPendingRequests();
+                }
+                if (state.currentUser?.role === 'psych') renderBoxOccupancy();
+            } else {
+                console.log('📅 Sin cambios en citas, omitiendo render');
             }
-            renderPendingRequests();
+        } else {
+            if (state.appointments.length > 0) {
+                state.setAppointments([]);
+            }
         }
-        if (state.currentUser?.role === 'psych') renderBoxOccupancy();
     });
 
     db.ref('PendingRequests').on('value', (snapshot) => {

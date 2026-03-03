@@ -199,7 +199,7 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE
+// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -211,8 +211,14 @@ export function save() {
     const boxesObj = {};
     state.boxes.forEach(item => { boxesObj[item.id] = item; });
 
+    // ============================================
+    // 🔥 CORRECCIÓN: Guardar pacientes con verificación
+    // ============================================
     const patientsObj = {};
-    state.patients.forEach(item => { patientsObj[item.id] = item; });
+    state.patients.forEach(item => { 
+        patientsObj[item.id] = item; 
+    });
+    console.log('📋 Guardando pacientes en Firebase:', state.patients.length);
 
     const appointmentsObj = {};
     state.appointments.forEach(item => { appointmentsObj[item.id] = item; });
@@ -235,6 +241,7 @@ export function save() {
     db.ref().update(updates)
         .then(() => {
             console.log('✅ Datos guardados correctamente en Firebase');
+            console.log('✅ Pacientes guardados:', state.patients.length);
             
             const specialtiesObj = {};
             state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
@@ -264,6 +271,7 @@ export function save() {
         })
         .catch(err => {
             console.error('❌ Error al guardar en Firebase:', err);
+            console.error('❌ Error guardando pacientes específicamente');
             if (typeof utils.showToast === 'function') utils.showToast('Error al guardar los datos', 'error');
         });
 }

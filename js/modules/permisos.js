@@ -1,5 +1,5 @@
 // js/modules/permisos.js
-import state from './state.js';
+import * as state from './state.js';
 
 // ============================================
 // FUNCIONES BÁSICAS DE PERMISOS - VERSIÓN ASÍNCRONA CON REINTENTOS
@@ -36,7 +36,6 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
   
   console.log('👤 Usuario encontrado:', user.data?.name || user.name);
   console.log('👤 Role:', user.role);
-  console.log('👤 user.data:', user.data);
   
   // 3. Buscar paciente
   if (!state.patients || !Array.isArray(state.patients)) {
@@ -59,7 +58,6 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
   }
   
   // 5. Psicólogo - verificar si el paciente le pertenece
-  // Obtener el ID del usuario (puede estar en diferentes lugares)
   const userId = user.data?.id || user.id;
   
   if (!userId) {
@@ -69,7 +67,6 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
   
   console.log(`🔍 Comparando: psychId=${patient.psychId} (${typeof patient.psychId}) vs userId=${userId} (${typeof userId})`);
   
-  // Comparación flexible (== para permitir string/number)
   const tieneAcceso = patient.psychId == userId;
   console.log(`✅ Resultado: ${tieneAcceso ? 'ACCESO CONCEDIDO' : 'ACCESO DENEGADO'}`);
   
@@ -183,6 +180,7 @@ if (typeof window !== 'undefined') {
     isPsychologist,
     getPermisosResumen
   };
+  console.log('✅ window.permisos expuesto correctamente');
 }
 
 console.log('✅ permisos.js cargado con funciones para fichas clínicas (versión asíncrona)');

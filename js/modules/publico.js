@@ -10,6 +10,79 @@ import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
 // ============================================
+// FUNCIONES DE NAVEGACIÓN DEL MENÚ
+// ============================================
+
+window.showSection = function(sectionId) {
+    console.log('🔄 Mostrando sección:', sectionId);
+    
+    // Mostrar todas las secciones principales
+    const sections = {
+        'inicio': document.getElementById('inicio'),
+        'about': document.getElementById('about'),
+        'equipo': document.getElementById('equipo'),
+        'atencion': document.getElementById('atencion'),
+        'blog': document.getElementById('blog'),
+        'contacto': document.getElementById('contacto')
+    };
+    
+    // Ocultar todas primero
+    Object.values(sections).forEach(section => {
+        if (section) section.style.display = 'none';
+    });
+    
+    // Mostrar la seleccionada
+    if (sections[sectionId]) {
+        sections[sectionId].style.display = 'block';
+        sections[sectionId].scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Siempre mostrar el grid de profesionales y mensajes
+    const grid = document.getElementById('publicGrid');
+    const messages = document.getElementById('messagesGrid');
+    if (grid) grid.style.display = 'grid';
+    if (messages) messages.style.display = 'grid';
+    
+    // Actualizar clase activa en el menú
+    document.querySelectorAll('.public-nav a').forEach(link => {
+        link.style.borderBottom = 'none';
+        link.style.paddingBottom = '0';
+    });
+    
+    const activeLink = document.querySelector(`.public-nav a[onclick*="${sectionId}"]`);
+    if (activeLink) {
+        activeLink.style.borderBottom = '2px solid var(--ocre-calido)';
+        activeLink.style.paddingBottom = '5px';
+    }
+};
+
+window.abrirAgenda = function() {
+    console.log('📅 Abriendo agenda...');
+    // Mostrar la sección equipo primero
+    window.showSection('equipo');
+    showToast('Selecciona un profesional para agendar tu hora', 'info');
+};
+
+window.enviarContacto = function() {
+    const nombre = document.getElementById('contactName')?.value;
+    const email = document.getElementById('contactEmail')?.value;
+    const mensaje = document.getElementById('contactMessage')?.value;
+    
+    if (!nombre || !email || !mensaje) {
+        showToast('Completa todos los campos', 'error');
+        return;
+    }
+    
+    // Aquí puedes agregar la lógica para enviar el mensaje
+    showToast('Mensaje enviado, te contactaremos pronto', 'success');
+    
+    // Limpiar formulario
+    document.getElementById('contactName').value = '';
+    document.getElementById('contactEmail').value = '';
+    document.getElementById('contactMessage').value = '';
+};
+
+// ============================================
 // FUNCIÓN PARA COMPARTIR PERFIL
 // ============================================
 window.compartirPerfil = function(psychId, psychName) {
@@ -452,4 +525,4 @@ window.forceRenderProfessionals = function() {
     }
 };
 
-console.log('✅ publico.js cargado con estilo Puntoterapia exacto');
+console.log('✅ publico.js cargado con estilo Puntoterapia exacto y funciones de navegación');

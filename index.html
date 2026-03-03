@@ -1204,7 +1204,7 @@
             <div style="background:#f8fafc; padding:25px; border-radius:20px;">
                 <div class="form-group">
                     <label>Nombre</label>
-                    <input type="text" id="myName" disabled>
+                    <input type="text" id="myName">
                 </div>
                 <div class="form-group">
                     <label>Email</label>
@@ -1212,7 +1212,10 @@
                 </div>
                 <div class="form-group">
                     <label>Especialidades</label>
-                    <div id="mySpecialties" class="specialties-container"></div>
+                    <select id="mySpecialtiesSelect" multiple size="5" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--gris-oscuro);">
+                        <!-- Las opciones se cargarán dinámicamente con JavaScript -->
+                    </select>
+                    <small style="color:var(--texto-secundario);">Selecciona una o más (Ctrl + clic)</small>
                 </div>
                 <h4 style="margin:25px 0 15px;">Precios</h4>
                 <div class="form-group">

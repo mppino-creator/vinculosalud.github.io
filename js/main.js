@@ -20,6 +20,9 @@ import * as mensajes from './modules/mensajes.js';
 import * as personalizacion from './modules/personalizacion.js';
 import * as publico from './modules/publico.js';
 
+// 🔍 VERIFICAR QUÉ FUNCIONES EXPORTA personalizacion
+console.log('🔍 Funciones en personalizacion:', Object.keys(personalizacion));
+
 // Módulos de fichas clínicas
 import * as fichasClinicas from './modules/fichasClinicas.js';
 import * as informes from './modules/informes.js';
@@ -175,16 +178,19 @@ window.validarRut = utils.validarRut;
 window.showToast = utils.showToast;
 
 // ============================================
-// VERIFICACIÓN (DESPUÉS DE ASIGNAR TODO)
+// VERIFICACIÓN (DESPUÉS DE ASIGNAR TODO) - VERSIÓN MEJORADA
 // ============================================
 console.log('✅ showLoginModal asignada:', typeof window.showLoginModal);
 console.log('✅ switchTab asignada:', typeof window.switchTab);
 console.log('✅ renderPatients asignada:', typeof window.renderPatients);
 console.log('✅ verFichaCompleta asignada:', typeof window.verFichaCompleta);
 console.log('✅ estadisticas asignada:', typeof window.estadisticas);
-// AHORA ESTO DEBERÍA MOSTRAR "function" PORQUE VIENEN DE citas.js
 console.log('✅ selectTimeSlot asignada:', typeof window.selectTimeSlot);
 console.log('✅ selectTimePref asignada:', typeof window.selectTimePref);
+console.log('✅ loadMyConfig asignada:', typeof window.loadMyConfig);
+
+// Verificar disponibilidad en personalizacion
+console.log('🔍 personalizacion.loadMyConfig existe:', typeof personalizacion.loadMyConfig);
 
 // ============================================
 // RESPALDO DE EMERGENCIA (por si acaso)

@@ -144,6 +144,80 @@
                 padding: 10px;
             }
         }
+
+        /* ============================================
+           NUEVOS ESTILOS PARA MODAL DE PERFIL PROFESIONAL
+           ============================================ */
+        .profile-tab {
+            padding: 20px 0;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            color: var(--primario);
+        }
+
+        .tab-btn.active {
+            border-bottom-color: var(--primario);
+            color: var(--primario);
+            font-weight: 500;
+        }
+
+        #editMyPhotoPreview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primario);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-profile {
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: none;
+            background: var(--fondo-secundario);
+            color: var(--texto-principal);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-profile:hover {
+            background: var(--primario);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 10px auto;
+            }
+            
+            .tab-btn {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -760,6 +834,275 @@
     </div>
 </div>
 
+<!-- ============================================ -->
+<!-- 🆕 NUEVO: MODAL DE EDICIÓN DE PERFIL PROFESIONAL -->
+<!-- ============================================ -->
+<div id="editMyProfileModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+        <span class="close" onclick="document.getElementById('editMyProfileModal').style.display='none'">&times;</span>
+        <h2 style="margin-bottom: 20px;">✏️ Editar Mi Perfil Profesional</h2>
+        
+        <!-- TABS PARA ORGANIZAR -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; flex-wrap: wrap;">
+            <button class="tab-btn active" onclick="showMyProfileTab('basic')" id="tabBasicBtn">📋 Básico</button>
+            <button class="tab-btn" onclick="showMyProfileTab('professional')" id="tabProfessionalBtn">🎓 Profesional</button>
+            <button class="tab-btn" onclick="showMyProfileTab('prices')" id="tabPricesBtn">💰 Precios</button>
+            <button class="tab-btn" onclick="showMyProfileTab('payment')" id="tabPaymentBtn">💳 Pagos</button>
+            <button class="tab-btn" onclick="showMyProfileTab('social')" id="tabSocialBtn">🌐 Redes</button>
+        </div>
+        
+        <!-- TAB 1: DATOS BÁSICOS -->
+        <div id="tabBasic" class="profile-tab" style="display: block;">
+            <div style="display: flex; gap: 30px; margin-bottom: 20px; flex-wrap: wrap;">
+                <!-- Foto de perfil -->
+                <div style="flex: 0 0 150px; text-align: center;">
+                    <div style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin-bottom: 10px; border: 3px solid var(--primario);">
+                        <img id="editMyPhotoPreview" src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <input type="file" id="editMyPhotoUpload" accept="image/*" style="display: none;" onchange="previewMyPhoto(this)">
+                    <button onclick="document.getElementById('editMyPhotoUpload').click()" class="btn-secondary" style="font-size: 12px;">
+                        <i class="fa fa-camera"></i> Cambiar foto
+                    </button>
+                </div>
+                
+                <!-- Datos principales -->
+                <div style="flex: 1; min-width: 250px;">
+                    <div class="form-group">
+                        <label>Nombre completo *</label>
+                        <input type="text" id="editMyName" class="filter-input" required>
+                    </div>
+                    
+                    <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Email *</label>
+                            <input type="email" id="editMyEmail" class="filter-input" required>
+                        </div>
+                        <div class="form-group" style="flex: 0.5; min-width: 150px;">
+                            <label>Género</label>
+                            <select id="editMyGenero" class="filter-input">
+                                <option value="">Selecciona</option>
+                                <option value="M">Masculino (Psicólogo)</option>
+                                <option value="F">Femenino (Psicóloga)</option>
+                                <option value="other">Otro / Prefiero no decir</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Título profesional</label>
+                        <input type="text" id="editMyTitle" class="filter-input" placeholder="Ej: Psicólogo Clínico">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Biografía / Descripción</label>
+                        <textarea id="editMyBio" rows="3" class="filter-input" placeholder="Cuéntales a tus pacientes sobre ti..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 2: INFORMACIÓN PROFESIONAL -->
+        <div id="tabProfessional" class="profile-tab" style="display: none;">
+            <div style="border-top: 1px solid #eee; padding-top: 20px;">
+                <h4 style="margin-bottom: 15px;">📋 Información profesional</h4>
+                
+                <div class="form-group">
+                    <label>Especialidades</label>
+                    <select id="editMySpec" class="filter-input" multiple size="5" style="width:100%;">
+                        <!-- Se cargarán dinámicamente -->
+                    </select>
+                    <small style="color:var(--texto-secundario);">Ctrl+clic para seleccionar múltiples</small>
+                </div>
+                
+                <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Número de registro profesional</label>
+                        <input type="text" id="editMyProfessionalId" class="filter-input" placeholder="Ej: 12345">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Años de experiencia</label>
+                        <input type="number" id="editMyExperience" class="filter-input" placeholder="Ej: 10">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Formación académica</label>
+                    <input type="text" id="editMyEducation" class="filter-input" placeholder="Ej: Universidad de Chile, 2015">
+                </div>
+                
+                <div class="form-group">
+                    <label>Idiomas (separados por coma)</label>
+                    <input type="text" id="editMyLanguages" class="filter-input" placeholder="Ej: Español, Inglés, Portugués">
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 3: PRECIOS Y HORARIOS -->
+        <div id="tabPrices" class="profile-tab" style="display: none;">
+            <h4 style="margin-bottom: 15px;">💰 Precios de consulta</h4>
+            
+            <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Precio consulta ONLINE ($)</label>
+                    <input type="number" id="editMyPriceOnline" class="filter-input" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Precio consulta PRESENCIAL ($)</label>
+                    <input type="number" id="editMyPricePresencial" class="filter-input" required>
+                </div>
+                <div class="form-group" style="flex: 0.5;">
+                    <label>Duración (min)</label>
+                    <input type="number" id="editMyDuration" class="filter-input" value="45">
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <h4 style="margin-bottom: 15px;">📅 Configurar mi disponibilidad</h4>
+                <p style="margin-bottom: 15px;">
+                    <button onclick="openMyAvailabilityModal()" class="btn-primary" style="background: var(--primario); padding:12px 25px; border-radius:30px; border:none; color:white; cursor:pointer;">
+                        <i class="fa fa-calendar-alt"></i> Gestionar horarios
+                    </button>
+                    <span style="margin-left: 15px; color: var(--texto-secundario);">
+                        Define tus horas disponibles por día
+                    </span>
+                </p>
+            </div>
+        </div>
+        
+        <!-- TAB 4: MÉTODOS DE PAGO -->
+        <div id="tabPayment" class="profile-tab" style="display: none;">
+            <h4 style="margin-bottom: 15px;">💳 Métodos de pago que acepto</h4>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="editMyPaymentTransfer"> Transferencia bancaria
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="editMyPaymentCardPresencial"> Tarjeta (en consulta)
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="editMyPaymentCash"> Efectivo
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="editMyPaymentCardOnline"> Tarjeta Online
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="editMyPaymentMercadopago"> Mercado Pago
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="editMyPaymentWebpay"> Webpay
+                </label>
+            </div>
+            
+            <h4 style="margin-bottom: 15px;">🏦 Datos bancarios (para transferencias)</h4>
+            
+            <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Banco</label>
+                    <input type="text" id="editMyBank" class="filter-input">
+                </div>
+                <div class="form-group" style="flex: 0.5;">
+                    <label>Tipo cuenta</label>
+                    <select id="editMyAccountType" class="filter-input">
+                        <option value="corriente">Corriente</option>
+                        <option value="vista">Vista</option>
+                        <option value="ahorros">Ahorros</option>
+                        <option value="rut">RUT</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Número de cuenta</label>
+                    <input type="text" id="editMyAccountNumber" class="filter-input">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>RUT asociado</label>
+                    <input type="text" id="editMyBankRut" class="filter-input" placeholder="12.345.678-9">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Email para notificaciones de pago</label>
+                <input type="email" id="editMyBankEmail" class="filter-input">
+            </div>
+            
+            <h4 style="margin: 30px 0 15px;">🔗 Links de pago online</h4>
+            
+            <div class="form-group">
+                <label>Link de pago online (general)</label>
+                <input type="url" id="editMyPaymentLinkOnline" class="filter-input" placeholder="https://...">
+            </div>
+            
+            <div class="form-group">
+                <label>Link para pagos presenciales</label>
+                <input type="url" id="editMyPaymentLinkPresencial" class="filter-input" placeholder="https://...">
+            </div>
+            
+            <div class="form-group">
+                <label>Código QR de pago</label>
+                <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                    <div style="width: 100px; height: 100px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                        <img id="editMyQrPreview" src="" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+                    </div>
+                    <div>
+                        <input type="file" id="editMyQrUpload" accept="image/*" style="display: none;" onchange="previewMyQR(this)">
+                        <button onclick="document.getElementById('editMyQrUpload').click()" class="btn-secondary" style="padding:10px 20px;">
+                            <i class="fa fa-qrcode"></i> Subir QR
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 5: REDES SOCIALES -->
+        <div id="tabSocial" class="profile-tab" style="display: none;">
+            <h4 style="margin-bottom: 15px;">🌐 Redes sociales y contacto</h4>
+            
+            <div class="form-group">
+                <label><i class="fa fa-linkedin" style="color: #0077B5;"></i> LinkedIn</label>
+                <input type="url" id="editMyLinkedin" class="filter-input" placeholder="https://linkedin.com/in/...">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa fa-instagram" style="color: #E1306C;"></i> Instagram</label>
+                <input type="text" id="editMyInstagram" class="filter-input" placeholder="@usuario o https://...">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa fa-globe"></i> Sitio web personal</label>
+                <input type="url" id="editMyWebsite" class="filter-input" placeholder="https://...">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa fa-whatsapp" style="color: #25D366;"></i> WhatsApp</label>
+                <input type="text" id="editMyWhatsapp" class="filter-input" placeholder="+56 9 1234 5678">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa fa-phone"></i> Teléfono de contacto</label>
+                <input type="text" id="editMyPhone" class="filter-input" placeholder="+56 2 1234 5678">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fa fa-map-marker-alt"></i> Dirección consulta</label>
+                <input type="text" id="editMyAddress" class="filter-input" placeholder="Dirección de tu consulta presencial">
+            </div>
+        </div>
+        
+        <!-- BOTONES -->
+        <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; flex-wrap: wrap;">
+            <button onclick="document.getElementById('editMyProfileModal').style.display='none'" class="btn-secondary" style="padding:12px 25px;">
+                Cancelar
+            </button>
+            <button onclick="saveMyProfile()" class="btn-primary" style="background: var(--exito); color:white; padding:12px 25px; border:none; border-radius:30px; cursor:pointer;">
+                <i class="fa fa-save"></i> Guardar cambios
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Contenedor Principal -->
 <div class="container">
     <header class="nav-container">
@@ -768,9 +1111,11 @@
                 <img id="headerLogo" class="logo-img" src="" style="display:none;" alt="Logo">
                 <span id="headerLogoText" class="logo-text">Vínculo Salud</span>
             </div>
-            <button class="btn-staff" onclick="showLoginModal()">
-                <i class="fa fa-lock"></i> Staff
-            </button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-staff" onclick="showLoginModal()">
+                    <i class="fa fa-lock"></i> Staff
+                </button>
+            </div>
         </nav>
     </header>
 
@@ -840,7 +1185,7 @@
                 <!-- TELÉFONO CON 3 CAMPOS -->
                 <div class="form-group">
                     <label>Teléfono</label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                         <select id="countryCode" style="width: 25%; min-width: 70px; padding: 12px 5px; border-radius: 12px; border: 1px solid var(--gris-oscuro); background: white; font-size: 0.9rem;">
                             <option value="+56" selected>🇨🇱 +56</option>
                             <option value="+54">🇦🇷 +54</option>
@@ -852,7 +1197,7 @@
                         
                         <input type="text" id="phoneNine" value="9" maxlength="1" style="width: 15%; min-width: 45px; padding: 12px 0; border-radius: 12px; border: 1px solid var(--gris-oscuro); text-align: center; font-size: 1rem;" pattern="[0-9]" inputmode="numeric">
                         
-                        <input type="text" id="custPhone" placeholder="9135 7990" style="width: 60%; padding: 12px; border-radius: 12px; border: 1px solid var(--gris-oscuro);" maxlength="8" pattern="[0-9]*" inputmode="numeric">
+                        <input type="text" id="custPhone" placeholder="9135 7990" style="width: 60%; min-width: 150px; padding: 12px; border-radius: 12px; border: 1px solid var(--gris-oscuro);" maxlength="8" pattern="[0-9]*" inputmode="numeric">
                     </div>
                     <small style="color: var(--text-light); display: block; margin-top: 5px;">Ejemplo: +56 9 9135 7990</small>
                 </div>
@@ -1025,7 +1370,15 @@
                 <h2 id="dashTitle">Panel de Gestión</h2>
                 <p id="dashSubtitle">Bienvenido</p>
             </div>
-            <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="logout()">Cerrar Sesión</button>
+            <div class="profile-actions">
+                <!-- ⬇️ NUEVO BOTÓN PARA EDITAR PERFIL PROFESIONAL ⬇️ -->
+                <button id="editProfileButton" class="btn-staff" style="background: var(--primario);" onclick="openMyProfileModal()">
+                    <i class="fa fa-user-edit"></i> Editar Mi Perfil
+                </button>
+                <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="logout()">
+                    <i class="fa fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
         </div>
 
         <div class="stat-grid">
@@ -1232,7 +1585,7 @@
         </div>
 
         <div id="tabConfiguracion" class="tab-content">
-            <h3>Mi ConfiguraciÃ³n</h3>
+            <h3>Mi Configuración</h3>
             <div style="background:#f8fafc; padding:25px; border-radius:20px;">
                 <div class="form-group">
                     <label>Nombre</label>
@@ -1282,7 +1635,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>NÃºmero</label>
+                    <label>Número</label>
                     <input type="text" id="myAccountNumber">
                 </div>
                 <div class="form-group">
@@ -1502,6 +1855,46 @@
         
         return edad;
     };
+
+    // 🆕 NUEVAS FUNCIONES PARA PERFIL PROFESIONAL
+    window.previewMyPhoto = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editMyPhotoPreview').src = e.target.result;
+                state.setTempImageData(e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.previewMyQR = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editMyQrPreview').src = e.target.result;
+                document.getElementById('editMyQrPreview').style.display = 'block';
+                state.setTempQrData(e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.showMyProfileTab = function(tabName) {
+        // Ocultar todos los tabs
+        document.querySelectorAll('.profile-tab').forEach(tab => {
+            tab.style.display = 'none';
+        });
+        
+        // Mostrar el tab seleccionado
+        document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).style.display = 'block';
+        
+        // Actualizar botones activos
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Btn`).classList.add('active');
+    };
 </script>
 
 <!-- SCRIPT DE DIAGNÓSTICO -->
@@ -1520,6 +1913,8 @@
         console.log('- renderPatients:', typeof window.renderPatients);
         console.log('- showNewPatientModal:', typeof window.showNewPatientModal);
         console.log('- verFichaCompleta:', typeof window.verFichaCompleta);
+        console.log('- openMyProfileModal:', typeof window.openMyProfileModal);
+        console.log('- saveMyProfile:', typeof window.saveMyProfile);
         console.log('- state.patients:', window.state.patients?.length || 0);
         console.log('- state.currentUser:', window.state.currentUser ? 'Sí' : 'No');
         console.log('- state.fichasIngreso:', window.state.fichasIngreso?.length || 0);
@@ -1620,6 +2015,13 @@
         font-size: 14px !important;
         font-weight: 500 !important;
         text-align: center !important;
+    }
+
+    /* Estilos para el botón de perfil */
+    #editProfileButton {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
     }
 </style>
 

@@ -200,6 +200,39 @@
             background: var(--primario-hover) !important;
         }
 
+        /* ============================================
+           ESTILOS PARA LAS NUEVAS SECCIONES
+           ============================================ */
+        #atencion, #contacto {
+            scroll-margin-top: 100px;
+        }
+
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .contact-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--gris-claro);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            outline: none;
+            border-color: var(--ocre-calido);
+            box-shadow: 0 0 0 3px rgba(200, 161, 97, 0.1);
+        }
+
         @media (max-width: 768px) {
             .public-nav {
                 gap: 15px !important;
@@ -1136,27 +1169,43 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- VISTA PÚBLICA - ESTILO PUNTOTERAPIA EXACTO -->
+    <!-- VISTA PÚBLICA - ESTILO PUNTOTERAPIA CON MENÚ FUNCIONAL -->
     <!-- ============================================ -->
     <main id="clientView">
-        <!-- MENÚ DE NAVEGACIÓN SUPERIOR -->
+        <!-- MENÚ DE NAVEGACIÓN SUPERIOR - FUNCIONAL -->
         <div class="public-nav" style="display: flex; justify-content: center; gap: 30px; padding: 20px 0 30px; margin-bottom: 20px; border-bottom: 1px solid var(--gris-claro); flex-wrap: wrap; background: white; border-radius: 0 0 30px 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-            <a href="#" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Inicio</a>
-            <a href="#" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Quienes Somos</a>
-            <a href="#" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem; border-bottom: 2px solid var(--ocre-calido); padding-bottom: 5px;">Equipo</a>
-            <a href="#" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Tipo de Atención</a>
-            <a href="#" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Punto de Interés</a>
-            <a href="#" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Contacto</a>
-            <a href="#" style="background: var(--verde-azulado-profundo); color: white; padding: 8px 22px; border-radius: 40px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">AGENDA TU HORA</a>
+            <a href="#inicio" onclick="showSection('inicio'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Inicio</a>
+            <a href="#about" onclick="showSection('about'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Quienes Somos</a>
+            <a href="#equipo" onclick="showSection('equipo'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem; border-bottom: 2px solid var(--ocre-calido); padding-bottom: 5px;">Equipo</a>
+            <a href="#atencion" onclick="showSection('atencion'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Tipo de Atención</a>
+            <a href="#blog" onclick="showSection('blog'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Punto de Interés</a>
+            <a href="#contacto" onclick="showSection('contacto'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Contacto</a>
+            <a href="#" onclick="abrirAgenda(); return false;" style="background: var(--verde-azulado-profundo); color: white; padding: 8px 22px; border-radius: 40px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">AGENDA TU HORA</a>
         </div>
 
-        <!-- HERO SECTION -->
-        <section class="hero-section" style="text-align: center; margin-bottom: 30px;">
+        <!-- SECCIÓN INICIO (HERO) -->
+        <section id="inicio" class="hero-section" style="text-align: center; margin-bottom: 30px;">
             <h1 style="font-size: 2.2rem; color: var(--verde-azulado-profundo); margin-bottom: 10px; font-weight: 600;">Terapia de Familia y Parejas</h1>
             <p style="color: var(--texto-secundario); font-size: 1rem;">Espacio de contención y crecimiento para ti y tus seres queridos</p>
         </section>
 
-        <!-- FILTROS DE BÚSQUEDA -->
+        <!-- SECCIÓN QUIENES SOMOS -->
+        <section id="about" class="about-section" style="margin: 60px 0; padding: 40px; background: white; border-radius: 48px; box-shadow: 0 8px 30px var(--sombra);">
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <h2 style="color: var(--verde-azulado-profundo); font-size: 2.2rem; margin-bottom: 20px;">Estamos para acompañarte</h2>
+                <p style="color: var(--texto-secundario); line-height: 1.8; font-size: 1.1rem;">
+                    Contamos con un equipo de terapeutas con amplia formación en terapia individual, 
+                    familiar y de pareja, con un sistema de abordaje colaborativo dentro del equipo Vínculo Salud, 
+                    así como con otros profesionales.
+                </p>
+                <p style="color: var(--texto-secundario); line-height: 1.8; font-size: 1.1rem; margin-top: 20px;">
+                    Cada profesional se compromete con el proceso terapéutico desde una mirada humana, 
+                    ética y especializada.
+                </p>
+            </div>
+        </section>
+
+        <!-- FILTROS DE BÚSQUEDA (siempre visibles) -->
         <div class="filters">
             <input type="text" class="filter-input" id="searchFilter" placeholder="🔍 Buscar profesional..." oninput="filterProfessionals()">
             <select class="filter-select" id="specialtyFilter" onchange="filterProfessionals()">
@@ -1170,11 +1219,38 @@
             </select>
         </div>
 
-        <!-- GRID DE PROFESIONALES -->
-        <div class="grid" id="publicGrid"></div>
+        <!-- GRID DE PROFESIONALES (EQUIPO) - SIEMPRE VISIBLE -->
+        <div id="equipo" class="grid" style="scroll-margin-top: 100px;"></div>
+
+        <!-- SECCIÓN TIPO DE ATENCIÓN (nueva) -->
+        <section id="atencion" class="atencion-section" style="margin: 60px 0; padding: 40px; background: white; border-radius: 48px; display: none;">
+            <h2 style="color: var(--verde-azulado-profundo); text-align: center; margin-bottom: 40px; font-size: 2.2rem;">Tipos de Atención</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+                <div style="text-align: center; padding: 30px;">
+                    <i class="fa fa-video" style="font-size: 3rem; color: var(--ocre-calido); margin-bottom: 20px;"></i>
+                    <h3 style="color: var(--verde-azulado-profundo); font-size: 1.3rem; margin-bottom: 10px;">Online</h3>
+                    <p style="color: var(--texto-secundario);">Sesiones por videollamada desde la comodidad de tu hogar</p>
+                </div>
+                <div style="text-align: center; padding: 30px;">
+                    <i class="fa fa-users" style="font-size: 3rem; color: var(--ocre-calido); margin-bottom: 20px;"></i>
+                    <h3 style="color: var(--verde-azulado-profundo); font-size: 1.3rem; margin-bottom: 10px;">Presencial</h3>
+                    <p style="color: var(--texto-secundario);">Atención en nuestro consultorio con todos los protocolos</p>
+                </div>
+                <div style="text-align: center; padding: 30px;">
+                    <i class="fa fa-heart" style="font-size: 3rem; color: var(--ocre-calido); margin-bottom: 20px;"></i>
+                    <h3 style="color: var(--verde-azulado-profundo); font-size: 1.3rem; margin-bottom: 10px;">Pareja</h3>
+                    <p style="color: var(--texto-secundario);">Terapia para fortalecer vínculos y mejorar la comunicación</p>
+                </div>
+                <div style="text-align: center; padding: 30px;">
+                    <i class="fa fa-child" style="font-size: 3rem; color: var(--ocre-calido); margin-bottom: 20px;"></i>
+                    <h3 style="color: var(--verde-azulado-profundo); font-size: 1.3rem; margin-bottom: 10px;">Familiar</h3>
+                    <p style="color: var(--texto-secundario);">Espacio de diálogo y crecimiento para toda la familia</p>
+                </div>
+            </div>
+        </section>
 
         <!-- SECCIÓN BLOG - PUNTO DE INTERÉS -->
-        <section class="blog-section" style="margin: 80px 0;">
+        <section id="blog" class="blog-section" style="margin: 80px 0; display: none;">
             <h2 style="color: var(--verde-azulado-profundo); font-size: 2.2rem; text-align: center; margin-bottom: 10px;">Punto de Interés</h2>
             <p style="color: var(--texto-secundario); text-align: center; max-width: 600px; margin: 0 auto 40px; font-size: 1rem;">
                 Reflexiones, ideas y recursos para tu bienestar emocional
@@ -1231,7 +1307,7 @@
             </div>
         </section>
 
-        <!-- SECCIÓN DE MENSAJES -->
+        <!-- SECCIÓN DE MENSAJES (siempre visible) -->
         <div class="messages-section" style="background: white; border-radius: 30px; padding: 40px; margin: 60px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
             <div class="messages-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <h2 style="color: var(--verde-azulado-profundo); font-size: 1.8rem;">💬 Experiencias de pacientes</h2>
@@ -1242,13 +1318,35 @@
             <div class="messages-grid" id="messagesGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;"></div>
         </div>
 
-        <!-- SECCIÓN CTA -->
+        <!-- SECCIÓN CONTACTO (nueva) -->
+        <section id="contacto" class="contact-section" style="margin: 60px 0; padding: 40px; background: white; border-radius: 48px; display: none;">
+            <h2 style="color: var(--verde-azulado-profundo); text-align: center; margin-bottom: 40px; font-size: 2.2rem;">Contacto</h2>
+            <div class="contact-form">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--texto-principal); font-weight: 500;">Nombre</label>
+                    <input type="text" id="contactName" placeholder="Tu nombre">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--texto-principal); font-weight: 500;">Email</label>
+                    <input type="email" id="contactEmail" placeholder="tucorreo@ejemplo.com">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; color: var(--texto-principal); font-weight: 500;">Mensaje</label>
+                    <textarea id="contactMessage" rows="4" placeholder="¿En qué podemos ayudarte?"></textarea>
+                </div>
+                <button class="btn-staff" style="width:100%; background: var(--ocre-calido);" onclick="enviarContacto()">
+                    Enviar mensaje
+                </button>
+            </div>
+        </section>
+
+        <!-- SECCIÓN CTA (siempre visible) -->
         <section class="cta-section" style="background: linear-gradient(135deg, var(--verde-grisaceo-claro) 0%, #d4e3d9 100%); border-radius: 40px; padding: 50px 30px; text-align: center; margin: 60px 0;">
             <h2 style="color: var(--verde-azulado-profundo); font-size: 2rem; margin-bottom: 15px;">Queremos escucharte</h2>
             <p style="color: var(--texto-secundario); max-width: 500px; margin: 0 auto 25px; font-size: 1rem;">
                 Si estás buscando orientación o necesitas apoyo, nuestro equipo está aquí para ti.
             </p>
-            <button onclick="showMessageModal()" class="btn-cta" style="background: var(--ocre-calido); color: white; border: none; padding: 14px 40px; border-radius: 40px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: 0 8px 20px rgba(200, 161, 97, 0.3);">
+            <button onclick="showSection('contacto')" class="btn-cta" style="background: var(--ocre-calido); color: white; border: none; padding: 14px 40px; border-radius: 40px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: 0 8px 20px rgba(200, 161, 97, 0.3);">
                 <i class="fa fa-comment"></i> Contáctanos
             </button>
         </section>

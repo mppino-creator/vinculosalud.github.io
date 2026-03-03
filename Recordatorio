@@ -1,10 +1,10 @@
-## 📋 **RESUMEN EJECUTIVO ACTUALIZADO - VÍNCULO SALUD v2.1**
+## 📋 **RESUMEN EJECUTIVO ACTUALIZADO - VÍNCULO SALUD v2.2**
 
-He actualizado el resumen ejecutivo con **TODAS las mejoras y correcciones** que hemos implementado en esta larga sesión. Aquí está la versión final:
+He actualizado el resumen ejecutivo para incluir **la nueva funcionalidad de Edad y Tutor Legal** que acabas de implementar. Aquí está la versión final:
 
 ---
 
-## 📋 **RESUMEN EJECUTIVO - VÍNCULO SALUD v2.1**
+## 📋 **RESUMEN EJECUTIVO - VÍNCULO SALUD v2.2**
 
 ### 🎯 **VISIÓN GENERAL DEL PROYECTO**
 
@@ -12,8 +12,8 @@ Vínculo Salud es una plataforma web integral para centros de bienestar y salud 
 
 | Usuario | Funcionalidades Principales |
 |---------|----------------------------|
-| **Pacientes** | Buscar profesionales, ver disponibilidad, agendar citas online/presenciales, pagar (transferencia/efectivo/tarjeta/online), dejar testimonios, **teléfono con 3 campos (código + 9 + número)** |
-| **Psicólogos** | Gestionar agenda, confirmar pagos, ver pacientes, **gestionar fichas clínicas completas (EHR)**, notas de evolución, informes, estadísticas personales |
+| **Pacientes** | Buscar profesionales, ver disponibilidad, agendar citas online/presenciales, pagar (transferencia/efectivo/tarjeta/online), dejar testimonios, **teléfono con 3 campos (código + 9 + número)**, **registro de edad y tutor legal para menores** |
+| **Psicólogos** | Gestionar agenda, confirmar pagos, ver pacientes, **gestionar fichas clínicas completas (EHR)**, notas de evolución, informes, estadísticas personales, **ver datos de tutor de pacientes menores** |
 | **Administradores** | Gestionar profesionales, boxes, personalización del sitio, **acceso total a fichas clínicas**, backup/restore, estadísticas globales, limpieza de datos |
 
 ---
@@ -52,6 +52,88 @@ const phoneNine = document.getElementById('phoneNine')?.value || '9';
 const phoneNumber = document.getElementById('custPhone').value;
 const phone = countryCode + ' ' + phoneNine + ' ' + phoneNumber;
 console.log('📞 Teléfono completo:', phone);
+```
+
+---
+
+### 👶 **NUEVA FUNCIONALIDAD: EDAD Y TUTOR LEGAL (v2.2)**
+
+#### **En el formulario de reserva:**
+```html
+<!-- FECHA DE NACIMIENTO Y EDAD -->
+<div class="form-group">
+    <label>Fecha de Nacimiento *</label>
+    <input type="date" id="custBirthdate" class="filter-input" onchange="calcularEdad()">
+</div>
+<div id="edadDisplay" style="margin:5px 0 15px; font-size:0.9rem; color:var(--texto-secundario);"></div>
+
+<!-- SECCIÓN DE TUTOR LEGAL (aparece automáticamente si edad < 18) -->
+<div id="tutorSection" style="display:none; border-left:3px solid #ff9500; padding-left:15px; margin:15px 0; background:#fff9f0; border-radius:8px;">
+    <h4 style="color:#ff9500; margin-bottom:15px;">👤 Datos del Tutor Legal</h4>
+    <p style="font-size:0.9rem; margin-bottom:15px;">El paciente es menor de 18 años. Debe completar los datos del tutor.</p>
+    
+    <div class="form-group">
+        <label>Nombre del Tutor *</label>
+        <input type="text" id="tutorName">
+    </div>
+    
+    <div class="form-group">
+        <label>RUT del Tutor *</label>
+        <input type="text" id="tutorRut" placeholder="12.345.678-9" oninput="formatRut(this)">
+    </div>
+    
+    <div class="form-group">
+        <label>Parentesco *</label>
+        <select id="tutorRelationship">
+            <option value="">Selecciona parentesco</option>
+            <option value="padre">Padre</option>
+            <option value="madre">Madre</option>
+            <option value="tutor">Tutor legal</option>
+            <option value="abuelo">Abuelo/a</option>
+            <option value="hermano">Hermano/a mayor</option>
+        </select>
+    </div>
+</div>
+```
+
+#### **Función JavaScript para calcular edad:**
+```javascript
+window.calcularEdad = function() {
+    const birthdate = document.getElementById('custBirthdate').value;
+    const edadDisplay = document.getElementById('edadDisplay');
+    const tutorSection = document.getElementById('tutorSection');
+    
+    if (!birthdate) {
+        edadDisplay.innerHTML = '';
+        tutorSection.style.display = 'none';
+        return;
+    }
+    
+    const hoy = new Date();
+    const nacimiento = new Date(birthdate);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
+    
+    edadDisplay.innerHTML = `<strong>Edad:</strong> ${edad} años`;
+    
+    if (edad < 18) {
+        tutorSection.style.display = 'block';
+        document.getElementById('tutorName').required = true;
+        document.getElementById('tutorRut').required = true;
+        document.getElementById('tutorRelationship').required = true;
+    } else {
+        tutorSection.style.display = 'none';
+        document.getElementById('tutorName').required = false;
+        document.getElementById('tutorRut').required = false;
+        document.getElementById('tutorRelationship').required = false;
+    }
+    
+    return edad;
+};
 ```
 
 ---
@@ -110,7 +192,7 @@ const firebaseConfig = {
 #### **Estructura de Datos en Firebase**
 ```
 /Staff           # Profesionales y admin
-/Patients        # Pacientes
+/Patients        # Pacientes (incluye birthdate y tutor)
 /Appointments    # Citas confirmadas
 /PendingRequests # Solicitudes pendientes
 /Boxes          # Boxes/consultorios
@@ -178,7 +260,11 @@ EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
 
 ```
 /pacientes/{patientId}
-  ├── nombre, rut, email, phone, birthdate, psychId
+  ├── nombre, rut, email, phone, birthdate, edad, psychId
+  ├── tutor (si es menor de edad)
+  │    ├── nombre
+  │    ├── rut
+  │    └── parentesco
   │
   ├── /fichasIngreso/{fichaIngresoId}     # FICHA PREINGRESOS.docx
   │    ├── motivoConsulta
@@ -202,7 +288,7 @@ EMAILJS_USER_ID = '_LDTyGJlGKoOIWVJa';
 #### **Flujo de trabajo clínico:**
 ```
 PACIENTE NUEVO:
-1. Registro básico → Se crea en state.patients
+1. Registro básico → Se crea en state.patients (con edad y tutor si aplica)
 2. Crear FICHA DE INGRESO (antecedentes completos)
 3. Asignar psicólogo (psychId)
 
@@ -249,7 +335,7 @@ EXPORTACIÓN:
 
 ```javascript
 // Colecciones principales
-state.patients           // Array de pacientes
+state.patients           // Array de pacientes (con birthdate y tutor)
 state.staff              // Array de profesionales (con campo genero)
 state.appointments       // Array de citas
 state.messages           // Array de testimonios
@@ -284,6 +370,7 @@ state.ui.fichas = {
 │  RUT: 12.345.678-9                  │
 │  Email: maria@email.com             │
 │  Tel: +56 9 9135 7990                │
+│  📅 Edad: 16 años (menor de edad)    │
 ├─────────────────────────────────────┤
 │  Pagado: $150.000 · Total: $225.000 │
 │  📅 Próxima: 15-03-2026 16:00       │
@@ -296,12 +383,15 @@ state.ui.fichas = {
 #### **Vista detalle con 4 pestañas:**
 ```
 ┌─────────────────────────────────────────────┐
-│  👤 María González · 12.345.678-9 · 35 años │
+│  👤 María González · 12.345.678-9 · 16 años │
+│  ⚠️ MENOR DE EDAD - Tutor: Juan González     │
 │  [PERFIL] [FICHA INGRESO] [SESIONES] [INFORMES] │
 ├─────────────────────────────────────────────┤
 │  📋 PERFIL DEL PACIENTE                      │
 │  • Datos personales                          │
 │  • Estadísticas: Citas:15 · Sesiones:8 · $150K │
+│  • Tutor: Juan González (RUT: 12.345.678-5) │
+│  • Parentesco: Padre                         │
 │  • Botones: [Editar] [Imprimir] [Exportar]   │
 └─────────────────────────────────────────────┘
 ```
@@ -341,7 +431,9 @@ return `https://storage.vinculosalud.cl/informes/${id}_${Date.now()}.pdf`;
 ┌──────────┬──────────┬──────────┬──────────┐
 │ 15       │ 48       │ 12       │ 5        │
 │Pacientes │Sesiones  │Fichas    │Informes  │
-└──────────┴──────────┴──────────┴──────────┘
+├──────────┴──────────┴──────────┴──────────┤
+│ Pacientes menores de edad: 3                │
+└────────────────────────────────────────────┘
 ┌─────────────────────┬─────────────────────┐
 │ Ingresos Totales    │ Ingresos este Mes   │
 │ $2.450.000          │ $380.000            │
@@ -360,7 +452,7 @@ return `https://storage.vinculosalud.cl/informes/${id}_${Date.now()}.pdf`;
 📈 CRECIMIENTO: Pacientes +12% · Citas -3% · Ingresos +8%
 
 📊 DETALLE:
-• Pacientes por edad: 0-18:5 · 19-30:15 · 31-45:18
+• Pacientes por edad: 0-18:8 · 19-30:15 · 31-45:18 · 46+:4
 • Informes: 12 Psicodiagnóstico · 6 Cierre
 • Citas: 89 pagadas · 23 pendientes · 4 rechazadas
 • Ingresos totales: $5.670.000
@@ -443,6 +535,14 @@ if (emailsEnviados.has(emailId)) {
 }
 ```
 
+#### **11. "La sección de tutor no aparece para menores de edad"**
+```javascript
+// Verificar que la función calcularEdad() esté definida
+console.log(typeof window.calcularEdad); // Debe ser 'function'
+// Verificar que el campo birthdate tenga el evento onchange
+document.getElementById('custBirthdate').setAttribute('onchange', 'calcularEdad()');
+```
+
 ---
 
 ### 🔧 **FUNCIONES GLOBALES PRINCIPALES**
@@ -518,6 +618,7 @@ window.calculateAge()
 window.limpiarStorage()
 window.selectTimeSlot(time)      // Seleccionar horario en agenda
 window.selectTimePref(pref)      // Preferencia AM/PM
+window.calcularEdad()             // Calcular edad desde fecha de nacimiento
 ```
 
 ---
@@ -542,11 +643,18 @@ window.selectTimePref(pref)      // Preferencia AM/PM
 - [x] `estadisticas.js` - Estadísticas globales admin
 - [x] `utils.js` - Utilidades (RUT, emails, fechas) **(CORREGIDO: control de duplicados)**
 
+#### **Funcionalidades Especiales:**
+- [x] **Teléfono 3 campos** - Código + 9 + número (editable)
+- [x] **Edad y Tutor Legal** - Cálculo automático y campos condicionales
+- [x] **Parentesco parametrizado** - Selector con opciones predefinidas
+
 #### **Verificaciones UI:**
 - [x] Botón "Staff" para login
 - [x] Grid de profesionales con filtros
 - [x] Teléfono con 3 campos (código + 9 + número) editable
 - [x] Panel de reserva con selección de fecha/hora/box
+- [x] **Campo de fecha de nacimiento** en formulario de reserva
+- [x] **Sección de tutor** que aparece automáticamente para menores
 - [x] Dashboard con estadísticas
 - [x] Botón "Ver Ficha Clínica" en cada paciente
 - [x] Pestañas (Perfil, Ficha Ingreso, Sesiones, Informes)
@@ -556,7 +664,7 @@ window.selectTimePref(pref)      // Preferencia AM/PM
 
 ---
 
-### ✅ **RESUMEN FINAL v2.1**
+### ✅ **RESUMEN FINAL v2.2**
 
 | Módulo | Funcionalidades | Estado |
 |--------|-----------------|--------|
@@ -565,6 +673,7 @@ window.selectTimePref(pref)      // Preferencia AM/PM
 | **Email System** | Envío SOLO al paciente, sin duplicados | ✅ CORREGIDO |
 | **Disponibilidad** | Horarios se ocupan correctamente | ✅ CORREGIDO |
 | **Pacientes** | CRUD básico, historial de citas | ✅ |
+| **Edad y Tutor** | Cálculo automático, campos condicionales | ✅ NUEVO v2.2 |
 | **Teléfono** | 3 campos (código + 9 + número) editable | ✅ |
 | **Profesionales** | CRUD, disponibilidad, género | ✅ |
 | **Boxes** | CRUD, disponibilidad, ocupación en tiempo real | ✅ |
@@ -588,10 +697,11 @@ window.selectTimePref(pref)      // Preferencia AM/PM
 
 ```javascript
 (function() {
-  console.log('%c🔍 VÍNCULO SALUD v2.1 - DIAGNÓSTICO COMPLETO', 'font-size:16px');
+  console.log('%c🔍 VÍNCULO SALUD v2.2 - DIAGNÓSTICO COMPLETO', 'font-size:16px');
   
   const campo9 = document.getElementById('phoneNine');
   const campoNumero = document.getElementById('custPhone');
+  const birthdate = document.getElementById('custBirthdate');
   
   const checks = {
     'state global': !!window.state,
@@ -604,6 +714,7 @@ window.selectTimePref(pref)      // Preferencia AM/PM
     'exportarExcel': typeof window.exportarDatosExcel === 'function',
     'compartirPerfil': typeof window.compartirPerfil === 'function',
     'verFichaCompleta': typeof window.verFichaCompleta === 'function',
+    'calcularEdad': typeof window.calcularEdad === 'function',
     'pacientes': window.state?.patients?.length || 0,
     'fichasIngreso': window.state?.fichasIngreso?.length || 0,
     'sesiones': window.state?.sesiones?.length || 0,
@@ -611,6 +722,7 @@ window.selectTimePref(pref)      // Preferencia AM/PM
     'profesionales': window.state?.staff?.length || 0,
     '📱 campo 9 editable': campo9 ? !campo9.readOnly : 'No existe',
     '📱 campo número editable': campoNumero ? !campoNumero.readOnly : 'No existe',
+    '📅 campo birthdate': birthdate ? '✅' : 'No existe',
     '📧 control duplicados': typeof window.emailsEnviados !== 'undefined',
     '🚫 doble clic': typeof window.bookingEnProceso !== 'undefined'
   };
@@ -636,14 +748,14 @@ window.selectTimePref(pref)      // Preferencia AM/PM
 |---------|-----------------|
 | **v1.0** | Agenda, pagos, pacientes básico |
 | **v2.0** | Fichas clínicas, sesiones, informes (20+ campos), PDF, permisos granulares |
-| **v2.1** | ✅ **EMAILS CORREGIDOS** (solo al paciente, sin duplicados) |
-|           | ✅ **DISPONIBILIDAD CORREGIDA** (no más dobles reservas) |
-|           | ✅ **RENDERIZADO CORREGIDO** (pacientes siempre visibles) |
-|           | ✅ **BLOQUEO DE DOBLE CLIC** (evita reservas duplicadas) |
+| **v2.1** | Emails corregidos, disponibilidad, renderizado, bloqueo doble clic |
+| **v2.2** | ✅ **EDAD Y TUTOR LEGAL** - Cálculo automático y campos condicionales |
 
 #### **Flujo completo del paciente:**
 ```
 📞 TELÉFONO → +56 9 9135 7990 (3 campos editables)
+📅 FECHA NACIMIENTO → Cálculo automático de edad
+👤 SI ES MENOR → Se solicita tutor legal
 📋 PREINGRESO → Ficha de Ingreso (antecedentes completos)
 📝 PROCESO → Notas de evolución por cada sesión
 📊 EVALUACIÓN → Informe Psicodiagnóstico (20+ campos)
@@ -657,6 +769,7 @@ window.selectTimePref(pref)      // Preferencia AM/PM
 2. **Los pagos SIEMPRE comienzan como "pendiente"** - Confirmación manual
 3. **Los emails SIEMPRE van al paciente** - Nunca al profesional
 4. **Los PDFs tienen fallback** - Modo simulado siempre disponible
+5. **Los menores SIEMPRE requieren tutor** - Validación automática por edad
 
 #### **Tecnologías utilizadas:**
 - **Frontend:** HTML5, CSS3, JavaScript (ES6+), Font Awesome 6
@@ -670,7 +783,7 @@ window.selectTimePref(pref)      // Preferencia AM/PM
 
 ---
 
-### 🎉 **ÚLTIMAS MEJORAS INCORPORADAS (v2.1):**
+### 🎉 **ÚLTIMAS MEJORAS INCORPORADAS (v2.2):**
 
 1. 📱 **Teléfono de 3 campos** - Código país + 9 + número (el 9 ahora es editable)
 2. 🔗 **Botón compartir perfil** - WhatsApp, Email, copiar enlace
@@ -681,26 +794,12 @@ window.selectTimePref(pref)      // Preferencia AM/PM
 7. 📅 **Disponibilidad corregida** - Considera `appointments` y `pendingRequests`
 8. 👥 **Renderizado de pacientes** - Siempre se cargan, incluso sin login
 9. 🎨 **Género en profesionales** - Psicólogo/Psicóloga según corresponda
+10. 👶 **Edad y Tutor Legal** - Cálculo automático y campos condicionales **(NUEVO)**
 
 ---
 
-**¡Vínculo Salud v2.1 está COMPLETAMENTE OPERATIVO Y CORREGIDO!** 🚀
+**¡Vínculo Salud v2.2 está COMPLETAMENTE OPERATIVO Y CORREGIDO!** 🚀
 
-Agenda + Pagos + Fichas Clínicas + Informes Profesionales + PDF + Permisos Granulares + Estadísticas Globales + Backup + Boxes en Tiempo Real + Sobrecupos + Teléfono 3 Campos + Compartir Perfil + Exportar Excel + **EMAILS CORREGIDOS + DISPONIBILIDAD CORREGIDA + SIN DUPLICADOS**.
+Agenda + Pagos + Fichas Clínicas + Informes Profesionales + PDF + Permisos Granulares + Estadísticas Globales + Backup + Boxes en Tiempo Real + Sobrecupos + Teléfono 3 Campos + Compartir Perfil + Exportar Excel + **EMAILS CORREGIDOS + DISPONIBILIDAD CORREGIDA + SIN DUPLICADOS + EDAD Y TUTOR LEGAL**.
 
-**Todo lo que un centro de salud mental necesita en una sola plataforma, ahora funcionando perfectamente.** 🎯
-```
-
----
-
-## ✅ **RESUMEN DE LO QUE HEMOS LOGRADO**
-
-| Problema | Estado | Solución |
-|----------|--------|----------|
-| Emails al profesional | ✅ CORREGIDO | `patientEmail: email` en `citas.js` |
-| Emails duplicados | ✅ CORREGIDO | `Set()` y flags en `utils.js` |
-| Doble reserva misma hora | ✅ CORREGIDO | `bookingEnProceso` y `bookedTimes` |
-| Pacientes no se cargan | ✅ CORREGIDO | Listener en `publico.js` siempre activo |
-| Disponibilidad no se actualiza | ✅ CORREGIDO | `bookedAppointments + bookedRequests` |
-
-¡Tu plataforma está lista! 🚀
+**Todo lo que un centro de salud mental necesita en una sola plataforma, ahora funcionando perfectamente con soporte para pacientes menores de edad.** 🎯

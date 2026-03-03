@@ -67,6 +67,37 @@ window.copiarAlPortapapeles = function(texto) {
     });
 };
 
+// ============================================
+// FUNCIÓN PARA MOSTRAR MÁS INFORMACIÓN DEL PROFESIONAL
+// ============================================
+window.showTherapistInfo = function(psychId) {
+    const psych = state.staff.find(p => p.id == psychId);
+    if (!psych) return;
+    
+    // Crear modal con información detallada
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="modal-close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h2 style="color: var(--verde-azulado-profundo); margin-bottom: 20px;">${psych.name}</h2>
+            <div style="margin-bottom: 20px;">
+                <p style="color: var(--texto-principal); line-height: 1.6;">${psych.bio || 'Especialista en salud mental con amplia experiencia en terapia individual, familiar y de pareja.'}</p>
+            </div>
+            <div style="border-top: 1px solid var(--gris-claro); padding-top: 20px;">
+                <p style="margin: 10px 0;"><i class="fa fa-graduation-cap" style="color: var(--ocre-calido); width: 25px;"></i> ${psych.education || 'Formación no especificada'}</p>
+                <p style="margin: 10px 0;"><i class="fa fa-clock" style="color: var(--ocre-calido); width: 25px;"></i> ${psych.experience || '0'} años de experiencia</p>
+                <p style="margin: 10px 0;"><i class="fa fa-language" style="color: var(--ocre-calido); width: 25px;"></i> ${psych.languages ? psych.languages.join(', ') : 'Español'}</p>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove(); openBooking('${psych.id}')" class="btn-staff" style="width:100%; margin-top:20px; background: var(--verde-azulado-profundo);">
+                AGENDAR HORA
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
 export function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
     const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
@@ -117,9 +148,7 @@ export function renderProfessionals(professionals) {
     grid.innerHTML = professionals.map(p => {
         const today = new Date().toISOString().split('T')[0];
         
-        // ============================================
-        // 🔥 CORRECCIÓN: Calcular disponibilidad REAL considerando TODAS las ocupaciones
-        // ============================================
+        // Calcular disponibilidad
         const citasHoy = window.state?.appointments?.filter(a => 
             a.psychId == p.id && 
             a.date === today && 
@@ -134,100 +163,62 @@ export function renderProfessionals(professionals) {
         ) || [];
         
         const totalOcupadosHoy = citasHoy.length + solicitudesHoy.length;
-        
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
         const horasLibres = slotsHoy.length - totalOcupadosHoy;
-        const disponibilidadClase = horasLibres > 0 ? 'online' : 'offline';
-        
-        // 🔥 LOG PARA DEPURAR DISPONIBILIDAD
-        console.log(`📊 ${p.name}: slotsHoy=${slotsHoy.length}, citasHoy=${citasHoy.length}, solicitudesHoy=${solicitudesHoy.length}, totalOcupados=${totalOcupadosHoy}, horasLibres=${horasLibres}`);
-        
-        // ============================================
-        // Especialidades limitadas a 3
-        // ============================================
-        const specialtiesList = Array.isArray(p.spec) ? p.spec : [p.spec];
-        const specsMostrar = specialtiesList.slice(0, 3);
-        const specsRestantes = specialtiesList.length - 3;
-        const specialties = specsMostrar.join(' · ') + (specsRestantes > 0 ? ` +${specsRestantes}` : '');
-        
-        // ============================================
-        // Estrellas con número de reseñas
-        // ============================================
-        const avgRating = getAverageRating(p.id);
-        const ratingDisplay = avgRating > 0 ? avgRating : 5;
-        const starCount = Math.floor(ratingDisplay);
-        const totalReseñas = state.messages.filter(m => m.therapistId == p.id).length;
-        
-        const whatsappMessage = encodeURIComponent('Hola buenas tardes, necesito una hora para atención psicológica. ¿Podría ayudarme?');
-        const whatsappUrl = p.whatsapp ? `https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${whatsappMessage}` : '#';
-        const instagramUrl = p.instagram ? `https://instagram.com/${p.instagram.replace('@', '')}` : '#';
 
         // ============================================
-        // 🎨 TARJETA CON CLASES CSS (estilo Puntoterapia)
+        // 🎨 TARJETA ESTILO PUNTOTERAPIA - EXACTA
         // ============================================
         return `
-            <div class="therapist-card" data-id="${p.id}">
-                <div class="img-container">
-                    <!-- Badge de disponibilidad real -->
-                    <div class="availability-badge ${disponibilidadClase}">
-                        <div class="pulse"></div> 
-                        ${horasLibres > 0 ? `${horasLibres} disponibles` : 'Sin cupos'}
-                    </div>
-                    
-                    ${p.whatsapp ? `
-                        <a href="${whatsappUrl}" target="_blank" class="whatsapp-badge" onclick="event.stopPropagation()" title="Contactar por WhatsApp">
-                            <i class="fab fa-whatsapp"></i>
-                        </a>
-                    ` : ''}
-                    
-                    ${p.instagram ? `
-                        <a href="${instagramUrl}" target="_blank" class="instagram-badge" onclick="event.stopPropagation()" title="Ver Instagram">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                    ` : ''}
-                    
-                    <img src="${p.img}" alt="${p.name}" onerror="this.src='https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'">
+            <div class="therapist-card" data-id="${p.id}" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+                <!-- Imagen del profesional -->
+                <div style="width: 100%; height: 280px; overflow: hidden;">
+                    <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
                 
-                <div class="card-body" onclick="openBooking(${p.id})">
-                    <!-- Especialidades limitadas -->
-                    <span class="tag">${specialties}</span>
+                <!-- Contenido de la tarjeta -->
+                <div style="padding: 25px;">
+                    <!-- Nombre en MAYÚSCULAS -->
+                    <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--texto-principal); margin-bottom: 10px; text-transform: uppercase;">${p.name}</h3>
                     
-                    <h3>${p.name}</h3>
+                    <!-- Título profesional (formato específico) -->
+                    <p style="color: var(--texto-secundario); font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
+                        ${p.title || 'Psicólogo Clínico de Adultos y Adolescentes, Terapeuta Familiar y de Parejas.'}
+                    </p>
                     
-                    ${p.genero ? `<small style="display:block; color:var(--texto-secundario); font-size:0.8rem; margin-top:-5px;">${p.genero === 'M' ? 'Psicólogo' : p.genero === 'F' ? 'Psicóloga' : ''}</small>` : ''}
-                    
-                    <!-- Estrellas con número de reseñas -->
-                    <div class="stars" style="display:flex; align-items:center; justify-content:space-between; margin:10px 0;">
-                        <div style="color:var(--gold);">
-                            ${'★'.repeat(starCount)}${'☆'.repeat(5-starCount)}
-                        </div>
-                        <div style="background:var(--primario); color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; display:flex; align-items:center; gap:4px;">
-                            <i class="fa fa-comment" style="font-size:0.7rem;"></i>
-                            ${totalReseñas}
-                        </div>
-                    </div>
-                    
-                    <!-- Disponibilidad CORREGIDA -->
-                    <div style="display:flex; justify-content:center; align-items:center; margin:10px 0;">
-                        <span style="color:${horasLibres > 0 ? 'var(--exito)' : 'var(--peligro)'}; font-size:0.9rem; font-weight:500;">
-                            <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i> 
-                            ${horasLibres > 0 ? `${horasLibres} horario(s) disponible(s)` : 'Sin cupos disponibles'}
-                        </span>
-                    </div>
-                    
-                    <div class="price-box">
-                        <!-- 🆕 BOTÓN RESERVAR con clase btn-reservar -->
-                        <button class="btn-reservar" onclick="event.stopPropagation(); openBooking(${p.id})">
-                            <i class="fa fa-calendar-check"></i> Reservar hora
+                    <!-- Botones en fila -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <button onclick="showTherapistInfo('${p.id}')" style="background: transparent; border: 2px solid var(--verde-azulado-claro); color: var(--verde-azulado-claro); padding: 12px 25px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; flex: 1;">
+                            Más Información
                         </button>
-                        
-                        <!-- Botón Compartir Perfil -->
-                        <button class="btn-share" onclick="event.stopPropagation(); compartirPerfil('${p.id}', '${p.name}')" 
-                                style="width:100%; margin-top:8px; padding:8px; background:transparent; border:2px solid var(--primario); border-radius:30px; color:var(--primario); font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            <i class="fa fa-share-alt"></i> Compartir
+                        <button onclick="openBooking('${p.id}')" style="background: var(--verde-azulado-profundo); border: none; color: white; padding: 12px 25px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; flex: 1;">
+                            AGENDA TU HORA
                         </button>
                     </div>
+                    
+                    <!-- Dirección -->
+                    <div style="display: flex; align-items: center; gap: 8px; color: var(--texto-secundario); font-size: 0.9rem; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--gris-claro);">
+                        <i class="fa fa-map-marker-alt" style="color: var(--ocre-calido);"></i>
+                        <span>${p.address || 'Dirección no especificada'}</span>
+                    </div>
+                    
+                    <!-- Disponibilidad (opcional) -->
+                    ${horasLibres > 0 ? `
+                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 5px;">
+                            <span style="color: var(--exito); font-size: 0.8rem;">
+                                <i class="fa fa-check-circle"></i> ${horasLibres} horario(s) disponible(s)
+                            </span>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Badge de WhatsApp si existe -->
+                    ${p.whatsapp ? `
+                        <div style="margin-top: 10px;">
+                            <a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank" style="color: var(--whatsapp); text-decoration: none; font-size: 0.9rem;">
+                                <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
+                            </a>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -268,6 +259,11 @@ export function cargarDatosIniciales() {
                         genero: item.genero || '',
                         address: item.address || '',
                         phone: item.phone || '',
+                        title: item.title || '',
+                        bio: item.bio || '',
+                        education: item.education || '',
+                        experience: item.experience || 0,
+                        languages: item.languages || ['Español'],
                         bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
                         paymentMethods: item.paymentMethods || state.globalPaymentMethods,
                         sessionDuration: item.sessionDuration || 45,
@@ -291,6 +287,11 @@ export function cargarDatosIniciales() {
                         genero: item.genero || '',
                         address: item.address || '',
                         phone: item.phone || '',
+                        title: item.title || '',
+                        bio: item.bio || '',
+                        education: item.education || '',
+                        experience: item.experience || 0,
+                        languages: item.languages || ['Español'],
                         bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
                         paymentMethods: item.paymentMethods || state.globalPaymentMethods,
                         sessionDuration: item.sessionDuration || 45,
@@ -321,6 +322,11 @@ export function cargarDatosIniciales() {
             genero: '',
             address: '',
             phone: '',
+            title: '',
+            bio: '',
+            education: '',
+            experience: 0,
+            languages: ['Español'],
             bankDetails: {},
             isHiddenAdmin: true,
             isAdmin: true,
@@ -347,9 +353,7 @@ export function cargarDatosIniciales() {
         if (state.currentUser?.role === 'psych') renderBoxOccupancy();
     });
 
-    // ============================================
-    // Cargar pacientes SIEMPRE
-    // ============================================
+    // Cargar pacientes
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
         console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
@@ -366,12 +370,10 @@ export function cargarDatosIniciales() {
             console.log('📋 No hay pacientes en Firebase');
         }
         
-        // Renderizar pacientes si hay usuario
         if (state.currentUser) {
             renderPatients();
         }
         
-        // 🔥 FORZAR RENDERIZADO DE PROFESIONALES
         setTimeout(() => {
             if (typeof filterProfessionals === 'function') {
                 filterProfessionals();
@@ -379,9 +381,7 @@ export function cargarDatosIniciales() {
         }, 100);
     });
 
-    // ============================================
-    // Listener de Appointments optimizado
-    // ============================================
+    // Listener de Appointments
     db.ref('Appointments').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -452,4 +452,4 @@ window.forceRenderProfessionals = function() {
     }
 };
 
-console.log('✅ publico.js cargado con mejoras (disponibilidad corregida)');
+console.log('✅ publico.js cargado con estilo Puntoterapia exacto');

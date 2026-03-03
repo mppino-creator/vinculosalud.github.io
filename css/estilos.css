@@ -2002,3 +2002,31 @@ h3, h4, h5,
         height: 180px;
     }
 }
+
+/* Estilos adicionales para las tarjetas estilo Puntoterapia */
+.therapist-card button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.therapist-card button:first-child:hover {
+    background: var(--verde-azulado-claro);
+    color: white;
+}
+
+.therapist-card button:last-child:hover {
+    background: var(--primario-hover);
+}
+
+/* Estilos para el menú de navegación */
+.public-nav a {
+    transition: all 0.3s;
+}
+
+.public-nav a:hover:not(:last-child) {
+    color: var(--ocre-calido);
+}
+
+.public-nav a:last-child:hover {
+    background: var(--primario-hover);
+}

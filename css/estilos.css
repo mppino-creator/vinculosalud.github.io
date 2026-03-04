@@ -2537,3 +2537,45 @@ html {
     display: inline-block;
     margin: 0 5px 5px 0;
 }
+
+/* Animación para el toggle */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.therapist-info-toggle {
+    animation: slideDown 0.3s ease;
+}
+
+/* Hover effects para tarjetas */
+.therapist-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.therapist-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(30, 122, 138, 0.15);
+}
+
+/* Estrellas de calificación */
+.rating .fa-star, .rating .fa-star-o {
+    color: var(--gold);
+}
+
+/* Filtros mejorados */
+.filter-input, .filter-select {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.filter-input:focus, .filter-select:focus {
+    border-color: var(--ocre-calido);
+    box-shadow: 0 0 0 4px rgba(200, 161, 97, 0.1);
+}

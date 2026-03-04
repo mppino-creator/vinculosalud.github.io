@@ -22,13 +22,13 @@ import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
 // ============================================
-// FUNCIONES DE NAVEGACIÓN DEL MENÚ
+// FUNCIONES DE NAVEGACIÓN DEL MENÚ - CORREGIDAS
 // ============================================
 
 window.showSection = function(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
     
-    // Mostrar todas las secciones principales
+    // Definir las secciones principales que pueden ocultarse/mostrarse
     const sections = {
         'inicio': document.getElementById('inicio'),
         'about': document.getElementById('about'),
@@ -38,12 +38,12 @@ window.showSection = function(sectionId) {
         'contacto': document.getElementById('contacto')
     };
     
-    // Ocultar todas primero
+    // Ocultar TODAS las secciones principales
     Object.values(sections).forEach(section => {
         if (section) section.style.display = 'none';
     });
     
-    // Mostrar la seleccionada
+    // Mostrar la sección seleccionada
     if (sections[sectionId]) {
         sections[sectionId].style.display = 'block';
         sections[sectionId].scrollIntoView({ behavior: 'smooth' });
@@ -58,30 +58,64 @@ window.showSection = function(sectionId) {
         }
     }
     
-    // Siempre mostrar el grid de profesionales y mensajes
+    // 👉 REGLA DE ORO: El GRID DE PROFESIONALES SIEMPRE debe ser visible
+    // cuando se navega a 'equipo' o cuando se usa el botón 'AGENDA TU HORA'
     const grid = document.getElementById('publicGrid');
     const messages = document.getElementById('messagesGrid');
-    if (grid) grid.style.display = 'grid';
-    if (messages) messages.style.display = 'grid';
+    const filtros = document.querySelector('.filters');
+    
+    // El grid de profesionales SIEMPRE visible (excepto quizás en inicio)
+    if (grid) {
+        grid.style.display = 'grid';
+    }
+    
+    // Los mensajes SIEMPRE visibles (son parte de la identidad del sitio)
+    if (messages) {
+        messages.style.display = 'grid';
+    }
+    
+    // Los filtros solo se muestran en la sección equipo (donde están los profesionales)
+    if (filtros) {
+        filtros.style.display = sectionId === 'equipo' ? 'flex' : 'none';
+    }
     
     // Actualizar clase activa en el menú
     document.querySelectorAll('.public-nav a').forEach(link => {
+        link.classList.remove('active');
         link.style.borderBottom = 'none';
         link.style.paddingBottom = '0';
     });
     
     const activeLink = document.querySelector(`.public-nav a[onclick*="${sectionId}"]`);
     if (activeLink) {
+        activeLink.classList.add('active');
         activeLink.style.borderBottom = '2px solid var(--ocre-calido)';
         activeLink.style.paddingBottom = '5px';
     }
+    
+    console.log(`✅ Sección ${sectionId} mostrada correctamente`);
 };
 
 window.abrirAgenda = function() {
-    console.log('📅 Abriendo agenda...');
-    // Mostrar la sección equipo primero
+    console.log('📅 Abriendo agenda con profesionales y filtros...');
+    
+    // Mostrar la sección equipo
     window.showSection('equipo');
-    showToast('Selecciona un profesional para agendar tu hora', 'info');
+    
+    // Asegurar que los filtros estén visibles
+    const filtros = document.querySelector('.filters');
+    if (filtros) {
+        filtros.style.display = 'flex';
+    }
+    
+    // Asegurar que el grid de profesionales esté visible
+    const grid = document.getElementById('publicGrid');
+    if (grid) {
+        grid.style.display = 'grid';
+    }
+    
+    // Mensaje amigable para el usuario
+    showToast('Selecciona un profesional para ver su disponibilidad y agendar tu hora', 'info', 3000);
 };
 
 window.enviarContacto = function() {
@@ -94,8 +128,16 @@ window.enviarContacto = function() {
         return;
     }
     
+    // Validar email simple
+    if (!email.includes('@') || !email.includes('.')) {
+        showToast('Ingresa un email válido', 'error');
+        return;
+    }
+    
     // Aquí puedes agregar la lógica para enviar el mensaje
-    showToast('Mensaje enviado, te contactaremos pronto', 'success');
+    console.log('📧 Mensaje de contacto:', { nombre, email, mensaje });
+    
+    showToast('✅ Mensaje enviado, te contactaremos pronto', 'success');
     
     // Limpiar formulario
     document.getElementById('contactName').value = '';
@@ -261,60 +303,49 @@ export function renderProfessionals(professionals) {
         const horasLibres = slotsHoy.length - totalOcupadosHoy;
 
         // ============================================
-        // 🎨 TARJETA ESTILO PUNTOTERAPIA - EXACTA
+        // 🎨 TARJETA ESTILO PUNTOTERAPIA - EXACTA CON CLASES CSS
         // ============================================
         return `
-            <div class="therapist-card" data-id="${p.id}" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+            <div class="therapist-card" data-id="${p.id}">
                 <!-- Imagen del profesional -->
-                <div style="width: 100%; height: 280px; overflow: hidden;">
-                    <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                <div class="img-container">
+                    <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}">
                 </div>
                 
                 <!-- Contenido de la tarjeta -->
-                <div style="padding: 25px;">
+                <div class="card-body">
                     <!-- Nombre en MAYÚSCULAS -->
-                    <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--texto-principal); margin-bottom: 10px; text-transform: uppercase;">${p.name}</h3>
+                    <h3>${p.name}</h3>
                     
-                    <!-- Título profesional (formato específico) -->
-                    <p style="color: var(--texto-secundario); font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
-                        ${p.title || 'Psicólogo Clínico de Adultos y Adolescentes, Terapeuta Familiar y de Parejas.'}
-                    </p>
+                    <!-- Título profesional -->
+                    <p>${p.title || 'Psicólogo Clínico de Adultos y Adolescentes, Terapeuta Familiar y de Parejas.'}</p>
                     
-                    <!-- Botones en fila -->
-                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                        <button onclick="showTherapistInfo('${p.id}')" style="background: transparent; border: 2px solid var(--verde-azulado-claro); color: var(--verde-azulado-claro); padding: 12px 25px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; flex: 1;">
+                    <!-- Botones en fila con clases específicas -->
+                    <div class="price-box">
+                        <button class="btn-mas-info" onclick="event.stopPropagation(); showTherapistInfo('${p.id}')">
                             Más Información
                         </button>
-                        <button onclick="openBooking('${p.id}')" style="background: var(--verde-azulado-profundo); border: none; color: white; padding: 12px 25px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; flex: 1;">
+                        <button class="btn-agendar" onclick="event.stopPropagation(); openBooking('${p.id}')">
                             AGENDA TU HORA
                         </button>
                     </div>
                     
                     <!-- Dirección -->
-                    <div style="display: flex; align-items: center; gap: 8px; color: var(--texto-secundario); font-size: 0.9rem; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--gris-claro);">
-                        <i class="fa fa-map-marker-alt" style="color: var(--ocre-calido);"></i>
+                    <div class="direccion">
+                        <i class="fa fa-map-marker-alt"></i>
                         <span>${p.address || 'Dirección no especificada'}</span>
                     </div>
                     
-                    <!-- Disponibilidad (opcional) -->
-                    ${horasLibres > 0 ? `
-                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 5px;">
-                            <span style="color: var(--exito); font-size: 0.8rem;">
-                                <i class="fa fa-check-circle"></i> ${horasLibres} horario(s) disponible(s) hoy
-                            </span>
-                        </div>
-                    ` : `
-                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 5px;">
-                            <span style="color: var(--peligro); font-size: 0.8rem;">
-                                <i class="fa fa-times-circle"></i> Sin disponibilidad hoy
-                            </span>
-                        </div>
-                    `}
+                    <!-- Disponibilidad -->
+                    <div class="disponibilidad ${horasLibres > 0 ? 'disponible' : 'no-disponible'}">
+                        <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                        <span>${horasLibres > 0 ? `${horasLibres} horario(s) disponible(s) hoy` : 'Sin disponibilidad hoy'}</span>
+                    </div>
                     
-                    <!-- Badge de WhatsApp si existe -->
+                    <!-- WhatsApp si existe -->
                     ${p.whatsapp ? `
-                        <div style="margin-top: 10px;">
-                            <a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank" style="color: var(--whatsapp); text-decoration: none; font-size: 0.9rem;">
+                        <div class="whatsapp-link">
+                            <a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank">
                                 <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
                             </a>
                         </div>
@@ -337,6 +368,12 @@ export function cargarDatosIniciales() {
     const grid = document.getElementById('publicGrid');
     if (grid) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x" style="color:var(--primario);"></i><p>Cargando profesionales...</p></div>';
+    }
+
+    // Ocultar filtros inicialmente (solo se muestran en equipo)
+    const filtros = document.querySelector('.filters');
+    if (filtros) {
+        filtros.style.display = 'none';
     }
 
     // Cargar profesionales
@@ -598,4 +635,4 @@ window.forceRenderProfessionals = function() {
 };
 window.actualizarTodasLasSecciones = actualizarTodasLasSecciones;
 
-console.log('✅ publico.js cargado con estilo Puntoterapia exacto, funciones de navegación y secciones editables v3.0');
+console.log('✅ publico.js cargado con navegación corregida y estilo Puntoterapia exacto v3.0');

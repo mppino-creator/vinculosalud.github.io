@@ -1259,7 +1259,7 @@
         </section>
 
         <!-- SECCIÓN QUIENES SOMOS - EDITABLE -->
-        <section id="about" class="about-section">
+        <section id="about" class="about-section" style="display: none;">
             <!-- Botón de edición para admin -->
             <div class="admin-edit-btn" id="adminAboutEditBtn" style="display: none;" onclick="showAboutModal()">
                 <i class="fa fa-edit"></i> Editar sección
@@ -1300,8 +1300,8 @@
             </div>
         </section>
 
-        <!-- FILTROS DE BÚSQUEDA (siempre visibles) -->
-        <div class="filters">
+        <!-- FILTROS DE BÚSQUEDA - Solo visibles en Equipo -->
+        <div class="filters" style="display: none;">
             <input type="text" class="filter-input" id="searchFilter" placeholder="🔍 Buscar profesional..." oninput="filterProfessionals()">
             <select class="filter-select" id="specialtyFilter" onchange="filterProfessionals()">
                 <option value="">🏷️ Todas las especialidades</option>
@@ -1467,8 +1467,10 @@
         </section>
     </main>
 
-    <!-- Panel de Reserva - COMPLETO (con 3 campos de teléfono, edad y tutor) -->
+    <!-- Panel de Reserva - COMPLETO (desde línea 1700 de tu original) -->
     <div id="bookingPanel" class="panel">
+        <!-- AQUÍ VA TODO EL CÓDIGO DE TU PANEL DE RESERVA ORIGINAL -->
+        <!-- Copia desde tu archivo original desde <div id="bookingPanel" hasta su cierre -->
         <div class="dashboard-header">
             <h2>Solicitar Cita con <span id="psychName"></span></h2>
             <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="closePanels()">Cerrar</button>
@@ -1666,8 +1668,9 @@
         <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;"></div>
     </div>
 
-    <!-- Panel de Dashboard - COMPLETO -->
+    <!-- Panel de Dashboard - COMPLETO (desde línea 2000 de tu original) -->
     <div id="dashboard" class="panel">
+        <!-- AQUÍ VA TODO EL CÓDIGO DE TU PANEL DE DASHBOARD ORIGINAL -->
         <div class="dashboard-header">
             <div>
                 <h2 id="dashTitle">Panel de Gestión</h2>

@@ -37,7 +37,7 @@ export function closeLoginModal() {
 }
 
 // ============================================
-// FUNCIÓN PARA ACTUALIZAR UI SIN CAMBIAR DE VISTA
+// FUNCIÓN PARA ACTUALIZAR UI SIN CAMBIAR DE VISTA - VERSIÓN CORREGIDA
 // ============================================
 function actualizarUIAdmin(userData, role) {
     console.log('👑 Actualizando UI para:', role);
@@ -80,6 +80,31 @@ function actualizarUIAdmin(userData, role) {
         });
     }
     
+    // 🔥 NUEVO: Si es psicólogo, cargar datos completos desde staff
+    if (role === 'psych') {
+        // Buscar datos completos del profesional en staff
+        const psychFullData = state.staff.find(s => s.id == userData.id);
+        if (psychFullData) {
+            // Actualizar currentUser con TODOS los datos
+            state.currentUser.data = psychFullData;
+            console.log('✅ Datos completos del profesional cargados:', psychFullData.name);
+            
+            // Cargar configuración en el dashboard si estamos allí
+            setTimeout(() => {
+                if (document.getElementById('dashboard').style.display === 'block') {
+                    if (typeof loadMyConfig === 'function') {
+                        loadMyConfig();
+                    }
+                }
+                
+                // Cargar especialidades en los selects del perfil
+                if (typeof window.loadSpecialtiesInProfileSelects === 'function') {
+                    window.loadSpecialtiesInProfileSelects();
+                }
+            }, 1000);
+        }
+    }
+    
     // Mostrar mensaje de bienvenida
     const generoEmoji = userData.genero === 'M' ? '♂️' : userData.genero === 'F' ? '♀️' : '';
     showToast(`✅ Sesión iniciada como ${userData.name} ${generoEmoji}`, 'success');
@@ -91,12 +116,21 @@ function actualizarUIAdmin(userData, role) {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR MENÚ STAFF - VERSIÓN MEJORADA
+// FUNCIÓN PARA MOSTRAR MENÚ STAFF - VERSIÓN CORREGIDA
 // ============================================
 window.mostrarMenuStaff = function(desdeLogin = false) {
     if (!state.currentUser) {
         showLoginModal();
         return;
+    }
+    
+    // 🔥 NUEVO: Actualizar datos del profesional desde staff antes de mostrar el menú
+    if (state.currentUser.role === 'psych') {
+        const psychFullData = state.staff.find(s => s.id == state.currentUser.data.id);
+        if (psychFullData) {
+            state.currentUser.data = psychFullData;
+            console.log('✅ Datos actualizados para menú:', psychFullData.name);
+        }
     }
     
     // Si viene del login, solo mostrar el menú, NO ir al dashboard
@@ -220,6 +254,15 @@ window.irADashboard = function() {
     // Cerrar menú
     const menu = document.getElementById('staffMenu');
     if (menu) menu.remove();
+    
+    // 🔥 NUEVO: Cargar datos del profesional si es necesario
+    if (state.currentUser?.role === 'psych') {
+        setTimeout(() => {
+            if (typeof loadMyConfig === 'function') {
+                loadMyConfig();
+            }
+        }, 500);
+    }
 };
 
 // ============================================
@@ -294,7 +337,7 @@ export function processLogin() {
         
         const role = foundUser.isAdmin ? 'admin' : 'psych';
         
-        // Buscar datos COMPLETOS del profesional en staff
+        // 🔥 BUSCAR DATOS COMPLETOS DEL PROFESIONAL EN STAFF
         const psychFullData = state.staff.find(s => s.id == foundUser.id) || foundUser;
         
         // Guardar usuario con TODOS los datos
@@ -305,7 +348,7 @@ export function processLogin() {
         
         closeLoginModal();
         
-        // Guardar en localStorage
+        // Guardar en localStorage (solo datos básicos para no exceder espacio)
         const userToStore = {
             role: role,
             data: {
@@ -321,6 +364,14 @@ export function processLogin() {
         
         // 🔥 IMPORTANTE: Actualizar UI sin cambiar de vista
         actualizarUIAdmin(psychFullData, role);
+        
+        // 🔥 NUEVO: Cargar configuración en background
+        setTimeout(() => {
+            if (typeof loadMyConfig === 'function') {
+                console.log('⚙️ Cargando configuración del profesional...');
+                loadMyConfig();
+            }
+        }, 2000);
         
     } else {
         showToast('Usuario o contraseña incorrectos', 'error');
@@ -653,15 +704,26 @@ export function verificarSesionGuardada() {
         
         if (userData.role === 'admin') {
             state.setCurrentUser(userData);
-            // 🔥 CORREGIDO: usar actualizarUIAdmin en lugar de mostrarDashboardInmediato
             actualizarUIAdmin(userData.data, 'admin');
             return true;
         } else {
             const psychExists = state.staff.some(s => s.id == userData.data.id);
             if (psychExists) {
-                state.setCurrentUser(userData);
-                // 🔥 CORREGIDO: usar actualizarUIAdmin en lugar de mostrarDashboardInmediato
-                actualizarUIAdmin(userData.data, userData.role);
+                // 🔥 NUEVO: Obtener datos completos del staff
+                const psychFullData = state.staff.find(s => s.id == userData.data.id);
+                state.setCurrentUser({ 
+                    role: 'psych', 
+                    data: psychFullData 
+                });
+                actualizarUIAdmin(psychFullData, 'psych');
+                
+                // Cargar configuración
+                setTimeout(() => {
+                    if (typeof loadMyConfig === 'function') {
+                        loadMyConfig();
+                    }
+                }, 1500);
+                
                 return true;
             } else {
                 console.log('⚠️ Psicólogo ya no existe en el sistema');

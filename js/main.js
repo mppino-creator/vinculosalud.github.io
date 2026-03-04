@@ -3,6 +3,7 @@
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
 // ============================================
+import { db } from './config/firebase.js';  // ✅ DEBE SER LA PRIMERA LÍNEA
 import * as state from './modules/state.js';
 window.state = state;
 console.log('✅ state expuesto globalmente inmediatamente');

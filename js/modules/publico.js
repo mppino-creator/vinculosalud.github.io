@@ -3,7 +3,19 @@ import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
 import { renderMessages, updateMarquee } from './mensajes.js';
-import { cargarEspecialidades, cargarMetodosPago, cargarFondo, cargarTextos, cargarLogo } from './personalizacion.js';
+import { 
+    cargarEspecialidades, 
+    cargarMetodosPago, 
+    cargarFondo, 
+    cargarTextos, 
+    cargarLogo,
+    cargarAboutTexts,
+    cargarAtencionTexts,
+    cargarContactInfo,
+    updateAboutSection,
+    updateAtencionSection,
+    updateContactSection
+} from './personalizacion.js';
 import { renderStaffTable } from './profesionales.js';
 import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
 import { renderPatients } from './pacientes.js';
@@ -35,6 +47,15 @@ window.showSection = function(sectionId) {
     if (sections[sectionId]) {
         sections[sectionId].style.display = 'block';
         sections[sectionId].scrollIntoView({ behavior: 'smooth' });
+        
+        // Actualizar contenido dinámico según la sección
+        if (sectionId === 'about') {
+            updateAboutSection();
+        } else if (sectionId === 'atencion') {
+            updateAtencionSection();
+        } else if (sectionId === 'contacto') {
+            updateContactSection();
+        }
     }
     
     // Siempre mostrar el grid de profesionales y mensajes
@@ -279,10 +300,16 @@ export function renderProfessionals(professionals) {
                     ${horasLibres > 0 ? `
                         <div style="margin-top: 10px; display: flex; align-items: center; gap: 5px;">
                             <span style="color: var(--exito); font-size: 0.8rem;">
-                                <i class="fa fa-check-circle"></i> ${horasLibres} horario(s) disponible(s)
+                                <i class="fa fa-check-circle"></i> ${horasLibres} horario(s) disponible(s) hoy
                             </span>
                         </div>
-                    ` : ''}
+                    ` : `
+                        <div style="margin-top: 10px; display: flex; align-items: center; gap: 5px;">
+                            <span style="color: var(--peligro); font-size: 0.8rem;">
+                                <i class="fa fa-times-circle"></i> Sin disponibilidad hoy
+                            </span>
+                        </div>
+                    `}
                     
                     <!-- Badge de WhatsApp si existe -->
                     ${p.whatsapp ? `
@@ -305,11 +332,14 @@ function getAverageRating(psychId) {
 }
 
 export function cargarDatosIniciales() {
+    console.log('🚀 Cargando datos iniciales...');
+    
     const grid = document.getElementById('publicGrid');
     if (grid) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x" style="color:var(--primario);"></i><p>Cargando profesionales...</p></div>';
     }
 
+    // Cargar profesionales
     db.ref('Staff').once('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -415,6 +445,7 @@ export function cargarDatosIniciales() {
         state.setDataLoaded(true);
     });
 
+    // Cargar boxes
     db.ref('Boxes').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -475,6 +506,7 @@ export function cargarDatosIniciales() {
         }
     });
 
+    // Cargar solicitudes pendientes
     db.ref('PendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -485,6 +517,7 @@ export function cargarDatosIniciales() {
         if (state.currentUser) renderPendingRequests();
     });
 
+    // Cargar mensajes
     db.ref('Messages').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -503,12 +536,48 @@ export function cargarDatosIniciales() {
         }
     });
 
+    // ============================================
+    // CARGAR TODOS LOS TEXTOS EDITABLES
+    // ============================================
+    console.log('📝 Cargando textos editables...');
+    
+    // Cargar configuraciones básicas
     cargarEspecialidades();
     cargarMetodosPago();
     cargarFondo();
     cargarTextos();
     cargarLogo();
+    
+    // Cargar nuevas secciones editables
+    cargarAboutTexts();
+    cargarAtencionTexts();
+    cargarContactInfo();
+    
+    // Actualizar vistas después de cargar
+    setTimeout(() => {
+        updateAboutSection();
+        updateAtencionSection();
+        updateContactSection();
+    }, 500);
 }
+
+// ============================================
+// FUNCIÓN PARA ACTUALIZAR TODAS LAS SECCIONES
+// ============================================
+
+export function actualizarTodasLasSecciones() {
+    console.log('🔄 Actualizando todas las secciones...');
+    updateAboutSection();
+    updateAtencionSection();
+    updateContactSection();
+    if (typeof filterProfessionals === 'function') {
+        filterProfessionals();
+    }
+}
+
+// ============================================
+// FUNCIONES DE UTILIDAD
+// ============================================
 
 export function forzarCargaDatos() {
     console.log('🔄 Forzando carga de datos...');
@@ -517,6 +586,9 @@ export function forzarCargaDatos() {
     }
 }
 
+// ============================================
+// EXPORTAR FUNCIONES GLOBALES
+// ============================================
 window.forzarCargaDatos = forzarCargaDatos;
 window.forceRenderProfessionals = function() {
     console.log('🔄 Forzando renderizado de profesionales...');
@@ -524,5 +596,6 @@ window.forceRenderProfessionals = function() {
         filterProfessionals();
     }
 };
+window.actualizarTodasLasSecciones = actualizarTodasLasSecciones;
 
-console.log('✅ publico.js cargado con estilo Puntoterapia exacto y funciones de navegación');
+console.log('✅ publico.js cargado con estilo Puntoterapia exacto, funciones de navegación y secciones editables v3.0');

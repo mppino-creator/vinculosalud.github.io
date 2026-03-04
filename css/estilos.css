@@ -1,12 +1,12 @@
 /* ============================================
-   VÍNCULO SALUD v2.0 - ESTILOS PRINCIPALES
-   Diseño Apple con paleta Puntoterapia
+   VÍNCULO SALUD v3.0 - ESTILOS PRINCIPALES
+   Diseño Puntoterapia con paleta personalizada
    ============================================ */
 
 :root {
-    /* 🎨 NUEVA PALETA - Inspirada en Puntoterapia y tus colores */
+    /* 🎨 PALETA PERSONALIZADA - DE TU IMAGEN LOGO MEJOR.JPG */
     --verde-azulado-profundo: #1E7A8A;  /* Turquesa profundo - títulos, acentos */
-    --verde-azulado-claro: #63B0C7;     /* Turquesa claro - botones, enlaces */
+    --verde--azulado-claro: #63B0C7;     /* Turquesa claro - botones, enlaces */
     --ocre-calido: #C8A161;              /* Ocre cálido - detalles, hovers */
     --verde-grisaceo-claro: #E5EADF;     /* Verde grisáceo suave - fondos de secciones */
     --crema-fondo: #FAF5EC;               /* Crema - fondo principal */
@@ -2003,7 +2003,15 @@ h3, h4, h5,
     }
 }
 
-/* Estilos adicionales para las tarjetas estilo Puntoterapia */
+/* ============================================
+   ESTILOS ADICIONALES PUNTOTERAPIA
+   ============================================ */
+
+/* Estilos para las tarjetas estilo Puntoterapia */
+.therapist-card button {
+    transition: all 0.3s ease;
+}
+
 .therapist-card button:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
@@ -2018,15 +2026,232 @@ h3, h4, h5,
     background: var(--primario-hover);
 }
 
-/* Estilos para el menú de navegación */
+/* Estilos para el menú de navegación pública */
+.public-nav {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 20px 0 30px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--gris-claro);
+    flex-wrap: wrap;
+    background: white;
+    border-radius: 0 0 30px 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+
 .public-nav a {
-    transition: all 0.3s;
+    color: var(--texto-principal);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    padding: 5px 0;
 }
 
 .public-nav a:hover:not(:last-child) {
     color: var(--ocre-calido);
 }
 
+.public-nav a.active {
+    border-bottom: 2px solid var(--ocre-calido);
+    padding-bottom: 5px;
+}
+
+.public-nav a:last-child {
+    background: var(--verde-azulado-profundo);
+    color: white;
+    padding: 8px 22px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
 .public-nav a:last-child:hover {
     background: var(--primario-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(30, 122, 138, 0.3);
+}
+
+/* Estilos para la sección Quiénes Somos editable */
+.about-section {
+    position: relative;
+    margin: 60px 0;
+    padding: 40px;
+    background: white;
+    border-radius: 48px;
+    box-shadow: 0 8px 30px var(--sombra);
+}
+
+.about-section h2 {
+    color: var(--verde-azulado-profundo);
+    font-size: 2.2rem;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.about-section .mission-vision-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 30px;
+}
+
+.about-section .mission-box,
+.about-section .vision-box {
+    background: var(--verde-grisaceo-claro);
+    padding: 30px;
+    border-radius: 24px;
+    text-align: center;
+}
+
+.about-section .mission-box i,
+.about-section .vision-box i {
+    font-size: 2.5rem;
+    color: var(--ocre-calido);
+    margin-bottom: 15px;
+}
+
+.about-section .mission-box h3,
+.about-section .vision-box h3 {
+    color: var(--verde-azulado-profundo);
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.about-section .mission-box p,
+.about-section .vision-box p {
+    color: var(--texto-secundario);
+    line-height: 1.6;
+}
+
+/* Estilos para la sección Tipo de Atención */
+.atencion-section {
+    margin: 60px 0;
+    padding: 40px;
+    background: white;
+    border-radius: 48px;
+}
+
+.atencion-section h2 {
+    color: var(--verde-azulado-profundo);
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2.2rem;
+}
+
+.atencion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+}
+
+.atencion-card {
+    text-align: center;
+    padding: 30px;
+}
+
+.atencion-card i {
+    font-size: 3rem;
+    color: var(--ocre-calido);
+    margin-bottom: 20px;
+}
+
+.atencion-card h3 {
+    color: var(--verde-azulado-profundo);
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.atencion-card p {
+    color: var(--texto-secundario);
+}
+
+/* Estilos para la sección Contacto */
+.contact-section {
+    margin: 60px 0;
+    padding: 40px;
+    background: white;
+    border-radius: 48px;
+}
+
+.contact-section h2 {
+    color: var(--verde-azulado-profundo);
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2.2rem;
+}
+
+.contact-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.contact-form .form-group {
+    margin-bottom: 20px;
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--gris-claro);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: none;
+    border-color: var(--ocre-calido);
+    box-shadow: 0 0 0 3px rgba(200, 161, 97, 0.1);
+}
+
+.contact-form button {
+    width: 100%;
+    background: var(--ocre-calido);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 40px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.contact-form button:hover {
+    background: var(--verde-azulado-claro);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(99, 176, 199, 0.3);
+}
+
+/* Botón de edición para admin */
+.admin-edit-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--primario);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.admin-edit-btn:hover {
+    background: var(--primario-hover);
+    transform: translateY(-2px);
+}
+
+/* Scroll suave para las secciones */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px;
 }

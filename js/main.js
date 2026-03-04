@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN CORREGIDA Y OPTIMIZADA CON PERFIL PROFESIONAL
+// js/main.js - VERSIÓN COMPLETA CON SECCIONES EDITABLES v3.0
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -19,6 +19,7 @@ import * as boxes from './modules/boxes.js';
 import * as mensajes from './modules/mensajes.js';
 import * as personalizacion from './modules/personalizacion.js';
 import * as publico from './modules/publico.js';
+import * as admin from './modules/admin.js';
 
 // Módulos de fichas clínicas
 import * as fichasClinicas from './modules/fichasClinicas.js';
@@ -145,32 +146,68 @@ window.toggleBoxStatus = boxes.toggleBoxStatus;
 window.deleteBox = boxes.deleteBox;
 
 // ============================================
-// FUNCIONES DE PERSONALIZACIÓN (CORREGIDO)
+// 🆕 FUNCIONES DE PERSONALIZACIÓN (NUEVAS SECCIONES EDITABLES)
 // ============================================
+// Funciones de Logo
 window.showLogoModal = personalizacion.showLogoModal;
 window.closeLogoModal = personalizacion.closeLogoModal;
 window.saveLogo = personalizacion.saveLogo;
 window.removeLogo = personalizacion.removeLogo;
+window.previewLogo = personalizacion.previewLogo;
+
+// Funciones de Textos Hero
 window.showTextsModal = personalizacion.showTextsModal;
 window.closeTextsModal = personalizacion.closeTextsModal;
 window.saveHeroTexts = personalizacion.saveHeroTexts;
+
+// Funciones de Fondo
 window.showBackgroundImageModal = personalizacion.showBackgroundImageModal;
 window.closeBackgroundImageModal = personalizacion.closeBackgroundImageModal;
 window.saveBackgroundImage = personalizacion.saveBackgroundImage;
 window.removeBackgroundImage = personalizacion.removeBackgroundImage;
+window.updateBackgroundOpacity = personalizacion.updateBackgroundOpacity;
+window.previewBackgroundImage = personalizacion.previewBackgroundImage;
+
+// Funciones de Métodos de Pago
 window.showPaymentMethodsModal = personalizacion.showPaymentMethodsModal;
 window.closePaymentMethodsModal = personalizacion.closePaymentMethodsModal;
 window.saveGlobalPaymentMethods = personalizacion.saveGlobalPaymentMethods;
 window.updatePaymentMethodsInfo = personalizacion.updatePaymentMethodsInfo;
 
-// 🔥 CORREGIDO: Asignación de loadMyConfig y saveMyConfig
-window.loadMyConfig = personalizacion.loadMyConfig;
-window.saveMyConfig = personalizacion.saveMyConfig;
-
+// Funciones de Especialidades
 window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
 window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
 window.addSpecialty = personalizacion.addSpecialty;
 window.deleteSpecialty = personalizacion.deleteSpecialty;
+
+// 🔥 Funciones de Configuración Personal
+window.loadMyConfig = personalizacion.loadMyConfig;
+window.saveMyConfig = personalizacion.saveMyConfig;
+
+// 🆕 NUEVAS FUNCIONES PARA SECCIONES EDITABLES
+window.showAboutModal = personalizacion.showAboutModal;
+window.uploadAboutImage = personalizacion.uploadAboutImage;
+window.saveAboutTexts = personalizacion.saveAboutTexts;
+window.showAtencionModal = personalizacion.showAtencionModal;
+window.saveAtencionTexts = personalizacion.saveAtencionTexts;
+window.showContactModal = personalizacion.showContactModal;
+window.saveContactInfo = personalizacion.saveContactInfo;
+
+// ============================================
+// FUNCIONES DE ADMIN
+// ============================================
+window.actualizarContadoresReinicio = admin.actualizarContadoresReinicio;
+window.getEstadisticasGlobales = admin.getEstadisticasGlobales;
+window.eliminarTodasLasFichasIngreso = admin.eliminarTodasLasFichasIngreso;
+window.eliminarTodasLasSesiones = admin.eliminarTodasLasSesiones;
+window.eliminarTodosLosInformes = admin.eliminarTodosLosInformes;
+window.eliminarFichasDePaciente = admin.eliminarFichasDePaciente;
+window.exportarTodasLasFichas = admin.exportarTodasLasFichas;
+window.importarFichas = admin.importarFichas;
+window.limpiarFichasHuerfanas = admin.limpiarFichasHuerfanas;
+window.renderAdminPanel = admin.renderAdminPanel;
+window.addEditButtonsToAdmin = admin.addEditButtonsToAdmin;
+window.exportarDatosExcel = admin.exportarDatosExcel;
 
 // ============================================
 // FUNCIONES DE FICHAS CLÍNICAS
@@ -197,6 +234,17 @@ window.filterProfessionals = publico.filterProfessionals;
 window.formatRut = utils.formatRut;
 window.validarRut = utils.validarRut;
 window.showToast = utils.showToast;
+window.calcularEdad = utils.calcularEdad;
+
+// ============================================
+// FUNCIONES DE NAVEGACIÓN PÚBLICA
+// ============================================
+window.showSection = publico.showSection;
+window.abrirAgenda = publico.abrirAgenda;
+window.enviarContacto = publico.enviarContacto;
+window.compartirPerfil = publico.compartirPerfil;
+window.copiarAlPortapapeles = publico.copiarAlPortapapeles;
+window.showTherapistInfo = publico.showTherapistInfo;
 
 // ============================================
 // 🆕 FUNCIONES DE ESTADO (para acceso global)
@@ -217,6 +265,23 @@ window.miPerfil = function() {
         console.log('👑 Usuario admin:', state.currentUser.data);
         return state.currentUser.data;
     }
+};
+
+// 🆕 Función para ver textos editables
+window.verTextos = function() {
+    console.log('📝 Textos editables:');
+    console.log('- Misión:', state.missionText);
+    console.log('- Visión:', state.visionText);
+    console.log('- Equipo:', state.aboutTeamText);
+    console.log('- Tipos de Atención:', state.atencionTexts);
+    console.log('- Contacto:', state.contactInfo);
+    return {
+        mission: state.missionText,
+        vision: state.visionText,
+        team: state.aboutTeamText,
+        atencion: state.atencionTexts,
+        contact: state.contactInfo
+    };
 };
 
 // ============================================
@@ -246,6 +311,10 @@ console.log('✅ loadMyConfig asignada:', typeof window.loadMyConfig);
 console.log('✅ openMyProfileModal asignada:', typeof window.openMyProfileModal);
 console.log('✅ saveMyProfile asignada:', typeof window.saveMyProfile);
 console.log('✅ miPerfil asignada:', typeof window.miPerfil);
+console.log('✅ showAboutModal asignada:', typeof window.showAboutModal);
+console.log('✅ showAtencionModal asignada:', typeof window.showAtencionModal);
+console.log('✅ showContactModal asignada:', typeof window.showContactModal);
+console.log('✅ verTextos asignada:', typeof window.verTextos);
 
 // ============================================
 // RESPALDO DE EMERGENCIA
@@ -262,10 +331,20 @@ setTimeout(() => {
         window.openMyProfileModal = profesionales.openMyProfileModal;
         window.saveMyProfile = profesionales.saveMyProfile;
     }
+    
+    if (typeof window.showAboutModal !== 'function' && typeof personalizacion?.showAboutModal === 'function') {
+        console.log('🚨 Restaurando showAboutModal desde personalizacion...');
+        window.showAboutModal = personalizacion.showAboutModal;
+        window.saveAboutTexts = personalizacion.saveAboutTexts;
+        window.showAtencionModal = personalizacion.showAtencionModal;
+        window.saveAtencionTexts = personalizacion.saveAtencionTexts;
+        window.showContactModal = personalizacion.showContactModal;
+        window.saveContactInfo = personalizacion.saveContactInfo;
+    }
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE
+// FUNCIÓN PARA GUARDAR EN FIREBASE (ACTUALIZADA)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -302,6 +381,20 @@ export function save() {
     const informesObj = {};
     state.informes.forEach(item => { informesObj[item.id] = item; });
 
+    // 🆕 Guardar textos editables
+    const textosEditablesObj = {
+        missionText: state.missionText,
+        visionText: state.visionText,
+        aboutTeamText: state.aboutTeamText,
+        aboutImage: state.aboutImage,
+        atencionTexts: state.atencionTexts,
+        contactInfo: state.contactInfo,
+        heroTexts: state.heroTexts,
+        logoImage: state.logoImage,
+        backgroundImage: state.backgroundImage,
+        globalPaymentMethods: state.globalPaymentMethods
+    };
+
     const updates = {
         '/Staff': staffObj,
         '/Boxes': boxesObj,
@@ -311,7 +404,8 @@ export function save() {
         '/Messages': messagesObj,
         '/FichasIngreso': fichasIngresoObj,
         '/Sesiones': sesionesObj,
-        '/Informes': informesObj
+        '/Informes': informesObj,
+        '/TextosEditables': textosEditablesObj
     };
 
     db.ref().update(updates)
@@ -334,6 +428,11 @@ export function save() {
                     if (typeof profesionales.renderStaffTable === 'function') profesionales.renderStaffTable();
                     if (typeof mensajes.renderMessagesTable === 'function') mensajes.renderMessagesTable();
                     if (typeof boxes.renderBoxesTable === 'function') boxes.renderBoxesTable();
+                    
+                    // Actualizar botones de admin
+                    if (typeof admin.addEditButtonsToAdmin === 'function') {
+                        setTimeout(admin.addEditButtonsToAdmin, 500);
+                    }
                 }
                 if (state.currentUser.role === 'psych') {
                     if (typeof pacientes.renderPatients === 'function') pacientes.renderPatients();
@@ -344,6 +443,11 @@ export function save() {
             if (typeof publico.filterProfessionals === 'function') publico.filterProfessionals();
             if (typeof mensajes.renderMessages === 'function') mensajes.renderMessages();
             if (typeof mensajes.updateMarquee === 'function') mensajes.updateMarquee();
+            
+            // Actualizar secciones editables
+            if (typeof personalizacion.updateAboutSection === 'function') personalizacion.updateAboutSection();
+            if (typeof personalizacion.updateAtencionSection === 'function') personalizacion.updateAtencionSection();
+            if (typeof personalizacion.updateContactSection === 'function') personalizacion.updateContactSection();
             
             // Mostrar toast de éxito
             if (typeof utils.showToast === 'function') utils.showToast('✅ Datos guardados', 'success');
@@ -376,6 +480,11 @@ if (savedUser) {
                 // Actualizar botón de perfil
                 if (typeof window.updateProfileButton === 'function') {
                     setTimeout(window.updateProfileButton, 1000);
+                }
+                
+                // Si es admin, agregar botones de edición
+                if (state.currentUser.role === 'admin' && typeof admin.addEditButtonsToAdmin === 'function') {
+                    setTimeout(admin.addEditButtonsToAdmin, 2000);
                 }
             }
         }, 100);
@@ -411,4 +520,4 @@ window.addEventListener('load', function() {
 // ============================================
 import './modules/admin.js';
 
-console.log('✅ main.js cargado completamente');
+console.log('✅ main.js cargado completamente con todas las funciones de secciones editables v3.0');

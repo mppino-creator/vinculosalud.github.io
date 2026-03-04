@@ -26,6 +26,122 @@ export function actualizarContadoresReinicio() {
 }
 
 // ============================================
+// 🆕 FUNCIÓN PARA AGREGAR BOTONES DE EDICIÓN EN EL DASHBOARD
+// ============================================
+
+export function addEditButtonsToAdmin() {
+    console.log('🔧 Agregando botones de edición al panel de admin...');
+    
+    // Esperar a que exista la pestaña de personalización
+    setTimeout(() => {
+        // Buscar la pestaña de personalización o crear una nueva sección
+        let tabPersonalizacion = document.getElementById('tabPersonalizacion');
+        
+        // Si no existe la pestaña, buscar en el dashboard
+        if (!tabPersonalizacion) {
+            // Buscar en las pestañas existentes
+            const dashboardTabs = document.getElementById('dashboardTabs');
+            if (dashboardTabs) {
+                // Crear nueva pestaña si no existe
+                if (!document.getElementById('adminTabPersonalizacion')) {
+                    const newTab = document.createElement('div');
+                    newTab.className = 'tab';
+                    newTab.id = 'adminTabPersonalizacion';
+                    newTab.setAttribute('onclick', "switchTab('personalizacion')");
+                    newTab.innerText = '🎨 Personalización';
+                    dashboardTabs.appendChild(newTab);
+                }
+                
+                // Crear contenido de la pestaña si no existe
+                if (!document.getElementById('tabPersonalizacion')) {
+                    const tabContent = document.createElement('div');
+                    tabContent.id = 'tabPersonalizacion';
+                    tabContent.className = 'tab-content';
+                    
+                    // Insertar después de la última pestaña existente
+                    const lastTab = document.querySelector('.tab-content:last-of-type');
+                    if (lastTab) {
+                        lastTab.parentNode.insertBefore(tabContent, lastTab.nextSibling);
+                    } else {
+                        document.getElementById('dashboard').appendChild(tabContent);
+                    }
+                }
+            }
+            
+            tabPersonalizacion = document.getElementById('tabPersonalizacion');
+        }
+        
+        if (!tabPersonalizacion) return;
+        
+        // Limpiar contenido existente
+        tabPersonalizacion.innerHTML = '';
+        
+        // Crear título
+        const title = document.createElement('h2');
+        title.innerText = '🎨 Personalización del Sitio';
+        title.style.marginBottom = '20px';
+        tabPersonalizacion.appendChild(title);
+        
+        // Crear contenedor de botones
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'admin-edit-buttons';
+        buttonContainer.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;';
+        
+        buttonContainer.innerHTML = `
+            <button class="btn-staff" onclick="showAboutModal()" style="background: var(--primario); padding: 15px; font-size: 1rem;">
+                <i class="fa fa-users"></i> Editar Quiénes Somos
+            </button>
+            <button class="btn-staff" onclick="showAtencionModal()" style="background: var(--ocre-calido); padding: 15px; font-size: 1rem;">
+                <i class="fa fa-list"></i> Editar Tipos de Atención
+            </button>
+            <button class="btn-staff" onclick="showContactModal()" style="background: var(--verde-azulado-claro); padding: 15px; font-size: 1rem;">
+                <i class="fa fa-address-card"></i> Editar Contacto
+            </button>
+            <button class="btn-staff" onclick="showTextsModal()" style="background: var(--verde-azulado-profundo); padding: 15px; font-size: 1rem;">
+                <i class="fa fa-pen"></i> Editar Textos Hero
+            </button>
+            <button class="btn-staff" onclick="showLogoModal()" style="background: var(--box-color); padding: 15px; font-size: 1rem;">
+                <i class="fa fa-image"></i> Editar Logo
+            </button>
+            <button class="btn-staff" onclick="showBackgroundImageModal()" style="background: var(--exito); padding: 15px; font-size: 1rem;">
+                <i class="fa fa-wallpaper"></i> Editar Fondo
+            </button>
+        `;
+        
+        tabPersonalizacion.appendChild(buttonContainer);
+        
+        // Agregar sección de estadísticas de textos
+        const statsContainer = document.createElement('div');
+        statsContainer.style.cssText = 'margin-top: 30px; background: white; border-radius: 20px; padding: 20px; border: 1px solid var(--gris-claro);';
+        statsContainer.innerHTML = `
+            <h3 style="margin-bottom: 15px; color: var(--verde-azulado-profundo);">📊 Estado de Textos Editables</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div style="background: var(--verde-grisaceo-claro); padding: 15px; border-radius: 12px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Misión</div>
+                    <div style="font-size: 0.9rem; color: var(--texto-secundario);">${state.missionText?.substring(0, 50)}...</div>
+                </div>
+                <div style="background: var(--verde-grisaceo-claro); padding: 15px; border-radius: 12px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Visión</div>
+                    <div style="font-size: 0.9rem; color: var(--texto-secundario);">${state.visionText?.substring(0, 50)}...</div>
+                </div>
+                <div style="background: var(--verde-grisaceo-claro); padding: 15px; border-radius: 12px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Email Contacto</div>
+                    <div style="font-size: 0.9rem; color: var(--texto-secundario);">${state.contactInfo?.email || 'No definido'}</div>
+                </div>
+                <div style="background: var(--verde-grisaceo-claro); padding: 15px; border-radius: 12px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Teléfono</div>
+                    <div style="font-size: 0.9rem; color: var(--texto-secundario);">${state.contactInfo?.phone || 'No definido'}</div>
+                </div>
+            </div>
+        `;
+        
+        tabPersonalizacion.appendChild(statsContainer);
+        
+        console.log('✅ Botones de edición agregados al panel de admin');
+    }, 2000);
+}
+
+// ============================================
 // FUNCIONES DE ESTADÍSTICAS GLOBALES
 // ============================================
 
@@ -255,8 +371,19 @@ export function exportarTodasLasFichas() {
     
     const backup = {
         fecha: new Date().toISOString(),
-        version: '2.0',
+        version: '3.0',
         estadisticas: getEstadisticasGlobales(),
+        textosEditables: {
+            missionText: state.missionText,
+            visionText: state.visionText,
+            aboutTeamText: state.aboutTeamText,
+            aboutImage: state.aboutImage,
+            atencionTexts: state.atencionTexts,
+            contactInfo: state.contactInfo,
+            heroTexts: state.heroTexts,
+            logoImage: state.logoImage,
+            backgroundImage: state.backgroundImage
+        },
         datos: {
             pacientes: state.patients,
             fichasIngreso: state.fichasIngreso,
@@ -264,7 +391,9 @@ export function exportarTodasLasFichas() {
             informes: state.informes,
             citas: state.appointments,
             mensajes: state.messages,
-            profesionales: state.staff
+            profesionales: state.staff,
+            boxes: state.boxes,
+            specialties: state.specialties
         }
     };
     
@@ -300,8 +429,25 @@ export function importarFichas() {
             try {
                 const backup = JSON.parse(ev.target.result);
                 
-                if (confirm(`¿Importar ${backup.datos?.fichasIngreso?.length || 0} fichas de ingreso, ${backup.datos?.sesiones?.length || 0} sesiones y ${backup.datos?.informes?.length || 0} informes? Los datos actuales se mantendrán.`)) {
+                if (confirm(`¿Importar datos del backup?`)) {
                     
+                    // Importar textos editables si existen
+                    if (backup.textosEditables) {
+                        if (backup.textosEditables.missionText) state.missionText = backup.textosEditables.missionText;
+                        if (backup.textosEditables.visionText) state.visionText = backup.textosEditables.visionText;
+                        if (backup.textosEditables.aboutTeamText) state.aboutTeamText = backup.textosEditables.aboutTeamText;
+                        if (backup.textosEditables.aboutImage) state.aboutImage = backup.textosEditables.aboutImage;
+                        if (backup.textosEditables.atencionTexts) state.atencionTexts = backup.textosEditables.atencionTexts;
+                        if (backup.textosEditables.contactInfo) state.contactInfo = backup.textosEditables.contactInfo;
+                        if (backup.textosEditables.heroTexts) state.heroTexts = backup.textosEditables.heroTexts;
+                        if (backup.textosEditables.logoImage) state.logoImage = backup.textosEditables.logoImage;
+                        if (backup.textosEditables.backgroundImage) state.backgroundImage = backup.textosEditables.backgroundImage;
+                    }
+                    
+                    // Importar datos
+                    if (backup.datos?.pacientes) {
+                        state.setPatients([...state.patients, ...backup.datos.pacientes]);
+                    }
                     if (backup.datos?.fichasIngreso) {
                         state.setFichasIngreso([...state.fichasIngreso, ...backup.datos.fichasIngreso]);
                     }
@@ -311,10 +457,30 @@ export function importarFichas() {
                     if (backup.datos?.informes) {
                         state.setInformes([...state.informes, ...backup.datos.informes]);
                     }
+                    if (backup.datos?.citas) {
+                        state.setAppointments([...state.appointments, ...backup.datos.citas]);
+                    }
+                    if (backup.datos?.mensajes) {
+                        state.setMessages([...state.messages, ...backup.datos.mensajes]);
+                    }
+                    if (backup.datos?.profesionales) {
+                        state.setStaff([...state.staff, ...backup.datos.profesionales]);
+                    }
+                    if (backup.datos?.boxes) {
+                        state.setBoxes([...state.boxes, ...backup.datos.boxes]);
+                    }
+                    if (backup.datos?.specialties) {
+                        state.setSpecialties([...state.specialties, ...backup.datos.specialties]);
+                    }
                     
                     import('../main.js').then(main => main.save());
                     showToast('✅ Datos importados correctamente', 'success');
                     actualizarContadoresReinicio();
+                    
+                    // Actualizar vistas
+                    if (typeof window.updateAboutSection === 'function') window.updateAboutSection();
+                    if (typeof window.updateAtencionSection === 'function') window.updateAtencionSection();
+                    if (typeof window.updateContactSection === 'function') window.updateContactSection();
                 }
             } catch (error) {
                 console.error('Error importando:', error);
@@ -484,7 +650,7 @@ window.eliminarCitasPrueba = function() {
 window.reinicioCompleto = function() {
     if (!state.currentUser || state.currentUser.role !== 'admin') return;
     
-    if (confirm('🔥 ¿REINICIO COMPLETO? Esto eliminará TODOS los pacientes, mensajes, citas, solicitudes Y FICHAS CLÍNICAS. Los profesionales se mantienen. ¿Continuar?')) {
+    if (confirm('🔥 ¿REINICIO COMPLETO? Esto eliminará TODOS los pacientes, mensajes, citas, solicitudes, FICHAS CLÍNICAS Y TEXTOS EDITABLES. Los profesionales se mantienen. ¿Continuar?')) {
         if (confirm('ÚLTIMA CONFIRMACIÓN: ¿Estás ABSOLUTAMENTE SEGURO?')) {
             state.setPatients([]);
             state.setMessages([]);
@@ -494,9 +660,31 @@ window.reinicioCompleto = function() {
             state.setSesiones([]);
             state.setInformes([]);
             
+            // Reiniciar textos editables
+            state.missionText = 'Acompañar a las personas en su proceso de sanación emocional...';
+            state.visionText = 'Ser un referente en salud mental en la región...';
+            state.aboutTeamText = 'Nuestro equipo está formado por profesionales...';
+            state.aboutImage = '';
+            state.atencionTexts = {
+                online: { title: 'Online', description: 'Sesiones por videollamada' },
+                presencial: { title: 'Presencial', description: 'Atención en consultorio' },
+                pareja: { title: 'Pareja', description: 'Terapia de pareja' },
+                familiar: { title: 'Familiar', description: 'Terapia familiar' }
+            };
+            state.contactInfo = {
+                email: 'contacto@vinculosalud.cl',
+                phone: '+56 9 1234 5678',
+                address: 'Av. Principal 123, Santiago'
+            };
+            
             import('../main.js').then(main => main.save());
-            showToast('✅ Sistema reiniciado completamente (incluyendo fichas clínicas)', 'success');
+            showToast('✅ Sistema reiniciado completamente', 'success');
             actualizarContadoresReinicio();
+            
+            // Actualizar vistas
+            if (typeof window.updateAboutSection === 'function') window.updateAboutSection();
+            if (typeof window.updateAtencionSection === 'function') window.updateAtencionSection();
+            if (typeof window.updateContactSection === 'function') window.updateContactSection();
         }
     }
 };
@@ -564,9 +752,17 @@ if (typeof window !== 'undefined') {
     window.importarFichas = importarFichas;
     window.limpiarFichasHuerfanas = limpiarFichasHuerfanas;
     window.renderAdminPanel = renderAdminPanel;
+    window.addEditButtonsToAdmin = addEditButtonsToAdmin;
+    
+    // Llamar a la función para agregar botones después de un tiempo
+    setTimeout(() => {
+        if (state.currentUser?.role === 'admin') {
+            addEditButtonsToAdmin();
+        }
+    }, 3000);
 }
 
-console.log('✅ admin.js cargado con estadísticas integradas');
+console.log('✅ admin.js cargado con estadísticas integradas y botones de edición v3.0');
 
 // ============================================
 // EXPORTAR DATOS A EXCEL
@@ -586,13 +782,13 @@ window.exportarDatosExcel = function(tipo) {
         case 'pacientes':
             datos = state.patients.filter(p => !p.isHiddenAdmin);
             nombreArchivo = `pacientes_${new Date().toISOString().split('T')[0]}.csv`;
-            headers = ['RUT', 'Nombre', 'Email', 'Teléfono', 'Fecha Nacimiento', 'Profesional', 'Notas'];
+            headers = ['RUT', 'Nombre', 'Email', 'Teléfono', 'Fecha Nacimiento', 'Edad', 'Profesional', 'Notas'];
             
-            // Convertir a CSV
             let csvPacientes = headers.join(',') + '\n';
             datos.forEach(p => {
                 const profesional = state.staff.find(s => s.id == p.psychId)?.name || 'Sin asignar';
-                csvPacientes += `"${p.rut || ''}","${p.name || ''}","${p.email || ''}","${p.phone || ''}","${p.birthdate || ''}","${profesional}","${(p.notes || '').replace(/"/g, '""')}"\n`;
+                const edad = p.birthdate ? calcularEdad(p.birthdate) : '';
+                csvPacientes += `"${p.rut || ''}","${p.name || ''}","${p.email || ''}","${p.phone || ''}","${p.birthdate || ''}","${edad}","${profesional}","${(p.notes || '').replace(/"/g, '""')}"\n`;
             });
             
             descargarCSV(csvPacientes, nombreArchivo);
@@ -616,12 +812,12 @@ window.exportarDatosExcel = function(tipo) {
         case 'profesionales':
             datos = state.staff.filter(s => !s.isHiddenAdmin);
             nombreArchivo = `profesionales_${new Date().toISOString().split('T')[0]}.csv`;
-            headers = ['Nombre', 'Email', 'Especialidades', 'WhatsApp', 'Instagram', 'Precio Online', 'Precio Presencial'];
+            headers = ['Nombre', 'Email', 'Especialidades', 'WhatsApp', 'Instagram', 'Precio Online', 'Precio Presencial', 'Título', 'Experiencia'];
             
             let csvProfesionales = headers.join(',') + '\n';
             datos.forEach(p => {
                 const specs = Array.isArray(p.spec) ? p.spec.join(' | ') : p.spec;
-                csvProfesionales += `"${p.name || ''}","${p.email || ''}","${specs || ''}","${p.whatsapp || ''}","${p.instagram || ''}",${p.priceOnline || 0},${p.pricePresencial || 0}\n`;
+                csvProfesionales += `"${p.name || ''}","${p.email || ''}","${specs || ''}","${p.whatsapp || ''}","${p.instagram || ''}",${p.priceOnline || 0},${p.pricePresencial || 0},"${p.title || ''}","${p.experience || 0}"\n`;
             });
             
             descargarCSV(csvProfesionales, nombreArchivo);
@@ -640,6 +836,21 @@ window.exportarDatosExcel = function(tipo) {
             
             descargarCSV(csvMensajes, nombreArchivo);
             showToast(`✅ ${datos.length} mensajes exportados`, 'success');
+            break;
+            
+        case 'fichas':
+            datos = state.fichasIngreso;
+            nombreArchivo = `fichas_ingreso_${new Date().toISOString().split('T')[0]}.csv`;
+            headers = ['Paciente ID', 'Fecha', 'Motivo Consulta', 'Psicólogo'];
+            
+            let csvFichas = headers.join(',') + '\n';
+            datos.forEach(f => {
+                const patient = state.patients.find(p => p.id == f.patientId);
+                csvFichas += `"${f.patientId || ''}","${f.fechaIngreso || ''}","${(f.motivoConsulta || '').replace(/"/g, '""')}","${patient?.name || 'Desconocido'}"\n`;
+            });
+            
+            descargarCSV(csvFichas, nombreArchivo);
+            showToast(`✅ ${datos.length} fichas exportadas`, 'success');
             break;
     }
 };

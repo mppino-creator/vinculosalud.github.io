@@ -4,6 +4,37 @@ import * as state from './state.js';
 import { showToast } from './utils.js';
 
 // ============================================
+// VARIABLES PARA TEXTOS EDITABLES (NUEVAS v3.0)
+// ============================================
+export let missionText = 'Acompañar a las personas en su proceso de sanación emocional, proporcionando herramientas para el crecimiento personal y la mejora de la calidad de vida.';
+export let visionText = 'Ser un referente en salud mental en la región, reconocido por nuestra calidad profesional, calidez humana y compromiso con la comunidad.';
+export let aboutTeamText = 'Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.';
+export let aboutImage = '';
+export let atencionTexts = {
+    online: {
+        title: 'Online',
+        description: 'Sesiones por videollamada desde la comodidad de tu hogar'
+    },
+    presencial: {
+        title: 'Presencial',
+        description: 'Atención en nuestro consultorio con todos los protocolos'
+    },
+    pareja: {
+        title: 'Pareja',
+        description: 'Terapia para fortalecer vínculos y mejorar la comunicación'
+    },
+    familiar: {
+        title: 'Familiar',
+        description: 'Espacio de diálogo y crecimiento para toda la familia'
+    }
+};
+export let contactInfo = {
+    email: 'contacto@vinculosalud.cl',
+    phone: '+56 9 1234 5678',
+    address: 'Av. Principal 123, Santiago'
+};
+
+// ============================================
 // FUNCIONES DE LOGO (AMBOS SIEMPRE VISIBLES)
 // ============================================
 
@@ -250,7 +281,7 @@ export function saveGlobalPaymentMethods() {
         cardPresencial: document.getElementById('globalCardPresencial').checked,
         cardOnline: document.getElementById('globalCardOnline').checked,
         cash: document.getElementById('globalCash').checked,
-        mercadopago: document.getElementById('globalMercadoPago').checked,
+        mercadopago: document.getElementById('globalMercadopago').checked,
         webpay: document.getElementById('globalWebpay').checked
     });
     db.ref('PaymentMethods').set(state.globalPaymentMethods);
@@ -389,6 +420,384 @@ function guardarEspecialidades() {
 }
 
 // ============================================
+// 🆕 NUEVAS FUNCIONES PARA SECCIÓN QUIÉNES SOMOS
+// ============================================
+
+export function cargarAboutTexts() {
+    db.ref('AboutTexts').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            missionText = data.mission || missionText;
+            visionText = data.vision || visionText;
+            aboutTeamText = data.teamText || aboutTeamText;
+            aboutImage = data.image || aboutImage;
+            
+            // Actualizar vista
+            updateAboutSection();
+        }
+    });
+}
+
+export function updateAboutSection() {
+    const missionEl = document.getElementById('missionDisplay');
+    const visionEl = document.getElementById('visionDisplay');
+    const teamTextEl = document.getElementById('teamTextDisplay');
+    const aboutImg = document.getElementById('aboutTeamImage');
+    const placeholder = document.getElementById('aboutImagePlaceholder');
+    
+    if (missionEl) missionEl.innerText = missionText;
+    if (visionEl) visionEl.innerText = visionText;
+    if (teamTextEl) teamTextEl.innerText = aboutTeamText;
+    
+    if (aboutImg && aboutImage) {
+        aboutImg.src = aboutImage;
+        aboutImg.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+    } else if (aboutImg && placeholder) {
+        aboutImg.style.display = 'none';
+        placeholder.style.display = 'flex';
+    }
+}
+
+export function showAboutModal() {
+    // Crear modal si no existe
+    if (!document.getElementById('aboutModal')) {
+        const modalHTML = `
+        <div id="aboutModal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <span class="modal-close" onclick="document.getElementById('aboutModal').style.display='none'">&times;</span>
+                <h2 style="margin-bottom: 25px;">📝 Editar Sección Quiénes Somos</h2>
+                
+                <div class="form-group">
+                    <label>Imagen del equipo</label>
+                    <div class="file-upload" onclick="document.getElementById('aboutImageInput').click()">
+                        <i class="fa fa-cloud-upload-alt"></i> Seleccionar foto grupal
+                    </div>
+                    <input type="file" id="aboutImageInput" accept="image/*" style="display:none;" onchange="uploadAboutImage()">
+                    <img id="aboutImagePreview" src="" style="max-width:100%; max-height:200px; margin-top:15px; border-radius:12px; display:none;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Texto del equipo</label>
+                    <textarea id="teamText" rows="4" class="filter-input" placeholder="Describe al equipo..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Misión</label>
+                    <textarea id="missionText" rows="3" class="filter-input" placeholder="Nuestra misión..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Visión</label>
+                    <textarea id="visionText" rows="3" class="filter-input" placeholder="Nuestra visión..."></textarea>
+                </div>
+                
+                <div style="display:flex; gap:15px;">
+                    <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="saveAboutTexts()">Guardar</button>
+                    <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('aboutModal').style.display='none'">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // Cargar datos actuales
+    document.getElementById('teamText').value = aboutTeamText;
+    document.getElementById('missionText').value = missionText;
+    document.getElementById('visionText').value = visionText;
+    
+    if (aboutImage) {
+        document.getElementById('aboutImagePreview').src = aboutImage;
+        document.getElementById('aboutImagePreview').style.display = 'block';
+    }
+    
+    document.getElementById('aboutModal').style.display = 'flex';
+}
+
+export function uploadAboutImage() {
+    const input = document.getElementById('aboutImageInput');
+    if (!input.files || !input.files[0]) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        aboutImage = e.target.result;
+        
+        // Actualizar vista
+        const img = document.getElementById('aboutTeamImage');
+        const preview = document.getElementById('aboutImagePreview');
+        const placeholder = document.getElementById('aboutImagePlaceholder');
+        
+        if (img) {
+            img.src = e.target.result;
+            img.style.display = 'block';
+        }
+        if (preview) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        if (placeholder) placeholder.style.display = 'none';
+        
+        showToast('✅ Imagen cargada, guarda los cambios', 'success');
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+export function saveAboutTexts() {
+    const teamText = document.getElementById('teamText')?.value;
+    const mission = document.getElementById('missionText')?.value;
+    const vision = document.getElementById('visionText')?.value;
+    const imagePreview = document.getElementById('aboutImagePreview')?.src;
+    
+    // Actualizar variables
+    if (teamText) aboutTeamText = teamText;
+    if (mission) missionText = mission;
+    if (vision) visionText = vision;
+    if (imagePreview && imagePreview.startsWith('data:image')) {
+        aboutImage = imagePreview;
+    }
+    
+    // Guardar en Firebase
+    const aboutData = {
+        teamText: aboutTeamText,
+        mission: missionText,
+        vision: visionText,
+        image: aboutImage
+    };
+    
+    db.ref('AboutTexts').set(aboutData);
+    
+    // Actualizar vista
+    updateAboutSection();
+    
+    document.getElementById('aboutModal').style.display = 'none';
+    showToast('Sección Quiénes Somos actualizada', 'success');
+}
+
+// ============================================
+// 🆕 NUEVAS FUNCIONES PARA SECCIÓN TIPO DE ATENCIÓN
+// ============================================
+
+export function cargarAtencionTexts() {
+    db.ref('AtencionTexts').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            atencionTexts = data;
+        }
+        updateAtencionSection();
+    });
+}
+
+export function updateAtencionSection() {
+    const onlineTitle = document.getElementById('atencionOnlineTitle');
+    const onlineDesc = document.getElementById('atencionOnlineDesc');
+    const presencialTitle = document.getElementById('atencionPresencialTitle');
+    const presencialDesc = document.getElementById('atencionPresencialDesc');
+    const parejaTitle = document.getElementById('atencionParejaTitle');
+    const parejaDesc = document.getElementById('atencionParejaDesc');
+    const familiarTitle = document.getElementById('atencionFamiliarTitle');
+    const familiarDesc = document.getElementById('atencionFamiliarDesc');
+    
+    if (onlineTitle) onlineTitle.innerText = atencionTexts.online?.title || 'Online';
+    if (onlineDesc) onlineDesc.innerText = atencionTexts.online?.description || 'Sesiones por videollamada desde la comodidad de tu hogar';
+    if (presencialTitle) presencialTitle.innerText = atencionTexts.presencial?.title || 'Presencial';
+    if (presencialDesc) presencialDesc.innerText = atencionTexts.presencial?.description || 'Atención en nuestro consultorio con todos los protocolos';
+    if (parejaTitle) parejaTitle.innerText = atencionTexts.pareja?.title || 'Pareja';
+    if (parejaDesc) parejaDesc.innerText = atencionTexts.pareja?.description || 'Terapia para fortalecer vínculos y mejorar la comunicación';
+    if (familiarTitle) familiarTitle.innerText = atencionTexts.familiar?.title || 'Familiar';
+    if (familiarDesc) familiarDesc.innerText = atencionTexts.familiar?.description || 'Espacio de diálogo y crecimiento para toda la familia';
+}
+
+export function showAtencionModal() {
+    // Crear modal si no existe
+    if (!document.getElementById('atencionModal')) {
+        const modalHTML = `
+        <div id="atencionModal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <span class="modal-close" onclick="document.getElementById('atencionModal').style.display='none'">&times;</span>
+                <h2 style="margin-bottom: 25px;">📝 Editar Tipos de Atención</h2>
+                
+                <div style="display: grid; gap: 20px;">
+                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
+                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Online</h3>
+                        <div class="form-group">
+                            <label>Título</label>
+                            <input type="text" id="atencionOnlineTitleInput" class="filter-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea id="atencionOnlineDescInput" rows="2" class="filter-input"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
+                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Presencial</h3>
+                        <div class="form-group">
+                            <label>Título</label>
+                            <input type="text" id="atencionPresencialTitleInput" class="filter-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea id="atencionPresencialDescInput" rows="2" class="filter-input"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
+                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Pareja</h3>
+                        <div class="form-group">
+                            <label>Título</label>
+                            <input type="text" id="atencionParejaTitleInput" class="filter-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea id="atencionParejaDescInput" rows="2" class="filter-input"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
+                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Familiar</h3>
+                        <div class="form-group">
+                            <label>Título</label>
+                            <input type="text" id="atencionFamiliarTitleInput" class="filter-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea id="atencionFamiliarDescInput" rows="2" class="filter-input"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display:flex; gap:15px; margin-top: 30px;">
+                    <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="saveAtencionTexts()">Guardar</button>
+                    <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('atencionModal').style.display='none'">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // Cargar datos actuales
+    document.getElementById('atencionOnlineTitleInput').value = atencionTexts.online?.title || 'Online';
+    document.getElementById('atencionOnlineDescInput').value = atencionTexts.online?.description || '';
+    document.getElementById('atencionPresencialTitleInput').value = atencionTexts.presencial?.title || 'Presencial';
+    document.getElementById('atencionPresencialDescInput').value = atencionTexts.presencial?.description || '';
+    document.getElementById('atencionParejaTitleInput').value = atencionTexts.pareja?.title || 'Pareja';
+    document.getElementById('atencionParejaDescInput').value = atencionTexts.pareja?.description || '';
+    document.getElementById('atencionFamiliarTitleInput').value = atencionTexts.familiar?.title || 'Familiar';
+    document.getElementById('atencionFamiliarDescInput').value = atencionTexts.familiar?.description || '';
+    
+    document.getElementById('atencionModal').style.display = 'flex';
+}
+
+export function saveAtencionTexts() {
+    atencionTexts = {
+        online: {
+            title: document.getElementById('atencionOnlineTitleInput').value,
+            description: document.getElementById('atencionOnlineDescInput').value
+        },
+        presencial: {
+            title: document.getElementById('atencionPresencialTitleInput').value,
+            description: document.getElementById('atencionPresencialDescInput').value
+        },
+        pareja: {
+            title: document.getElementById('atencionParejaTitleInput').value,
+            description: document.getElementById('atencionParejaDescInput').value
+        },
+        familiar: {
+            title: document.getElementById('atencionFamiliarTitleInput').value,
+            description: document.getElementById('atencionFamiliarDescInput').value
+        }
+    };
+    
+    db.ref('AtencionTexts').set(atencionTexts);
+    updateAtencionSection();
+    
+    document.getElementById('atencionModal').style.display = 'none';
+    showToast('Tipos de atención actualizados', 'success');
+}
+
+// ============================================
+// 🆕 NUEVAS FUNCIONES PARA SECCIÓN CONTACTO
+// ============================================
+
+export function cargarContactInfo() {
+    db.ref('ContactInfo').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            contactInfo = data;
+        }
+        updateContactSection();
+    });
+}
+
+export function updateContactSection() {
+    const contactEmail = document.getElementById('contactEmailDisplay');
+    const contactPhone = document.getElementById('contactPhoneDisplay');
+    const contactAddress = document.getElementById('contactAddressDisplay');
+    
+    if (contactEmail) contactEmail.innerText = contactInfo.email || 'contacto@vinculosalud.cl';
+    if (contactPhone) contactPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
+    if (contactAddress) contactAddress.innerText = contactInfo.address || 'Av. Principal 123, Santiago';
+}
+
+export function showContactModal() {
+    // Crear modal si no existe
+    if (!document.getElementById('contactModal')) {
+        const modalHTML = `
+        <div id="contactModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <span class="modal-close" onclick="document.getElementById('contactModal').style.display='none'">&times;</span>
+                <h2 style="margin-bottom: 25px;">📝 Editar Información de Contacto</h2>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="contactEmailInput" class="filter-input" placeholder="contacto@vinculosalud.cl">
+                </div>
+                
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <input type="text" id="contactPhoneInput" class="filter-input" placeholder="+56 9 1234 5678">
+                </div>
+                
+                <div class="form-group">
+                    <label>Dirección</label>
+                    <input type="text" id="contactAddressInput" class="filter-input" placeholder="Av. Principal 123, Santiago">
+                </div>
+                
+                <div style="display:flex; gap:15px;">
+                    <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="saveContactInfo()">Guardar</button>
+                    <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('contactModal').style.display='none'">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // Cargar datos actuales
+    document.getElementById('contactEmailInput').value = contactInfo.email || '';
+    document.getElementById('contactPhoneInput').value = contactInfo.phone || '';
+    document.getElementById('contactAddressInput').value = contactInfo.address || '';
+    
+    document.getElementById('contactModal').style.display = 'flex';
+}
+
+export function saveContactInfo() {
+    contactInfo = {
+        email: document.getElementById('contactEmailInput').value,
+        phone: document.getElementById('contactPhoneInput').value,
+        address: document.getElementById('contactAddressInput').value
+    };
+    
+    db.ref('ContactInfo').set(contactInfo);
+    updateContactSection();
+    
+    document.getElementById('contactModal').style.display = 'none';
+    showToast('Información de contacto actualizada', 'success');
+}
+
+// ============================================
 // CONFIGURACIÓN PERSONAL DEL PSICÓLOGO
 // ============================================
 
@@ -406,7 +815,7 @@ export function loadMyConfig() {
     // Elementos básicos que siempre deben existir
     const myName = document.getElementById('myName');
     const myEmail = document.getElementById('myEmail');
-    const mySpecialtiesSelect = document.getElementById('mySpecialtiesSelect');  // ← NUEVO
+    const mySpecialtiesSelect = document.getElementById('mySpecialtiesSelect');
     const myPriceOnline = document.getElementById('myPriceOnline');
     const myPricePresencial = document.getElementById('myPricePresencial');
     const myWhatsapp = document.getElementById('myWhatsapp');
@@ -457,22 +866,16 @@ export function loadMyConfig() {
     if (myBankRut) myBankRut.value = bank.rut || '';
     if (myBankEmail) myBankEmail.value = bank.email || '';
 
-    // ============================================
     // Mostrar estadísticas del psicólogo
-    // ============================================
     mostrarEstadisticasPsicologo(psych.id);
 
     console.log('✅ Configuración cargada');
 }
 
 // ============================================
-// FUNCIONES PARA ESTADÍSTICAS PERSONALES (ACTUALIZADAS)
+// FUNCIONES PARA ESTADÍSTICAS PERSONALES
 // ============================================
 
-/**
- * Muestra estadísticas del psicólogo en su configuración
- * @param {string} psychId - ID del psicólogo
- */
 function mostrarEstadisticasPsicologo(psychId) {
     const statsContainer = document.getElementById('psychStatsContainer');
     if (!statsContainer) return;
@@ -485,9 +888,7 @@ function mostrarEstadisticasPsicologo(psychId) {
     const misCitas = state.appointments.filter(a => a.psychId == psychId);
     const citasPagadas = misCitas.filter(a => a.paymentStatus === 'pagado');
     
-    // ============================================
     // Estadísticas de fichas clínicas
-    // ============================================
     const fichasIngreso = state.fichasIngreso.filter(f => misPatientIds.includes(f.patientId));
     const sesiones = state.sesiones.filter(s => misPatientIds.includes(s.patientId));
     const informes = state.informes.filter(i => misPatientIds.includes(i.patientId));
@@ -502,116 +903,46 @@ function mostrarEstadisticasPsicologo(psychId) {
         })
         .reduce((sum, a) => sum + (a.price || 0), 0);
 
-    // Renderizar estadísticas con la nueva paleta de colores
+    // Renderizar estadísticas
     statsContainer.innerHTML = `
         <div class="stats-container" style="margin: 20px 0;">
-            <h4 style="margin-bottom: 15px; color: var(--texto-primario); font-size: 1.2rem;">📊 Mis Estadísticas</h4>
+            <h4 style="margin-bottom: 15px; color: var(--texto-principal); font-size: 1.2rem;">📊 Mis Estadísticas</h4>
             
             <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                <div class="stat-box" style="background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
+                <div class="stat-box" style="background: white; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid var(--gris-claro);">
                     <div style="font-size: 2rem; font-weight: 700; color: var(--primario);">${misPacientes.length}</div>
                     <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Pacientes</div>
                 </div>
                 
-                <div class="stat-box" style="background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
+                <div class="stat-box" style="background: white; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid var(--gris-claro);">
                     <div style="font-size: 2rem; font-weight: 700; color: var(--exito);">${sesiones.length}</div>
                     <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Sesiones</div>
                 </div>
                 
-                <div class="stat-box" style="background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
+                <div class="stat-box" style="background: white; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid var(--gris-claro);">
                     <div style="font-size: 2rem; font-weight: 700; color: var(--atencion);">${fichasIngreso.length}</div>
-                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Fichas Ingreso</div>
+                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Fichas</div>
                 </div>
                 
-                <div class="stat-box" style="background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
+                <div class="stat-box" style="background: white; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid var(--gris-claro);">
                     <div style="font-size: 2rem; font-weight: 700; color: var(--box-color);">${informes.length}</div>
                     <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Informes</div>
                 </div>
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                <div style="background: linear-gradient(135deg, var(--primario), var(--primario-hover)); padding: 20px; border-radius: var(--radius-lg); color: white; box-shadow: var(--sombra);">
+                <div style="background: linear-gradient(135deg, var(--primario), var(--primario-hover)); padding: 20px; border-radius: 20px; color: white;">
                     <div style="font-size: 0.9rem; opacity: 0.9;">Ingresos Totales</div>
                     <div style="font-size: 1.8rem; font-weight: 700;">$${ingresosTotales.toLocaleString()}</div>
                 </div>
                 
-                <div style="background: linear-gradient(135deg, var(--primario), var(--primario-hover)); padding: 20px; border-radius: var(--radius-lg); color: white; box-shadow: var(--sombra);">
+                <div style="background: linear-gradient(135deg, var(--primario), var(--primario-hover)); padding: 20px; border-radius: 20px; color: white;">
                     <div style="font-size: 0.9rem; opacity: 0.9;">Ingresos este Mes</div>
                     <div style="font-size: 1.8rem; font-weight: 700;">$${ingresosMes.toLocaleString()}</div>
                 </div>
             </div>
-            
-            <div style="margin-top: 15px; background: var(--fondo-secundario); padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--gris-claro); box-shadow: var(--sombra);">
-                <div style="font-size: 0.9rem; color: var(--texto-secundario);">Promedio de sesiones por paciente</div>
-                <div style="font-size: 1.8rem; font-weight: 700; color: var(--primario);">
-                    ${misPacientes.length > 0 ? (sesiones.length / misPacientes.length).toFixed(1) : 0}
-                </div>
-            </div>
         </div>
     `;
-}
-
-/**
- * Obtiene los últimos pacientes atendidos con sus últimas sesiones
- * @param {string} psychId - ID del psicólogo
- * @param {number} limit - Límite de resultados
- * @returns {Array} Lista de pacientes con última sesión
- */
-export function getRecentPatientsWithSessions(psychId, limit = 5) {
-    const misPacientes = state.patients.filter(p => p.psychId == psychId);
-    
-    return misPacientes
-        .map(patient => {
-            const sesiones = state.sesiones
-                .filter(s => s.patientId == patient.id)
-                .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion));
-            
-            return {
-                ...patient,
-                ultimaSesion: sesiones.length > 0 ? sesiones[0] : null,
-                totalSesiones: sesiones.length,
-                tieneFichaIngreso: state.fichasIngreso.some(f => f.patientId == patient.id)
-            };
-        })
-        .sort((a, b) => {
-            if (!a.ultimaSesion) return 1;
-            if (!b.ultimaSesion) return -1;
-            return new Date(b.ultimaSesion.fechaAtencion) - new Date(a.ultimaSesion.fechaAtencion);
-        })
-        .slice(0, limit);
-}
-
-/**
- * Exporta la configuración personal del psicólogo
- * @returns {Object} Configuración completa
- */
-export function exportMyConfig() {
-    if (!state.currentUser?.data) return null;
-    
-    const psych = state.currentUser.data;
-    
-    return {
-        personal: {
-            nombre: psych.name,
-            email: psych.email,
-            especialidades: psych.spec,
-            whatsapp: psych.whatsapp,
-            instagram: psych.instagram
-        },
-        precios: {
-            online: psych.priceOnline,
-            presencial: psych.pricePresencial
-        },
-        bancarios: psych.bankDetails || {},
-        metodosPago: psych.paymentMethods || state.globalPaymentMethods,
-        estadisticas: {
-            totalPacientes: state.patients.filter(p => p.psychId == psych.id).length,
-            totalSesiones: state.sesiones.filter(s => {
-                const patient = state.patients.find(p => p.id == s.patientId);
-                return patient && patient.psychId == psych.id;
-            }).length
-        }
-    };
 }
 
 // ============================================
@@ -625,11 +956,14 @@ export function cargarTodaPersonalizacion() {
     cargarFondo();
     cargarMetodosPago();
     cargarEspecialidades();
+    cargarAboutTexts();
+    cargarAtencionTexts();
+    cargarContactInfo();
     console.log('✅ Personalización cargada');
 }
 
 // ============================================
-// CONFIGURACIÓN PERSONAL (continuación)
+// CONFIGURACIÓN PERSONAL (guardar)
 // ============================================
 
 export function saveMyConfig() {
@@ -646,7 +980,7 @@ export function saveMyConfig() {
     // Obtener referencias a los campos del formulario
     const myName = document.getElementById('myName');
     const myEmail = document.getElementById('myEmail');
-    const mySpecialtiesSelect = document.getElementById('mySpecialtiesSelect');   // ← NUEVO
+    const mySpecialtiesSelect = document.getElementById('mySpecialtiesSelect');
     const myPriceOnline = document.getElementById('myPriceOnline');
     const myPricePresencial = document.getElementById('myPricePresencial');
     const myWhatsapp = document.getElementById('myWhatsapp');
@@ -721,12 +1055,78 @@ export function saveMyConfig() {
 }
 
 // ============================================
+// FUNCIONES AUXILIARES
+// ============================================
+
+export function getRecentPatientsWithSessions(psychId, limit = 5) {
+    const misPacientes = state.patients.filter(p => p.psychId == psychId);
+    
+    return misPacientes
+        .map(patient => {
+            const sesiones = state.sesiones
+                .filter(s => s.patientId == patient.id)
+                .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion));
+            
+            return {
+                ...patient,
+                ultimaSesion: sesiones.length > 0 ? sesiones[0] : null,
+                totalSesiones: sesiones.length,
+                tieneFichaIngreso: state.fichasIngreso.some(f => f.patientId == patient.id)
+            };
+        })
+        .sort((a, b) => {
+            if (!a.ultimaSesion) return 1;
+            if (!b.ultimaSesion) return -1;
+            return new Date(b.ultimaSesion.fechaAtencion) - new Date(a.ultimaSesion.fechaAtencion);
+        })
+        .slice(0, limit);
+}
+
+export function exportMyConfig() {
+    if (!state.currentUser?.data) return null;
+    
+    const psych = state.currentUser.data;
+    
+    return {
+        personal: {
+            nombre: psych.name,
+            email: psych.email,
+            especialidades: psych.spec,
+            whatsapp: psych.whatsapp,
+            instagram: psych.instagram
+        },
+        precios: {
+            online: psych.priceOnline,
+            presencial: psych.pricePresencial
+        },
+        bancarios: psych.bankDetails || {},
+        metodosPago: psych.paymentMethods || state.globalPaymentMethods,
+        estadisticas: {
+            totalPacientes: state.patients.filter(p => p.psychId == psych.id).length,
+            totalSesiones: state.sesiones.filter(s => {
+                const patient = state.patients.find(p => p.id == s.patientId);
+                return patient && patient.psychId == psych.id;
+            }).length
+        }
+    };
+}
+
+// ============================================
 // EXPORTAR FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {
     window.getRecentPatientsWithSessions = getRecentPatientsWithSessions;
     window.exportMyConfig = exportMyConfig;
     window.cargarTodaPersonalizacion = cargarTodaPersonalizacion;
+    
+    // Nuevas funciones para secciones editables
+    window.showAboutModal = showAboutModal;
+    window.uploadAboutImage = uploadAboutImage;
+    window.saveAboutTexts = saveAboutTexts;
+    window.showAtencionModal = showAtencionModal;
+    window.saveAtencionTexts = saveAtencionTexts;
+    window.showContactModal = showContactModal;
+    window.saveContactInfo = saveContactInfo;
 }
 
-console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas');
+console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas y secciones editables v3.0');

@@ -47,6 +47,39 @@ export let fichasIngreso = [];           // Todas las fichas de ingreso
 export let sesiones = [];                // Todas las notas de evolución por sesión
 export let informes = [];                // Todos los informes (psicodiagnóstico/cierre)
 
+// ============================================
+// 🆕 NUEVAS VARIABLES PARA SECCIONES EDITABLES (v3.0)
+// ============================================
+export let missionText = 'Acompañar a las personas en su proceso de sanación emocional, proporcionando herramientas para el crecimiento personal y la mejora de la calidad de vida.';
+export let visionText = 'Ser un referente en salud mental en la región, reconocido por nuestra calidad profesional, calidez humana y compromiso con la comunidad.';
+export let aboutTeamText = 'Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.';
+export let aboutImage = '';
+
+export let atencionTexts = {
+    online: {
+        title: 'Online',
+        description: 'Sesiones por videollamada desde la comodidad de tu hogar'
+    },
+    presencial: {
+        title: 'Presencial',
+        description: 'Atención en nuestro consultorio con todos los protocolos'
+    },
+    pareja: {
+        title: 'Pareja',
+        description: 'Terapia para fortalecer vínculos y mejorar la comunicación'
+    },
+    familiar: {
+        title: 'Familiar',
+        description: 'Espacio de diálogo y crecimiento para toda la familia'
+    }
+};
+
+export let contactInfo = {
+    email: 'contacto@vinculosalud.cl',
+    phone: '+56 9 1234 5678',
+    address: 'Av. Principal 123, Santiago'
+};
+
 // Estado UI para fichas
 export let ui = {
     fichas: {
@@ -73,6 +106,16 @@ export function setHeroTexts(newTexts) { heroTexts = newTexts; }
 export function setGlobalPaymentMethods(newMethods) { globalPaymentMethods = newMethods; }
 export function setBackgroundImage(newImg) { backgroundImage = newImg; }
 export function setLogoImage(newLogo) { logoImage = newLogo; }
+
+// ============================================
+// 🆕 NUEVAS FUNCIONES SETTER PARA SECCIONES EDITABLES
+// ============================================
+export function setMissionText(text) { missionText = text; }
+export function setVisionText(text) { visionText = text; }
+export function setAboutTeamText(text) { aboutTeamText = text; }
+export function setAboutImage(url) { aboutImage = url; }
+export function setAtencionTexts(data) { atencionTexts = data; }
+export function setContactInfo(data) { contactInfo = data; }
 
 // ============================================
 // FUNCIÓN setCurrentUser CORREGIDA (con manejo de errores de localStorage)
@@ -324,6 +367,38 @@ export function resetAllState() {
     fichasIngreso = [];
     sesiones = [];
     informes = [];
+    
+    // Nuevas variables de secciones editables
+    missionText = 'Acompañar a las personas en su proceso de sanación emocional, proporcionando herramientas para el crecimiento personal y la mejora de la calidad de vida.';
+    visionText = 'Ser un referente en salud mental en la región, reconocido por nuestra calidad profesional, calidez humana y compromiso con la comunidad.';
+    aboutTeamText = 'Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.';
+    aboutImage = '';
+    
+    atencionTexts = {
+        online: {
+            title: 'Online',
+            description: 'Sesiones por videollamada desde la comodidad de tu hogar'
+        },
+        presencial: {
+            title: 'Presencial',
+            description: 'Atención en nuestro consultorio con todos los protocolos'
+        },
+        pareja: {
+            title: 'Pareja',
+            description: 'Terapia para fortalecer vínculos y mejorar la comunicación'
+        },
+        familiar: {
+            title: 'Familiar',
+            description: 'Espacio de diálogo y crecimiento para toda la familia'
+        }
+    };
+    
+    contactInfo = {
+        email: 'contacto@vinculosalud.cl',
+        phone: '+56 9 1234 5678',
+        address: 'Av. Principal 123, Santiago'
+    };
+    
     ui = {
         fichas: {
             pacienteSeleccionadoId: null,
@@ -392,10 +467,19 @@ const state = {
     dataLoaded,
     EDIT_HOURS,
     
-    // Nuevas variables
+    // Nuevas variables de fichas clínicas
     fichasIngreso,
     sesiones,
     informes,
+    
+    // 🆕 Nuevas variables de secciones editables
+    missionText,
+    visionText,
+    aboutTeamText,
+    aboutImage,
+    atencionTexts,
+    contactInfo,
+    
     ui,
     
     // Funciones existentes
@@ -424,7 +508,7 @@ const state = {
     setSelectedPatientForTherapist,
     setDataLoaded,
     
-    // Nuevas funciones
+    // Nuevas funciones de fichas clínicas
     setFichasIngreso,
     setSesiones,
     setInformes,
@@ -441,7 +525,15 @@ const state = {
     setPestanaActiva,
     setPacienteSeleccionado,
     
-    // NUEVAS FUNCIONES PARA PROFESIONALES
+    // 🆕 Nuevas funciones para secciones editables
+    setMissionText,
+    setVisionText,
+    setAboutTeamText,
+    setAboutImage,
+    setAtencionTexts,
+    setContactInfo,
+    
+    // Funciones para profesionales
     getCurrentPsychFullData,
     updatePsychData,
     
@@ -457,7 +549,7 @@ export default state;
 // ============================================
 if (typeof window !== 'undefined') {
     window.state = state;
-    console.log('📦 state.js cargado con fichas clínicas y datos completos de profesionales');
+    console.log('📦 state.js cargado con fichas clínicas, datos de profesionales y secciones editables v3.0');
     
     // Función de ayuda en consola
     window.estado = function() {
@@ -480,6 +572,16 @@ if (typeof window !== 'undefined') {
             console.log('👑 Usuario admin:', state.currentUser.data);
             return state.currentUser.data;
         }
+    };
+    
+    // Función para ver textos editables
+    window.verTextos = function() {
+        console.log('📝 Textos editables:');
+        console.log('- Misión:', state.missionText);
+        console.log('- Visión:', state.visionText);
+        console.log('- Equipo:', state.aboutTeamText);
+        console.log('- Tipos de Atención:', state.atencionTexts);
+        console.log('- Contacto:', state.contactInfo);
     };
     
     // Función para limpiar localStorage manualmente si es necesario

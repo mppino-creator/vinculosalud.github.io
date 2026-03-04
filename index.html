@@ -203,7 +203,7 @@
         /* ============================================
            ESTILOS PARA LAS NUEVAS SECCIONES
            ============================================ */
-        #atencion, #contacto {
+        #atencion, #contacto, #about, #blog {
             scroll-margin-top: 100px;
         }
 
@@ -233,6 +233,63 @@
             box-shadow: 0 0 0 3px rgba(200, 161, 97, 0.1);
         }
 
+        /* Estilos para Misión y Visión */
+        .mission-vision-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .mission-box, .vision-box {
+            background: var(--verde-grisaceo-claro);
+            padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+        }
+
+        .mission-box i, .vision-box i {
+            font-size: 2.5rem;
+            color: var(--ocre-calido);
+            margin-bottom: 15px;
+        }
+
+        .mission-box h3, .vision-box h3 {
+            color: var(--verde-azulado-profundo);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .mission-box p, .vision-box p {
+            color: var(--texto-secundario);
+            line-height: 1.6;
+        }
+
+        /* Botón de edición para admin */
+        .admin-edit-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--primario);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .admin-edit-btn:hover {
+            background: var(--primario-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 122, 138, 0.3);
+        }
+
         @media (max-width: 768px) {
             .public-nav {
                 gap: 15px !important;
@@ -255,6 +312,10 @@
             .time-slot-btn {
                 padding: 10px 5px;
                 font-size: 0.8rem;
+            }
+            .mission-vision-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
             }
         }
 
@@ -1169,39 +1230,73 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- VISTA PÚBLICA - ESTILO PUNTOTERAPIA CON MENÚ FUNCIONAL -->
+    <!-- VISTA PÚBLICA - ESTILO PUNTOTERAPIA CON SECCIONES EDITABLES -->
     <!-- ============================================ -->
     <main id="clientView">
-        <!-- MENÚ DE NAVEGACIÓN SUPERIOR - FUNCIONAL -->
-        <div class="public-nav" style="display: flex; justify-content: center; gap: 30px; padding: 20px 0 30px; margin-bottom: 20px; border-bottom: 1px solid var(--gris-claro); flex-wrap: wrap; background: white; border-radius: 0 0 30px 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-            <a href="#inicio" onclick="showSection('inicio'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Inicio</a>
-            <a href="#about" onclick="showSection('about'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Quienes Somos</a>
-            <a href="#equipo" onclick="showSection('equipo'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem; border-bottom: 2px solid var(--ocre-calido); padding-bottom: 5px;">Equipo</a>
-            <a href="#atencion" onclick="showSection('atencion'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Tipo de Atención</a>
-            <a href="#blog" onclick="showSection('blog'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Punto de Interés</a>
-            <a href="#contacto" onclick="showSection('contacto'); return false;" style="color: var(--texto-principal); text-decoration: none; font-weight: 500; font-size: 0.95rem;">Contacto</a>
-            <a href="#" onclick="abrirAgenda(); return false;" style="background: var(--verde-azulado-profundo); color: white; padding: 8px 22px; border-radius: 40px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">AGENDA TU HORA</a>
+        <!-- MENÚ DE NAVEGACIÓN SUPERIOR -->
+        <div class="public-nav">
+            <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
+            <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
+            <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
+            <a href="#atencion" onclick="showSection('atencion'); return false;">Tipo de Atención</a>
+            <a href="#blog" onclick="showSection('blog'); return false;">Punto de Interés</a>
+            <a href="#contacto" onclick="showSection('contacto'); return false;">Contacto</a>
+            <a href="#" onclick="abrirAgenda(); return false;">AGENDA TU HORA</a>
         </div>
 
-        <!-- SECCIÓN INICIO (HERO) -->
-        <section id="inicio" class="hero-section" style="text-align: center; margin-bottom: 30px;">
-            <h1 style="font-size: 2.2rem; color: var(--verde-azulado-profundo); margin-bottom: 10px; font-weight: 600;">Terapia de Familia y Parejas</h1>
-            <p style="color: var(--texto-secundario); font-size: 1rem;">Espacio de contención y crecimiento para ti y tus seres queridos</p>
+        <!-- SECCIÓN INICIO (HERO) - EDITABLE -->
+        <section id="inicio" class="hero-section">
+            <h1 id="heroTitleDisplay">Un espacio seguro para <span>sanar</span>, comprender y crecer</h1>
+            <p id="heroSubtitleDisplay">En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.</p>
+            <div style="margin-top: 30px;">
+                <span class="hero-badge">Estamos para acompañarte</span>
+            </div>
+            
+            <!-- Botón de edición para admin (solo visible para admin) -->
+            <div class="admin-edit-btn" id="adminHeroEditBtn" style="display: none;" onclick="showTextsModal()">
+                <i class="fa fa-edit"></i> Editar Hero
+            </div>
         </section>
 
-        <!-- SECCIÓN QUIENES SOMOS -->
-        <section id="about" class="about-section" style="margin: 60px 0; padding: 40px; background: white; border-radius: 48px; box-shadow: 0 8px 30px var(--sombra);">
-            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
-                <h2 style="color: var(--verde-azulado-profundo); font-size: 2.2rem; margin-bottom: 20px;">Estamos para acompañarte</h2>
-                <p style="color: var(--texto-secundario); line-height: 1.8; font-size: 1.1rem;">
-                    Contamos con un equipo de terapeutas con amplia formación en terapia individual, 
-                    familiar y de pareja, con un sistema de abordaje colaborativo dentro del equipo Vínculo Salud, 
-                    así como con otros profesionales.
+        <!-- SECCIÓN QUIENES SOMOS - EDITABLE -->
+        <section id="about" class="about-section">
+            <!-- Botón de edición para admin -->
+            <div class="admin-edit-btn" id="adminAboutEditBtn" style="display: none;" onclick="showAboutModal()">
+                <i class="fa fa-edit"></i> Editar sección
+            </div>
+            
+            <div class="about-content">
+                <!-- Título -->
+                <h2>Quiénes Somos</h2>
+                
+                <!-- Foto grupal -->
+                <div class="about-image-container">
+                    <img id="aboutTeamImage" src="" alt="Nuestro equipo" class="about-image" style="display: none;">
+                    <div id="aboutImagePlaceholder" class="about-image-placeholder">
+                        <i class="fa fa-users"></i>
+                        <p>Foto del equipo</p>
+                    </div>
+                </div>
+                
+                <!-- Texto del equipo -->
+                <p id="teamTextDisplay" class="team-text">
+                    Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.
                 </p>
-                <p style="color: var(--texto-secundario); line-height: 1.8; font-size: 1.1rem; margin-top: 20px;">
-                    Cada profesional se compromete con el proceso terapéutico desde una mirada humana, 
-                    ética y especializada.
-                </p>
+                
+                <!-- Grid de Misión y Visión -->
+                <div class="mission-vision-grid">
+                    <div class="mission-box">
+                        <i class="fa fa-bullseye"></i>
+                        <h3>Misión</h3>
+                        <p id="missionDisplay">Acompañar a las personas en su proceso de sanación emocional, proporcionando herramientas para el crecimiento personal y la mejora de la calidad de vida.</p>
+                    </div>
+                    
+                    <div class="vision-box">
+                        <i class="fa fa-eye"></i>
+                        <h3>Visión</h3>
+                        <p id="visionDisplay">Ser un referente en salud mental en la región, reconocido por nuestra calidad profesional, calidez humana y compromiso con la comunidad.</p>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -1220,139 +1315,159 @@
         </div>
 
         <!-- GRID DE PROFESIONALES (EQUIPO) - SIEMPRE VISIBLE -->
-        <div id="equipo" class="grid" style="scroll-margin-top: 100px;"></div>
+        <div id="equipo" class="grid"></div>
 
-        <!-- SECCIÓN TIPO DE ATENCIÓN (nueva) -->
-        <section id="atencion" class="atencion-section" style="margin: 60px 0; padding: 40px; background: white; border-radius: 48px; display: none;">
-            <h2 style="color: var(--verde-azulado-profundo); text-align: center; margin-bottom: 40px; font-size: 2.2rem;">Tipos de Atención</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
-                <div style="text-align: center; padding: 30px;">
-                    <i class="fa fa-video" style="font-size: 3rem; color: var(--ocre-calido); margin-bottom: 20px;"></i>
-                    <h3 style="color: var(--verde-azulado-profundo); font-size: 1.3rem; margin-bottom: 10px;">Online</h3>
-                    <p style="color: var(--texto-secundario);">Sesiones por videollamada desde la comodidad de tu hogar</p>
+        <!-- SECCIÓN TIPO DE ATENCIÓN - EDITABLE -->
+        <section id="atencion" class="atencion-section" style="display: none;">
+            <!-- Botón de edición para admin -->
+            <div class="admin-edit-btn" id="adminAtencionEditBtn" style="display: none;" onclick="showAtencionModal()">
+                <i class="fa fa-edit"></i> Editar tipos
+            </div>
+            
+            <h2>Tipos de Atención</h2>
+            
+            <div class="atencion-grid">
+                <div class="atencion-card">
+                    <i class="fa fa-video"></i>
+                    <h3 id="atencionOnlineTitle">Online</h3>
+                    <p id="atencionOnlineDesc">Sesiones por videollamada desde la comodidad de tu hogar</p>
                 </div>
-                <div style="text-align: center; padding: 30px;">
-                    <i class="fa fa-users" style="font-size: 3rem; color: var(--ocre-calido); margin-bottom: 20px;"></i>
-                    <h3 style="color: var(--verde-azulado-profundo); font-size: 1.3rem; margin-bottom: 10px;">Presencial</h3>
-                    <p style="color: var(--texto-secundario);">Atención en nuestro consultorio con todos los protocolos</p>
+                
+                <div class="atencion-card">
+                    <i class="fa fa-users"></i>
+                    <h3 id="atencionPresencialTitle">Presencial</h3>
+                    <p id="atencionPresencialDesc">Atención en nuestro consultorio con todos los protocolos</p>
                 </div>
-                <div style="text-align: center; padding: 30px;">
-                    <i class="fa fa-heart" style="font-size: 3rem; color: var(--ocre-calido); margin-bottom: 20px;"></i>
-                    <h3 style="color: var(--verde-azulado-profundo); font-size: 1.3rem; margin-bottom: 10px;">Pareja</h3>
-                    <p style="color: var(--texto-secundario);">Terapia para fortalecer vínculos y mejorar la comunicación</p>
+                
+                <div class="atencion-card">
+                    <i class="fa fa-heart"></i>
+                    <h3 id="atencionParejaTitle">Pareja</h3>
+                    <p id="atencionParejaDesc">Terapia para fortalecer vínculos y mejorar la comunicación</p>
                 </div>
-                <div style="text-align: center; padding: 30px;">
-                    <i class="fa fa-child" style="font-size: 3rem; color: var(--ocre-calido); margin-bottom: 20px;"></i>
-                    <h3 style="color: var(--verde-azulado-profundo); font-size: 1.3rem; margin-bottom: 10px;">Familiar</h3>
-                    <p style="color: var(--texto-secundario);">Espacio de diálogo y crecimiento para toda la familia</p>
+                
+                <div class="atencion-card">
+                    <i class="fa fa-child"></i>
+                    <h3 id="atencionFamiliarTitle">Familiar</h3>
+                    <p id="atencionFamiliarDesc">Espacio de diálogo y crecimiento para toda la familia</p>
                 </div>
             </div>
         </section>
 
         <!-- SECCIÓN BLOG - PUNTO DE INTERÉS -->
-        <section id="blog" class="blog-section" style="margin: 80px 0; display: none;">
-            <h2 style="color: var(--verde-azulado-profundo); font-size: 2.2rem; text-align: center; margin-bottom: 10px;">Punto de Interés</h2>
-            <p style="color: var(--texto-secundario); text-align: center; max-width: 600px; margin: 0 auto 40px; font-size: 1rem;">
-                Reflexiones, ideas y recursos para tu bienestar emocional
-            </p>
+        <section id="blog" class="blog-section" style="display: none;">
+            <h2>Punto de Interés</h2>
+            <p>Reflexiones, ideas y recursos para tu bienestar emocional</p>
             
-            <div class="blog-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+            <div class="blog-grid">
                 <!-- Artículo 1 -->
-                <article class="blog-card" style="background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--gris-claro);">
-                    <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500" alt="Ansiedad" style="width: 100%; height: 200px; object-fit: cover;">
-                    <div style="padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <span style="background: var(--ocre-calido); color: white; padding: 4px 12px; border-radius: 30px; font-size: 0.75rem;">5 Enero, 2026</span>
-                            <span style="color: var(--texto-secundario); font-size: 0.75rem;">📚 5 min</span>
+                <article class="blog-card">
+                    <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500" alt="Ansiedad">
+                    <div class="blog-content">
+                        <div class="blog-meta">
+                            <span class="blog-date">5 Enero, 2026</span>
+                            <span class="blog-read-time">📚 5 min</span>
                         </div>
-                        <h3 style="color: var(--verde-azulado-profundo); font-size: 1.2rem; margin-bottom: 10px;">PAES 2025: Cómo enfrentar la frustración</h3>
-                        <p style="color: var(--texto-secundario); font-size: 0.9rem; line-height: 1.5; margin-bottom: 15px;">
-                            Con los resultados de la PAES Regular a punto de publicarse...
-                        </p>
-                        <a href="#" style="color: var(--ocre-calido); text-decoration: none; font-weight: 500; font-size: 0.9rem;">Leer más →</a>
+                        <h3>PAES 2025: Cómo enfrentar la frustración, ansiedad y decisiones en resultados</h3>
+                        <p>Con los resultados de la PAES Regular a punto de publicarse, miles de estudiantes enfrentan...</p>
+                        <a href="#" class="blog-read-more">Leer más →</a>
                     </div>
                 </article>
 
                 <!-- Artículo 2 -->
-                <article class="blog-card" style="background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--gris-claro);">
-                    <img src="https://images.unsplash.com/photo-1516585427167-9f4af9627e6c?w=500" alt="Infidelidad" style="width: 100%; height: 200px; object-fit: cover;">
-                    <div style="padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <span style="background: var(--ocre-calido); color: white; padding: 4px 12px; border-radius: 30px; font-size: 0.75rem;">Nov 07, 2025</span>
-                            <span style="color: var(--texto-secundario); font-size: 0.75rem;">📚 8 min</span>
+                <article class="blog-card">
+                    <img src="https://images.unsplash.com/photo-1516585427167-9f4af9627e6c?w=500" alt="Infidelidad">
+                    <div class="blog-content">
+                        <div class="blog-meta">
+                            <span class="blog-date">Nov 07, 2025</span>
+                            <span class="blog-read-time">📚 8 min</span>
                         </div>
-                        <h3 style="color: var(--verde-azulado-profundo); font-size: 1.2rem; margin-bottom: 10px;">¿Qué se puede hacer ante una infidelidad?</h3>
-                        <p style="color: var(--texto-secundario); font-size: 0.9rem; line-height: 1.5; margin-bottom: 15px;">
-                            El 31% de los chilenos admite haber sido infiel alguna vez...
-                        </p>
-                        <a href="#" style="color: var(--ocre-calido); text-decoration: none; font-weight: 500; font-size: 0.9rem;">Leer más →</a>
+                        <h3>¿Qué se puede hacer ante una infidelidad?</h3>
+                        <p>Actualmente, el 31% de los chilenos admite haber sido infiel alguna vez...</p>
+                        <a href="#" class="blog-read-more">Leer más →</a>
                     </div>
                 </article>
 
                 <!-- Artículo 3 -->
-                <article class="blog-card" style="background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--gris-claro);">
-                    <img src="https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=500" alt="Familia" style="width: 100%; height: 200px; object-fit: cover;">
-                    <div style="padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <span style="background: var(--ocre-calido); color: white; padding: 4px 12px; border-radius: 30px; font-size: 0.75rem;">Nov 07, 2025</span>
-                            <span style="color: var(--texto-secundario); font-size: 0.75rem;">📚 6 min</span>
+                <article class="blog-card">
+                    <img src="https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=500" alt="Familia">
+                    <div class="blog-content">
+                        <div class="blog-meta">
+                            <span class="blog-date">Nov 07, 2025</span>
+                            <span class="blog-read-time">📚 6 min</span>
                         </div>
-                        <h3 style="color: var(--verde-azulado-profundo); font-size: 1.2rem; margin-bottom: 10px;">Familias Reconstituidas: Un Camino de Adaptación</h3>
-                        <p style="color: var(--texto-secundario); font-size: 0.9rem; line-height: 1.5; margin-bottom: 15px;">
-                            Las familias ensambladas representan nuevos desafíos...
-                        </p>
-                        <a href="#" style="color: var(--ocre-calido); text-decoration: none; font-weight: 500; font-size: 0.9rem;">Leer más →</a>
+                        <h3>Familias Reconstituidas: Un Camino de Adaptación y Resiliencia</h3>
+                        <p>Las familias reconstituidas representan nuevos desafíos y oportunidades...</p>
+                        <a href="#" class="blog-read-more">Leer más →</a>
                     </div>
                 </article>
             </div>
         </section>
 
         <!-- SECCIÓN DE MENSAJES (siempre visible) -->
-        <div class="messages-section" style="background: white; border-radius: 30px; padding: 40px; margin: 60px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
-            <div class="messages-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h2 style="color: var(--verde-azulado-profundo); font-size: 1.8rem;">💬 Experiencias de pacientes</h2>
-                <button class="btn-new-message" onclick="showMessageModal()" style="background: var(--ocre-calido); color: white; border: none; padding: 12px 25px; border-radius: 40px; font-weight: 500; cursor: pointer;">
+        <div class="messages-section">
+            <div class="messages-header">
+                <h2>💬 Experiencias de pacientes</h2>
+                <button class="btn-new-message" onclick="showMessageModal()">
                     <i class="fa fa-pen"></i> Dejar mensaje
                 </button>
             </div>
-            <div class="messages-grid" id="messagesGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;"></div>
+            <div class="messages-grid" id="messagesGrid"></div>
         </div>
 
-        <!-- SECCIÓN CONTACTO (nueva) -->
-        <section id="contacto" class="contact-section" style="margin: 60px 0; padding: 40px; background: white; border-radius: 48px; display: none;">
-            <h2 style="color: var(--verde-azulado-profundo); text-align: center; margin-bottom: 40px; font-size: 2.2rem;">Contacto</h2>
+        <!-- SECCIÓN CONTACTO - EDITABLE -->
+        <section id="contacto" class="contact-section" style="display: none;">
+            <!-- Botón de edición para admin -->
+            <div class="admin-edit-btn" id="adminContactEditBtn" style="display: none;" onclick="showContactModal()">
+                <i class="fa fa-edit"></i> Editar contacto
+            </div>
+            
+            <h2>Contacto</h2>
+            
+            <div class="contact-info">
+                <div class="contact-info-item">
+                    <i class="fa fa-envelope"></i>
+                    <span id="contactEmailDisplay">contacto@vinculosalud.cl</span>
+                </div>
+                <div class="contact-info-item">
+                    <i class="fa fa-phone"></i>
+                    <span id="contactPhoneDisplay">+56 9 1234 5678</span>
+                </div>
+                <div class="contact-info-item">
+                    <i class="fa fa-map-marker-alt"></i>
+                    <span id="contactAddressDisplay">Av. Principal 123, Santiago</span>
+                </div>
+            </div>
+            
             <div class="contact-form">
                 <div class="form-group">
-                    <label style="display: block; margin-bottom: 8px; color: var(--texto-principal); font-weight: 500;">Nombre</label>
+                    <label>Nombre</label>
                     <input type="text" id="contactName" placeholder="Tu nombre">
                 </div>
                 <div class="form-group">
-                    <label style="display: block; margin-bottom: 8px; color: var(--texto-principal); font-weight: 500;">Email</label>
+                    <label>Email</label>
                     <input type="email" id="contactEmail" placeholder="tucorreo@ejemplo.com">
                 </div>
                 <div class="form-group">
-                    <label style="display: block; margin-bottom: 8px; color: var(--texto-principal); font-weight: 500;">Mensaje</label>
+                    <label>Mensaje</label>
                     <textarea id="contactMessage" rows="4" placeholder="¿En qué podemos ayudarte?"></textarea>
                 </div>
-                <button class="btn-staff" style="width:100%; background: var(--ocre-calido);" onclick="enviarContacto()">
+                <button class="btn-contact" onclick="enviarContacto()">
                     Enviar mensaje
                 </button>
             </div>
         </section>
 
         <!-- SECCIÓN CTA (siempre visible) -->
-        <section class="cta-section" style="background: linear-gradient(135deg, var(--verde-grisaceo-claro) 0%, #d4e3d9 100%); border-radius: 40px; padding: 50px 30px; text-align: center; margin: 60px 0;">
-            <h2 style="color: var(--verde-azulado-profundo); font-size: 2rem; margin-bottom: 15px;">Queremos escucharte</h2>
-            <p style="color: var(--texto-secundario); max-width: 500px; margin: 0 auto 25px; font-size: 1rem;">
-                Si estás buscando orientación o necesitas apoyo, nuestro equipo está aquí para ti.
-            </p>
-            <button onclick="showSection('contacto')" class="btn-cta" style="background: var(--ocre-calido); color: white; border: none; padding: 14px 40px; border-radius: 40px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: 0 8px 20px rgba(200, 161, 97, 0.3);">
+        <section class="cta-section">
+            <h2>Queremos escucharte</h2>
+            <p>Si estás buscando orientación o necesitas apoyo, nuestro equipo está aquí para ti.</p>
+            <button onclick="showSection('contacto')" class="btn-cta">
                 <i class="fa fa-comment"></i> Contáctanos
             </button>
         </section>
     </main>
 
-    <!-- Panel de Reserva -->
+    <!-- Panel de Reserva - COMPLETO (con 3 campos de teléfono, edad y tutor) -->
     <div id="bookingPanel" class="panel">
         <div class="dashboard-header">
             <h2>Solicitar Cita con <span id="psychName"></span></h2>
@@ -1551,7 +1666,7 @@
         <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;"></div>
     </div>
 
-    <!-- Panel de Dashboard -->
+    <!-- Panel de Dashboard - COMPLETO -->
     <div id="dashboard" class="panel">
         <div class="dashboard-header">
             <div>
@@ -1889,6 +2004,40 @@
         </div>
     </div>
 </div>
+
+<!-- Script para mostrar botones de edición solo a admin -->
+<script>
+(function() {
+    function checkAdminForEditButtons() {
+        const isAdmin = window.state?.currentUser?.role === 'admin';
+        const editButtons = [
+            'adminHeroEditBtn',
+            'adminAboutEditBtn', 
+            'adminAtencionEditBtn',
+            'adminContactEditBtn'
+        ];
+        
+        editButtons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.style.display = isAdmin ? 'flex' : 'none';
+            }
+        });
+    }
+    
+    // Verificar cada vez que cambia el usuario
+    const originalSetCurrentUser = window.state?.setCurrentUser;
+    if (originalSetCurrentUser) {
+        window.state.setCurrentUser = function(user) {
+            originalSetCurrentUser(user);
+            setTimeout(checkAdminForEditButtons, 100);
+        };
+    }
+    
+    // Verificar al cargar
+    setTimeout(checkAdminForEditButtons, 2000);
+})();
+</script>
 
 <!-- ÚNICO SCRIPT: main.js -->
 <script type="module" src="js/main.js?v=20240303"></script>

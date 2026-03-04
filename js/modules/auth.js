@@ -567,7 +567,7 @@ export function updateProfileButton() {
 }
 
 // ============================================
-// VERIFICAR SESIÓN GUARDADA
+// VERIFICAR SESIÓN GUARDADA - VERSIÓN CORREGIDA
 // ============================================
 
 export function verificarSesionGuardada() {
@@ -585,12 +585,14 @@ export function verificarSesionGuardada() {
         
         if (userData.role === 'admin') {
             state.setCurrentUser(userData);
+            // 🔥 CORREGIDO: usar actualizarUIAdmin en lugar de mostrarDashboardInmediato
             actualizarUIAdmin(userData.data, 'admin');
             return true;
         } else {
             const psychExists = state.staff.some(s => s.id == userData.data.id);
             if (psychExists) {
                 state.setCurrentUser(userData);
+                // 🔥 CORREGIDO: usar actualizarUIAdmin en lugar de mostrarDashboardInmediato
                 actualizarUIAdmin(userData.data, userData.role);
                 return true;
             } else {

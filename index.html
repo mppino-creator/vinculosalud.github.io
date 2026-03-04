@@ -33,6 +33,90 @@
     
     <!-- Estilos adicionales - MEJORADOS ESTILO PUNTOTERAPIA -->
     <style>
+
+        /* ============================================
+   ESTILOS PARA MENÚ HOMOGÉNEO - STAFF INTEGRADO
+   ============================================ */
+
+/* Ajustes para el contenedor del menú */
+.public-nav {
+    display: flex;
+    align-items: center;
+    gap: 2.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Estilo base para TODOS los items del menú */
+.nav-item {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--texto-principal);
+    text-decoration: none;
+    padding: 0.5rem 0;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+    position: relative;
+}
+
+/* Efecto hover para todos los items */
+.nav-item:hover {
+    color: var(--ocre-calido);
+    border-bottom-color: var(--ocre-calido);
+}
+
+/* Item activo (Equipo) */
+.nav-item.active {
+    font-weight: 600;
+    border-bottom-color: var(--ocre-calido);
+}
+
+/* Estilo específico para Staff - mantiene misma apariencia */
+.nav-item.staff-link {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: var(--texto-principal) !important;
+    padding: 0.5rem 0 !important;
+}
+
+.nav-item.staff-link i {
+    margin-right: 5px;
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+.nav-item.staff-link:hover {
+    color: var(--ocre-calido) !important;
+    border-bottom-color: var(--ocre-calido) !important;
+    background: transparent !important;
+    transform: none !important;
+}
+
+/* Eliminar el botón Staff duplicado si existe */
+.btn-staff:not(#editProfileButton):not(#loginBtn):not(#bookBtn) {
+    /* Este selector es para no afectar otros botones */
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .public-nav {
+        gap: 1.5rem;
+    }
+    .nav-item {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .public-nav {
+        gap: 1rem;
+    }
+    .nav-item {
+        font-size: 0.9rem;
+    }
+}
         /* ============================================
            ESTILOS GENERALES MEJORADOS - ESTILO PUNTOTERAPIA
            ============================================ */
@@ -1676,29 +1760,33 @@
 </div>
 
 <!-- ============================================ -->
-<!-- HEADER MEJORADO - ESTILO PUNTOTERAPIA -->
+<!-- HEADER MEJORADO - STAFF INTEGRADO AL MISMO NIVEL -->
 <!-- ============================================ -->
 <div class="container">
     <header class="nav-container">
-        <nav class="glass" style="display: flex; justify-content: space-between; align-items: center;">
-            <div class="logo-container" onclick="location.reload()" style="display: flex; align-items: center; gap: 10px;">
-                <img id="headerLogo" class="logo-img" src="" style="display:none; height: 40px;" alt="Logo">
-                <span id="headerLogoText" class="logo-text" style="font-size: 2.2rem; font-weight: 700;">Vínculo Salud</span>.                 <!-- ✅ MODIFICAR ESTO: Aumentar font-size de 1.8rem a 2.2rem -->
-
+        <nav class="glass" style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 2rem;">
+            <!-- LOGO MÁS GRANDE -->
+            <div class="logo-container" onclick="location.reload()" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                <img id="headerLogo" class="logo-img" src="" style="display:none; height: 45px;" alt="Logo">
+                <span id="headerLogoText" class="logo-text" style="font-size: 2.5rem; font-weight: 700; letter-spacing: -0.5px;">Vínculo Salud</span>
             </div>
             
-            <div style="display: flex; align-items: center; gap: 30px;">
-                <div class="public-nav">
-                    <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
-                    <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
-                    <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
-                    <a href="#atencion" onclick="showSection('atencion'); return false;">Tipo de Atención</a>
-                    <a href="#contacto" onclick="showSection('contacto'); return false;">Contacto</a>
-                </div>
+            <!-- MENÚ COMPLETO - TODOS LOS ITEMS CON EL MISMO ESTILO (INCLUYENDO STAFF) -->
+            <div class="public-nav" style="display: flex; align-items: center; gap: 2.2rem; flex-wrap: wrap; justify-content: center;">
+                <a href="#inicio" onclick="showSection('inicio'); return false;" class="nav-item" style="font-size: 1.2rem; font-weight: 500; color: var(--texto-principal); text-decoration: none; padding: 0.5rem 0; white-space: nowrap; transition: all 0.2s ease; border-bottom: 2px solid transparent;">Inicio</a>
                 
-                <button class="btn-staff" onclick="showLoginModal()">
-                    <i class="fa fa-lock"></i> Staff
-                </button>
+                <a href="#about" onclick="showSection('about'); return false;" class="nav-item" style="font-size: 1.2rem; font-weight: 500; color: var(--texto-principal); text-decoration: none; padding: 0.5rem 0; white-space: nowrap; transition: all 0.2s ease; border-bottom: 2px solid transparent;">Quienes Somos</a>
+                
+                <a href="#equipo" onclick="showSection('equipo'); return false;" class="nav-item active" style="font-size: 1.2rem; font-weight: 600; color: var(--texto-principal); text-decoration: none; padding: 0.5rem 0; white-space: nowrap; transition: all 0.2s ease; border-bottom: 2px solid var(--ocre-calido);">Equipo</a>
+                
+                <a href="#atencion" onclick="showSection('atencion'); return false;" class="nav-item" style="font-size: 1.2rem; font-weight: 500; color: var(--texto-principal); text-decoration: none; padding: 0.5rem 0; white-space: nowrap; transition: all 0.2s ease; border-bottom: 2px solid transparent;">Tipo de Atención</a>
+                
+                <a href="#contacto" onclick="showSection('contacto'); return false;" class="nav-item" style="font-size: 1.2rem; font-weight: 500; color: var(--texto-principal); text-decoration: none; padding: 0.5rem 0; white-space: nowrap; transition: all 0.2s ease; border-bottom: 2px solid transparent;">Contacto</a>
+                
+                <!-- STAFF - CON EL MISMO ESTILO QUE LOS DEMÁS, SOLO CON UN CANDADO SUTIL -->
+                <a href="#" onclick="showLoginModal(); return false;" class="nav-item staff-link" style="font-size: 1.2rem; font-weight: 500; color: var(--texto-principal); text-decoration: none; padding: 0.5rem 0; white-space: nowrap; transition: all 0.2s ease; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 5px;">
+                    <i class="fa fa-lock" style="font-size: 1rem; opacity: 0.7;"></i> Staff
+                </a>
             </div>
         </nav>
     </header>

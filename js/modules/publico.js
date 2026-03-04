@@ -31,6 +31,110 @@ function getAverageRating(psychId) {
 }
 
 // ============================================
+// FUNCIÓN PARA TOGGLE DE INFORMACIÓN (ACCORDION)
+// ============================================
+window.toggleInfo = function(button) {
+    // Buscar la tarjeta más cercana
+    const card = button.closest('.professional-card, .therapist-card');
+    if (!card) return;
+    
+    // Buscar o crear la sección de información
+    let infoSection = card.querySelector('.card-info');
+    
+    if (!infoSection) {
+        // Si no existe, obtener el ID del profesional
+        const psychId = card.getAttribute('data-id');
+        const psych = state.staff.find(p => p.id == psychId);
+        if (!psych) return;
+        
+        // Crear la sección de información
+        infoSection = document.createElement('div');
+        infoSection.className = 'card-info';
+        infoSection.style.display = 'none';
+        
+        // Construir el contenido
+        let infoHTML = '';
+        
+        if (psych.education) {
+            infoHTML += `
+                <div class="info-section">
+                    <h4>Formación</h4>
+                    <p>${psych.education}</p>
+                </div>
+            `;
+        }
+        
+        if (psych.spec && psych.spec.length) {
+            const specs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
+            infoHTML += `
+                <div class="info-section">
+                    <h4>Especialidades</h4>
+                    <div class="specialties-list">
+                        ${specs.map(s => `<span class="specialty-tag">${s}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (psych.experience) {
+            infoHTML += `
+                <div class="info-section">
+                    <h4>Experiencia clínica</h4>
+                    <p>${psych.experience}</p>
+                </div>
+            `;
+        }
+        
+        if (psych.clinicalExperience) {
+            infoHTML += `
+                <div class="info-section">
+                    <h4>Experiencia detallada</h4>
+                    <p>${psych.clinicalExperience}</p>
+                </div>
+            `;
+        }
+        
+        if (psych.languages) {
+            const langs = Array.isArray(psych.languages) ? psych.languages.join(', ') : psych.languages;
+            infoHTML += `
+                <div class="info-section">
+                    <h4>Idiomas</h4>
+                    <p>${langs}</p>
+                </div>
+            `;
+        }
+        
+        if (psych.whatsapp) {
+            infoHTML += `
+                <div class="info-section">
+                    <h4>Contacto</h4>
+                    <a href="https://wa.me/${psych.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank" class="whatsapp-link">
+                        <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
+                    </a>
+                </div>
+            `;
+        }
+        
+        infoSection.innerHTML = infoHTML;
+        card.appendChild(infoSection);
+    }
+    
+    // Toggle visibility
+    const isHidden = infoSection.style.display === 'none' || !infoSection.style.display;
+    infoSection.style.display = isHidden ? 'block' : 'none';
+    
+    // Cambiar el icono del botón
+    const icon = button.querySelector('i');
+    if (icon) {
+        icon.className = isHidden ? 'fa fa-chevron-up' : 'fa fa-chevron-down';
+    }
+    
+    // Cambiar el texto del botón
+    const buttonText = button.innerHTML.replace(/<i.*<\/i>/, '').trim();
+    button.innerHTML = isHidden ? `Menos Información <i class="fa fa-chevron-up"></i>` : `Más Información <i class="fa fa-chevron-down"></i>`;
+}
+
+// ============================================
 // FUNCIONES DE NAVEGACIÓN DEL MENÚ
 // ============================================
 export function showSection(sectionId) {
@@ -183,114 +287,14 @@ export function copiarAlPortapapeles(texto) {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR MÁS INFORMACIÓN DEL PROFESIONAL (ESTILO PUNTOTERAPIA - TOGGLE)
+// FUNCIÓN LEGACY PARA COMPATIBILIDAD
 // ============================================
 export function showTherapistInfo(psychId) {
-    console.log('📋 Mostrando información detallada para profesional:', psychId);
-    
-    const psych = state.staff.find(p => p.id == psychId);
-    if (!psych) return;
-    
-    // Buscar la tarjeta del profesional
-    const therapistCard = document.querySelector(`.therapist-card[data-id="${psychId}"]`);
-    if (!therapistCard) return;
-    
-    // Verificar si ya existe un toggle abierto para este profesional
-    const existingToggle = document.getElementById(`toggle-${psychId}`);
-    if (existingToggle) {
-        // Si ya existe, lo cerramos y eliminamos
-        existingToggle.remove();
-        return;
+    console.log('📋 Usando nuevo sistema accordion para profesional:', psychId);
+    const button = document.querySelector(`.therapist-card[data-id="${psychId}"] .btn-mas-info`);
+    if (button) {
+        window.toggleInfo(button);
     }
-    
-    // Cerrar cualquier otro toggle abierto
-    document.querySelectorAll('.therapist-info-toggle').forEach(toggle => {
-        toggle.remove();
-    });
-    
-    // Crear el contenedor del toggle
-    const toggleDiv = document.createElement('div');
-    toggleDiv.id = `toggle-${psychId}`;
-    toggleDiv.className = 'therapist-info-toggle';
-    toggleDiv.style.cssText = `
-        margin-top: 20px;
-        margin-bottom: 20px;
-        border-radius: 32px;
-        overflow: hidden;
-        border: 1px solid rgba(123,132,113,0.19);
-        background-color: #f6f4f1;
-        animation: slideDown 0.3s ease;
-    `;
-    
-    // Función para formatear educación como lista HTML
-    const formatEducation = (text) => {
-        if (!text) return '<p style="color: var(--texto-secundario);">No especificada</p>';
-        const lines = text.split('\n').filter(line => line.trim() !== '');
-        if (lines.length === 0) return '<p style="color: var(--texto-secundario);">No especificada</p>';
-        return `<ul style="list-style-type: disc; padding-left: 20px; margin: 10px 0;">
-            ${lines.map(line => `<li style="margin-bottom: 5px; color: var(--texto-principal);">${line}</li>`).join('')}
-        </ul>`;
-    };
-    
-    // Construir el contenido del toggle
-    let toggleContent = `
-        <div style="padding: 30px;">
-            <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 20px; font-size: 1.5rem;">${psych.name}</h3>
-            
-            ${psych.bio ? `
-            <div style="margin-bottom: 25px;">
-                <p style="color: var(--texto-principal); line-height: 1.6;">${psych.bio}</p>
-            </div>
-            ` : ''}
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                <!-- Columna izquierda -->
-                <div>
-                    <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; font-size: 1.2rem;">
-                        <i class="fa fa-graduation-cap" style="margin-right: 8px;"></i> Formación
-                    </h4>
-                    ${formatEducation(psych.education)}
-                    
-                    <h4 style="color: var(--verde-azulado-profundo); margin: 25px 0 15px; font-size: 1.2rem;">
-                        <i class="fa fa-clock" style="margin-right: 8px;"></i> Experiencia
-                    </h4>
-                    <p style="color: var(--texto-principal);">${psych.experience || '0'} años de experiencia clínica</p>
-                </div>
-                
-                <!-- Columna derecha -->
-                <div>
-                    <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; font-size: 1.2rem;">
-                        <i class="fa fa-stethoscope" style="margin-right: 8px;"></i> Especialidades
-                    </h4>
-                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px;">
-                        ${Array.isArray(psych.spec) ? psych.spec.map(s => `<span style="background: var(--verde-azulado-claro); color: white; padding: 6px 14px; border-radius: 30px; font-size: 0.9rem;">${s}</span>`).join('') : `<span style="background: var(--verde-azulado-claro); color: white; padding: 6px 14px; border-radius: 30px; font-size: 0.9rem;">${psych.spec || 'Especialista'}</span>`}
-                    </div>
-                    
-                    <h4 style="color: var(--verde-azulado-profundo); margin: 0 0 15px; font-size: 1.2rem;">
-                        <i class="fa fa-language" style="margin-right: 8px;"></i> Idiomas
-                    </h4>
-                    <p style="color: var(--texto-principal);">${psych.languages ? (Array.isArray(psych.languages) ? psych.languages.join(', ') : psych.languages) : 'Español'}</p>
-                </div>
-            </div>
-    `;
-    
-    // Agregar experiencia clínica detallada si existe
-    if (psych.clinicalExperience) {
-        toggleContent += `
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--gris-claro);">
-                <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; font-size: 1.2rem;">Experiencia Clínica</h4>
-                <p style="color: var(--texto-principal); line-height: 1.6;">${psych.clinicalExperience}</p>
-            </div>
-        `;
-    }
-    
-    // Cerrar el div de padding
-    toggleContent += `</div>`;
-    
-    toggleDiv.innerHTML = toggleContent;
-    
-    // Insertar el toggle después de la tarjeta del profesional
-    therapistCard.parentNode.insertBefore(toggleDiv, therapistCard.nextSibling);
 }
 
 // ============================================
@@ -356,50 +360,50 @@ export function renderProfessionals(professionals) {
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
         const horasLibres = slotsHoy.length - totalOcupadosHoy;
 
-        // 👇 NUEVO: Calcular calificación y estrellas
+        // Calcular calificación y estrellas
         const rating = getAverageRating(p.id);
         const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
         const totalReseñas = state.messages.filter(m => m.therapistId == p.id).length;
 
+        // Construir HTML de la tarjeta con estructura accordion
         return `
-            <div class="therapist-card" data-id="${p.id}">
-                <div class="img-container">
-                    <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}" loading="lazy">
-                </div>
-                <div class="card-body">
+            <div class="professional-card therapist-card" data-id="${p.id}">
+                <!-- HEADER DE LA TARJETA (SIEMPRE VISIBLE) -->
+                <div class="card-header">
+                    <div class="img-container">
+                        <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}" loading="lazy">
+                    </div>
                     <h3>${p.name}</h3>
-                    <p>${p.title || 'Psicólogo Clínico de Adultos y Adolescentes, Terapeuta Familiar y de Parejas.'}</p>
+                    <p class="card-subtitle">${p.title || 'Psicólogo Clínico de Adultos y Adolescentes, Terapeuta Familiar y de Parejas.'}</p>
                     
-                    <!-- 👇 NUEVO: Estrellas de calificación -->
                     ${rating > 0 ? `
-                    <div class="rating" style="margin: 10px 0; display: flex; align-items: center; gap: 5px; justify-content: center;">
-                        <span style="color: var(--gold); font-size: 1.1rem;">${stars}</span>
+                    <div class="rating">
+                        <span style="color: var(--gold);">${stars}</span>
                         <span style="color: var(--texto-secundario); font-size: 0.85rem;">(${totalReseñas} reseñas)</span>
                     </div>
                     ` : ''}
                     
-                    <div class="price-box">
-                        <button class="btn-mas-info" onclick="event.stopPropagation(); showTherapistInfo('${p.id}')">Más Información</button>
-                        <button class="btn-agendar" onclick="event.stopPropagation(); openBooking('${p.id}')">AGENDA TU HORA</button>
+                    <div class="card-meta">
+                        <span><i class="fa fa-map-marker-alt"></i> ${p.address || 'Dirección no especificada'}</span>
+                        <span><i class="fa fa-clock"></i> ${horasLibres > 0 ? `${horasLibres} horario(s) disponible(s) hoy` : 'Sin disponibilidad hoy'}</span>
                     </div>
-                    <div class="direccion"><i class="fa fa-map-marker-alt"></i> ${p.address || 'Dirección no especificada'}</div>
-                    <div class="disponibilidad ${horasLibres > 0 ? 'disponible' : 'no-disponible'}">
-                        <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-                        <span>${horasLibres > 0 ? `${horasLibres} horario(s) disponible(s) hoy` : 'Sin disponibilidad hoy'}</span>
+                    
+                    <div class="card-actions">
+                        <button class="btn-mas-info" onclick="event.stopPropagation(); window.toggleInfo(this)">
+                            Más Información <i class="fa fa-chevron-down"></i>
+                        </button>
+                        <button class="btn-agendar" onclick="event.stopPropagation(); openBooking('${p.id}')">
+                            AGENDA TU HORA
+                        </button>
                     </div>
-                    ${p.whatsapp ? `
-                        <div class="whatsapp-link">
-                            <a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank">
-                                <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
-                            </a>
-                        </div>
-                    ` : ''}
                 </div>
+                
+                <!-- INFORMACIÓN ADICIONAL (SE GENERA DINÁMICAMENTE AL HACER CLIC) -->
             </div>
         `;
     }).join('');
     
-    console.log(`✅ Renderizados ${professionals.length} profesionales en #equipo`);
+    console.log(`✅ Renderizados ${professionals.length} profesionales con estilo accordion`);
 }
 
 // ============================================
@@ -600,6 +604,7 @@ if (typeof window !== 'undefined') {
     window.compartirPerfil = compartirPerfil;
     window.copiarAlPortapapeles = copiarAlPortapapeles;
     window.showTherapistInfo = showTherapistInfo;
+    window.toggleInfo = window.toggleInfo;
     window.filterProfessionals = filterProfessionals;
     window.forzarCargaDatos = forzarCargaDatos;
     window.forceRenderProfessionals = () => filterProfessionals();
@@ -608,4 +613,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js cargado con navegación corregida y estilo Puntoterapia exacto v3.0');
+console.log('✅ publico.js cargado con navegación corregida y estilo accordion v4.0');

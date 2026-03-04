@@ -54,33 +54,56 @@ export function cargarLogo() {
         const data = snapshot.val();
         if (data) {
             state.setLogoImage(data);
+            
+            // 🔥 CORREGIDO: Verificar que los elementos existen antes de usarlos
+            const headerLogo = document.getElementById('headerLogo');
+            const headerLogoText = document.getElementById('headerLogoText');
+            
             if (state.logoImage.url) {
-                document.getElementById('headerLogo').src = state.logoImage.url;
-                document.getElementById('headerLogo').style.display = 'inline-block';
+                if (headerLogo) {
+                    headerLogo.src = state.logoImage.url;
+                    headerLogo.style.display = 'inline-block';
+                }
             } else {
-                document.getElementById('headerLogo').style.display = 'none';
+                if (headerLogo) headerLogo.style.display = 'none';
             }
-            document.getElementById('headerLogoText').style.display = 'inline-block';
-            document.getElementById('headerLogoText').innerText = state.logoImage.text || 'Vínculo Salud';
+            
+            if (headerLogoText) {
+                headerLogoText.style.display = 'inline-block';
+                headerLogoText.innerText = state.logoImage.text || 'Vínculo Salud';
+            }
         } else {
-            document.getElementById('headerLogo').style.display = 'none';
-            document.getElementById('headerLogoText').style.display = 'inline-block';
-            document.getElementById('headerLogoText').innerText = 'Vínculo Salud';
+            const headerLogo = document.getElementById('headerLogo');
+            const headerLogoText = document.getElementById('headerLogoText');
+            
+            if (headerLogo) headerLogo.style.display = 'none';
+            if (headerLogoText) {
+                headerLogoText.style.display = 'inline-block';
+                headerLogoText.innerText = 'Vínculo Salud';
+            }
         }
     });
 }
 
 export function showLogoModal() {
-    document.getElementById('logoModal').style.display = 'flex';
-    document.getElementById('logoText').value = state.logoImage.text || 'Vínculo Salud';
-    if (state.logoImage.url) {
-        document.getElementById('logoPreview').src = state.logoImage.url;
-        document.getElementById('logoPreview').style.display = 'block';
+    const modal = document.getElementById('logoModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    
+    const logoText = document.getElementById('logoText');
+    if (logoText) logoText.value = state.logoImage.text || 'Vínculo Salud';
+    
+    const logoPreview = document.getElementById('logoPreview');
+    if (state.logoImage.url && logoPreview) {
+        logoPreview.src = state.logoImage.url;
+        logoPreview.style.display = 'block';
     }
 }
 
 export function closeLogoModal() {
-    document.getElementById('logoModal').style.display = 'none';
+    const modal = document.getElementById('logoModal');
+    if (modal) modal.style.display = 'none';
     state.setTempLogoData(null);
 }
 
@@ -88,8 +111,11 @@ export function previewLogo(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('logoPreview').src = e.target.result;
-            document.getElementById('logoPreview').style.display = 'block';
+            const logoPreview = document.getElementById('logoPreview');
+            if (logoPreview) {
+                logoPreview.src = e.target.result;
+                logoPreview.style.display = 'block';
+            }
             state.setTempLogoData(e.target.result);
         };
         reader.readAsDataURL(input.files[0]);
@@ -97,21 +123,32 @@ export function previewLogo(input) {
 }
 
 export function saveLogo() {
-    const newLogo = { ...state.logoImage, text: document.getElementById('logoText').value || 'Vínculo Salud' };
+    const logoText = document.getElementById('logoText');
+    const newLogo = { ...state.logoImage, text: logoText?.value || 'Vínculo Salud' };
+    
     if (state.tempLogoData) {
         newLogo.url = state.tempLogoData;
     }
     state.setLogoImage(newLogo);
     db.ref('LogoImage').set(state.logoImage);
 
+    // 🔥 CORREGIDO: Verificar elementos
+    const headerLogo = document.getElementById('headerLogo');
+    const headerLogoText = document.getElementById('headerLogoText');
+    
     if (state.logoImage.url) {
-        document.getElementById('headerLogo').src = state.logoImage.url;
-        document.getElementById('headerLogo').style.display = 'inline-block';
+        if (headerLogo) {
+            headerLogo.src = state.logoImage.url;
+            headerLogo.style.display = 'inline-block';
+        }
     } else {
-        document.getElementById('headerLogo').style.display = 'none';
+        if (headerLogo) headerLogo.style.display = 'none';
     }
-    document.getElementById('headerLogoText').style.display = 'inline-block';
-    document.getElementById('headerLogoText').innerText = state.logoImage.text;
+    
+    if (headerLogoText) {
+        headerLogoText.style.display = 'inline-block';
+        headerLogoText.innerText = state.logoImage.text;
+    }
 
     closeLogoModal();
     showToast('Logo guardado correctamente', 'success');
@@ -119,11 +156,20 @@ export function saveLogo() {
 
 export function removeLogo() {
     if (confirm('¿Eliminar el logo?')) {
-        state.setLogoImage({ url: '', text: document.getElementById('logoText').value || 'Vínculo Salud' });
+        const logoText = document.getElementById('logoText');
+        state.setLogoImage({ url: '', text: logoText?.value || 'Vínculo Salud' });
         db.ref('LogoImage').set(state.logoImage);
-        document.getElementById('headerLogo').style.display = 'none';
-        document.getElementById('headerLogoText').style.display = 'inline-block';
-        document.getElementById('headerLogoText').innerText = state.logoImage.text;
+        
+        // 🔥 CORREGIDO: Verificar elementos
+        const headerLogo = document.getElementById('headerLogo');
+        const headerLogoText = document.getElementById('headerLogoText');
+        
+        if (headerLogo) headerLogo.style.display = 'none';
+        if (headerLogoText) {
+            headerLogoText.style.display = 'inline-block';
+            headerLogoText.innerText = state.logoImage.text;
+        }
+        
         closeLogoModal();
         showToast('Logo eliminado', 'success');
     }
@@ -138,30 +184,51 @@ export function cargarTextos() {
         const data = snapshot.val();
         if (data) {
             state.setHeroTexts(data);
-            document.getElementById('heroTitleDisplay').innerHTML = state.heroTexts.title.replace(/\n/g, '<br>');
-            document.getElementById('heroSubtitleDisplay').innerText = state.heroTexts.subtitle;
+            
+            const titleDisplay = document.getElementById('heroTitleDisplay');
+            const subtitleDisplay = document.getElementById('heroSubtitleDisplay');
+            
+            if (titleDisplay) titleDisplay.innerHTML = state.heroTexts.title.replace(/\n/g, '<br>');
+            if (subtitleDisplay) subtitleDisplay.innerText = state.heroTexts.subtitle;
         }
     });
 }
 
 export function showTextsModal() {
-    document.getElementById('textsModal').style.display = 'flex';
-    document.getElementById('heroTitle').value = state.heroTexts.title;
-    document.getElementById('heroSubtitle').value = state.heroTexts.subtitle;
+    const modal = document.getElementById('textsModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSubtitle = document.getElementById('heroSubtitle');
+    
+    if (heroTitle) heroTitle.value = state.heroTexts.title;
+    if (heroSubtitle) heroSubtitle.value = state.heroTexts.subtitle;
 }
 
 export function closeTextsModal() {
-    document.getElementById('textsModal').style.display = 'none';
+    const modal = document.getElementById('textsModal');
+    if (modal) modal.style.display = 'none';
 }
 
 export function saveHeroTexts() {
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSubtitle = document.getElementById('heroSubtitle');
+    
     state.setHeroTexts({
-        title: document.getElementById('heroTitle').value,
-        subtitle: document.getElementById('heroSubtitle').value
+        title: heroTitle?.value || '',
+        subtitle: heroSubtitle?.value || ''
     });
+    
     db.ref('HeroTexts').set(state.heroTexts);
-    document.getElementById('heroTitleDisplay').innerHTML = state.heroTexts.title.replace(/\n/g, '<br>');
-    document.getElementById('heroSubtitleDisplay').innerText = state.heroTexts.subtitle;
+    
+    const titleDisplay = document.getElementById('heroTitleDisplay');
+    const subtitleDisplay = document.getElementById('heroSubtitleDisplay');
+    
+    if (titleDisplay) titleDisplay.innerHTML = state.heroTexts.title.replace(/\n/g, '<br>');
+    if (subtitleDisplay) subtitleDisplay.innerText = state.heroTexts.subtitle;
+    
     closeTextsModal();
     showToast('Textos actualizados', 'success');
 }
@@ -188,17 +255,27 @@ export function cargarFondo() {
 }
 
 export function showBackgroundImageModal() {
-    document.getElementById('backgroundImageModal').style.display = 'flex';
-    document.getElementById('backgroundOpacity').value = state.backgroundImage.opacity || 10;
-    document.getElementById('opacityValue').innerText = (state.backgroundImage.opacity || 10) + '%';
-    if (state.backgroundImage.url) {
-        document.getElementById('backgroundPreview').src = state.backgroundImage.url;
-        document.getElementById('backgroundPreview').style.display = 'block';
+    const modal = document.getElementById('backgroundImageModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    
+    const opacityInput = document.getElementById('backgroundOpacity');
+    const opacityValue = document.getElementById('opacityValue');
+    const preview = document.getElementById('backgroundPreview');
+    
+    if (opacityInput) opacityInput.value = state.backgroundImage.opacity || 10;
+    if (opacityValue) opacityValue.innerText = (state.backgroundImage.opacity || 10) + '%';
+    
+    if (state.backgroundImage.url && preview) {
+        preview.src = state.backgroundImage.url;
+        preview.style.display = 'block';
     }
 }
 
 export function closeBackgroundImageModal() {
-    document.getElementById('backgroundImageModal').style.display = 'none';
+    const modal = document.getElementById('backgroundImageModal');
+    if (modal) modal.style.display = 'none';
     state.setTempBackgroundImageData(null);
 }
 
@@ -206,8 +283,11 @@ export function previewBackgroundImage(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('backgroundPreview').src = e.target.result;
-            document.getElementById('backgroundPreview').style.display = 'block';
+            const preview = document.getElementById('backgroundPreview');
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
             state.setTempBackgroundImageData(e.target.result);
         };
         reader.readAsDataURL(input.files[0]);
@@ -215,8 +295,14 @@ export function previewBackgroundImage(input) {
 }
 
 export function updateBackgroundOpacity() {
-    const opacity = document.getElementById('backgroundOpacity').value;
-    document.getElementById('opacityValue').innerText = opacity + '%';
+    const opacityInput = document.getElementById('backgroundOpacity');
+    const opacityValue = document.getElementById('opacityValue');
+    
+    if (!opacityInput || !opacityValue) return;
+    
+    const opacity = opacityInput.value;
+    opacityValue.innerText = opacity + '%';
+    
     if (state.backgroundImage.url) {
         document.body.style.backgroundImage = `url('${state.backgroundImage.url}')`;
         document.body.style.backgroundSize = 'cover';
@@ -227,11 +313,14 @@ export function updateBackgroundOpacity() {
 }
 
 export function saveBackgroundImage() {
+    const opacityInput = document.getElementById('backgroundOpacity');
+    if (!opacityInput) return;
+    
     const newBg = { ...state.backgroundImage };
     if (state.tempBackgroundImageData) {
         newBg.url = state.tempBackgroundImageData;
     }
-    newBg.opacity = parseInt(document.getElementById('backgroundOpacity').value);
+    newBg.opacity = parseInt(opacityInput.value);
     state.setBackgroundImage(newBg);
     db.ref('BackgroundImage').set(state.backgroundImage);
 
@@ -273,28 +362,48 @@ export function cargarMetodosPago() {
 }
 
 export function showPaymentMethodsModal() {
-    document.getElementById('paymentMethodsModal').style.display = 'flex';
-    document.getElementById('globalTransfer').checked = state.globalPaymentMethods.transfer;
-    document.getElementById('globalCardPresencial').checked = state.globalPaymentMethods.cardPresencial;
-    document.getElementById('globalCardOnline').checked = state.globalPaymentMethods.cardOnline;
-    document.getElementById('globalCash').checked = state.globalPaymentMethods.cash;
-    document.getElementById('globalMercadoPago').checked = state.globalPaymentMethods.mercadopago;
-    document.getElementById('globalWebpay').checked = state.globalPaymentMethods.webpay;
+    const modal = document.getElementById('paymentMethodsModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    
+    const transfer = document.getElementById('globalTransfer');
+    const cardPresencial = document.getElementById('globalCardPresencial');
+    const cardOnline = document.getElementById('globalCardOnline');
+    const cash = document.getElementById('globalCash');
+    const mercadopago = document.getElementById('globalMercadoPago');
+    const webpay = document.getElementById('globalWebpay');
+    
+    if (transfer) transfer.checked = state.globalPaymentMethods.transfer;
+    if (cardPresencial) cardPresencial.checked = state.globalPaymentMethods.cardPresencial;
+    if (cardOnline) cardOnline.checked = state.globalPaymentMethods.cardOnline;
+    if (cash) cash.checked = state.globalPaymentMethods.cash;
+    if (mercadopago) mercadopago.checked = state.globalPaymentMethods.mercadopago;
+    if (webpay) webpay.checked = state.globalPaymentMethods.webpay;
 }
 
 export function closePaymentMethodsModal() {
-    document.getElementById('paymentMethodsModal').style.display = 'none';
+    const modal = document.getElementById('paymentMethodsModal');
+    if (modal) modal.style.display = 'none';
 }
 
 export function saveGlobalPaymentMethods() {
+    const transfer = document.getElementById('globalTransfer');
+    const cardPresencial = document.getElementById('globalCardPresencial');
+    const cardOnline = document.getElementById('globalCardOnline');
+    const cash = document.getElementById('globalCash');
+    const mercadopago = document.getElementById('globalMercadoPago');
+    const webpay = document.getElementById('globalWebpay');
+    
     state.setGlobalPaymentMethods({
-        transfer: document.getElementById('globalTransfer').checked,
-        cardPresencial: document.getElementById('globalCardPresencial').checked,
-        cardOnline: document.getElementById('globalCardOnline').checked,
-        cash: document.getElementById('globalCash').checked,
-        mercadopago: document.getElementById('globalMercadopago').checked,
-        webpay: document.getElementById('globalWebpay').checked
+        transfer: transfer ? transfer.checked : false,
+        cardPresencial: cardPresencial ? cardPresencial.checked : false,
+        cardOnline: cardOnline ? cardOnline.checked : false,
+        cash: cash ? cash.checked : false,
+        mercadopago: mercadopago ? mercadopago.checked : false,
+        webpay: webpay ? webpay.checked : false
     });
+    
     db.ref('PaymentMethods').set(state.globalPaymentMethods);
     closePaymentMethodsModal();
     showToast('Métodos de pago globales guardados', 'success');
@@ -348,27 +457,22 @@ function actualizarSelectoresEspecialidades() {
     const editSpecSelect = document.getElementById('editSpec');
     const specialtyFilter = document.getElementById('specialtyFilter');
 
-    if (addSpecSelect) {
-        addSpecSelect.innerHTML = state.specialties.map(s => 
-            `<option value="${s.name}">${s.name}</option>`
-        ).join('');
-    }
+    const options = state.specialties.map(s => 
+        `<option value="${s.name}">${s.name}</option>`
+    ).join('');
 
-    if (editSpecSelect) {
-        editSpecSelect.innerHTML = state.specialties.map(s => 
-            `<option value="${s.name}">${s.name}</option>`
-        ).join('');
-    }
-
+    if (addSpecSelect) addSpecSelect.innerHTML = options;
+    if (editSpecSelect) editSpecSelect.innerHTML = options;
+    
     if (specialtyFilter) {
-        specialtyFilter.innerHTML = '<option value="">🏷️ Todas las especialidades</option>' +
-            state.specialties.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        specialtyFilter.innerHTML = '<option value="">🏷️ Todas las especialidades</option>' + options;
     }
 }
 
 function renderAllSpecialties() {
     const container = document.getElementById('allSpecialtiesList');
     if (!container) return;
+    
     container.innerHTML = state.specialties.map(s => `
         <div class="specialty-item">
             <span>${s.name}</span>
@@ -378,17 +482,25 @@ function renderAllSpecialties() {
 }
 
 export function showSpecialtiesModal() {
-    document.getElementById('specialtiesModal').style.display = 'flex';
-    document.getElementById('newSpecialty').value = '';
+    const modal = document.getElementById('specialtiesModal');
+    const input = document.getElementById('newSpecialty');
+    
+    if (modal) modal.style.display = 'flex';
+    if (input) input.value = '';
+    
     renderAllSpecialties();
 }
 
 export function closeSpecialtiesModal() {
-    document.getElementById('specialtiesModal').style.display = 'none';
+    const modal = document.getElementById('specialtiesModal');
+    if (modal) modal.style.display = 'none';
 }
 
 export function addSpecialty() {
-    const name = document.getElementById('newSpecialty').value.trim();
+    const input = document.getElementById('newSpecialty');
+    if (!input) return;
+    
+    const name = input.value.trim();
     if (!name) {
         showToast('Ingresa un nombre para la especialidad', 'error');
         return;
@@ -400,7 +512,7 @@ export function addSpecialty() {
     const newSpecialty = { id: Date.now(), name };
     state.setSpecialties([...state.specialties, newSpecialty]);
     guardarEspecialidades();
-    document.getElementById('newSpecialty').value = '';
+    input.value = '';
     showToast('Especialidad agregada', 'success');
 }
 
@@ -528,26 +640,35 @@ export function showInstagramModal() {
     }
     
     // Cargar datos actuales
-    document.getElementById('instagramTitleInput').value = instagramData.title;
-    document.getElementById('instagramSubtitleInput').value = instagramData.subtitle;
-    document.getElementById('instagramQuoteInput').value = instagramData.quote;
-    document.getElementById('instagramTextInput').value = instagramData.text;
-    document.getElementById('instagramMessageInput').value = instagramData.message;
-    document.getElementById('instagramLinkInput').value = instagramData.link;
+    const titleInput = document.getElementById('instagramTitleInput');
+    const subtitleInput = document.getElementById('instagramSubtitleInput');
+    const quoteInput = document.getElementById('instagramQuoteInput');
+    const textInput = document.getElementById('instagramTextInput');
+    const messageInput = document.getElementById('instagramMessageInput');
+    const linkInput = document.getElementById('instagramLinkInput');
+    const preview = document.getElementById('instagramImagePreview');
     
-    if (instagramData.image) {
-        document.getElementById('instagramImagePreview').src = instagramData.image;
-        document.getElementById('instagramImagePreview').style.display = 'block';
-    } else {
-        document.getElementById('instagramImagePreview').style.display = 'none';
+    if (titleInput) titleInput.value = instagramData.title;
+    if (subtitleInput) subtitleInput.value = instagramData.subtitle;
+    if (quoteInput) quoteInput.value = instagramData.quote;
+    if (textInput) textInput.value = instagramData.text;
+    if (messageInput) messageInput.value = instagramData.message;
+    if (linkInput) linkInput.value = instagramData.link;
+    
+    if (instagramData.image && preview) {
+        preview.src = instagramData.image;
+        preview.style.display = 'block';
+    } else if (preview) {
+        preview.style.display = 'none';
     }
     
-    document.getElementById('instagramModal').style.display = 'flex';
+    const modal = document.getElementById('instagramModal');
+    if (modal) modal.style.display = 'flex';
 }
 
 export function uploadInstagramImage() {
     const input = document.getElementById('instagramImageInput');
-    if (!input.files || !input.files[0]) return;
+    if (!input || !input.files || !input.files[0]) return;
     
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -566,20 +687,29 @@ export function uploadInstagramImage() {
 }
 
 export function saveInstagramData() {
+    const titleInput = document.getElementById('instagramTitleInput');
+    const subtitleInput = document.getElementById('instagramSubtitleInput');
+    const quoteInput = document.getElementById('instagramQuoteInput');
+    const textInput = document.getElementById('instagramTextInput');
+    const messageInput = document.getElementById('instagramMessageInput');
+    const linkInput = document.getElementById('instagramLinkInput');
+    
     instagramData = {
-        title: document.getElementById('instagramTitleInput').value,
-        subtitle: document.getElementById('instagramSubtitleInput').value,
-        quote: document.getElementById('instagramQuoteInput').value,
-        text: document.getElementById('instagramTextInput').value,
-        message: document.getElementById('instagramMessageInput').value,
-        link: document.getElementById('instagramLinkInput').value,
+        title: titleInput?.value || instagramData.title,
+        subtitle: subtitleInput?.value || instagramData.subtitle,
+        quote: quoteInput?.value || instagramData.quote,
+        text: textInput?.value || instagramData.text,
+        message: messageInput?.value || instagramData.message,
+        link: linkInput?.value || instagramData.link,
         image: instagramData.image // Mantener la imagen actual
     };
     
     db.ref('InstagramData').set(instagramData);
     updateInstagramSection();
     
-    document.getElementById('instagramModal').style.display = 'none';
+    const modal = document.getElementById('instagramModal');
+    if (modal) modal.style.display = 'none';
+    
     showToast('Sección Instagram actualizada', 'success');
 }
 
@@ -667,21 +797,27 @@ export function showAboutModal() {
     }
     
     // Cargar datos actuales
-    document.getElementById('teamText').value = aboutTeamText;
-    document.getElementById('missionText').value = missionText;
-    document.getElementById('visionText').value = visionText;
+    const teamText = document.getElementById('teamText');
+    const mission = document.getElementById('missionText');
+    const vision = document.getElementById('visionText');
+    const preview = document.getElementById('aboutImagePreview');
     
-    if (aboutImage) {
-        document.getElementById('aboutImagePreview').src = aboutImage;
-        document.getElementById('aboutImagePreview').style.display = 'block';
+    if (teamText) teamText.value = aboutTeamText;
+    if (mission) mission.value = missionText;
+    if (vision) vision.value = visionText;
+    
+    if (aboutImage && preview) {
+        preview.src = aboutImage;
+        preview.style.display = 'block';
     }
     
-    document.getElementById('aboutModal').style.display = 'flex';
+    const modal = document.getElementById('aboutModal');
+    if (modal) modal.style.display = 'flex';
 }
 
 export function uploadAboutImage() {
     const input = document.getElementById('aboutImageInput');
-    if (!input.files || !input.files[0]) return;
+    if (!input || !input.files || !input.files[0]) return;
     
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -708,17 +844,17 @@ export function uploadAboutImage() {
 }
 
 export function saveAboutTexts() {
-    const teamText = document.getElementById('teamText')?.value;
-    const mission = document.getElementById('missionText')?.value;
-    const vision = document.getElementById('visionText')?.value;
-    const imagePreview = document.getElementById('aboutImagePreview')?.src;
+    const teamText = document.getElementById('teamText');
+    const mission = document.getElementById('missionText');
+    const vision = document.getElementById('visionText');
+    const imagePreview = document.getElementById('aboutImagePreview');
     
     // Actualizar variables
-    if (teamText) aboutTeamText = teamText;
-    if (mission) missionText = mission;
-    if (vision) visionText = vision;
-    if (imagePreview && imagePreview.startsWith('data:image')) {
-        aboutImage = imagePreview;
+    if (teamText) aboutTeamText = teamText.value;
+    if (mission) missionText = mission.value;
+    if (vision) visionText = vision.value;
+    if (imagePreview && imagePreview.src && imagePreview.src.startsWith('data:image')) {
+        aboutImage = imagePreview.src;
     }
     
     // Guardar en Firebase
@@ -734,7 +870,9 @@ export function saveAboutTexts() {
     // Actualizar vista
     updateAboutSection();
     
-    document.getElementById('aboutModal').style.display = 'none';
+    const modal = document.getElementById('aboutModal');
+    if (modal) modal.style.display = 'none';
+    
     showToast('Sección Quiénes Somos actualizada', 'success');
 }
 
@@ -842,42 +980,63 @@ export function showAtencionModal() {
     }
     
     // Cargar datos actuales
-    document.getElementById('atencionOnlineTitleInput').value = atencionTexts.online?.title || 'Online';
-    document.getElementById('atencionOnlineDescInput').value = atencionTexts.online?.description || '';
-    document.getElementById('atencionPresencialTitleInput').value = atencionTexts.presencial?.title || 'Presencial';
-    document.getElementById('atencionPresencialDescInput').value = atencionTexts.presencial?.description || '';
-    document.getElementById('atencionParejaTitleInput').value = atencionTexts.pareja?.title || 'Pareja';
-    document.getElementById('atencionParejaDescInput').value = atencionTexts.pareja?.description || '';
-    document.getElementById('atencionFamiliarTitleInput').value = atencionTexts.familiar?.title || 'Familiar';
-    document.getElementById('atencionFamiliarDescInput').value = atencionTexts.familiar?.description || '';
+    const onlineTitle = document.getElementById('atencionOnlineTitleInput');
+    const onlineDesc = document.getElementById('atencionOnlineDescInput');
+    const presencialTitle = document.getElementById('atencionPresencialTitleInput');
+    const presencialDesc = document.getElementById('atencionPresencialDescInput');
+    const parejaTitle = document.getElementById('atencionParejaTitleInput');
+    const parejaDesc = document.getElementById('atencionParejaDescInput');
+    const familiarTitle = document.getElementById('atencionFamiliarTitleInput');
+    const familiarDesc = document.getElementById('atencionFamiliarDescInput');
     
-    document.getElementById('atencionModal').style.display = 'flex';
+    if (onlineTitle) onlineTitle.value = atencionTexts.online?.title || 'Online';
+    if (onlineDesc) onlineDesc.value = atencionTexts.online?.description || '';
+    if (presencialTitle) presencialTitle.value = atencionTexts.presencial?.title || 'Presencial';
+    if (presencialDesc) presencialDesc.value = atencionTexts.presencial?.description || '';
+    if (parejaTitle) parejaTitle.value = atencionTexts.pareja?.title || 'Pareja';
+    if (parejaDesc) parejaDesc.value = atencionTexts.pareja?.description || '';
+    if (familiarTitle) familiarTitle.value = atencionTexts.familiar?.title || 'Familiar';
+    if (familiarDesc) familiarDesc.value = atencionTexts.familiar?.description || '';
+    
+    const modal = document.getElementById('atencionModal');
+    if (modal) modal.style.display = 'flex';
 }
 
 export function saveAtencionTexts() {
+    const onlineTitle = document.getElementById('atencionOnlineTitleInput');
+    const onlineDesc = document.getElementById('atencionOnlineDescInput');
+    const presencialTitle = document.getElementById('atencionPresencialTitleInput');
+    const presencialDesc = document.getElementById('atencionPresencialDescInput');
+    const parejaTitle = document.getElementById('atencionParejaTitleInput');
+    const parejaDesc = document.getElementById('atencionParejaDescInput');
+    const familiarTitle = document.getElementById('atencionFamiliarTitleInput');
+    const familiarDesc = document.getElementById('atencionFamiliarDescInput');
+    
     atencionTexts = {
         online: {
-            title: document.getElementById('atencionOnlineTitleInput').value,
-            description: document.getElementById('atencionOnlineDescInput').value
+            title: onlineTitle?.value || 'Online',
+            description: onlineDesc?.value || 'Sesiones por videollamada desde la comodidad de tu hogar'
         },
         presencial: {
-            title: document.getElementById('atencionPresencialTitleInput').value,
-            description: document.getElementById('atencionPresencialDescInput').value
+            title: presencialTitle?.value || 'Presencial',
+            description: presencialDesc?.value || 'Atención en nuestro consultorio con todos los protocolos'
         },
         pareja: {
-            title: document.getElementById('atencionParejaTitleInput').value,
-            description: document.getElementById('atencionParejaDescInput').value
+            title: parejaTitle?.value || 'Pareja',
+            description: parejaDesc?.value || 'Terapia para fortalecer vínculos y mejorar la comunicación'
         },
         familiar: {
-            title: document.getElementById('atencionFamiliarTitleInput').value,
-            description: document.getElementById('atencionFamiliarDescInput').value
+            title: familiarTitle?.value || 'Familiar',
+            description: familiarDesc?.value || 'Espacio de diálogo y crecimiento para toda la familia'
         }
     };
     
     db.ref('AtencionTexts').set(atencionTexts);
     updateAtencionSection();
     
-    document.getElementById('atencionModal').style.display = 'none';
+    const modal = document.getElementById('atencionModal');
+    if (modal) modal.style.display = 'none';
+    
     showToast('Tipos de atención actualizados', 'success');
 }
 
@@ -905,7 +1064,7 @@ export function cargarContactInfo() {
             contactInfo = data;
         }
         updateContactSection();
-        updateFooterFromContactInfo(); // 🔥 NUEVO: Sincroniza el footer
+        updateFooterFromContactInfo(); // 🔥 Sincroniza el footer
     });
 }
 
@@ -957,25 +1116,36 @@ export function showContactModal() {
     }
     
     // Cargar datos actuales
-    document.getElementById('contactEmailInput').value = contactInfo.email || '';
-    document.getElementById('contactPhoneInput').value = contactInfo.phone || '';
-    document.getElementById('contactAddressInput').value = contactInfo.address || '';
+    const emailInput = document.getElementById('contactEmailInput');
+    const phoneInput = document.getElementById('contactPhoneInput');
+    const addressInput = document.getElementById('contactAddressInput');
     
-    document.getElementById('contactModal').style.display = 'flex';
+    if (emailInput) emailInput.value = contactInfo.email || '';
+    if (phoneInput) phoneInput.value = contactInfo.phone || '';
+    if (addressInput) addressInput.value = contactInfo.address || '';
+    
+    const modal = document.getElementById('contactModal');
+    if (modal) modal.style.display = 'flex';
 }
 
 export function saveContactInfo() {
+    const emailInput = document.getElementById('contactEmailInput');
+    const phoneInput = document.getElementById('contactPhoneInput');
+    const addressInput = document.getElementById('contactAddressInput');
+    
     contactInfo = {
-        email: document.getElementById('contactEmailInput').value,
-        phone: document.getElementById('contactPhoneInput').value,
-        address: document.getElementById('contactAddressInput').value
+        email: emailInput?.value || '',
+        phone: phoneInput?.value || '',
+        address: addressInput?.value || ''
     };
     
     db.ref('ContactInfo').set(contactInfo);
     updateContactSection();        // Actualiza sección contacto y footer
     updateFooterFromContactInfo(); // Doble actualización por seguridad
     
-    document.getElementById('contactModal').style.display = 'none';
+    const modal = document.getElementById('contactModal');
+    if (modal) modal.style.display = 'none';
+    
     showToast('Información de contacto actualizada', 'success');
 }
 

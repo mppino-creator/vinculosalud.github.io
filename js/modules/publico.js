@@ -22,11 +22,23 @@ import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
 // ============================================
+// FUNCIÓN AUXILIAR PARA CALIFICACIONES
+// ============================================
+function getAverageRating(psychId) {
+    const psychMessages = state.messages.filter(m => m.therapistId == psychId);
+    if (psychMessages.length === 0) return 0;
+    return psychMessages.reduce((sum, m) => sum + m.rating, 0) / psychMessages.length;
+}
+
+// ============================================
 // FUNCIONES DE NAVEGACIÓN DEL MENÚ
 // ============================================
-
 export function showSection(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
+    
+    // Breadcrumbs
+    const breadcrumbs = document.querySelector('.breadcrumbs');
+    const currentPageSpan = document.getElementById('currentPage');
     
     const sections = {
         'inicio': document.getElementById('inicio'),
@@ -56,6 +68,22 @@ export function showSection(sectionId) {
     if (grid) grid.style.display = 'grid';
     if (messages) messages.style.display = 'grid';
     if (filtros) filtros.style.display = sectionId === 'equipo' ? 'flex' : 'none';
+    
+    // Actualizar breadcrumbs
+    if (breadcrumbs) {
+        if (sectionId !== 'inicio') {
+            breadcrumbs.style.display = 'block';
+            const nombres = {
+                'about': 'Quiénes Somos',
+                'equipo': 'Equipo',
+                'atencion': 'Tipo de Atención',
+                'contacto': 'Contacto'
+            };
+            if (currentPageSpan) currentPageSpan.textContent = nombres[sectionId] || sectionId;
+        } else {
+            breadcrumbs.style.display = 'none';
+        }
+    }
     
     document.querySelectorAll('.public-nav a').forEach(link => {
         link.classList.remove('active');
@@ -153,10 +181,6 @@ export function copiarAlPortapapeles(texto) {
     navigator.clipboard.writeText(texto).then(() => showToast('✅ Enlace copiado', 'success'))
         .catch(() => showToast('❌ Error al copiar', 'error'));
 }
-
-// ============================================
-// 🎨 MODAL DE INFORMACIÓN MEJORADO (ESTILO PUNTOTERAPIA)
-// ============================================
 
 // ============================================
 // FUNCIÓN PARA MOSTRAR MÁS INFORMACIÓN DEL PROFESIONAL (ESTILO PUNTOTERAPIA - TOGGLE)
@@ -332,6 +356,11 @@ export function renderProfessionals(professionals) {
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
         const horasLibres = slotsHoy.length - totalOcupadosHoy;
 
+        // 👇 NUEVO: Calcular calificación y estrellas
+        const rating = getAverageRating(p.id);
+        const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
+        const totalReseñas = state.messages.filter(m => m.therapistId == p.id).length;
+
         return `
             <div class="therapist-card" data-id="${p.id}">
                 <div class="img-container">
@@ -340,6 +369,15 @@ export function renderProfessionals(professionals) {
                 <div class="card-body">
                     <h3>${p.name}</h3>
                     <p>${p.title || 'Psicólogo Clínico de Adultos y Adolescentes, Terapeuta Familiar y de Parejas.'}</p>
+                    
+                    <!-- 👇 NUEVO: Estrellas de calificación -->
+                    ${rating > 0 ? `
+                    <div class="rating" style="margin: 10px 0; display: flex; align-items: center; gap: 5px; justify-content: center;">
+                        <span style="color: var(--gold); font-size: 1.1rem;">${stars}</span>
+                        <span style="color: var(--texto-secundario); font-size: 0.85rem;">(${totalReseñas} reseñas)</span>
+                    </div>
+                    ` : ''}
+                    
                     <div class="price-box">
                         <button class="btn-mas-info" onclick="event.stopPropagation(); showTherapistInfo('${p.id}')">Más Información</button>
                         <button class="btn-agendar" onclick="event.stopPropagation(); openBooking('${p.id}')">AGENDA TU HORA</button>

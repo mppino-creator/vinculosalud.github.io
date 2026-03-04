@@ -22,12 +22,14 @@ import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
 // ============================================
-// FUNCIONES DE NAVEGACIÓN DEL MENÚ
+// FUNCIONES DE NAVEGACIÓN DEL MENÚ - CORREGIDAS CON DOBLE EXPORTACIÓN
 // ============================================
 
+// Versión exportable para usar en otros módulos
 export function showSection(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
     
+    // Definir las secciones principales que pueden ocultarse/mostrarse
     const sections = {
         'inicio': document.getElementById('inicio'),
         'about': document.getElementById('about'),
@@ -37,14 +39,17 @@ export function showSection(sectionId) {
         'contacto': document.getElementById('contacto')
     };
     
+    // Ocultar TODAS las secciones principales
     Object.values(sections).forEach(section => {
         if (section) section.style.display = 'none';
     });
     
+    // Mostrar la sección seleccionada
     if (sections[sectionId]) {
         sections[sectionId].style.display = 'block';
         sections[sectionId].scrollIntoView({ behavior: 'smooth' });
         
+        // Actualizar contenido dinámico según la sección
         if (sectionId === 'about') {
             updateAboutSection();
         } else if (sectionId === 'atencion') {
@@ -54,14 +59,27 @@ export function showSection(sectionId) {
         }
     }
     
+    // 👉 REGLA DE ORO: El GRID DE PROFESIONALES SIEMPRE debe ser visible
     const grid = document.getElementById('equipo');
     const messages = document.getElementById('messagesGrid');
     const filtros = document.querySelector('.filters');
     
-    if (grid) grid.style.display = 'grid';
-    if (messages) messages.style.display = 'grid';
-    if (filtros) filtros.style.display = sectionId === 'equipo' ? 'flex' : 'none';
+    // El grid de profesionales SIEMPRE visible
+    if (grid) {
+        grid.style.display = 'grid';
+    }
     
+    // Los mensajes SIEMPRE visibles
+    if (messages) {
+        messages.style.display = 'grid';
+    }
+    
+    // Los filtros solo se muestran en la sección equipo
+    if (filtros) {
+        filtros.style.display = sectionId === 'equipo' ? 'flex' : 'none';
+    }
+    
+    // Actualizar clase activa en el menú
     document.querySelectorAll('.public-nav a').forEach(link => {
         link.classList.remove('active');
         link.style.borderBottom = 'none';
@@ -78,19 +96,30 @@ export function showSection(sectionId) {
     console.log(`✅ Sección ${sectionId} mostrada correctamente`);
 }
 
+// Versión exportable para usar en otros módulos
 export function abrirAgenda() {
     console.log('📅 Abriendo agenda con profesionales y filtros...');
+    
+    // Mostrar la sección equipo
     showSection('equipo');
     
+    // Asegurar que los filtros estén visibles
     const filtros = document.querySelector('.filters');
-    if (filtros) filtros.style.display = 'flex';
+    if (filtros) {
+        filtros.style.display = 'flex';
+    }
     
+    // Asegurar que el grid de profesionales esté visible
     const grid = document.getElementById('equipo');
-    if (grid) grid.style.display = 'grid';
+    if (grid) {
+        grid.style.display = 'grid';
+    }
     
+    // Mensaje amigable para el usuario
     showToast('Selecciona un profesional para ver su disponibilidad y agendar tu hora', 'info', 3000);
 }
 
+// Versión exportable para usar en otros módulos
 export function enviarContacto() {
     const nombre = document.getElementById('contactName')?.value;
     const email = document.getElementById('contactEmail')?.value;
@@ -101,14 +130,18 @@ export function enviarContacto() {
         return;
     }
     
+    // Validar email simple
     if (!email.includes('@') || !email.includes('.')) {
         showToast('Ingresa un email válido', 'error');
         return;
     }
     
+    // Aquí puedes agregar la lógica para enviar el mensaje
     console.log('📧 Mensaje de contacto:', { nombre, email, mensaje });
+    
     showToast('✅ Mensaje enviado, te contactaremos pronto', 'success');
     
+    // Limpiar formulario
     document.getElementById('contactName').value = '';
     document.getElementById('contactEmail').value = '';
     document.getElementById('contactMessage').value = '';
@@ -179,6 +212,7 @@ export function showTherapistInfo(psychId) {
     const psych = state.staff.find(p => p.id == psychId);
     if (!psych) return;
     
+    // Crear modal con información detallada
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.style.display = 'flex';
@@ -204,7 +238,7 @@ export function showTherapistInfo(psychId) {
 
 export function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
-    console.log('📊 Total staff en state:', state.staff.length);
+    console.log('📊 Total staff en state antes de filtrar:', state.staff.length);
     
     const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
@@ -239,25 +273,27 @@ export function filterProfessionals() {
     });
 
     filtered.sort((a, b) => a.name.localeCompare(b.name));
-    console.log('📊 Profesionales filtrados:', filtered.length);
+    console.log('📊 Profesionales después de filtro:', filtered.length);
     renderProfessionals(filtered);
 }
 
 export function renderProfessionals(professionals) {
     const grid = document.getElementById('equipo');
     if (!grid) {
-        console.error('❌ Grid de profesionales NO ENCONTRADO (id="equipo")');
+        console.error('❌ Grid de profesionales no encontrado (id="equipo")');
         return;
     }
 
     if (professionals.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">No se encontraron profesionales</div>';
+        console.log('📭 No hay profesionales para mostrar');
         return;
     }
 
     grid.innerHTML = professionals.map(p => {
         const today = new Date().toISOString().split('T')[0];
         
+        // Calcular disponibilidad
         const citasHoy = window.state?.appointments?.filter(a => 
             a.psychId == p.id && 
             a.date === today && 
@@ -275,17 +311,25 @@ export function renderProfessionals(professionals) {
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
         const horasLibres = slotsHoy.length - totalOcupadosHoy;
 
+        // ============================================
+        // 🎨 TARJETA ESTILO PUNTOTERAPIA - EXACTA CON CLASES CSS
+        // ============================================
         return `
             <div class="therapist-card" data-id="${p.id}">
+                <!-- Imagen del profesional -->
                 <div class="img-container">
                     <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}" loading="lazy">
                 </div>
                 
+                <!-- Contenido de la tarjeta -->
                 <div class="card-body">
+                    <!-- Nombre en MAYÚSCULAS -->
                     <h3>${p.name}</h3>
                     
+                    <!-- Título profesional -->
                     <p>${p.title || 'Psicólogo Clínico de Adultos y Adolescentes, Terapeuta Familiar y de Parejas.'}</p>
                     
+                    <!-- Botones en fila con clases específicas -->
                     <div class="price-box">
                         <button class="btn-mas-info" onclick="event.stopPropagation(); showTherapistInfo('${p.id}')">
                             Más Información
@@ -295,16 +339,19 @@ export function renderProfessionals(professionals) {
                         </button>
                     </div>
                     
+                    <!-- Dirección -->
                     <div class="direccion">
                         <i class="fa fa-map-marker-alt"></i>
                         <span>${p.address || 'Dirección no especificada'}</span>
                     </div>
                     
+                    <!-- Disponibilidad -->
                     <div class="disponibilidad ${horasLibres > 0 ? 'disponible' : 'no-disponible'}">
                         <i class="fa ${horasLibres > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
                         <span>${horasLibres > 0 ? `${horasLibres} horario(s) disponible(s) hoy` : 'Sin disponibilidad hoy'}</span>
                     </div>
                     
+                    <!-- WhatsApp si existe -->
                     ${p.whatsapp ? `
                         <div class="whatsapp-link">
                             <a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank">
@@ -320,6 +367,12 @@ export function renderProfessionals(professionals) {
     console.log(`✅ Renderizados ${professionals.length} profesionales en #equipo`);
 }
 
+function getAverageRating(psychId) {
+    const psychMessages = state.messages.filter(m => m.therapistId == psychId);
+    if (psychMessages.length === 0) return 0;
+    return psychMessages.reduce((sum, m) => sum + m.rating, 0) / psychMessages.length;
+}
+
 export function cargarDatosIniciales() {
     console.log('🚀 Cargando datos iniciales...');
     
@@ -328,52 +381,85 @@ export function cargarDatosIniciales() {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x" style="color:var(--primario);"></i><p>Cargando profesionales...</p></div>';
     }
 
+    // Ocultar filtros inicialmente (solo se muestran en equipo)
     const filtros = document.querySelector('.filters');
-    if (filtros) filtros.style.display = 'none';
+    if (filtros) {
+        filtros.style.display = 'none';
+    }
 
-    // Cargar profesionales (CON TODOS LOS CAMPOS)
-    console.log('🔍 Intentando cargar profesionales desde Firebase...');
+    // 🚨 CARGA DE PROFESIONALES CON LOGS DETALLADOS
+    console.log('🔍 Intentando cargar profesionales desde Firebase (ruta: Staff)...');
     db.ref('Staff').once('value', (snapshot) => {
         const data = snapshot.val();
-        console.log('📦 Datos de Firebase (Staff):', data);
+        console.log('📦 Datos recibidos de Firebase (Staff):', data ? '✅ existen datos' : '❌ vacío o null');
         
         if (data) {
             const staffArray = Object.keys(data).map(key => {
                 const item = data[key];
-                // Preservar TODOS los campos originales
-                return { 
-                    id: key, 
-                    ...item,
-                    usuario: item.usuario || item.user || '',
-                    email: item.email || '',
-                    spec: item.spec || ['Profesional'],
-                    priceOnline: item.priceOnline || 0,
-                    pricePresencial: item.pricePresencial || 0,
-                    img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-                    whatsapp: item.whatsapp || '',
-                    instagram: item.instagram || '',
-                    stars: item.stars || 5,
-                    genero: item.genero || '',
-                    address: item.address || '',
-                    phone: item.phone || '',
-                    title: item.title || '',
-                    bio: item.bio || '',
-                    education: item.education || '',
-                    experience: item.experience || 0,
-                    languages: item.languages || ['Español'],
-                    bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
-                    paymentMethods: item.paymentMethods || state.globalPaymentMethods,
-                    sessionDuration: item.sessionDuration || 45,
-                    breakBetween: item.breakBetween || 10,
-                    availability: item.availability || {},
-                    paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
-                };
+                if (item.name && item.pass && !item.usuario && !item.user) {
+                    return {
+                        id: key,
+                        name: item.name,
+                        usuario: item.name.split(' ')[0] || item.name,
+                        pass: item.pass,
+                        email: item.email || '',
+                        spec: item.spec || ['Profesional'],
+                        priceOnline: item.priceOnline || 0,
+                        pricePresencial: item.pricePresencial || 0,
+                        img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+                        whatsapp: item.whatsapp || '',
+                        instagram: item.instagram || '',
+                        stars: item.stars || 5,
+                        genero: item.genero || '',
+                        address: item.address || '',
+                        phone: item.phone || '',
+                        title: item.title || '',
+                        bio: item.bio || '',
+                        education: item.education || '',
+                        experience: item.experience || 0,
+                        languages: item.languages || ['Español'],
+                        bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
+                        paymentMethods: item.paymentMethods || state.globalPaymentMethods,
+                        sessionDuration: item.sessionDuration || 45,
+                        breakBetween: item.breakBetween || 10,
+                        availability: item.availability || {},
+                        paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
+                    };
+                } else {
+                    return { 
+                        id: key, 
+                        ...item,
+                        usuario: item.usuario || item.user || '',
+                        email: item.email || '',
+                        spec: item.spec || ['Profesional'],
+                        priceOnline: item.priceOnline || 0,
+                        pricePresencial: item.pricePresencial || 0,
+                        img: item.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+                        whatsapp: item.whatsapp || '',
+                        instagram: item.instagram || '',
+                        stars: item.stars || 5,
+                        genero: item.genero || '',
+                        address: item.address || '',
+                        phone: item.phone || '',
+                        title: item.title || '',
+                        bio: item.bio || '',
+                        education: item.education || '',
+                        experience: item.experience || 0,
+                        languages: item.languages || ['Español'],
+                        bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
+                        paymentMethods: item.paymentMethods || state.globalPaymentMethods,
+                        sessionDuration: item.sessionDuration || 45,
+                        breakBetween: item.breakBetween || 10,
+                        availability: item.availability || {},
+                        paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
+                    };
+                }
             });
             
-            console.log('✅ Profesionales procesados:', staffArray.length);
+            console.log(`✅ Profesionales procesados: ${staffArray.length}`);
             state.setStaff(staffArray);
         } else {
-            console.warn('⚠️ No hay datos de profesionales en Firebase');
+            console.warn('⚠️ No hay datos de profesionales en Firebase. Verifica la ruta "Staff".');
             state.setStaff([]);
         }
 
@@ -410,11 +496,19 @@ export function cargarDatosIniciales() {
                 availability: {},
                 paymentLinks: { online: '', presencial: '', qrCode: '' }
             });
+            console.log('👤 Administrador oculto agregado');
         }
 
+        console.log('📊 Total staff después de procesar (incluyendo admin):', state.staff.length);
         filterProfessionals();
+        
         if (state.currentUser?.role === 'admin') renderStaffTable();
         state.setDataLoaded(true);
+    }, (error) => {
+        console.error('❌ Error al cargar profesionales:', error);
+        showToast('Error al cargar profesionales', 'error');
+        state.setStaff([]);
+        filterProfessionals();
     });
 
     // Cargar boxes
@@ -495,7 +589,11 @@ export function cargarDatosIniciales() {
         if (data) {
             state.setMessages(Object.keys(data).map(key => ({ id: key, ...data[key] })));
         } else {
-            state.setMessages([]);
+            state.setMessages([
+                { id: 1, name: 'Carolina Méndez', email: '', whatsapp: '', therapistId: 1, therapistName: 'Psic. Alison Gutiérrez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad. Muy recomendada.', date: '2024-02-15' },
+                { id: 2, name: 'Roberto Campos', email: 'roberto@email.com', whatsapp: '+56912345678', therapistId: null, therapistName: null, rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: '2024-02-16' },
+                { id: 3, name: 'María José', email: '', whatsapp: '', therapistId: 2, therapistName: 'Dr. Julián Sossa', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: '2024-02-17' }
+            ]);
         }
         renderMessages();
         updateMarquee();
@@ -504,17 +602,24 @@ export function cargarDatosIniciales() {
         }
     });
 
-    // Cargar textos editables
+    // ============================================
+    // CARGAR TODOS LOS TEXTOS EDITABLES
+    // ============================================
     console.log('📝 Cargando textos editables...');
+    
+    // Cargar configuraciones básicas
     cargarEspecialidades();
     cargarMetodosPago();
     cargarFondo();
     cargarTextos();
     cargarLogo();
+    
+    // Cargar nuevas secciones editables
     cargarAboutTexts();
     cargarAtencionTexts();
     cargarContactInfo();
     
+    // Actualizar vistas después de cargar
     setTimeout(() => {
         updateAboutSection();
         updateAtencionSection();
@@ -525,6 +630,7 @@ export function cargarDatosIniciales() {
 // ============================================
 // FUNCIÓN PARA ACTUALIZAR TODAS LAS SECCIONES
 // ============================================
+
 export function actualizarTodasLasSecciones() {
     console.log('🔄 Actualizando todas las secciones...');
     updateAboutSection();
@@ -538,6 +644,7 @@ export function actualizarTodasLasSecciones() {
 // ============================================
 // FUNCIONES DE UTILIDAD
 // ============================================
+
 export function forzarCargaDatos() {
     console.log('🔄 Forzando carga de datos...');
     if (!window.state?.dataLoaded) {
@@ -546,8 +653,9 @@ export function forzarCargaDatos() {
 }
 
 // ============================================
-// EXPORTACIÓN EXPLÍCITA AL OBJETO WINDOW
+// 🚨 EXPORTACIÓN EXPLÍCITA AL OBJETO WINDOW
 // ============================================
+
 if (typeof window !== 'undefined') {
     console.log('🔧 Asignando funciones de publico.js a window...');
     

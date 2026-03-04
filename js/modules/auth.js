@@ -36,6 +36,142 @@ export function closeLoginModal() {
     if (modal) modal.style.display = 'none';
 }
 
+// ============================================
+// FUNCIÓN PARA ACTUALIZAR UI SIN CAMBIAR DE VISTA
+// ============================================
+function actualizarUIAdmin(userData, role) {
+    console.log('👑 Actualizando UI para:', role);
+    
+    // Cambiar el ícono y texto del link Staff
+    const staffLink = document.querySelector('a[onclick*="showLoginModal"]');
+    const staffIcon = staffLink?.querySelector('i');
+    const staffText = staffLink?.childNodes[2]; // El texto después del ícono
+    
+    if (staffLink) {
+        // Cambiar el onclick para que ahora muestre el menú
+        staffLink.setAttribute('onclick', 'mostrarMenuStaff(); return false;');
+        
+        if (staffIcon) {
+            staffIcon.className = 'fa fa-user-check';
+            staffIcon.style.color = '#1E7A8A';
+            staffIcon.style.opacity = '1';
+        }
+        
+        if (staffText) {
+            staffText.textContent = userData.name || 'Admin';
+        }
+    }
+    
+    // Mostrar botones de edición en secciones
+    const editButtons = [
+        'adminHeroEditBtn',
+        'adminAboutEditBtn', 
+        'adminAtencionEditBtn',
+        'adminContactEditBtn',
+        'adminInstagramEditBtn'
+    ];
+    
+    editButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.style.display = 'flex';
+        }
+    });
+    
+    // Mostrar mensaje de bienvenida
+    const generoEmoji = userData.genero === 'M' ? '♂️' : userData.genero === 'F' ? '♀️' : '';
+    showToast(`✅ Sesión iniciada como ${userData.name} ${generoEmoji}`, 'success');
+}
+
+// ============================================
+// FUNCIÓN PARA MOSTRAR MENÚ STAFF
+// ============================================
+window.mostrarMenuStaff = function() {
+    if (!state.currentUser) {
+        showLoginModal();
+        return;
+    }
+    
+    const user = state.currentUser;
+    
+    // Eliminar menú anterior si existe
+    const oldMenu = document.getElementById('staffMenu');
+    if (oldMenu) oldMenu.remove();
+    
+    // Crear menú contextual
+    const menuHTML = `
+        <div id="staffMenu" style="position: absolute; top: 80px; right: 20px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 20px; z-index: 2000; min-width: 250px; border: 1px solid var(--gris-claro);">
+            <div style="padding: 10px 0; border-bottom: 1px solid #eee; margin-bottom: 15px;">
+                <div style="font-weight: 700; font-size: 1.1rem; color: var(--texto-principal);">${user.data.name}</div>
+                <div style="color: var(--texto-secundario); font-size: 0.9rem; margin-top: 5px;">
+                    <span style="background: ${user.role === 'admin' ? 'var(--primario)' : 'var(--exito)'}; color: white; padding: 3px 10px; border-radius: 30px; font-size: 0.8rem;">
+                        ${user.role === 'admin' ? 'Administrador' : 'Profesional'}
+                    </span>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="irADashboard()" style="padding: 12px; background: var(--primario); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <i class="fa fa-tachometer-alt"></i> Ir al Dashboard
+                </button>
+                ${user.role === 'psych' ? `
+                <button onclick="window.openMyProfileModal?.()" style="padding: 12px; background: var(--verde-azulado-claro); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <i class="fa fa-user-edit"></i> Editar Mi Perfil
+                </button>
+                ` : ''}
+                <button onclick="logout()" style="padding: 12px; background: #f5f5f5; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%; color: var(--peligro);">
+                    <i class="fa fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', menuHTML);
+    
+    // Cerrar al hacer clic fuera
+    setTimeout(() => {
+        function cerrarMenu(e) {
+            if (!e.target.closest('#staffMenu') && !e.target.closest('a[onclick*="mostrarMenuStaff"]')) {
+                const menu = document.getElementById('staffMenu');
+                if (menu) menu.remove();
+                document.removeEventListener('click', cerrarMenu);
+            }
+        }
+        document.addEventListener('click', cerrarMenu);
+    }, 100);
+};
+
+// ============================================
+// FUNCIÓN PARA IR AL DASHBOARD
+// ============================================
+window.irADashboard = function() {
+    console.log('📊 Cambiando a dashboard');
+    document.getElementById('clientView').style.setProperty('display', 'none', 'important');
+    document.getElementById('dashboard').style.setProperty('display', 'block', 'important');
+    document.getElementById('bookingPanel').style.setProperty('display', 'none', 'important');
+    
+    // Cerrar menú
+    const menu = document.getElementById('staffMenu');
+    if (menu) menu.remove();
+};
+
+// ============================================
+// FUNCIÓN PARA VOLVER A VISTA PÚBLICA
+// ============================================
+window.volverAVistaPublica = function() {
+    console.log('👁️ Cambiando a vista pública');
+    document.getElementById('clientView').style.setProperty('display', 'block', 'important');
+    document.getElementById('dashboard').style.setProperty('display', 'none', 'important');
+    document.getElementById('bookingPanel').style.setProperty('display', 'none', 'important');
+    
+    // Mostrar sección equipo por defecto
+    if (window.showSection) {
+        window.showSection('equipo');
+    }
+};
+
+// ============================================
+// FUNCIÓN DE LOGIN MODIFICADA
+// ============================================
 export function processLogin() {
     const user = document.getElementById('loginUser')?.value;
     const pass = document.getElementById('loginPass')?.value;
@@ -70,8 +206,8 @@ export function processLogin() {
         // Guardar en localStorage
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({ role: 'admin', data: adminUser }));
         
-        // Mostrar dashboard directamente
-        mostrarDashboardInmediato('admin', adminUser);
+        // 🔥 IMPORTANTE: Actualizar UI sin cambiar de vista
+        actualizarUIAdmin(adminUser, 'admin');
         
         if (btn) {
             btn.innerHTML = 'Ingresar al Panel';
@@ -90,7 +226,7 @@ export function processLogin() {
         
         const role = foundUser.isAdmin ? 'admin' : 'psych';
         
-        // 🔥 IMPORTANTE: Buscar datos COMPLETOS del profesional en staff
+        // Buscar datos COMPLETOS del profesional en staff
         const psychFullData = state.staff.find(s => s.id == foundUser.id) || foundUser;
         
         // Guardar usuario con TODOS los datos
@@ -115,12 +251,8 @@ export function processLogin() {
         };
         localStorage.setItem('vinculoCurrentUser', JSON.stringify(userToStore));
         
-        // Mostrar dashboard directamente
-        mostrarDashboardInmediato(role, psychFullData);
-        
-        // Mostrar mensaje de bienvenida
-        const generoEmoji = psychFullData.genero === 'M' ? '♂️' : psychFullData.genero === 'F' ? '♀️' : '';
-        showToast(`Bienvenido ${psychFullData.name} ${generoEmoji}`, 'success');
+        // 🔥 IMPORTANTE: Actualizar UI sin cambiar de vista
+        actualizarUIAdmin(psychFullData, role);
         
     } else {
         showToast('Usuario o contraseña incorrectos', 'error');
@@ -132,16 +264,78 @@ export function processLogin() {
     }
 }
 
+// ============================================
+// FUNCIÓN DE LOGOUT
+// ============================================
+export function logout() {
+    console.log('🚪 Cerrando sesión');
+    
+    state.setCurrentUser(null);
+    localStorage.removeItem('vinculoCurrentUser');
+    
+    // Restaurar link de Staff
+    const staffLink = document.querySelector('a[onclick*="mostrarMenuStaff"]');
+    if (staffLink) {
+        staffLink.setAttribute('onclick', 'showLoginModal(); return false;');
+        
+        const staffIcon = staffLink.querySelector('i');
+        const staffText = staffLink.childNodes[2];
+        
+        if (staffIcon) {
+            staffIcon.className = 'fa fa-lock';
+            staffIcon.style.color = '#2D3E4F';
+            staffIcon.style.opacity = '0.6';
+        }
+        
+        if (staffText) {
+            staffText.textContent = ' Staff';
+        }
+    }
+    
+    // Ocultar botones de edición
+    const editButtons = [
+        'adminHeroEditBtn',
+        'adminAboutEditBtn', 
+        'adminAtencionEditBtn',
+        'adminContactEditBtn',
+        'adminInstagramEditBtn'
+    ];
+    
+    editButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'none';
+    });
+    
+    // Volver a vista pública
+    window.volverAVistaPublica();
+    
+    // Cerrar menú si está abierto
+    const menu = document.getElementById('staffMenu');
+    if (menu) menu.remove();
+    
+    showToast('Sesión cerrada', 'info');
+}
+
+// ============================================
+// FUNCIÓN PARA CARGAR EL DASHBOARD (ahora se llama desde el menú)
+// ============================================
+export function cargarDashboard(role) {
+    const userData = state.currentUser?.data;
+    if (userData) {
+        mostrarDashboardInmediato(role, userData);
+    } else {
+        console.error('❌ No hay datos de usuario para cargar dashboard');
+    }
+}
+
 // 🔥 VERSIÓN CORREGIDA - Mostrar dashboard inmediatamente con !important
 function mostrarDashboardInmediato(role, userData) {
     console.log('🔄 Mostrando dashboard inmediatamente como:', role);
     
-    // Obtener elementos
     const clientView = document.getElementById('clientView');
     const bookingPanel = document.getElementById('bookingPanel');
     const dashboard = document.getElementById('dashboard');
     
-    // Verificar que los elementos existen
     if (!dashboard) {
         console.error('❌ Elemento dashboard no encontrado');
         return;
@@ -156,7 +350,6 @@ function mostrarDashboardInmediato(role, userData) {
         bookingPanel.style.setProperty('display', 'none', 'important');
     }
     
-    // Forzar dashboard visible con !important
     dashboard.style.setProperty('display', 'block', 'important');
     dashboard.style.setProperty('visibility', 'visible', 'important');
     dashboard.style.setProperty('opacity', '1', 'important');
@@ -216,26 +409,6 @@ function mostrarDashboardInmediato(role, userData) {
     console.log('✅ Dashboard forzado a visible con !important');
 }
 
-export function logout() {
-    state.setCurrentUser(null);
-    localStorage.removeItem('vinculoCurrentUser');
-    location.reload();
-}
-
-// ============================================
-// FUNCIÓN PARA CARGAR EL DASHBOARD
-// ============================================
-
-export function cargarDashboard(role) {
-    // Esta función ahora llama a mostrarDashboardInmediato
-    const userData = state.currentUser?.data;
-    if (userData) {
-        mostrarDashboardInmediato(role, userData);
-    } else {
-        console.error('❌ No hay datos de usuario para cargar dashboard');
-    }
-}
-
 // ============================================
 // FUNCIÓN SWITCH TAB
 // ============================================
@@ -243,17 +416,14 @@ export function cargarDashboard(role) {
 export function switchTab(tabName) {
     console.log('🔄 Cambiando a pestaña:', tabName);
     
-    // Desactivar todas las pestañas
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     
-    // Activar la pestaña clickeada
     const activeTab = Array.from(document.querySelectorAll('.tab')).find(t => 
         t.textContent.toLowerCase().includes(tabName.toLowerCase())
     );
     if (activeTab) activeTab.classList.add('active');
     
-    // Mostrar el contenido seleccionado
     const tabMap = {
         'citas': 'tabCitas',
         'solicitudes': 'tabSolicitudes',
@@ -279,7 +449,6 @@ export function switchTab(tabName) {
         if (tabElement) {
             tabElement.classList.add('active');
             
-            // Cargar datos según la pestaña
             setTimeout(() => {
                 try {
                     if (tabName === 'pacientes' && typeof renderPatients === 'function') {
@@ -302,7 +471,6 @@ export function switchTab(tabName) {
                         if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
                     }
                     else if (tabName === 'disponibilidad' && isPsych()) {
-                        // Verificar si existe la función loadTimeSlots
                         if (typeof window.loadTimeSlots === 'function') {
                             window.loadTimeSlots();
                         }
@@ -356,7 +524,6 @@ export function updateStats() {
     const miId = state.currentUser.data?.id;
     const esAdmin = isAdmin();
     
-    // Filtrar citas
     let misCitas = [];
     if (esAdmin) {
         misCitas = state.appointments || [];
@@ -364,18 +531,15 @@ export function updateStats() {
         misCitas = (state.appointments || []).filter(a => a.psychId == miId);
     }
     
-    // Calcular ingresos (solo pagadas)
     const ingresosPagados = misCitas
         .filter(a => a.paymentStatus === 'pagado')
         .reduce((sum, a) => sum + (a.price || 0), 0);
     
-    // Contar pacientes únicos
     const pacientesUnicos = new Set();
     misCitas.forEach(a => {
         if (a.patientId) pacientesUnicos.add(a.patientId);
     });
     
-    // Actualizar UI
     const statIncome = document.getElementById('statIncome');
     const statCitas = document.getElementById('statCitas');
     const statPatients = document.getElementById('statPatients');
@@ -386,7 +550,7 @@ export function updateStats() {
 }
 
 // ============================================
-// 🆕 FUNCIÓN PARA ACTUALIZAR BOTÓN DE PERFIL
+// FUNCIÓN PARA ACTUALIZAR BOTÓN DE PERFIL
 // ============================================
 
 export function updateProfileButton() {
@@ -403,7 +567,7 @@ export function updateProfileButton() {
 }
 
 // ============================================
-// 🆕 VERIFICAR SESIÓN GUARDADA
+// VERIFICAR SESIÓN GUARDADA
 // ============================================
 
 export function verificarSesionGuardada() {
@@ -419,17 +583,15 @@ export function verificarSesionGuardada() {
         const userData = JSON.parse(savedUser);
         console.log('📦 Sesión encontrada:', userData);
         
-        // Verificar que el usuario aún existe en staff (excepto admin)
         if (userData.role === 'admin') {
             state.setCurrentUser(userData);
-            mostrarDashboardInmediato('admin', userData.data);
+            actualizarUIAdmin(userData.data, 'admin');
             return true;
         } else {
-            // Buscar psicólogo en staff
             const psychExists = state.staff.some(s => s.id == userData.data.id);
             if (psychExists) {
                 state.setCurrentUser(userData);
-                mostrarDashboardInmediato('psych', userData.data);
+                actualizarUIAdmin(userData.data, userData.role);
                 return true;
             } else {
                 console.log('⚠️ Psicólogo ya no existe en el sistema');
@@ -456,6 +618,8 @@ if (typeof window !== 'undefined') {
     window.updateStats = updateStats;
     window.updateProfileButton = updateProfileButton;
     window.verificarSesionGuardada = verificarSesionGuardada;
+    window.irADashboard = irADashboard;
+    window.volverAVistaPublica = volverAVistaPublica;
 }
 
 console.log('✅ auth.js cargado correctamente con funciones de login y perfil profesional');

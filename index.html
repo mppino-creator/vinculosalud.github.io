@@ -1342,6 +1342,14 @@
     <main id="clientView">
         <!-- MENÚ DE NAVEGACIÓN SUPERIOR -->
         <div class="public-nav">
+            <!-- BREADCRUMBS (MIGAS DE PAN) ESTILO PUNTOTERAPIA -->
+<div class="breadcrumbs" style="padding: 20px 0; margin-bottom: 20px; display: none;">
+    <div class="container">
+        <a href="#" onclick="showSection('inicio'); return false;" style="color: var(--verde-azulado-claro); text-decoration: none;">Inicio</a> 
+        <span style="margin: 0 8px; color: var(--texto-secundario);">›</span>
+        <span id="currentPage" style="color: var(--texto-principal); font-weight: 500;">Equipo</span>
+    </div>
+</div>
             <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
             <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
             <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
@@ -1407,58 +1415,79 @@
             </div>
         </section>
 
-        <!-- FILTROS DE BÚSQUEDA - Solo visibles en Equipo -->
-        <div class="filters" style="display: none;">
-            <input type="text" class="filter-input" id="searchFilter" placeholder="🔍 Buscar profesional..." oninput="filterProfessionals()">
-            <select class="filter-select" id="specialtyFilter" onchange="filterProfessionals()">
-                <option value="">🏷️ Todas las especialidades</option>
-            </select>
-            <select class="filter-select" id="availabilityFilter" onchange="filterProfessionals()">
-                <option value="">Todos los horarios</option>
-                <option value="available">Solo con disponibilidad</option>
-                <option value="today">Disponibles hoy</option>
-                <option value="tomorrow">Disponibles mañana</option>
-            </select>
-        </div>
+       <!-- FILTROS DE BÚSQUEDA - MEJORADOS ESTILO PUNTOTERAPIA -->
+<div class="filters" style="display: none; flex-wrap: wrap; gap: 15px; margin: 30px 0; justify-content: center;">
+    <input type="text" class="filter-input" id="searchFilter" placeholder="🔍 Buscar profesional..." oninput="filterProfessionals()" style="flex: 2; min-width: 250px; padding: 14px 20px; border-radius: 50px; border: 1px solid var(--gris-claro);">
+    
+    <select class="filter-select" id="specialtyFilter" onchange="filterProfessionals()" style="flex: 1; min-width: 180px; padding: 14px 20px; border-radius: 50px; border: 1px solid var(--gris-claro); background: white;">
+        <option value="">🏷️ Todas las especialidades</option>
+    </select>
+    
+    <select class="filter-select" id="availabilityFilter" onchange="filterProfessionals()" style="flex: 1; min-width: 180px; padding: 14px 20px; border-radius: 50px; border: 1px solid var(--gris-claro); background: white;">
+        <option value="">📅 Todos los horarios</option>
+        <option value="available">✅ Con disponibilidad</option>
+        <option value="today">🔵 Disponibles hoy</option>
+        <option value="tomorrow">🟢 Disponibles mañana</option>
+    </select>
+</div>
 
         <!-- GRID DE PROFESIONALES (EQUIPO) - SIEMPRE VISIBLE -->
         <div id="equipo" class="grid"></div>
 
-        <!-- SECCIÓN TIPO DE ATENCIÓN - EDITABLE -->
-        <section id="atencion" class="atencion-section" style="display: none;">
-            <!-- Botón de edición para admin -->
-            <div class="admin-edit-btn" id="adminAtencionEditBtn" style="display: none;" onclick="showAtencionModal()">
-                <i class="fa fa-edit"></i> Editar tipos
+        <!-- SECCIÓN TIPO DE ATENCIÓN - MEJORADA ESTILO PUNTOTERAPIA -->
+<section id="atencion" class="atencion-section" style="display: none;">
+    <!-- Botón de edición para admin -->
+    <div class="admin-edit-btn" id="adminAtencionEditBtn" style="display: none;" onclick="showAtencionModal()">
+        <i class="fa fa-edit"></i> Editar tipos
+    </div>
+    
+    <div class="container">
+        <h2 style="color: var(--verde-azulado-profundo); font-size: 2.2rem; text-align: center; margin-bottom: 10px;">Tipos de Atención</h2>
+        <p style="color: var(--texto-secundario); text-align: center; margin-bottom: 50px;">Elige la modalidad que mejor se adapte a tus necesidades</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+            <!-- Online -->
+            <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+                <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="fa fa-video" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
+                </div>
+                <h3 id="atencionOnlineTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Online</h3>
+                <p id="atencionOnlineDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Sesiones por videollamada desde la comodidad de tu hogar</p>
+                <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $25.000</span>
             </div>
             
-            <h2>Tipos de Atención</h2>
-            
-            <div class="atencion-grid">
-                <div class="atencion-card">
-                    <i class="fa fa-video"></i>
-                    <h3 id="atencionOnlineTitle">Online</h3>
-                    <p id="atencionOnlineDesc">Sesiones por videollamada desde la comodidad de tu hogar</p>
+            <!-- Presencial -->
+            <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+                <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="fa fa-users" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
                 </div>
-                
-                <div class="atencion-card">
-                    <i class="fa fa-users"></i>
-                    <h3 id="atencionPresencialTitle">Presencial</h3>
-                    <p id="atencionPresencialDesc">Atención en nuestro consultorio con todos los protocolos</p>
-                </div>
-                
-                <div class="atencion-card">
-                    <i class="fa fa-heart"></i>
-                    <h3 id="atencionParejaTitle">Pareja</h3>
-                    <p id="atencionParejaDesc">Terapia para fortalecer vínculos y mejorar la comunicación</p>
-                </div>
-                
-                <div class="atencion-card">
-                    <i class="fa fa-child"></i>
-                    <h3 id="atencionFamiliarTitle">Familiar</h3>
-                    <p id="atencionFamiliarDesc">Espacio de diálogo y crecimiento para toda la familia</p>
-                </div>
+                <h3 id="atencionPresencialTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Presencial</h3>
+                <p id="atencionPresencialDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Atención en nuestro consultorio con todos los protocolos</p>
+                <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $30.000</span>
             </div>
-        </section>
+            
+            <!-- Pareja -->
+            <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+                <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="fa fa-heart" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
+                </div>
+                <h3 id="atencionParejaTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Pareja</h3>
+                <p id="atencionParejaDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Terapia para fortalecer vínculos y mejorar la comunicación</p>
+                <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $40.000</span>
+            </div>
+            
+            <!-- Familiar -->
+            <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+                <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="fa fa-child" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
+                </div>
+                <h3 id="atencionFamiliarTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Familiar</h3>
+                <p id="atencionFamiliarDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Espacio de diálogo y crecimiento para toda la familia</p>
+                <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $45.000</span>
+            </div>
+        </div>
+    </div>
+</section>
 
         <!-- SECCIÓN BLOG - PUNTO DE INTERÉS -->
         <section id="blog" class="blog-section" style="display: none;">

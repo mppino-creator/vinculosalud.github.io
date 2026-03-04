@@ -3,13 +3,12 @@
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
 // ============================================
-import { db } from './config/firebase.js';  // ✅ DEBE SER LA PRIMERA LÍNEA
+import { db } from './config/firebase.js';  // ✅ ÚNICA importación de db
 import * as state from './modules/state.js';
 window.state = state;
 console.log('✅ state expuesto globalmente inmediatamente');
 
-// AHORA importamos el resto
-import { db } from './config/firebase.js';
+// AHORA importamos el resto (SIN DUPLICAR db)
 import * as utils from './modules/utils.js';
 import * as auth from './modules/auth.js';
 import * as pacientes from './modules/pacientes.js';

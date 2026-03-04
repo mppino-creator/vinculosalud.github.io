@@ -2442,3 +2442,40 @@ html {
     visibility: visible !important;
     opacity: 1 !important;
 }
+
+/* Modal de información del terapeuta (estilo Puntoterapia) */
+.therapist-info-modal .modal-content {
+    border-radius: 40px;
+    padding: 40px;
+}
+
+.therapist-info-modal h2 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.therapist-info-modal h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.therapist-info-modal .specialty-tag {
+    background: var(--verde-azulado-claro);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.therapist-info-modal .btn-staff {
+    border-radius: 50px;
+    box-shadow: 0 10px 20px rgba(30, 122, 138, 0.2);
+    transition: all 0.3s;
+}
+
+.therapist-info-modal .btn-staff:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(30, 122, 138, 0.3);
+}

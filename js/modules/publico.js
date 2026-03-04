@@ -29,13 +29,12 @@ import { renderPendingRequests } from './citas.js';
 export function showSection(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
     
-    // Definir las secciones principales que pueden ocultarse/mostrarse
+    // Definir las secciones principales que pueden ocultarse/mostrarse (se eliminó 'blog')
     const sections = {
         'inicio': document.getElementById('inicio'),
         'about': document.getElementById('about'),
         'equipo': document.getElementById('equipo'),
         'atencion': document.getElementById('atencion'),
-        'blog': document.getElementById('blog'),
         'contacto': document.getElementById('contacto')
     };
     
@@ -206,31 +205,81 @@ export function copiarAlPortapapeles(texto) {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR MÁS INFORMACIÓN DEL PROFESIONAL
+// FUNCIÓN PARA MOSTRAR MÁS INFORMACIÓN DEL PROFESIONAL (ESTILO PUNTOTERAPIA MEJORADO)
 // ============================================
 export function showTherapistInfo(psychId) {
     const psych = state.staff.find(p => p.id == psychId);
     if (!psych) return;
     
-    // Crear modal con información detallada
+    // Crear modal con información detallada estilo Puntoterapia
     const modal = document.createElement('div');
-    modal.className = 'modal';
+    modal.className = 'modal therapist-info-modal';
     modal.style.display = 'flex';
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 700px;">
             <span class="modal-close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-            <h2 style="color: var(--verde-azulado-profundo); margin-bottom: 20px;">${psych.name}</h2>
-            <div style="margin-bottom: 20px;">
-                <p style="color: var(--texto-principal); line-height: 1.6;">${psych.bio || 'Especialista en salud mental con amplia experiencia en terapia individual, familiar y de pareja.'}</p>
+            
+            <!-- Cabecera con nombre y título -->
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: var(--verde-azulado-profundo); font-size: 2rem; margin-bottom: 5px;">${psych.name}</h2>
+                <p style="color: var(--texto-secundario); font-size: 1.1rem;">${psych.title || 'Psicólogo Clínico'}</p>
             </div>
-            <div style="border-top: 1px solid var(--gris-claro); padding-top: 20px;">
-                <p style="margin: 10px 0;"><i class="fa fa-graduation-cap" style="color: var(--ocre-calido); width: 25px;"></i> ${psych.education || 'Formación no especificada'}</p>
-                <p style="margin: 10px 0;"><i class="fa fa-clock" style="color: var(--ocre-calido); width: 25px;"></i> ${psych.experience || '0'} años de experiencia</p>
-                <p style="margin: 10px 0;"><i class="fa fa-language" style="color: var(--ocre-calido); width: 25px;"></i> ${psych.languages ? psych.languages.join(', ') : 'Español'}</p>
+            
+            <!-- Biografía / Descripción breve (si existe) -->
+            ${psych.bio ? `
+            <div style="margin-bottom: 25px; background: var(--verde-grisaceo-claro); padding: 20px; border-radius: 20px;">
+                <p style="color: var(--texto-principal); line-height: 1.6; font-size: 1rem;">${psych.bio}</p>
             </div>
-            <button onclick="this.parentElement.parentElement.remove(); window.openBooking('${psych.id}')" class="btn-staff" style="width:100%; margin-top:20px; background: var(--verde-azulado-profundo);">
-                AGENDAR HORA
-            </button>
+            ` : ''}
+            
+            <!-- Grid de información detallada -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                
+                <!-- Columna izquierda: Formación y Educación -->
+                <div>
+                    <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-graduation-cap"></i> Formación
+                    </h4>
+                    ${psych.education ? `
+                        <p style="color: var(--texto-secundario); margin-bottom: 10px; line-height: 1.5; white-space: pre-line;">${psych.education}</p>
+                    ` : '<p style="color: var(--texto-secundario);">No especificada</p>'}
+                    
+                    <h4 style="color: var(--verde-azulado-profundo); margin: 20px 0 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-clock"></i> Experiencia
+                    </h4>
+                    <p style="color: var(--texto-secundario);">${psych.experience || '0'} años de experiencia clínica</p>
+                </div>
+                
+                <!-- Columna derecha: Especialidades y áreas de trabajo -->
+                <div>
+                    <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-stethoscope"></i> Especialidades
+                    </h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
+                        ${Array.isArray(psych.spec) ? psych.spec.map(s => `<span class="specialty-tag" style="background: var(--verde-azulado-claro); color: white;">${s}</span>`).join('') : `<span class="specialty-tag" style="background: var(--verde-azulado-claro); color: white;">${psych.spec || 'Especialista'}</span>`}
+                    </div>
+                    
+                    <h4 style="color: var(--verde-azulado-profundo); margin: 20px 0 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-language"></i> Idiomas
+                    </h4>
+                    <p style="color: var(--texto-secundario);">${psych.languages ? (Array.isArray(psych.languages) ? psych.languages.join(', ') : psych.languages) : 'Español'}</p>
+                </div>
+            </div>
+            
+            <!-- Experiencia clínica detallada (si existe) -->
+            ${psych.clinicalExperience ? `
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--gris-claro);">
+                <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Experiencia Clínica</h4>
+                <p style="color: var(--texto-secundario); line-height: 1.6; white-space: pre-line;">${psych.clinicalExperience}</p>
+            </div>
+            ` : ''}
+            
+            <!-- Botón para agendar -->
+            <div style="margin-top: 30px; text-align: center;">
+                <button onclick="this.closest('.modal').remove(); window.openBooking('${psych.id}')" class="btn-staff" style="background: var(--verde-azulado-profundo); padding: 14px 40px; font-size: 1.1rem;">
+                    <i class="fa fa-calendar-check"></i> AGENDA TU HORA
+                </button>
+            </div>
         </div>
     `;
     document.body.appendChild(modal);
@@ -418,6 +467,7 @@ export function cargarDatosIniciales() {
                         education: item.education || '',
                         experience: item.experience || 0,
                         languages: item.languages || ['Español'],
+                        clinicalExperience: item.clinicalExperience || '', // Campo adicional opcional
                         bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
                         paymentMethods: item.paymentMethods || state.globalPaymentMethods,
                         sessionDuration: item.sessionDuration || 45,
@@ -446,6 +496,7 @@ export function cargarDatosIniciales() {
                         education: item.education || '',
                         experience: item.experience || 0,
                         languages: item.languages || ['Español'],
+                        clinicalExperience: item.clinicalExperience || '',
                         bankDetails: item.bankDetails || { bank: '', accountType: 'corriente', accountNumber: '', rut: '', email: '' },
                         paymentMethods: item.paymentMethods || state.globalPaymentMethods,
                         sessionDuration: item.sessionDuration || 45,

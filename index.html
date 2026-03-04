@@ -1997,32 +1997,7 @@
 <!-- ÚNICO SCRIPT: main.js -->
 <script type="module" src="js/main.js?v=20240303"></script>
 
-<!-- SCRIPT DE EMERGENCIA PARA FORZAR STATE -->
-<script>
-(function() {
-    console.log('🚨 SCRIPT DE EMERGENCIA ACTIVADO');
-    
-    const checkState = setInterval(function() {
-        if (window.state) {
-            console.log('✅ state detectado por script de emergencia');
-            clearInterval(checkState);
-            
-            if (window.publico && window.publico.cargarDatosIniciales) {
-                window.publico.cargarDatosIniciales();
-            }
-            
-            if (window.state.currentUser && typeof window.renderPatients === 'function') {
-                setTimeout(() => window.renderPatients(), 500);
-            }
-        }
-    }, 100);
-    
-    setTimeout(function() {
-        clearInterval(checkState);
-        console.log('⚠️ Timeout esperando state');
-    }, 5000);
-})();
-</script>
+
 
 <!-- Funciones de vista previa -->
 <script>

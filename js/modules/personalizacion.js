@@ -34,6 +34,17 @@ export let contactInfo = {
     address: 'Av. Principal 123, Santiago'
 };
 
+// 🆕 NUEVA VARIABLE PARA SECCIÓN INSTAGRAM
+export let instagramData = {
+    title: 'Sigue Nuestro Instagram',
+    subtitle: 'PUNTO',
+    quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
+    text: 'Detente aquí un segundo',
+    message: 'Esto también se aprende.',
+    link: 'https://instagram.com/vinculosalud',
+    image: ''
+};
+
 // ============================================
 // FUNCIONES DE LOGO (AMBOS SIEMPRE VISIBLES)
 // ============================================
@@ -420,7 +431,160 @@ function guardarEspecialidades() {
 }
 
 // ============================================
-// 🆕 NUEVAS FUNCIONES PARA SECCIÓN QUIÉNES SOMOS
+// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM
+// ============================================
+
+export function cargarInstagramData() {
+    db.ref('InstagramData').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            instagramData = { ...instagramData, ...data };
+        }
+        updateInstagramSection();
+    });
+}
+
+export function updateInstagramSection() {
+    const titleEl = document.getElementById('instagramTitle');
+    const subtitleEl = document.getElementById('instagramSubtitle');
+    const quoteEl = document.getElementById('instagramQuote');
+    const textEl = document.getElementById('instagramText');
+    const messageEl = document.getElementById('instagramMessage');
+    const linkEl = document.getElementById('instagramLink');
+    const imageEl = document.getElementById('instagramImage');
+    
+    if (titleEl) titleEl.innerText = instagramData.title;
+    if (subtitleEl) subtitleEl.innerText = instagramData.subtitle;
+    if (quoteEl) quoteEl.innerHTML = instagramData.quote;
+    if (textEl) textEl.innerText = instagramData.text;
+    if (messageEl) messageEl.innerText = instagramData.message;
+    if (linkEl) linkEl.href = instagramData.link;
+    
+    if (imageEl && instagramData.image) {
+        imageEl.src = instagramData.image;
+        imageEl.style.display = 'block';
+    } else if (imageEl) {
+        imageEl.style.display = 'none';
+    }
+}
+
+export function showInstagramModal() {
+    // Crear modal si no existe
+    if (!document.getElementById('instagramModal')) {
+        const modalHTML = `
+        <div id="instagramModal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <span class="modal-close" onclick="document.getElementById('instagramModal').style.display='none'">&times;</span>
+                <h2 style="margin-bottom: 25px;">📸 Editar Sección Instagram</h2>
+                
+                <div class="form-group">
+                    <label>Título (arriba)</label>
+                    <input type="text" id="instagramTitleInput" class="filter-input" placeholder="Sigue Nuestro Instagram">
+                </div>
+                
+                <div class="form-group">
+                    <label>Subtítulo (PUNTO)</label>
+                    <input type="text" id="instagramSubtitleInput" class="filter-input" placeholder="PUNTO">
+                </div>
+                
+                <div class="form-group">
+                    <label>Cita (con HTML permitido)</label>
+                    <textarea id="instagramQuoteInput" rows="4" class="filter-input" placeholder='<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.'></textarea>
+                    <small>Puedes usar &lt;strong&gt;texto&lt;/strong&gt; y &lt;br&gt; para saltos de línea</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Texto secundario</label>
+                    <input type="text" id="instagramTextInput" class="filter-input" placeholder="Detente aquí un segundo">
+                </div>
+                
+                <div class="form-group">
+                    <label>Mensaje final</label>
+                    <input type="text" id="instagramMessageInput" class="filter-input" placeholder="Esto también se aprende.">
+                </div>
+                
+                <div class="form-group">
+                    <label>Enlace a Instagram</label>
+                    <input type="url" id="instagramLinkInput" class="filter-input" placeholder="https://instagram.com/vinculosalud">
+                </div>
+                
+                <div class="form-group">
+                    <label>Imagen destacada</label>
+                    <div class="file-upload" onclick="document.getElementById('instagramImageInput').click()">
+                        <i class="fa fa-cloud-upload-alt"></i> Seleccionar imagen
+                    </div>
+                    <input type="file" id="instagramImageInput" accept="image/*" style="display:none;" onchange="uploadInstagramImage()">
+                    <img id="instagramImagePreview" src="" style="max-width:100%; max-height:200px; margin-top:15px; border-radius:12px; display:none;">
+                </div>
+                
+                <div style="display:flex; gap:15px;">
+                    <button class="btn-staff" style="background:var(--exito); flex:1;" onclick="saveInstagramData()">Guardar</button>
+                    <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('instagramModal').style.display='none'">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // Cargar datos actuales
+    document.getElementById('instagramTitleInput').value = instagramData.title;
+    document.getElementById('instagramSubtitleInput').value = instagramData.subtitle;
+    document.getElementById('instagramQuoteInput').value = instagramData.quote;
+    document.getElementById('instagramTextInput').value = instagramData.text;
+    document.getElementById('instagramMessageInput').value = instagramData.message;
+    document.getElementById('instagramLinkInput').value = instagramData.link;
+    
+    if (instagramData.image) {
+        document.getElementById('instagramImagePreview').src = instagramData.image;
+        document.getElementById('instagramImagePreview').style.display = 'block';
+    } else {
+        document.getElementById('instagramImagePreview').style.display = 'none';
+    }
+    
+    document.getElementById('instagramModal').style.display = 'flex';
+}
+
+export function uploadInstagramImage() {
+    const input = document.getElementById('instagramImageInput');
+    if (!input.files || !input.files[0]) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        instagramData.image = e.target.result;
+        
+        // Actualizar vista previa
+        const preview = document.getElementById('instagramImagePreview');
+        if (preview) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        
+        showToast('✅ Imagen cargada, guarda los cambios', 'success');
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+export function saveInstagramData() {
+    instagramData = {
+        title: document.getElementById('instagramTitleInput').value,
+        subtitle: document.getElementById('instagramSubtitleInput').value,
+        quote: document.getElementById('instagramQuoteInput').value,
+        text: document.getElementById('instagramTextInput').value,
+        message: document.getElementById('instagramMessageInput').value,
+        link: document.getElementById('instagramLinkInput').value,
+        image: instagramData.image // Mantener la imagen actual
+    };
+    
+    db.ref('InstagramData').set(instagramData);
+    updateInstagramSection();
+    
+    document.getElementById('instagramModal').style.display = 'none';
+    showToast('Sección Instagram actualizada', 'success');
+}
+
+// ============================================
+// 🆕 FUNCIONES PARA SECCIÓN QUIÉNES SOMOS
 // ============================================
 
 export function cargarAboutTexts() {
@@ -575,7 +739,7 @@ export function saveAboutTexts() {
 }
 
 // ============================================
-// 🆕 NUEVAS FUNCIONES PARA SECCIÓN TIPO DE ATENCIÓN
+// 🆕 FUNCIONES PARA SECCIÓN TIPO DE ATENCIÓN
 // ============================================
 
 export function cargarAtencionTexts() {
@@ -718,7 +882,7 @@ export function saveAtencionTexts() {
 }
 
 // ============================================
-// 🆕 NUEVAS FUNCIONES PARA SECCIÓN CONTACTO
+// 🆕 FUNCIONES PARA SECCIÓN CONTACTO
 // ============================================
 
 export function cargarContactInfo() {
@@ -959,6 +1123,7 @@ export function cargarTodaPersonalizacion() {
     cargarAboutTexts();
     cargarAtencionTexts();
     cargarContactInfo();
+    cargarInstagramData(); // 🆕 NUEVA
     console.log('✅ Personalización cargada');
 }
 
@@ -1119,7 +1284,7 @@ if (typeof window !== 'undefined') {
     window.exportMyConfig = exportMyConfig;
     window.cargarTodaPersonalizacion = cargarTodaPersonalizacion;
     
-    // Nuevas funciones para secciones editables
+    // Funciones para secciones editables
     window.showAboutModal = showAboutModal;
     window.uploadAboutImage = uploadAboutImage;
     window.saveAboutTexts = saveAboutTexts;
@@ -1127,6 +1292,12 @@ if (typeof window !== 'undefined') {
     window.saveAtencionTexts = saveAtencionTexts;
     window.showContactModal = showContactModal;
     window.saveContactInfo = saveContactInfo;
+    
+    // 🆕 Funciones para Instagram
+    window.showInstagramModal = showInstagramModal;
+    window.uploadInstagramImage = uploadInstagramImage;
+    window.saveInstagramData = saveInstagramData;
+    window.cargarInstagramData = cargarInstagramData;
 }
 
-console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas y secciones editables v3.0');
+console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas, secciones editables y SECCIÓN INSTAGRAM v3.0');

@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN COMPLETA CON SECCIONES EDITABLES v3.0
+// js/main.js - VERSIÓN COMPLETA CON SECCIONES EDITABLES E INSTAGRAM v3.0
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -193,6 +193,12 @@ window.saveAtencionTexts = personalizacion.saveAtencionTexts;
 window.showContactModal = personalizacion.showContactModal;
 window.saveContactInfo = personalizacion.saveContactInfo;
 
+// 🆕 🆕 NUEVAS FUNCIONES PARA INSTAGRAM
+window.showInstagramModal = personalizacion.showInstagramModal;
+window.uploadInstagramImage = personalizacion.uploadInstagramImage;
+window.saveInstagramData = personalizacion.saveInstagramData;
+window.cargarInstagramData = personalizacion.cargarInstagramData;
+
 // ============================================
 // FUNCIONES DE ADMIN
 // ============================================
@@ -267,7 +273,7 @@ window.miPerfil = function() {
     }
 };
 
-// 🆕 Función para ver textos editables
+// 🆕 Función para ver textos editables (actualizada con Instagram)
 window.verTextos = function() {
     console.log('📝 Textos editables:');
     console.log('- Misión:', state.missionText);
@@ -275,12 +281,14 @@ window.verTextos = function() {
     console.log('- Equipo:', state.aboutTeamText);
     console.log('- Tipos de Atención:', state.atencionTexts);
     console.log('- Contacto:', state.contactInfo);
+    console.log('- Instagram:', state.instagramData);
     return {
         mission: state.missionText,
         vision: state.visionText,
         team: state.aboutTeamText,
         atencion: state.atencionTexts,
-        contact: state.contactInfo
+        contact: state.contactInfo,
+        instagram: state.instagramData
     };
 };
 
@@ -314,6 +322,7 @@ console.log('✅ miPerfil asignada:', typeof window.miPerfil);
 console.log('✅ showAboutModal asignada:', typeof window.showAboutModal);
 console.log('✅ showAtencionModal asignada:', typeof window.showAtencionModal);
 console.log('✅ showContactModal asignada:', typeof window.showContactModal);
+console.log('✅ showInstagramModal asignada:', typeof window.showInstagramModal); // 🆕
 console.log('✅ verTextos asignada:', typeof window.verTextos);
 
 // ============================================
@@ -341,10 +350,18 @@ setTimeout(() => {
         window.showContactModal = personalizacion.showContactModal;
         window.saveContactInfo = personalizacion.saveContactInfo;
     }
+    
+    // 🆕 Respaldo para Instagram
+    if (typeof window.showInstagramModal !== 'function' && typeof personalizacion?.showInstagramModal === 'function') {
+        console.log('🚨 Restaurando showInstagramModal desde personalizacion...');
+        window.showInstagramModal = personalizacion.showInstagramModal;
+        window.uploadInstagramImage = personalizacion.uploadInstagramImage;
+        window.saveInstagramData = personalizacion.saveInstagramData;
+    }
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (ACTUALIZADA)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (ACTUALIZADA CON INSTAGRAM)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -381,7 +398,7 @@ export function save() {
     const informesObj = {};
     state.informes.forEach(item => { informesObj[item.id] = item; });
 
-    // 🆕 Guardar textos editables
+    // 🆕 Guardar textos editables (incluyendo Instagram)
     const textosEditablesObj = {
         missionText: state.missionText,
         visionText: state.visionText,
@@ -392,7 +409,8 @@ export function save() {
         heroTexts: state.heroTexts,
         logoImage: state.logoImage,
         backgroundImage: state.backgroundImage,
-        globalPaymentMethods: state.globalPaymentMethods
+        globalPaymentMethods: state.globalPaymentMethods,
+        instagramData: state.instagramData // 🆕 NUEVO
     };
 
     const updates = {
@@ -444,10 +462,11 @@ export function save() {
             if (typeof mensajes.renderMessages === 'function') mensajes.renderMessages();
             if (typeof mensajes.updateMarquee === 'function') mensajes.updateMarquee();
             
-            // Actualizar secciones editables
+            // Actualizar secciones editables (incluyendo Instagram)
             if (typeof personalizacion.updateAboutSection === 'function') personalizacion.updateAboutSection();
             if (typeof personalizacion.updateAtencionSection === 'function') personalizacion.updateAtencionSection();
             if (typeof personalizacion.updateContactSection === 'function') personalizacion.updateContactSection();
+            if (typeof personalizacion.updateInstagramSection === 'function') personalizacion.updateInstagramSection(); // 🆕 NUEVO
             
             // Mostrar toast de éxito
             if (typeof utils.showToast === 'function') utils.showToast('✅ Datos guardados', 'success');
@@ -520,4 +539,4 @@ window.addEventListener('load', function() {
 // ============================================
 import './modules/admin.js';
 
-console.log('✅ main.js cargado completamente con todas las funciones de secciones editables v3.0');
+console.log('✅ main.js cargado completamente con todas las funciones de secciones editables e INSTAGRAM v3.0');

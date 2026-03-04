@@ -80,6 +80,17 @@ export let contactInfo = {
     address: 'Av. Principal 123, Santiago'
 };
 
+// 🆕 NUEVA VARIABLE PARA SECCIÓN INSTAGRAM
+export let instagramData = {
+    title: 'Sigue Nuestro Instagram',
+    subtitle: 'PUNTO',
+    quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
+    text: 'Detente aquí un segundo',
+    message: 'Esto también se aprende.',
+    link: 'https://instagram.com/vinculosalud',
+    image: ''
+};
+
 // Estado UI para fichas
 export let ui = {
     fichas: {
@@ -116,6 +127,7 @@ export function setAboutTeamText(text) { aboutTeamText = text; }
 export function setAboutImage(url) { aboutImage = url; }
 export function setAtencionTexts(data) { atencionTexts = data; }
 export function setContactInfo(data) { contactInfo = data; }
+export function setInstagramData(data) { instagramData = { ...instagramData, ...data }; }
 
 // ============================================
 // FUNCIÓN setCurrentUser CORREGIDA (con manejo de errores de localStorage)
@@ -399,6 +411,17 @@ export function resetAllState() {
         address: 'Av. Principal 123, Santiago'
     };
     
+    // 🆕 Reiniciar Instagram data
+    instagramData = {
+        title: 'Sigue Nuestro Instagram',
+        subtitle: 'PUNTO',
+        quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
+        text: 'Detente aquí un segundo',
+        message: 'Esto también se aprende.',
+        link: 'https://instagram.com/vinculosalud',
+        image: ''
+    };
+    
     ui = {
         fichas: {
             pacienteSeleccionadoId: null,
@@ -431,6 +454,7 @@ export function getStateSummary() {
         fichasIngreso: fichasIngreso.length,
         sesiones: sesiones.length,
         informes: informes.length,
+        instagramConfigurado: instagramData.image ? '✅' : '❌',
         currentUser: currentUser ? `${currentUser.data?.name} (${currentUser.role})` : 'No logueado',
         dataLoaded
     };
@@ -472,13 +496,16 @@ const state = {
     sesiones,
     informes,
     
-    // 🆕 Nuevas variables de secciones editables
+    // Nuevas variables de secciones editables
     missionText,
     visionText,
     aboutTeamText,
     aboutImage,
     atencionTexts,
     contactInfo,
+    
+    // 🆕 Nueva variable de Instagram
+    instagramData,
     
     ui,
     
@@ -525,13 +552,16 @@ const state = {
     setPestanaActiva,
     setPacienteSeleccionado,
     
-    // 🆕 Nuevas funciones para secciones editables
+    // Nuevas funciones para secciones editables
     setMissionText,
     setVisionText,
     setAboutTeamText,
     setAboutImage,
     setAtencionTexts,
     setContactInfo,
+    
+    // 🆕 Nueva función para Instagram
+    setInstagramData,
     
     // Funciones para profesionales
     getCurrentPsychFullData,
@@ -549,7 +579,7 @@ export default state;
 // ============================================
 if (typeof window !== 'undefined') {
     window.state = state;
-    console.log('📦 state.js cargado con fichas clínicas, datos de profesionales y secciones editables v3.0');
+    console.log('📦 state.js cargado con fichas clínicas, datos de profesionales, secciones editables y SECCIÓN INSTAGRAM v3.0');
     
     // Función de ayuda en consola
     window.estado = function() {
@@ -582,6 +612,7 @@ if (typeof window !== 'undefined') {
         console.log('- Equipo:', state.aboutTeamText);
         console.log('- Tipos de Atención:', state.atencionTexts);
         console.log('- Contacto:', state.contactInfo);
+        console.log('- Instagram:', state.instagramData);
     };
     
     // Función para limpiar localStorage manualmente si es necesario

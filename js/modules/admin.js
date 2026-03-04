@@ -97,6 +97,10 @@ export function addEditButtonsToAdmin() {
             <button class="btn-staff" onclick="showContactModal()" style="background: var(--verde-azulado-claro); padding: 15px; font-size: 1rem;">
                 <i class="fa fa-address-card"></i> Editar Contacto
             </button>
+            <!-- 🆕 NUEVO BOTÓN INSTAGRAM -->
+            <button class="btn-staff" onclick="showInstagramModal()" style="background: #d62976; padding: 15px; font-size: 1rem;">
+                <i class="fab fa-instagram"></i> Editar Sección Instagram
+            </button>
             <button class="btn-staff" onclick="showTextsModal()" style="background: var(--verde-azulado-profundo); padding: 15px; font-size: 1rem;">
                 <i class="fa fa-pen"></i> Editar Textos Hero
             </button>
@@ -382,7 +386,9 @@ export function exportarTodasLasFichas() {
             contactInfo: state.contactInfo,
             heroTexts: state.heroTexts,
             logoImage: state.logoImage,
-            backgroundImage: state.backgroundImage
+            backgroundImage: state.backgroundImage,
+            // 🆕 Instagram data
+            instagramData: state.instagramData
         },
         datos: {
             pacientes: state.patients,
@@ -442,6 +448,8 @@ export function importarFichas() {
                         if (backup.textosEditables.heroTexts) state.heroTexts = backup.textosEditables.heroTexts;
                         if (backup.textosEditables.logoImage) state.logoImage = backup.textosEditables.logoImage;
                         if (backup.textosEditables.backgroundImage) state.backgroundImage = backup.textosEditables.backgroundImage;
+                        // 🆕 Importar Instagram data
+                        if (backup.textosEditables.instagramData) state.instagramData = backup.textosEditables.instagramData;
                     }
                     
                     // Importar datos
@@ -481,6 +489,7 @@ export function importarFichas() {
                     if (typeof window.updateAboutSection === 'function') window.updateAboutSection();
                     if (typeof window.updateAtencionSection === 'function') window.updateAtencionSection();
                     if (typeof window.updateContactSection === 'function') window.updateContactSection();
+                    if (typeof window.updateInstagramSection === 'function') window.updateInstagramSection();
                 }
             } catch (error) {
                 console.error('Error importando:', error);
@@ -685,6 +694,7 @@ window.reinicioCompleto = function() {
             if (typeof window.updateAboutSection === 'function') window.updateAboutSection();
             if (typeof window.updateAtencionSection === 'function') window.updateAtencionSection();
             if (typeof window.updateContactSection === 'function') window.updateContactSection();
+            if (typeof window.updateInstagramSection === 'function') window.updateInstagramSection();
         }
     }
 };
@@ -737,32 +747,6 @@ export function renderAdminPanel() {
         </div>
     `;
 }
-
-// ============================================
-// EXPORTAR FUNCIONES AL OBJETO WINDOW
-// ============================================
-if (typeof window !== 'undefined') {
-    window.actualizarContadoresReinicio = actualizarContadoresReinicio;
-    window.getEstadisticasGlobales = getEstadisticasGlobales;
-    window.eliminarTodasLasFichasIngreso = eliminarTodasLasFichasIngreso;
-    window.eliminarTodasLasSesiones = eliminarTodasLasSesiones;
-    window.eliminarTodosLosInformes = eliminarTodosLosInformes;
-    window.eliminarFichasDePaciente = eliminarFichasDePaciente;
-    window.exportarTodasLasFichas = exportarTodasLasFichas;
-    window.importarFichas = importarFichas;
-    window.limpiarFichasHuerfanas = limpiarFichasHuerfanas;
-    window.renderAdminPanel = renderAdminPanel;
-    window.addEditButtonsToAdmin = addEditButtonsToAdmin;
-    
-    // Llamar a la función para agregar botones después de un tiempo
-    setTimeout(() => {
-        if (state.currentUser?.role === 'admin') {
-            addEditButtonsToAdmin();
-        }
-    }, 3000);
-}
-
-console.log('✅ admin.js cargado con estadísticas integradas y botones de edición v3.0');
 
 // ============================================
 // EXPORTAR DATOS A EXCEL
@@ -864,3 +848,29 @@ function descargarCSV(csv, nombreArchivo) {
     a.click();
     URL.revokeObjectURL(url);
 }
+
+// ============================================
+// EXPORTAR FUNCIONES AL OBJETO WINDOW
+// ============================================
+if (typeof window !== 'undefined') {
+    window.actualizarContadoresReinicio = actualizarContadoresReinicio;
+    window.getEstadisticasGlobales = getEstadisticasGlobales;
+    window.eliminarTodasLasFichasIngreso = eliminarTodasLasFichasIngreso;
+    window.eliminarTodasLasSesiones = eliminarTodasLasSesiones;
+    window.eliminarTodosLosInformes = eliminarTodosLosInformes;
+    window.eliminarFichasDePaciente = eliminarFichasDePaciente;
+    window.exportarTodasLasFichas = exportarTodasLasFichas;
+    window.importarFichas = importarFichas;
+    window.limpiarFichasHuerfanas = limpiarFichasHuerfanas;
+    window.renderAdminPanel = renderAdminPanel;
+    window.addEditButtonsToAdmin = addEditButtonsToAdmin;
+    
+    // Llamar a la función para agregar botones después de un tiempo
+    setTimeout(() => {
+        if (state.currentUser?.role === 'admin') {
+            addEditButtonsToAdmin();
+        }
+    }, 3000);
+}
+
+console.log('✅ admin.js cargado con estadísticas integradas, botones de edición y sección Instagram v3.0');

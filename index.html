@@ -327,6 +327,113 @@
                 padding: 10px;
             }
         }
+
+        /* ============================================
+           🆕 ESTILOS PARA SECCIÓN INSTAGRAM
+           ============================================ */
+        .instagram-section {
+            margin: 80px 0;
+            padding: 0 var(--spacing-md);
+        }
+
+        .instagram-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            background: white;
+            border-radius: 48px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--gris-claro);
+        }
+
+        @media (max-width: 768px) {
+            .instagram-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .instagram-content {
+            padding: 60px 40px;
+        }
+
+        .instagram-content h2 {
+            color: var(--texto-secundario);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+
+        .instagram-content h3 {
+            color: var(--verde-azulado-profundo);
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 30px;
+        }
+
+        .instagram-quote {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            color: var(--texto-principal);
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .instagram-quote strong {
+            color: var(--ocre-calido);
+            font-weight: 700;
+        }
+
+        .instagram-text {
+            color: var(--texto-secundario);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .instagram-message {
+            color: var(--texto-secundario);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .btn-instagram {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);
+            color: white;
+            padding: 14px 30px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-instagram:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .btn-instagram i {
+            font-size: 1.2rem;
+        }
+
+        .instagram-image {
+            height: 100%;
+            min-height: 400px;
+            background: var(--verde-grisaceo-claro);
+        }
+
+        .instagram-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -1414,6 +1521,34 @@
             <div class="messages-grid" id="messagesGrid"></div>
         </div>
 
+        <!-- 🆕 SECCIÓN INSTAGRAM AGREGADA AQUÍ - ESTILO PUNTOTERAPIA EDITABLE -->
+        <section id="instagramSection" class="instagram-section">
+            <!-- Botón de edición para admin -->
+            <div class="admin-edit-btn" id="adminInstagramEditBtn" style="display: none;" onclick="showInstagramModal()">
+                <i class="fa fa-edit"></i> Editar Instagram
+            </div>
+            
+            <div class="instagram-card glass">
+                <div class="instagram-content">
+                    <h2 id="instagramTitle">Sigue Nuestro Instagram</h2>
+                    <h3 id="instagramSubtitle">PUNTO</h3>
+                    <div id="instagramQuote" class="instagram-quote">
+                        <strong>"SOLO HABLAMOS"</strong><br>
+                        JAVIERA TIENE EL ÉXITO,<br>
+                        pero no tiene con quién celebrarlo.
+                    </div>
+                    <p id="instagramText" class="instagram-text">Detente aquí un segundo</p>
+                    <p id="instagramMessage" class="instagram-message">Esto también se aprende.</p>
+                    <a id="instagramLink" href="#" target="_blank" class="btn-instagram">
+                        <i class="fab fa-instagram"></i> Ver en Instagram
+                    </a>
+                </div>
+                <div class="instagram-image">
+                    <img id="instagramImage" src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500" alt="Instagram post" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+            </div>
+        </section>
+
         <!-- SECCIÓN CONTACTO - EDITABLE -->
         <section id="contacto" class="contact-section" style="display: none;">
             <!-- Botón de edición para admin -->
@@ -2017,7 +2152,8 @@
             'adminHeroEditBtn',
             'adminAboutEditBtn', 
             'adminAtencionEditBtn',
-            'adminContactEditBtn'
+            'adminContactEditBtn',
+            'adminInstagramEditBtn' // 🆕 Botón de Instagram agregado
         ];
         
         editButtons.forEach(id => {
@@ -2247,10 +2383,12 @@
         console.log('- verFichaCompleta:', typeof window.verFichaCompleta);
         console.log('- openMyProfileModal:', typeof window.openMyProfileModal);
         console.log('- saveMyProfile:', typeof window.saveMyProfile);
+        console.log('- showInstagramModal:', typeof window.showInstagramModal); // 🆕 Verificación
         console.log('- state.patients:', window.state.patients?.length || 0);
         console.log('- state.currentUser:', window.state.currentUser ? 'Sí' : 'No');
         console.log('- state.fichasIngreso:', window.state.fichasIngreso?.length || 0);
         console.log('- state.sesiones:', window.state.sesiones?.length || 0);
+        console.log('- state.instagramData:', window.state.instagramData ? '✅ Configurado' : '❌ No configurado');
         
         return true;
     }

@@ -67,8 +67,11 @@ export function processLogin() {
         state.setCurrentUser({ role: 'admin', data: adminUser });
         closeLoginModal();
         
+        // Guardar en localStorage
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({ role: 'admin', data: adminUser }));
-        cargarDashboard('admin');
+        
+        // Mostrar dashboard directamente
+        mostrarDashboardInmediato('admin', adminUser);
         
         if (btn) {
             btn.innerHTML = 'Ingresar al Panel';
@@ -88,18 +91,17 @@ export function processLogin() {
         const role = foundUser.isAdmin ? 'admin' : 'psych';
         
         // 🔥 IMPORTANTE: Buscar datos COMPLETOS del profesional en staff
-        // (por si foundUser no tiene todos los campos)
         const psychFullData = state.staff.find(s => s.id == foundUser.id) || foundUser;
         
         // Guardar usuario con TODOS los datos
         state.setCurrentUser({ 
             role, 
-            data: psychFullData  // Guardamos el objeto COMPLETO
+            data: psychFullData
         });
         
         closeLoginModal();
         
-        // Guardar en localStorage (solo datos básicos para no exceder espacio)
+        // Guardar en localStorage
         const userToStore = {
             role: role,
             data: {
@@ -113,10 +115,10 @@ export function processLogin() {
         };
         localStorage.setItem('vinculoCurrentUser', JSON.stringify(userToStore));
         
-        // Cargar dashboard
-        cargarDashboard(role);
+        // Mostrar dashboard directamente
+        mostrarDashboardInmediato(role, psychFullData);
         
-        // Mostrar mensaje de bienvenida con género
+        // Mostrar mensaje de bienvenida
         const generoEmoji = psychFullData.genero === 'M' ? '♂️' : psychFullData.genero === 'F' ? '♀️' : '';
         showToast(`Bienvenido ${psychFullData.name} ${generoEmoji}`, 'success');
         
@@ -130,6 +132,74 @@ export function processLogin() {
     }
 }
 
+// 🔥 NUEVA FUNCIÓN: Mostrar dashboard inmediatamente
+function mostrarDashboardInmediato(role, userData) {
+    console.log('🔄 Mostrando dashboard inmediatamente como:', role);
+    
+    // Ocultar vistas públicas
+    const clientView = document.getElementById('clientView');
+    const bookingPanel = document.getElementById('bookingPanel');
+    const dashboard = document.getElementById('dashboard');
+    
+    if (clientView) clientView.style.display = 'none';
+    if (bookingPanel) bookingPanel.style.display = 'none';
+    if (dashboard) {
+        dashboard.style.display = 'block';
+        dashboard.style.visibility = 'visible';
+        dashboard.style.opacity = '1';
+    }
+    
+    // Actualizar títulos
+    const dashTitle = document.getElementById('dashTitle');
+    const dashSubtitle = document.getElementById('dashSubtitle');
+    
+    if (dashTitle) {
+        dashTitle.innerText = role === 'admin' ? 'Panel Administrador' : 'Mi Panel Profesional';
+    }
+    
+    if (dashSubtitle && userData) {
+        const generoEmoji = userData.genero === 'M' ? '♂️' : userData.genero === 'F' ? '♀️' : '';
+        dashSubtitle.innerText = `Bienvenido, ${userData.name} ${generoEmoji}`;
+    }
+    
+    // Configurar visibilidad de pestañas
+    const adminTabs = [
+        'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
+        'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
+        'messagesTab', 'boxesTab', 'adminTabEstadisticas'
+    ];
+    
+    adminTabs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = role === 'admin' ? 'inline-block' : 'none';
+    });
+    
+    const psychTabs = ['psychTab', 'configTab', 'agendarTab'];
+    psychTabs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = role === 'psych' ? 'inline-block' : 'none';
+    });
+    
+    // Mostrar/ocultar botón de edición de perfil
+    const profileBtn = document.getElementById('editProfileButton');
+    if (profileBtn) {
+        if (role === 'psych') {
+            profileBtn.style.display = 'inline-flex';
+            profileBtn.onclick = window.openMyProfileModal;
+        } else {
+            profileBtn.style.display = 'none';
+        }
+    }
+    
+    // Actualizar estadísticas
+    setTimeout(() => {
+        updateStats();
+    }, 500);
+    
+    // Cambiar a pestaña de citas
+    switchTab('citas');
+}
+
 export function logout() {
     state.setCurrentUser(null);
     localStorage.removeItem('vinculoCurrentUser');
@@ -141,85 +211,13 @@ export function logout() {
 // ============================================
 
 export function cargarDashboard(role) {
-    console.log('🔄 Cargando dashboard como:', role);
-    
-    const clientView = document.getElementById('clientView');
-    const bookingPanel = document.getElementById('bookingPanel');
-    const dashboard = document.getElementById('dashboard');
-    
-    if (clientView) clientView.style.display = 'none';
-    if (bookingPanel) bookingPanel.style.display = 'none';
-    if (dashboard) dashboard.style.display = 'block';
-
-    const isAdmin = role === 'admin';
-    const isPsych = role === 'psych';
-
-    const dashTitle = document.getElementById('dashTitle');
-    const dashSubtitle = document.getElementById('dashSubtitle');
-    
-    if (dashTitle) {
-        dashTitle.innerText = isAdmin ? "Panel Administrador" : "Mi Panel Profesional";
+    // Esta función ahora llama a mostrarDashboardInmediato
+    const userData = state.currentUser?.data;
+    if (userData) {
+        mostrarDashboardInmediato(role, userData);
+    } else {
+        console.error('❌ No hay datos de usuario para cargar dashboard');
     }
-    
-    if (dashSubtitle && state.currentUser?.data) {
-        const user = state.currentUser.data;
-        const generoEmoji = user.genero === 'M' ? '♂️' : user.genero === 'F' ? '♀️' : '';
-        dashSubtitle.innerText = `Bienvenido, ${user.name} ${generoEmoji}`;
-    }
-
-    // Configurar visibilidad de pestañas
-    const adminTabs = [
-        'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
-        'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
-        'messagesTab', 'boxesTab', 'adminTabEstadisticas'
-    ];
-    
-    adminTabs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = isAdmin ? 'inline-block' : 'none';
-    });
-
-    const psychTabs = ['psychTab', 'configTab', 'agendarTab'];
-    psychTabs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = isPsych ? 'inline-block' : 'none';
-    });
-
-    // 🔥 NUEVO: Mostrar/ocultar botón de edición de perfil
-    const profileBtn = document.getElementById('editProfileButton');
-    if (profileBtn) {
-        if (isPsych) {
-            profileBtn.style.display = 'inline-flex';
-            profileBtn.onclick = window.openMyProfileModal;
-        } else {
-            profileBtn.style.display = 'none';
-        }
-    }
-
-    // 🔥 NUEVO: Si es psicólogo, cargar datos completos y especialidades
-    if (isPsych && state.currentUser?.data) {
-        // Cargar configuración personal
-        if (typeof loadMyConfig === 'function') {
-            setTimeout(() => loadMyConfig(), 500);
-        }
-        
-        // Cargar especialidades en el select del perfil
-        if (typeof window.loadSpecialtiesInProfileSelects === 'function') {
-            setTimeout(() => window.loadSpecialtiesInProfileSelects(), 1000);
-        }
-        
-        // Agregar botón de perfil si no existe
-        if (typeof window.addProfileButtonToDashboard === 'function') {
-            setTimeout(() => window.addProfileButtonToDashboard(), 1000);
-        }
-    }
-
-    // Actualizar estadísticas
-    setTimeout(() => {
-        updateStats();
-    }, 500);
-    
-    switchTab('citas');
 }
 
 // ============================================
@@ -386,6 +384,48 @@ export function updateProfileButton() {
 }
 
 // ============================================
+// 🆕 VERIFICAR SESIÓN GUARDADA
+// ============================================
+
+export function verificarSesionGuardada() {
+    console.log('🔍 Verificando sesión guardada...');
+    
+    const savedUser = localStorage.getItem('vinculoCurrentUser');
+    if (!savedUser) {
+        console.log('ℹ️ No hay sesión guardada');
+        return false;
+    }
+    
+    try {
+        const userData = JSON.parse(savedUser);
+        console.log('📦 Sesión encontrada:', userData);
+        
+        // Verificar que el usuario aún existe en staff (excepto admin)
+        if (userData.role === 'admin') {
+            state.setCurrentUser(userData);
+            mostrarDashboardInmediato('admin', userData.data);
+            return true;
+        } else {
+            // Buscar psicólogo en staff
+            const psychExists = state.staff.some(s => s.id == userData.data.id);
+            if (psychExists) {
+                state.setCurrentUser(userData);
+                mostrarDashboardInmediato('psych', userData.data);
+                return true;
+            } else {
+                console.log('⚠️ Psicólogo ya no existe en el sistema');
+                localStorage.removeItem('vinculoCurrentUser');
+                return false;
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error al leer sesión guardada:', error);
+        localStorage.removeItem('vinculoCurrentUser');
+        return false;
+    }
+}
+
+// ============================================
 // EXPONER FUNCIONES GLOBALMENTE
 // ============================================
 if (typeof window !== 'undefined') {
@@ -395,7 +435,8 @@ if (typeof window !== 'undefined') {
     window.logout = logout;
     window.switchTab = switchTab;
     window.updateStats = updateStats;
-    window.updateProfileButton = updateProfileButton; // NUEVA
+    window.updateProfileButton = updateProfileButton;
+    window.verificarSesionGuardada = verificarSesionGuardada;
 }
 
 console.log('✅ auth.js cargado correctamente con funciones de login y perfil profesional');

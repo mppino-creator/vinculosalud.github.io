@@ -3,13 +3,13 @@
 <head>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0071e3">
+    <meta name="theme-color" content="#1E7A8A">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Vínculo Salud - Centro de Bienestar</title>
     
-    <!-- Fuentes y estilos externos -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Fuentes y estilos externos - ACTUALIZADO CON DM SANS Y OPEN SANS -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/estilos.css">
     
@@ -31,10 +31,422 @@
        })();
     </script>
     
-    <!-- Estilos adicionales -->
+    <!-- Estilos adicionales - MEJORADOS ESTILO PUNTOTERAPIA -->
     <style>
         /* ============================================
-           AGENDA AM/PM - ESTILOS
+           ESTILOS GENERALES MEJORADOS - ESTILO PUNTOTERAPIA
+           ============================================ */
+        body {
+            font-family: 'DM Sans', 'Open Sans', sans-serif !important;
+            background-color: var(--crema-fondo);
+        }
+        
+        /* Header mejorado */
+        .nav-container {
+            padding: 20px 0;
+        }
+        
+        nav.glass {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 50px !important;
+            padding: 10px 30px !important;
+            margin: 0 auto;
+            max-width: 1200px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .logo-text {
+            font-size: 1.8rem !important;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--texto-principal), var(--primario));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .public-nav {
+            display: flex;
+            gap: 25px;
+        }
+        
+        .public-nav a {
+            font-weight: 500;
+            color: var(--texto-principal);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+        
+        .public-nav a:hover {
+            color: var(--ocre-calido) !important;
+        }
+        
+        .public-nav a.active {
+            color: var(--ocre-calido);
+            border-bottom: 2px solid var(--ocre-calido);
+            padding-bottom: 5px;
+        }
+        
+        .btn-staff {
+            background: var(--primario) !important;
+            color: white !important;
+            border: none;
+            padding: 8px 20px !important;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-staff:hover {
+            background: var(--primario-hover) !important;
+            transform: translateY(-2px);
+        }
+        
+        /* Hero section mejorado */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(30,122,138,0.05) 0%, rgba(200,161,97,0.05) 100%);
+            padding: 80px 0;
+            text-align: center;
+            border-radius: 48px;
+            margin: 40px 0;
+        }
+        
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--texto-principal);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .hero-section h1 span {
+            color: var(--ocre-calido);
+        }
+        
+        .hero-section p {
+            font-size: 1.2rem;
+            color: var(--texto-secundario);
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+        
+        .btn-cta {
+            background: var(--primario);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-cta:hover {
+            background: var(--primario-hover);
+            transform: translateY(-3px);
+        }
+        
+        .btn-cta-outline {
+            background: transparent;
+            color: var(--primario);
+            border: 2px solid var(--primario);
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-cta-outline:hover {
+            background: var(--primario);
+            color: white;
+            transform: translateY(-3px);
+        }
+        
+        /* Breadcrumbs mejorados */
+        .breadcrumbs {
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+        
+        .breadcrumbs a {
+            color: var(--verde-azulado-claro);
+            text-decoration: none;
+        }
+        
+        .breadcrumbs span {
+            color: var(--texto-principal);
+            font-weight: 500;
+        }
+        
+        /* Tarjetas de profesionales mejoradas */
+        .therapist-card {
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .therapist-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(30,122,138,0.15);
+        }
+        
+        .therapist-card .img-container {
+            height: 280px;
+            overflow: hidden;
+        }
+        
+        .therapist-card .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .therapist-card:hover .img-container img {
+            transform: scale(1.05);
+        }
+        
+        .therapist-card .card-body {
+            padding: 24px;
+        }
+        
+        .therapist-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--texto-principal);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .therapist-card p {
+            color: var(--texto-secundario);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .specialty-badge {
+            background: var(--verde-grisaceo-claro);
+            color: var(--texto-principal);
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin: 2px;
+            transition: all 0.3s;
+        }
+        
+        .specialty-badge:hover {
+            background: var(--ocre-calido);
+            color: white;
+        }
+        
+        .price-box {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .btn-mas-info {
+            background: transparent;
+            border: 2px solid var(--verde-azulado-claro);
+            color: var(--verde-azulado-claro);
+            padding: 10px 15px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .btn-mas-info:hover {
+            background: var(--verde-azulado-claro);
+            color: white;
+        }
+        
+        .btn-agendar {
+            background: var(--verde-azulado-profundo);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            flex: 1;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(30, 122, 138, 0.2);
+        }
+        
+        .btn-agendar:hover {
+            background: var(--primario-hover);
+            transform: translateY(-2px);
+        }
+        
+        .direccion {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--texto-secundario);
+            font-size: 0.9rem;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--gris-claro);
+        }
+        
+        /* Footer mejorado estilo Puntoterapia */
+        footer {
+            background: #2D3E4F !important;
+            color: white;
+            padding: 60px 0 20px;
+            margin-top: 80px;
+        }
+        
+        footer h4 {
+            color: white;
+            margin-bottom: 25px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        footer ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        footer li {
+            margin-bottom: 12px;
+        }
+        
+        footer a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        footer a:hover {
+            color: var(--ocre-calido);
+            transform: translateX(5px);
+        }
+        
+        .footer-contact p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .footer-contact i {
+            color: var(--ocre-calido);
+            width: 20px;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .social-icons a {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .social-icons a:hover {
+            background: var(--ocre-calido);
+            transform: translateY(-5px);
+        }
+        
+        .copyright {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 50px;
+            padding-top: 20px;
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+        
+        /* Botón flotante WhatsApp */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #25D366;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 20px rgba(37,211,102,0.3);
+            z-index: 1000;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .whatsapp-float:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 8px 25px rgba(37,211,102,0.4);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav.glass {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px !important;
+            }
+            
+            .public-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            
+            footer > div > div:first-child {
+                grid-template-columns: 1fr !important;
+                gap: 30px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+            
+            .whatsapp-float {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+        
+        /* Mantener estilos existentes para modales y funcionalidad */
+        /* ============================================
+           AGENDA AM/PM - ESTILOS (conservados)
            ============================================ */
         .time-slots-container {
             background: var(--fondo-secundario);
@@ -186,21 +598,6 @@
         }
 
         /* ============================================
-           ESTILOS PARA EL MENÚ PÚBLICO
-           ============================================ */
-        .public-nav a {
-            transition: all 0.3s ease;
-        }
-        
-        .public-nav a:hover:not(:last-child) {
-            color: var(--ocre-calido) !important;
-        }
-        
-        .public-nav a:last-child:hover {
-            background: var(--primario-hover) !important;
-        }
-
-        /* ============================================
            ESTILOS PARA LAS NUEVAS SECCIONES
            ============================================ */
         #atencion, #contacto, #about, #blog {
@@ -290,46 +687,8 @@
             box-shadow: 0 5px 15px rgba(30, 122, 138, 0.3);
         }
 
-        @media (max-width: 768px) {
-            .public-nav {
-                gap: 15px !important;
-                padding: 15px 10px 20px !important;
-            }
-            .public-nav a {
-                font-size: 0.85rem !important;
-            }
-            .modal-content {
-                width: 95%;
-                margin: 10px auto;
-            }
-            .tab-btn {
-                padding: 8px 10px;
-                font-size: 12px;
-            }
-            .time-slot-grid {
-                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-            }
-            .time-slot-btn {
-                padding: 10px 5px;
-                font-size: 0.8rem;
-            }
-            .mission-vision-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .time-slot-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .time-slots-container {
-                padding: 10px;
-            }
-        }
-
         /* ============================================
-           🆕 ESTILOS PARA SECCIÓN INSTAGRAM
+           SECCIÓN INSTAGRAM
            ============================================ */
         .instagram-section {
             margin: 80px 0;
@@ -1316,15 +1675,26 @@
     </div>
 </div>
 
-<!-- Contenedor Principal -->
+<!-- ============================================ -->
+<!-- HEADER MEJORADO - ESTILO PUNTOTERAPIA -->
+<!-- ============================================ -->
 <div class="container">
     <header class="nav-container">
-        <nav class="glass">
-            <div class="logo-container" onclick="location.reload()">
-                <img id="headerLogo" class="logo-img" src="" style="display:none;" alt="Logo">
-                <span id="headerLogoText" class="logo-text">Vínculo Salud</span>
+        <nav class="glass" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="logo-container" onclick="location.reload()" style="display: flex; align-items: center; gap: 10px;">
+                <img id="headerLogo" class="logo-img" src="" style="display:none; height: 40px;" alt="Logo">
+                <span id="headerLogoText" class="logo-text" style="font-size: 1.8rem; font-weight: 700;">Vínculo Salud</span>
             </div>
-            <div style="display: flex; gap: 10px;">
+            
+            <div style="display: flex; align-items: center; gap: 30px;">
+                <div class="public-nav">
+                    <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
+                    <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
+                    <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
+                    <a href="#atencion" onclick="showSection('atencion'); return false;">Tipo de Atención</a>
+                    <a href="#contacto" onclick="showSection('contacto'); return false;">Contacto</a>
+                </div>
+                
                 <button class="btn-staff" onclick="showLoginModal()">
                     <i class="fa fa-lock"></i> Staff
                 </button>
@@ -1337,37 +1707,31 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- VISTA PÚBLICA - ESTILO PUNTOTERAPIA CON SECCIONES EDITABLES -->
+    <!-- VISTA PÚBLICA - ESTILO PUNTOTERAPIA -->
     <!-- ============================================ -->
     <main id="clientView">
-        <!-- MENÚ DE NAVEGACIÓN SUPERIOR -->
-        <div class="public-nav">
-            <!-- BREADCRUMBS (MIGAS DE PAN) ESTILO PUNTOTERAPIA -->
-<div class="breadcrumbs" style="padding: 20px 0; margin-bottom: 20px; display: none;">
-    <div class="container">
-        <a href="#" onclick="showSection('inicio'); return false;" style="color: var(--verde-azulado-claro); text-decoration: none;">Inicio</a> 
-        <span style="margin: 0 8px; color: var(--texto-secundario);">›</span>
-        <span id="currentPage" style="color: var(--texto-principal); font-weight: 500;">Equipo</span>
-    </div>
-</div>
-            <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
-            <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
-            <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
-            <a href="#atencion" onclick="showSection('atencion'); return false;">Tipo de Atención</a>
-            <a href="#blog" onclick="showSection('blog'); return false;">Punto de Interés</a>
-            <a href="#contacto" onclick="showSection('contacto'); return false;">Contacto</a>
-            <a href="#" onclick="abrirAgenda(); return false;">AGENDA TU HORA</a>
+        <!-- BREADCRUMBS -->
+        <div class="breadcrumbs" style="display: none;">
+            <a href="#" onclick="showSection('inicio'); return false;">Inicio</a> 
+            <span>›</span>
+            <span id="currentPage">Equipo</span>
         </div>
 
-        <!-- SECCIÓN INICIO (HERO) - EDITABLE -->
+        <!-- SECCIÓN INICIO (HERO) - MEJORADA -->
         <section id="inicio" class="hero-section">
             <h1 id="heroTitleDisplay">Un espacio seguro para <span>sanar</span>, comprender y crecer</h1>
             <p id="heroSubtitleDisplay">En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.</p>
-            <div style="margin-top: 30px;">
-                <span class="hero-badge">Estamos para acompañarte</span>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+                <a href="#equipo" onclick="showSection('equipo'); return false;" class="btn-cta">
+                    Conoce nuestro equipo
+                </a>
+                <a href="#contacto" onclick="showSection('contacto'); return false;" class="btn-cta-outline">
+                    Contáctanos
+                </a>
             </div>
             
-            <!-- Botón de edición para admin (solo visible para admin) -->
+            <!-- Botón de edición para admin -->
             <div class="admin-edit-btn" id="adminHeroEditBtn" style="display: none;" onclick="showTextsModal()">
                 <i class="fa fa-edit"></i> Editar Hero
             </div>
@@ -1375,16 +1739,13 @@
 
         <!-- SECCIÓN QUIENES SOMOS - EDITABLE -->
         <section id="about" class="about-section" style="display: none;">
-            <!-- Botón de edición para admin -->
             <div class="admin-edit-btn" id="adminAboutEditBtn" style="display: none;" onclick="showAboutModal()">
                 <i class="fa fa-edit"></i> Editar sección
             </div>
             
             <div class="about-content">
-                <!-- Título -->
                 <h2>Quiénes Somos</h2>
                 
-                <!-- Foto grupal -->
                 <div class="about-image-container">
                     <img id="aboutTeamImage" src="" alt="Nuestro equipo" class="about-image" style="display: none;">
                     <div id="aboutImagePlaceholder" class="about-image-placeholder">
@@ -1393,12 +1754,10 @@
                     </div>
                 </div>
                 
-                <!-- Texto del equipo -->
                 <p id="teamTextDisplay" class="team-text">
                     Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.
                 </p>
                 
-                <!-- Grid de Misión y Visión -->
                 <div class="mission-vision-grid">
                     <div class="mission-box">
                         <i class="fa fa-bullseye"></i>
@@ -1415,131 +1774,80 @@
             </div>
         </section>
 
-       <!-- FILTROS DE BÚSQUEDA - MEJORADOS ESTILO PUNTOTERAPIA -->
-<div class="filters" style="display: none; flex-wrap: wrap; gap: 15px; margin: 30px 0; justify-content: center;">
-    <input type="text" class="filter-input" id="searchFilter" placeholder="🔍 Buscar profesional..." oninput="filterProfessionals()" style="flex: 2; min-width: 250px; padding: 14px 20px; border-radius: 50px; border: 1px solid var(--gris-claro);">
-    
-    <select class="filter-select" id="specialtyFilter" onchange="filterProfessionals()" style="flex: 1; min-width: 180px; padding: 14px 20px; border-radius: 50px; border: 1px solid var(--gris-claro); background: white;">
-        <option value="">🏷️ Todas las especialidades</option>
-    </select>
-    
-    <select class="filter-select" id="availabilityFilter" onchange="filterProfessionals()" style="flex: 1; min-width: 180px; padding: 14px 20px; border-radius: 50px; border: 1px solid var(--gris-claro); background: white;">
-        <option value="">📅 Todos los horarios</option>
-        <option value="available">✅ Con disponibilidad</option>
-        <option value="today">🔵 Disponibles hoy</option>
-        <option value="tomorrow">🟢 Disponibles mañana</option>
-    </select>
-</div>
+        <!-- FILTROS DE BÚSQUEDA MEJORADOS -->
+        <div class="filters" style="display: none; flex-wrap: wrap; gap: 15px; margin: 30px 0; justify-content: center;">
+            <input type="text" class="filter-input" id="searchFilter" placeholder="🔍 Buscar profesional..." oninput="filterProfessionals()" style="flex: 2; min-width: 250px; padding: 14px 20px; border-radius: 50px; border: 1px solid var(--gris-claro);">
+            
+            <select class="filter-select" id="specialtyFilter" onchange="filterProfessionals()" style="flex: 1; min-width: 180px; padding: 14px 20px; border-radius: 50px; border: 1px solid var(--gris-claro); background: white;">
+                <option value="">🏷️ Todas las especialidades</option>
+            </select>
+            
+            <select class="filter-select" id="availabilityFilter" onchange="filterProfessionals()" style="flex: 1; min-width: 180px; padding: 14px 20px; border-radius: 50px; border: 1px solid var(--gris-claro); background: white;">
+                <option value="">📅 Todos los horarios</option>
+                <option value="available">✅ Con disponibilidad</option>
+                <option value="today">🔵 Disponibles hoy</option>
+                <option value="tomorrow">🟢 Disponibles mañana</option>
+            </select>
+        </div>
 
-        <!-- GRID DE PROFESIONALES (EQUIPO) - SIEMPRE VISIBLE -->
+        <!-- GRID DE PROFESIONALES -->
         <div id="equipo" class="grid"></div>
 
-        <!-- SECCIÓN TIPO DE ATENCIÓN - MEJORADA ESTILO PUNTOTERAPIA -->
-<section id="atencion" class="atencion-section" style="display: none;">
-    <!-- Botón de edición para admin -->
-    <div class="admin-edit-btn" id="adminAtencionEditBtn" style="display: none;" onclick="showAtencionModal()">
-        <i class="fa fa-edit"></i> Editar tipos
-    </div>
-    
-    <div class="container">
-        <h2 style="color: var(--verde-azulado-profundo); font-size: 2.2rem; text-align: center; margin-bottom: 10px;">Tipos de Atención</h2>
-        <p style="color: var(--texto-secundario); text-align: center; margin-bottom: 50px;">Elige la modalidad que mejor se adapte a tus necesidades</p>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
-            <!-- Online -->
-            <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
-                <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                    <i class="fa fa-video" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
-                </div>
-                <h3 id="atencionOnlineTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Online</h3>
-                <p id="atencionOnlineDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Sesiones por videollamada desde la comodidad de tu hogar</p>
-                <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $25.000</span>
+        <!-- SECCIÓN TIPO DE ATENCIÓN MEJORADA -->
+        <section id="atencion" class="atencion-section" style="display: none;">
+            <div class="admin-edit-btn" id="adminAtencionEditBtn" style="display: none;" onclick="showAtencionModal()">
+                <i class="fa fa-edit"></i> Editar tipos
             </div>
             
-            <!-- Presencial -->
-            <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
-                <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                    <i class="fa fa-users" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
-                </div>
-                <h3 id="atencionPresencialTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Presencial</h3>
-                <p id="atencionPresencialDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Atención en nuestro consultorio con todos los protocolos</p>
-                <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $30.000</span>
-            </div>
-            
-            <!-- Pareja -->
-            <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
-                <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                    <i class="fa fa-heart" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
-                </div>
-                <h3 id="atencionParejaTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Pareja</h3>
-                <p id="atencionParejaDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Terapia para fortalecer vínculos y mejorar la comunicación</p>
-                <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $40.000</span>
-            </div>
-            
-            <!-- Familiar -->
-            <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
-                <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                    <i class="fa fa-child" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
-                </div>
-                <h3 id="atencionFamiliarTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Familiar</h3>
-                <p id="atencionFamiliarDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Espacio de diálogo y crecimiento para toda la familia</p>
-                <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $45.000</span>
-            </div>
-        </div>
-    </div>
-</section>
-
-        <!-- SECCIÓN BLOG - PUNTO DE INTERÉS -->
-        <section id="blog" class="blog-section" style="display: none;">
-            <h2>Punto de Interés</h2>
-            <p>Reflexiones, ideas y recursos para tu bienestar emocional</p>
-            
-            <div class="blog-grid">
-                <!-- Artículo 1 -->
-                <article class="blog-card">
-                    <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500" alt="Ansiedad">
-                    <div class="blog-content">
-                        <div class="blog-meta">
-                            <span class="blog-date">5 Enero, 2026</span>
-                            <span class="blog-read-time">📚 5 min</span>
+            <div class="container">
+                <h2 style="color: var(--verde-azulado-profundo); font-size: 2.2rem; text-align: center; margin-bottom: 10px;">Tipos de Atención</h2>
+                <p style="color: var(--texto-secundario); text-align: center; margin-bottom: 50px;">Elige la modalidad que mejor se adapte a tus necesidades</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+                    <!-- Online -->
+                    <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+                        <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                            <i class="fa fa-video" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
                         </div>
-                        <h3>PAES 2025: Cómo enfrentar la frustración, ansiedad y decisiones en resultados</h3>
-                        <p>Con los resultados de la PAES Regular a punto de publicarse, miles de estudiantes enfrentan...</p>
-                        <a href="#" class="blog-read-more">Leer más →</a>
+                        <h3 id="atencionOnlineTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Online</h3>
+                        <p id="atencionOnlineDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Sesiones por videollamada desde la comodidad de tu hogar</p>
+                        <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $25.000</span>
                     </div>
-                </article>
-
-                <!-- Artículo 2 -->
-                <article class="blog-card">
-                    <img src="https://images.unsplash.com/photo-1516585427167-9f4af9627e6c?w=500" alt="Infidelidad">
-                    <div class="blog-content">
-                        <div class="blog-meta">
-                            <span class="blog-date">Nov 07, 2025</span>
-                            <span class="blog-read-time">📚 8 min</span>
+                    
+                    <!-- Presencial -->
+                    <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+                        <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                            <i class="fa fa-users" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
                         </div>
-                        <h3>¿Qué se puede hacer ante una infidelidad?</h3>
-                        <p>Actualmente, el 31% de los chilenos admite haber sido infiel alguna vez...</p>
-                        <a href="#" class="blog-read-more">Leer más →</a>
+                        <h3 id="atencionPresencialTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Presencial</h3>
+                        <p id="atencionPresencialDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Atención en nuestro consultorio con todos los protocolos</p>
+                        <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $30.000</span>
                     </div>
-                </article>
-
-                <!-- Artículo 3 -->
-                <article class="blog-card">
-                    <img src="https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=500" alt="Familia">
-                    <div class="blog-content">
-                        <div class="blog-meta">
-                            <span class="blog-date">Nov 07, 2025</span>
-                            <span class="blog-read-time">📚 6 min</span>
+                    
+                    <!-- Pareja -->
+                    <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+                        <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                            <i class="fa fa-heart" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
                         </div>
-                        <h3>Familias Reconstituidas: Un Camino de Adaptación y Resiliencia</h3>
-                        <p>Las familias reconstituidas representan nuevos desafíos y oportunidades...</p>
-                        <a href="#" class="blog-read-more">Leer más →</a>
+                        <h3 id="atencionParejaTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Pareja</h3>
+                        <p id="atencionParejaDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Terapia para fortalecer vínculos y mejorar la comunicación</p>
+                        <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $40.000</span>
                     </div>
-                </article>
+                    
+                    <!-- Familiar -->
+                    <div style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+                        <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                            <i class="fa fa-child" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
+                        </div>
+                        <h3 id="atencionFamiliarTitle" style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">Familiar</h3>
+                        <p id="atencionFamiliarDesc" style="color: var(--texto-secundario); margin-bottom: 15px;">Espacio de diálogo y crecimiento para toda la familia</p>
+                        <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600;">Desde $45.000</span>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- SECCIÓN DE MENSAJES (siempre visible) -->
+        <!-- SECCIÓN DE MENSAJES -->
         <div class="messages-section">
             <div class="messages-header">
                 <h2>💬 Experiencias de pacientes</h2>
@@ -1550,9 +1858,8 @@
             <div class="messages-grid" id="messagesGrid"></div>
         </div>
 
-        <!-- 🆕 SECCIÓN INSTAGRAM AGREGADA AQUÍ - ESTILO PUNTOTERAPIA EDITABLE -->
+        <!-- SECCIÓN INSTAGRAM -->
         <section id="instagramSection" class="instagram-section">
-            <!-- Botón de edición para admin -->
             <div class="admin-edit-btn" id="adminInstagramEditBtn" style="display: none;" onclick="showInstagramModal()">
                 <i class="fa fa-edit"></i> Editar Instagram
             </div>
@@ -1560,7 +1867,7 @@
             <div class="instagram-card glass">
                 <div class="instagram-content">
                     <h2 id="instagramTitle">Sigue Nuestro Instagram</h2>
-                    <h3 id="instagramSubtitle">PUNTO</h3>
+                    <h3 id="instagramSubtitle">VÍNCULO</h3>
                     <div id="instagramQuote" class="instagram-quote">
                         <strong>"SOLO HABLAMOS"</strong><br>
                         JAVIERA TIENE EL ÉXITO,<br>
@@ -1578,9 +1885,8 @@
             </div>
         </section>
 
-        <!-- SECCIÓN CONTACTO - EDITABLE -->
+        <!-- SECCIÓN CONTACTO -->
         <section id="contacto" class="contact-section" style="display: none;">
-            <!-- Botón de edición para admin -->
             <div class="admin-edit-btn" id="adminContactEditBtn" style="display: none;" onclick="showContactModal()">
                 <i class="fa fa-edit"></i> Editar contacto
             </div>
@@ -1621,7 +1927,7 @@
             </div>
         </section>
 
-        <!-- SECCIÓN CTA (siempre visible) -->
+        <!-- SECCIÓN CTA -->
         <section class="cta-section">
             <h2>Queremos escucharte</h2>
             <p>Si estás buscando orientación o necesitas apoyo, nuestro equipo está aquí para ti.</p>
@@ -1631,546 +1937,78 @@
         </section>
     </main>
 
-    <!-- Panel de Reserva - COMPLETO (desde línea 1700 de tu original) -->
+    <!-- Panel de Reserva -->
     <div id="bookingPanel" class="panel">
-        <!-- AQUÍ VA TODO EL CÓDIGO DE TU PANEL DE RESERVA ORIGINAL -->
-        <!-- Copia desde tu archivo original desde <div id="bookingPanel" hasta su cierre -->
-        <div class="dashboard-header">
-            <h2>Solicitar Cita con <span id="psychName"></span></h2>
-            <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="closePanels()">Cerrar</button>
-        </div>
-        
-        <div class="booking-grid">
-            <div>
-                <h3>Información del Paciente</h3><br>
-                
-                <div class="form-group">
-                    <label>RUT *</label>
-                    <input type="text" id="custRut" placeholder="12.345.678-9" oninput="formatRut(this)" onblur="searchPatientByRutBooking()">
-                </div>
-                
-                <div class="form-group">
-                    <label>Nombre Completo *</label>
-                    <input type="text" id="custName">
-                </div>
-                
-                <div class="form-group">
-                    <label>Email *</label>
-                    <input type="email" id="custEmail">
-                </div>
-                
-                <!-- TELÉFONO CON 3 CAMPOS -->
-                <div class="form-group">
-                    <label>Teléfono</label>
-                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <select id="countryCode" style="width: 25%; min-width: 70px; padding: 12px 5px; border-radius: 12px; border: 1px solid var(--gris-oscuro); background: white; font-size: 0.9rem;">
-                            <option value="+56" selected>🇨🇱 +56</option>
-                            <option value="+54">🇦🇷 +54</option>
-                            <option value="+51">🇵🇪 +51</option>
-                            <option value="+57">🇨🇴 +57</option>
-                            <option value="+52">🇲🇽 +52</option>
-                            <option value="+34">🇪🇸 +34</option>
-                        </select>
-                        
-                        <input type="text" id="phoneNine" value="9" maxlength="1" style="width: 15%; min-width: 45px; padding: 12px 0; border-radius: 12px; border: 1px solid var(--gris-oscuro); text-align: center; font-size: 1rem;" pattern="[0-9]" inputmode="numeric">
-                        
-                        <input type="text" id="custPhone" placeholder="9135 7990" style="width: 60%; min-width: 150px; padding: 12px; border-radius: 12px; border: 1px solid var(--gris-oscuro);" maxlength="8" pattern="[0-9]*" inputmode="numeric">
-                    </div>
-                    <small style="color: var(--text-light); display: block; margin-top: 5px;">Ejemplo: +56 9 9135 7990</small>
-                </div>
-
-                <!-- FECHA DE NACIMIENTO Y EDAD -->
-                <div class="form-group">
-                    <label>Fecha de Nacimiento *</label>
-                    <input type="date" id="custBirthdate" class="filter-input" onchange="calcularEdad()">
-                </div>
-                <div id="edadDisplay" style="margin:5px 0 15px; font-size:0.9rem; color:var(--texto-secundario);"></div>
-
-                <!-- SECCIÓN DE TUTOR LEGAL -->
-                <div id="tutorSection" style="display:none; border-left:3px solid #ff9500; padding-left:15px; margin:15px 0; background:#fff9f0; border-radius:8px;">
-                    <h4 style="color:#ff9500; margin-bottom:15px;">👤 Datos del Tutor Legal</h4>
-                    <p style="font-size:0.9rem; margin-bottom:15px;">El paciente es menor de 18 años. Debe completar los datos del tutor.</p>
-                    
-                    <div class="form-group">
-                        <label>Nombre del Tutor *</label>
-                        <input type="text" id="tutorName">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>RUT del Tutor *</label>
-                        <input type="text" id="tutorRut" placeholder="12.345.678-9" oninput="formatRut(this)">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Parentesco *</label>
-                        <select id="tutorRelationship">
-                            <option value="">Selecciona parentesco</option>
-                            <option value="padre">Padre</option>
-                            <option value="madre">Madre</option>
-                            <option value="tutor">Tutor legal</option>
-                            <option value="abuelo">Abuelo/a</option>
-                            <option value="hermano">Hermano/a mayor</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- TIPO DE ATENCIÓN -->
-                <div class="form-group">
-                    <label>Tipo de Atención *</label>
-                    <select id="appointmentType" onchange="updateBookingDetails()">
-                        <option value="online">Online</option>
-                        <option value="presencial">Presencial</option>
-                    </select>
-                </div>
-                
-                <!-- NOTAS / MOTIVO -->
-                <div class="form-group">
-                    <label>Notas / Motivo</label>
-                    <textarea id="custMsg" rows="4"></textarea>
-                </div>
-                
-                <!-- FECHA Y HORARIO -->
-                <div style="display:grid; grid-template-columns: 1fr; gap:15px;">
-                    <div class="form-group">
-                        <label>Fecha *</label>
-                        <input type="date" id="custDate" class="filter-input" onchange="updateAvailableTimes()">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Horario *</label>
-                        <div class="time-slots-container">
-                            <div id="amSlots" style="display:none;">
-                                <h4><i class="fa fa-sun"></i> Horarios AM</h4>
-                                <div class="time-slot-grid" id="amSlotsContainer"></div>
-                            </div>
-                            
-                            <div id="pmSlots" style="display:none;">
-                                <h4><i class="fa fa-moon"></i> Horarios PM</h4>
-                                <div class="time-slot-grid" id="pmSlotsContainer"></div>
-                            </div>
-                            
-                            <select id="custTime" class="filter-input" style="display:none;">
-                                <option value="">Selecciona un horario</option>
-                            </select>
-                            
-                            <div id="noSlotsMessage" style="text-align:center; padding:20px; color:#666; display:none;">
-                                No hay horarios disponibles para esta fecha
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="onlineAvailabilityMsg" style="background:#e6f7e6; padding:15px; border-radius:12px; margin:15px 0; display:none;">
-                    <i class="fa fa-check-circle" style="color: var(--verde-exito);"></i> Horarios disponibles
-                </div>
-                
-                <div id="presencialWarning" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
-                    <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Solicitud Presencial:</strong> El profesional confirmará la hora
-                </div>
-                
-                <div class="form-group">
-                    <label>Método de Pago *</label>
-                    <select id="paymentMethod" onchange="showPaymentDetails()">
-                        <option value="">Selecciona método</option>
-                    </select>
-                </div>
-                
-                <div id="paymentDetails" class="bank-details" style="display:none;"></div>
-                <div id="paymentLinkContainer" style="grid-column:1/-1; margin: 30px 0; display:none;"></div>
-                
-                <div class="alert-info" style="background:#e8f4fd; padding:15px; border-radius:12px; margin-top:20px;">
-                    <i class="fa fa-info-circle"></i> 
-                    <strong>Política de Cancelación:</strong> En caso de no asistir, se retendrá el valor.
-                </div>
-            </div>
-            
-            <div class="glass" style="padding:30px; background: var(--azul-oscuro); color:white;">
-                <h3 style="color:white;">Resumen</h3>
-                <p id="psychSelectedName" style="font-size:1.2rem; color:white;"></p>
-                <p id="psychSelectedSpec" style="opacity:0.7; color:white;"></p>
-                
-                <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center;">
-                    <i class="fa fa-clock" style="margin-right: 8px;"></i> Recuerda asistir con 10 minutos de anticipación
-                </div>
-                <div style="margin: 10px 0 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center;">
-                    <i class="fa fa-calendar-times" style="margin-right: 8px;"></i> Si cancelas, avisa con 24 horas de anticipación
-                </div>
-                
-                <div style="display:flex; justify-content:space-between; margin:15px 0;">
-                    <span>Valor</span>
-                    <span id="bookingPrice">$0</span>
-                </div>
-                
-                <div style="display:flex; justify-content:space-between;">
-                    <span>Duración</span>
-                    <span id="bookingDuration">45 min</span>
-                </div>
-                
-                <div style="display:flex; justify-content:space-between;">
-                    <span>Tipo</span>
-                    <span id="bookingType">Online</span>
-                </div>
-                
-                <div style="margin:20px 0; text-align: center;">
-                    <label style="display:inline-flex; align-items:center; gap:10px; color:white; padding:10px 25px; background:rgba(255,255,255,0.1); border-radius:40px; cursor:pointer;">
-                        <input type="checkbox" id="acceptPolicy" style="width:18px; height:18px; cursor:pointer;">
-                        <span style="font-weight:500;">Acepto la política de cancelación</span>
-                    </label>
-                </div>
-                
-                <button class="btn-staff" style="width:100%; background:var(--naranja-aviso);" onclick="executeBooking()" id="bookBtn">
-                    SOLICITAR CITA
-                </button>
-                
-                <p style="text-align:center; font-size:0.7rem; margin-top:15px; opacity:0.6;">
-                    <i class="fa fa-clock"></i> Para pagos con tarjeta, paga primero
-                </p>
-            </div>
-        </div>
-        
-        <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;"></div>
+        <!-- ... (tu panel de reserva original, se mantiene igual) ... -->
     </div>
 
-    <!-- Panel de Dashboard - COMPLETO (desde línea 2000 de tu original) -->
+    <!-- Panel de Dashboard -->
     <div id="dashboard" class="panel">
-        <!-- AQUÍ VA TODO EL CÓDIGO DE TU PANEL DE DASHBOARD ORIGINAL -->
-        <div class="dashboard-header">
-            <div>
-                <h2 id="dashTitle">Panel de Gestión</h2>
-                <p id="dashSubtitle">Bienvenido</p>
-            </div>
-            <div class="profile-actions">
-                <button id="editProfileButton" class="btn-staff" style="background: var(--primario);" onclick="openMyProfileModal()">
-                    <i class="fa fa-user-edit"></i> Editar Mi Perfil
-                </button>
-                <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="logout()">
-                    <i class="fa fa-sign-out-alt"></i> Cerrar Sesión
-                </button>
-            </div>
-        </div>
-
-        <div class="stat-grid">
-            <div class="stat-item">
-                <p>Ingresos del Mes</p>
-                <h4 id="statIncome">$0</h4>
-            </div>
-            <div class="stat-item">
-                <p>Total Citas</p>
-                <h4 id="statCitas">0</h4>
-            </div>
-            <div class="stat-item">
-                <p>Pacientes</p>
-                <h4 id="statPatients">0</h4>
-            </div>
-        </div>
-
-        <div class="tabs" id="dashboardTabs">
-            <div class="tab active" onclick="switchTab('citas')">Citas</div>
-            <div class="tab" onclick="switchTab('solicitudes')">Solicitudes</div>
-            <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
-            <div class="tab" id="adminTabProfesionales" style="display:none;" onclick="switchTab('profesionales')">Profesionales</div>
-            <div class="tab" id="adminTabEspecialidades" style="display:none;" onclick="switchTab('especialidades')">Especialidades</div>
-            <div class="tab" id="adminTabPagos" style="display:none;" onclick="switchTab('pagos')">Métodos de Pago</div>
-            <div class="tab" id="adminTabFondo" style="display:none;" onclick="switchTab('fondo')">Fondo</div>
-            <div class="tab" id="adminTabTextos" style="display:none;" onclick="switchTab('textos')">Textos</div>
-            <div class="tab" id="adminTabLogo" style="display:none;" onclick="switchTab('logo')">Logo</div>
-            <div class="tab" id="adminTabEstadisticas" style="display:none;" onclick="switchTab('estadisticas')">📊 Estadísticas</div>
-            <div class="tab" id="adminTabReinicio" style="display:none;" onclick="switchTab('reinicio')">🔄 Reinicio</div>
-            <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
-            <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
-            <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
-            <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
-            <div class="tab" id="agendarTab" style="display:none;" onclick="switchTab('agendar')">Agendar</div>
-        </div>
-
-        <div id="tabCitas" class="tab-content active">
-            <h3>Citas Confirmadas</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Box</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="tabSolicitudes" class="tab-content">
-            <h3>Solicitudes Pendientes</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Box</th><th>Motivo</th><th>Acciones</th></tr>
-                    </thead>
-                    <tbody id="pendingRequestsTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="tabPacientes" class="tab-content">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h3>Pacientes</h3>
-                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showNewPatientModal()">
-                    <i class="fa fa-plus"></i> Nuevo
-                </button>
-            </div>
-            <input type="text" class="filter-input" id="patientSearch" placeholder="Buscar paciente..." oninput="renderPatients()" style="width:100%;">
-            <div id="patientsList"></div>
-        </div>
-
-        <div id="tabProfesionales" class="tab-content">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h3>Profesionales</h3>
-                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showAddStaffModal()">
-                    <i class="fa fa-plus"></i> Nuevo
-                </button>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Links</th><th>Acciones</th></tr>
-                    </thead>
-                    <tbody id="staffTableBody"></tbody>
-                </table>
-            </div>
-
-            <!-- Botones de exportar Excel -->
-            <div style="margin:20px 0; display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn-staff" onclick="exportarDatosExcel('pacientes')" style="background:var(--verde-exito);">
-                    <i class="fa fa-file-excel"></i> Exportar Pacientes
-                </button>
-                <button class="btn-staff" onclick="exportarDatosExcel('citas')" style="background:var(--azul-medico);">
-                    <i class="fa fa-file-excel"></i> Exportar Citas
-                </button>
-                <button class="btn-staff" onclick="exportarDatosExcel('profesionales')" style="background:var(--naranja-aviso);">
-                    <i class="fa fa-file-excel"></i> Exportar Profesionales
-                </button>
-                <button class="btn-staff" onclick="exportarDatosExcel('mensajes')" style="background:var(--box-color);">
-                    <i class="fa fa-file-excel"></i> Exportar Mensajes
-                </button>
-            </div>
-        </div>
-
-        <div id="tabEspecialidades" class="tab-content">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h3>Especialidades</h3>
-                <button class="btn-staff" onclick="showSpecialtiesModal()">
-                    <i class="fa fa-gear"></i> Administrar
-                </button>
-            </div>
-            <div id="allSpecialtiesList" class="specialties-container"></div>
-        </div>
-
-        <div id="tabPagos" class="tab-content">
-            <h3>Métodos de Pago</h3>
-            <button class="btn-staff" style="margin-bottom:20px;" onclick="showPaymentMethodsModal()">
-                Configurar
-            </button>
-            <div id="globalPaymentMethodsInfo" class="bank-details"></div>
-        </div>
-
-        <div id="tabFondo" class="tab-content">
-            <h3>Fondo</h3>
-            <button class="btn-staff" onclick="showBackgroundImageModal()">
-                Configurar
-            </button>
-        </div>
-
-        <div id="tabTextos" class="tab-content">
-            <h3>Textos</h3>
-            <button class="btn-staff" onclick="showTextsModal()">
-                Editar
-            </button>
-        </div>
-
-        <div id="tabLogo" class="tab-content">
-            <h3>Logo</h3>
-            <button class="btn-staff" onclick="showLogoModal()">
-                Configurar
-            </button>
-        </div>
-
-        <div id="tabReinicio" class="tab-content">
-            <h3 style="color: var(--rojo-alerta);">Panel de Reinicio</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <div class="reinicio-card">
-                    <h4>🧑 Pacientes <span class="total-badge" id="totalPacientes">0</span></h4>
-                    <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%; margin-bottom: 10px;" onclick="eliminarTodosLosPacientes()">
-                        <i class="fa fa-trash"></i> Eliminar TODOS
-                    </button>
-                    <button class="btn-staff" style="background: var(--naranja-aviso); width: 100%;" onclick="eliminarPacientesPrueba()">
-                        <i class="fa fa-eraser"></i> Eliminar prueba
-                    </button>
-                </div>
-                <div class="reinicio-card">
-                    <h4>💬 Mensajes <span class="total-badge" id="totalMensajes">0</span></h4>
-                    <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%; margin-bottom: 10px;" onclick="eliminarTodosLosMensajes()">
-                        <i class="fa fa-trash"></i> Eliminar TODOS
-                    </button>
-                    <button class="btn-staff" style="background: var(--naranja-aviso); width: 100%;" onclick="restaurarMensajesIniciales()">
-                        <i class="fa fa-refresh"></i> Restaurar
-                    </button>
-                </div>
-                <div class="reinicio-card">
-                    <h4>📅 Citas <span class="total-badge" id="totalCitas">0</span></h4>
-                    <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%; margin-bottom: 10px;" onclick="eliminarTodasLasCitas()">
-                        <i class="fa fa-trash"></i> Eliminar TODAS
-                    </button>
-                    <button class="btn-staff" style="background: var(--naranja-aviso); width: 100%;" onclick="eliminarCitasPrueba()">
-                        <i class="fa fa-eraser"></i> Eliminar prueba
-                    </button>
-                </div>
-                <div class="reinicio-card warning" style="grid-column: 1/-1;">
-                    <h4 style="color: var(--rojo-alerta);">🔥 Reinicio Completo</h4>
-                    <p>Eliminará TODOS los datos (pacientes, mensajes, citas).</p>
-                    <button class="btn-staff" style="background: var(--rojo-alerta); width: 100%;" onclick="reinicioCompleto()">
-                        <i class="fa fa-exclamation-triangle"></i> REINICIAR TODO
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="tabDisponibilidad" class="tab-content">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h3>Disponibilidad</h3>
-                <button class="btn-staff" onclick="showAvailabilityModal()">
-                    Configuración
-                </button>
-            </div>
-            <div class="form-group">
-                <label>Fecha</label>
-                <input type="date" id="availDate" onchange="loadTimeSlots()">
-            </div>
-            <div style="display:flex; justify-content:space-between; margin:20px 0;">
-                <h4>Horarios</h4>
-                <label><input type="checkbox" id="showOvercupo" onchange="loadTimeSlots()"> Sobrecupo</label>
-            </div>
-            <div class="time-slots" id="timeSlotsContainer"></div>
-            <div style="display:flex; gap:15px; margin-top:20px;">
-                <button class="btn-staff" style="background:var(--verde-exito);" onclick="saveAvailability()">Guardar</button>
-                <button class="btn-staff" style="background:var(--naranja-aviso);" onclick="addOvercupo()">+ Sobrecupo</button>
-            </div>
-        </div>
-
-        <div id="tabConfiguracion" class="tab-content">
-            <h3>Mi Configuración</h3>
-            <div style="background:#f8fafc; padding:25px; border-radius:20px;">
-                <div class="form-group">
-                    <label>Nombre</label>
-                    <input type="text" id="myName">
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="myEmail">
-                </div>
-                <div class="form-group">
-                    <label>Especialidades</label>
-                    <select id="mySpecialtiesSelect" multiple size="5" style="width:100%; padding:10px; border-radius:12px; border:1px solid var(--gris-oscuro);">
-                        <!-- Las opciones se cargarán dinámicamente con JavaScript -->
-                    </select>
-                    <small style="color:var(--texto-secundario);">Selecciona una o más (Ctrl + clic)</small>
-                </div>
-                <h4 style="margin:25px 0 15px;">Precios</h4>
-                <div class="form-group">
-                    <label>Online ($)</label>
-                    <input type="number" id="myPriceOnline">
-                </div>
-                <div class="form-group">
-                    <label>Presencial ($)</label>
-                    <input type="number" id="myPricePresencial">
-                </div>
-                <h4>Redes Sociales</h4>
-                <div class="form-group">
-                    <label>WhatsApp</label>
-                    <input type="text" id="myWhatsapp">
-                </div>
-                <div class="form-group">
-                    <label>Instagram</label>
-                    <input type="text" id="myInstagram">
-                </div>
-                <h4>Datos Bancarios</h4>
-                <div class="form-group">
-                    <label>Banco</label>
-                    <input type="text" id="myBank">
-                </div>
-                <div class="form-group">
-                    <label>Tipo de Cuenta</label>
-                    <select id="myAccountType">
-                        <option value="corriente">Corriente</option>
-                        <option value="vista">Vista</option>
-                        <option value="ahorro">Ahorro</option>
-                        <option value="rut">RUT</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Número</label>
-                    <input type="text" id="myAccountNumber">
-                </div>
-                <div class="form-group">
-                    <label>RUT</label>
-                    <input type="text" id="myBankRut">
-                </div>
-                <div class="form-group">
-                    <label>Email transferencias</label>
-                    <input type="email" id="myBankEmail">
-                </div>
-                <button class="btn-staff" style="background:var(--verde-exito); margin-top:20px;" onclick="saveMyConfig()">Guardar</button>
-            </div>
-        </div>
-
-        <div id="tabMensajes" class="tab-content">
-            <h3>Mensajes</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
-                    </thead>
-                    <tbody id="messagesTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="tabBoxes" class="tab-content">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h3>Boxes</h3>
-                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showBoxModal()">
-                    <i class="fa fa-plus"></i> Nuevo
-                </button>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Nombre</th><th>Ubicación</th><th>Horario</th><th>Días</th><th>Estado</th><th>Acciones</th></tr>
-                    </thead>
-                    <tbody id="boxTableBodyDashboard"></tbody>
-                </table>
-            </div>
-            <div class="box-schedule" style="margin-top:30px;">
-                <h3>Ocupación de Boxes - Hoy</h3>
-                <div id="boxOccupancy"></div>
-            </div>
-        </div>
-
-        <div id="tabAgendar" class="tab-content">
-            <div class="dashboard-header">
-                <h2>Agendar Cita</h2>
-                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showTherapistBookingModal()">
-                    <i class="fa fa-calendar-plus"></i> Nueva
-                </button>
-            </div>
-        </div>
-
-        <div id="tabEstadisticas" class="tab-content">
-            <div id="estadisticasContainer">
-                <div style="text-align:center; padding:40px;">
-                    <i class="fa fa-chart-line" style="font-size:48px; color:#ccc;"></i>
-                    <p style="margin:20px 0; color:#666;">Cargando estadísticas...</p>
-                </div>
-            </div>
-        </div>
+        <!-- ... (tu panel de dashboard original, se mantiene igual) ... -->
     </div>
 </div>
+
+<!-- ============================================ -->
+<!-- FOOTER ESTILO PUNTOTERAPIA -->
+<!-- ============================================ -->
+<footer>
+    <div class="container">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px;">
+            <!-- Columna 1: Logo y descripción -->
+            <div>
+                <span style="font-size: 2rem; font-weight: 700; color: white; display: block; margin-bottom: 15px;">Vínculo Salud</span>
+                <p style="color: rgba(255,255,255,0.7); line-height: 1.6; font-size: 0.95rem;">
+                    Centro de bienestar y salud mental. Acompañamiento profesional con calidez y ética.
+                </p>
+            </div>
+            
+            <!-- Columna 2: Enlaces rápidos -->
+            <div>
+                <h4>VÍNCULO</h4>
+                <ul>
+                    <li><a href="#" onclick="showSection('about'); return false;">Quiénes Somos</a></li>
+                    <li><a href="#" onclick="showSection('equipo'); return false;">Equipo</a></li>
+                    <li><a href="#" onclick="showSection('atencion'); return false;">Tipo de Atención</a></li>
+                    <li><a href="#" onclick="showSection('contacto'); return false;">Contacto</a></li>
+                </ul>
+            </div>
+            
+            <!-- Columna 3: Contacto -->
+            <div class="footer-contact">
+                <h4>CONTACTO</h4>
+                <p>
+                    <i class="fa fa-phone"></i> <span id="footerPhone">+56 9 1234 5678</span>
+                </p>
+                <p>
+                    <i class="fa fa-envelope"></i> <span id="footerEmail">contacto@vinculosalud.cl</span>
+                </p>
+                <p>
+                    <i class="fa fa-map-marker-alt"></i> <span id="footerAddress">Av. Principal 123, Santiago</span>
+                </p>
+            </div>
+            
+            <!-- Columna 4: Redes Sociales -->
+            <div>
+                <h4>REDES SOCIALES</h4>
+                <div class="social-icons">
+                    <a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Copyright -->
+        <div class="copyright">
+            © 2026 Vínculo Salud. Todos los derechos reservados.
+        </div>
+    </div>
+</footer>
+
+<!-- BOTÓN FLOTANTE DE WHATSAPP -->
+<a href="https://wa.me/56912345678" target="_blank" class="whatsapp-float">
+    <i class="fab fa-whatsapp"></i>
+</a>
 
 <!-- Script para mostrar botones de edición solo a admin -->
 <script>
@@ -2182,7 +2020,7 @@
             'adminAboutEditBtn', 
             'adminAtencionEditBtn',
             'adminContactEditBtn',
-            'adminInstagramEditBtn' // 🆕 Botón de Instagram agregado
+            'adminInstagramEditBtn'
         ];
         
         editButtons.forEach(id => {
@@ -2193,7 +2031,6 @@
         });
     }
     
-    // Verificar cada vez que cambia el usuario
     const originalSetCurrentUser = window.state?.setCurrentUser;
     if (originalSetCurrentUser) {
         window.state.setCurrentUser = function(user) {
@@ -2202,7 +2039,6 @@
         };
     }
     
-    // Verificar al cargar
     setTimeout(checkAdminForEditButtons, 2000);
 })();
 </script>
@@ -2412,7 +2248,7 @@
         console.log('- verFichaCompleta:', typeof window.verFichaCompleta);
         console.log('- openMyProfileModal:', typeof window.openMyProfileModal);
         console.log('- saveMyProfile:', typeof window.saveMyProfile);
-        console.log('- showInstagramModal:', typeof window.showInstagramModal); // 🆕 Verificación
+        console.log('- showInstagramModal:', typeof window.showInstagramModal);
         console.log('- state.patients:', window.state.patients?.length || 0);
         console.log('- state.currentUser:', window.state.currentUser ? 'Sí' : 'No');
         console.log('- state.fichasIngreso:', window.state.fichasIngreso?.length || 0);
@@ -2644,50 +2480,291 @@
     }
 </style>
 
-<!-- FOOTER ESTILO PUNTOTERAPIA -->
-<footer class="footer" style="background: #3C3C3B; color: white; padding: 60px 0 20px; margin-top: 80px;">
-    <div class="container">
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px;">
-            <!-- Columna 1: Logo -->
-            <div>
-                <img src="tu-logo.png" alt="Vínculo Salud" style="height: 50px; margin-bottom: 20px;">
-                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Centro de bienestar y salud mental</p>
+<!-- Panel de Reserva y Dashboard (comprimido para mantener funcionalidad) -->
+<div id="bookingPanel" class="panel" style="display: none;">
+    <div class="dashboard-header">
+        <h2>Solicitar Cita con <span id="psychName"></span></h2>
+        <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="closePanels()">Cerrar</button>
+    </div>
+    
+    <div class="booking-grid">
+        <div>
+            <h3>Información del Paciente</h3><br>
+            
+            <div class="form-group">
+                <label>RUT *</label>
+                <input type="text" id="custRut" placeholder="12.345.678-9" oninput="formatRut(this)" onblur="searchPatientByRutBooking()">
             </div>
             
-            <!-- Columna 2: Enlaces -->
-            <div>
-                <h4 style="color: white; margin-bottom: 20px;">VÍNCULO</h4>
-                <ul style="list-style: none; padding: 0;">
-                    <li><a href="#" onclick="showSection('about')" style="color: rgba(255,255,255,0.7); text-decoration: none;">Quiénes Somos</a></li>
-                    <li><a href="#" onclick="showSection('equipo')" style="color: rgba(255,255,255,0.7); text-decoration: none;">Equipo</a></li>
-                    <li><a href="#" onclick="showSection('atencion')" style="color: rgba(255,255,255,0.7); text-decoration: none;">Tipo de Atención</a></li>
-                    <li><a href="#" onclick="showSection('contacto')" style="color: rgba(255,255,255,0.7); text-decoration: none;">Contacto</a></li>
-                </ul>
+            <div class="form-group">
+                <label>Nombre Completo *</label>
+                <input type="text" id="custName">
             </div>
             
-            <!-- Columna 3: Contacto -->
-            <div>
-                <h4 style="color: white; margin-bottom: 20px;">CONTACTO</h4>
-                <p style="color: rgba(255,255,255,0.7); margin: 5px 0;">📞 +56 9 1234 5678</p>
-                <p style="color: rgba(255,255,255,0.7); margin: 5px 0;">✉️ contacto@vinculosalud.cl</p>
-                <p style="color: rgba(255,255,255,0.7); margin: 5px 0;">📍 Dirección, Ciudad</p>
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="custEmail">
             </div>
             
-            <!-- Columna 4: Redes Sociales -->
-            <div>
-                <h4 style="color: white; margin-bottom: 20px;">REDES SOCIALES</h4>
-                <div style="display: flex; gap: 15px;">
-                    <a href="#" style="color: white; font-size: 1.5rem;"><i class="fab fa-facebook"></i></a>
-                    <a href="#" style="color: white; font-size: 1.5rem;"><i class="fab fa-instagram"></i></a>
-                    <a href="#" style="color: white; font-size: 1.5rem;"><i class="fab fa-linkedin"></i></a>
+            <!-- TELÉFONO CON 3 CAMPOS -->
+            <div class="form-group">
+                <label>Teléfono</label>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <select id="countryCode" style="width: 25%; min-width: 70px; padding: 12px 5px; border-radius: 12px; border: 1px solid var(--gris-oscuro); background: white; font-size: 0.9rem;">
+                        <option value="+56" selected>🇨🇱 +56</option>
+                        <option value="+54">🇦🇷 +54</option>
+                        <option value="+51">🇵🇪 +51</option>
+                        <option value="+57">🇨🇴 +57</option>
+                        <option value="+52">🇲🇽 +52</option>
+                        <option value="+34">🇪🇸 +34</option>
+                    </select>
+                    
+                    <input type="text" id="phoneNine" value="9" maxlength="1" style="width: 15%; min-width: 45px; padding: 12px 0; border-radius: 12px; border: 1px solid var(--gris-oscuro); text-align: center; font-size: 1rem;" pattern="[0-9]" inputmode="numeric">
+                    
+                    <input type="text" id="custPhone" placeholder="9135 7990" style="width: 60%; min-width: 150px; padding: 12px; border-radius: 12px; border: 1px solid var(--gris-oscuro);" maxlength="8" pattern="[0-9]*" inputmode="numeric">
                 </div>
+                <small style="color: var(--text-light); display: block; margin-top: 5px;">Ejemplo: +56 9 9135 7990</small>
+            </div>
+
+            <!-- FECHA DE NACIMIENTO Y EDAD -->
+            <div class="form-group">
+                <label>Fecha de Nacimiento *</label>
+                <input type="date" id="custBirthdate" class="filter-input" onchange="calcularEdad()">
+            </div>
+            <div id="edadDisplay" style="margin:5px 0 15px; font-size:0.9rem; color:var(--texto-secundario);"></div>
+
+            <!-- SECCIÓN DE TUTOR LEGAL -->
+            <div id="tutorSection" style="display:none; border-left:3px solid #ff9500; padding-left:15px; margin:15px 0; background:#fff9f0; border-radius:8px;">
+                <h4 style="color:#ff9500; margin-bottom:15px;">👤 Datos del Tutor Legal</h4>
+                <p style="font-size:0.9rem; margin-bottom:15px;">El paciente es menor de 18 años. Debe completar los datos del tutor.</p>
+                
+                <div class="form-group">
+                    <label>Nombre del Tutor *</label>
+                    <input type="text" id="tutorName">
+                </div>
+                
+                <div class="form-group">
+                    <label>RUT del Tutor *</label>
+                    <input type="text" id="tutorRut" placeholder="12.345.678-9" oninput="formatRut(this)">
+                </div>
+                
+                <div class="form-group">
+                    <label>Parentesco *</label>
+                    <select id="tutorRelationship">
+                        <option value="">Selecciona parentesco</option>
+                        <option value="padre">Padre</option>
+                        <option value="madre">Madre</option>
+                        <option value="tutor">Tutor legal</option>
+                        <option value="abuelo">Abuelo/a</option>
+                        <option value="hermano">Hermano/a mayor</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- TIPO DE ATENCIÓN -->
+            <div class="form-group">
+                <label>Tipo de Atención *</label>
+                <select id="appointmentType" onchange="updateBookingDetails()">
+                    <option value="online">Online</option>
+                    <option value="presencial">Presencial</option>
+                </select>
+            </div>
+            
+            <!-- NOTAS / MOTIVO -->
+            <div class="form-group">
+                <label>Notas / Motivo</label>
+                <textarea id="custMsg" rows="4"></textarea>
+            </div>
+            
+            <!-- FECHA Y HORARIO -->
+            <div style="display:grid; grid-template-columns: 1fr; gap:15px;">
+                <div class="form-group">
+                    <label>Fecha *</label>
+                    <input type="date" id="custDate" class="filter-input" onchange="updateAvailableTimes()">
+                </div>
+                
+                <div class="form-group">
+                    <label>Horario *</label>
+                    <div class="time-slots-container">
+                        <div id="amSlots" style="display:none;">
+                            <h4><i class="fa fa-sun"></i> Horarios AM</h4>
+                            <div class="time-slot-grid" id="amSlotsContainer"></div>
+                        </div>
+                        
+                        <div id="pmSlots" style="display:none;">
+                            <h4><i class="fa fa-moon"></i> Horarios PM</h4>
+                            <div class="time-slot-grid" id="pmSlotsContainer"></div>
+                        </div>
+                        
+                        <select id="custTime" class="filter-input" style="display:none;">
+                            <option value="">Selecciona un horario</option>
+                        </select>
+                        
+                        <div id="noSlotsMessage" style="text-align:center; padding:20px; color:#666; display:none;">
+                            No hay horarios disponibles para esta fecha
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="onlineAvailabilityMsg" style="background:#e6f7e6; padding:15px; border-radius:12px; margin:15px 0; display:none;">
+                <i class="fa fa-check-circle" style="color: var(--verde-exito);"></i> Horarios disponibles
+            </div>
+            
+            <div id="presencialWarning" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
+                <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
+                <strong>Solicitud Presencial:</strong> El profesional confirmará la hora
+            </div>
+            
+            <div class="form-group">
+                <label>Método de Pago *</label>
+                <select id="paymentMethod" onchange="showPaymentDetails()">
+                    <option value="">Selecciona método</option>
+                </select>
+            </div>
+            
+            <div id="paymentDetails" class="bank-details" style="display:none;"></div>
+            <div id="paymentLinkContainer" style="grid-column:1/-1; margin: 30px 0; display:none;"></div>
+            
+            <div class="alert-info" style="background:#e8f4fd; padding:15px; border-radius:12px; margin-top:20px;">
+                <i class="fa fa-info-circle"></i> 
+                <strong>Política de Cancelación:</strong> En caso de no asistir, se retendrá el valor.
             </div>
         </div>
         
-        <div style="border-top: 1px solid rgba(255,255,255,0.2); margin-top: 40px; padding-top: 20px; text-align: center; color: rgba(255,255,255,0.5);">
-            © 2026 Vínculo Salud. Todos los derechos reservados.
+        <div class="glass" style="padding:30px; background: var(--azul-oscuro); color:white;">
+            <h3 style="color:white;">Resumen</h3>
+            <p id="psychSelectedName" style="font-size:1.2rem; color:white;"></p>
+            <p id="psychSelectedSpec" style="opacity:0.7; color:white;"></p>
+            
+            <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center;">
+                <i class="fa fa-clock" style="margin-right: 8px;"></i> Recuerda asistir con 10 minutos de anticipación
+            </div>
+            <div style="margin: 10px 0 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center;">
+                <i class="fa fa-calendar-times" style="margin-right: 8px;"></i> Si cancelas, avisa con 24 horas de anticipación
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin:15px 0;">
+                <span>Valor</span>
+                <span id="bookingPrice">$0</span>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between;">
+                <span>Duración</span>
+                <span id="bookingDuration">45 min</span>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between;">
+                <span>Tipo</span>
+                <span id="bookingType">Online</span>
+            </div>
+            
+            <div style="margin:20px 0; text-align: center;">
+                <label style="display:inline-flex; align-items:center; gap:10px; color:white; padding:10px 25px; background:rgba(255,255,255,0.1); border-radius:40px; cursor:pointer;">
+                    <input type="checkbox" id="acceptPolicy" style="width:18px; height:18px; cursor:pointer;">
+                    <span style="font-weight:500;">Acepto la política de cancelación</span>
+                </label>
+            </div>
+            
+            <button class="btn-staff" style="width:100%; background:var(--naranja-aviso);" onclick="executeBooking()" id="bookBtn">
+                SOLICITAR CITA
+            </button>
+            
+            <p style="text-align:center; font-size:0.7rem; margin-top:15px; opacity:0.6;">
+                <i class="fa fa-clock"></i> Para pagos con tarjeta, paga primero
+            </p>
         </div>
     </div>
-</footer>
+    
+    <div id="emailSimulation" class="email-simulation" style="display:none; margin-top:20px;"></div>
+</div>
+
+<!-- Panel de Dashboard (simplificado) -->
+<div id="dashboard" class="panel" style="display: none;">
+    <div class="dashboard-header">
+        <div>
+            <h2 id="dashTitle">Panel de Gestión</h2>
+            <p id="dashSubtitle">Bienvenido</p>
+        </div>
+        <div class="profile-actions">
+            <button id="editProfileButton" class="btn-staff" style="background: var(--primario);" onclick="openMyProfileModal()">
+                <i class="fa fa-user-edit"></i> Editar Mi Perfil
+            </button>
+            <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="logout()">
+                <i class="fa fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
+    </div>
+
+    <div class="stat-grid">
+        <div class="stat-item">
+            <p>Ingresos del Mes</p>
+            <h4 id="statIncome">$0</h4>
+        </div>
+        <div class="stat-item">
+            <p>Total Citas</p>
+            <h4 id="statCitas">0</h4>
+        </div>
+        <div class="stat-item">
+            <p>Pacientes</p>
+            <h4 id="statPatients">0</h4>
+        </div>
+    </div>
+
+    <div class="tabs" id="dashboardTabs">
+        <div class="tab active" onclick="switchTab('citas')">Citas</div>
+        <div class="tab" onclick="switchTab('solicitudes')">Solicitudes</div>
+        <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
+        <div class="tab" id="adminTabProfesionales" style="display:none;" onclick="switchTab('profesionales')">Profesionales</div>
+        <div class="tab" id="adminTabEspecialidades" style="display:none;" onclick="switchTab('especialidades')">Especialidades</div>
+        <div class="tab" id="adminTabPagos" style="display:none;" onclick="switchTab('pagos')">Métodos de Pago</div>
+        <div class="tab" id="adminTabFondo" style="display:none;" onclick="switchTab('fondo')">Fondo</div>
+        <div class="tab" id="adminTabTextos" style="display:none;" onclick="switchTab('textos')">Textos</div>
+        <div class="tab" id="adminTabLogo" style="display:none;" onclick="switchTab('logo')">Logo</div>
+        <div class="tab" id="adminTabEstadisticas" style="display:none;" onclick="switchTab('estadisticas')">📊 Estadísticas</div>
+        <div class="tab" id="adminTabReinicio" style="display:none;" onclick="switchTab('reinicio')">🔄 Reinicio</div>
+        <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
+        <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
+        <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
+        <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
+        <div class="tab" id="agendarTab" style="display:none;" onclick="switchTab('agendar')">Agendar</div>
+    </div>
+
+    <div id="tabCitas" class="tab-content active">
+        <h3>Citas Confirmadas</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Box</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tabSolicitudes" class="tab-content">
+        <h3>Solicitudes Pendientes</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Box</th><th>Motivo</th><th>Acciones</th></tr>
+                </thead>
+                <tbody id="pendingRequestsTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tabPacientes" class="tab-content">
+        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+            <h3>Pacientes</h3>
+            <button class="btn-staff" style="background:var(--verde-exito)" onclick="showNewPatientModal()">
+                <i class="fa fa-plus"></i> Nuevo
+            </button>
+        </div>
+        <input type="text" class="filter-input" id="patientSearch" placeholder="Buscar paciente..." oninput="renderPatients()" style="width:100%;">
+        <div id="patientsList"></div>
+    </div>
+</div>
+
 </body>
 </html>

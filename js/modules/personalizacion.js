@@ -37,7 +37,7 @@ export let contactInfo = {
 // 🆕 NUEVA VARIABLE PARA SECCIÓN INSTAGRAM
 export let instagramData = {
     title: 'Sigue Nuestro Instagram',
-    subtitle: 'PUNTO',
+    subtitle: 'VÍNCULO',
     quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
     text: 'Detente aquí un segundo',
     message: 'Esto también se aprende.',
@@ -484,7 +484,7 @@ export function showInstagramModal() {
                 
                 <div class="form-group">
                     <label>Subtítulo (PUNTO)</label>
-                    <input type="text" id="instagramSubtitleInput" class="filter-input" placeholder="PUNTO">
+                    <input type="text" id="instagramSubtitleInput" class="filter-input" placeholder="VÍNCULO">
                 </div>
                 
                 <div class="form-group">
@@ -882,8 +882,21 @@ export function saveAtencionTexts() {
 }
 
 // ============================================
-// 🆕 FUNCIONES PARA SECCIÓN CONTACTO
+// 🆕 FUNCIONES PARA SECCIÓN CONTACTO (con actualización del footer)
 // ============================================
+
+/**
+ * Actualiza los elementos del footer con la información de contacto actual.
+ */
+function updateFooterFromContactInfo() {
+    const footerPhone = document.getElementById('footerPhone');
+    const footerEmail = document.getElementById('footerEmail');
+    const footerAddress = document.getElementById('footerAddress');
+
+    if (footerPhone) footerPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
+    if (footerEmail) footerEmail.innerText = contactInfo.email || 'contacto@vinculosalud.cl';
+    if (footerAddress) footerAddress.innerText = contactInfo.address || 'Av. Principal 123, Santiago';
+}
 
 export function cargarContactInfo() {
     db.ref('ContactInfo').on('value', (snapshot) => {
@@ -892,6 +905,7 @@ export function cargarContactInfo() {
             contactInfo = data;
         }
         updateContactSection();
+        updateFooterFromContactInfo(); // 🔥 NUEVO: Sincroniza el footer
     });
 }
 
@@ -903,6 +917,9 @@ export function updateContactSection() {
     if (contactEmail) contactEmail.innerText = contactInfo.email || 'contacto@vinculosalud.cl';
     if (contactPhone) contactPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
     if (contactAddress) contactAddress.innerText = contactInfo.address || 'Av. Principal 123, Santiago';
+    
+    // También actualizamos el footer aquí por si se llama directamente
+    updateFooterFromContactInfo();
 }
 
 export function showContactModal() {
@@ -955,7 +972,8 @@ export function saveContactInfo() {
     };
     
     db.ref('ContactInfo').set(contactInfo);
-    updateContactSection();
+    updateContactSection();        // Actualiza sección contacto y footer
+    updateFooterFromContactInfo(); // Doble actualización por seguridad
     
     document.getElementById('contactModal').style.display = 'none';
     showToast('Información de contacto actualizada', 'success');
@@ -1122,8 +1140,8 @@ export function cargarTodaPersonalizacion() {
     cargarEspecialidades();
     cargarAboutTexts();
     cargarAtencionTexts();
-    cargarContactInfo();
-    cargarInstagramData(); // 🆕 NUEVA
+    cargarContactInfo(); // Ya incluye updateFooterFromContactInfo internamente
+    cargarInstagramData();
     console.log('✅ Personalización cargada');
 }
 
@@ -1300,4 +1318,4 @@ if (typeof window !== 'undefined') {
     window.cargarInstagramData = cargarInstagramData;
 }
 
-console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas, secciones editables y SECCIÓN INSTAGRAM v3.0');
+console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas, secciones editables, SECCIÓN INSTAGRAM y FOOTER SINCRONIZADO v3.0');

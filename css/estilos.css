@@ -2479,3 +2479,61 @@ html {
     transform: translateY(-3px);
     box-shadow: 0 15px 30px rgba(30, 122, 138, 0.3);
 }
+
+
+/* ============================================
+   TOGGLE DE INFORMACIÓN DEL PROFESIONAL (ESTILO PUNTOTERAPIA)
+   ============================================ */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.therapist-info-toggle {
+    background-color: #f6f4f1 !important;
+    border-radius: 32px;
+    border: 1px solid rgba(123, 132, 113, 0.19);
+    margin: 20px 0;
+    animation: slideDown 0.3s ease;
+}
+
+.therapist-info-toggle h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.therapist-info-toggle h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.therapist-info-toggle ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.therapist-info-toggle li {
+    margin-bottom: 5px;
+    line-height: 1.5;
+}
+
+.therapist-info-toggle .specialty-tag {
+    background: var(--verde-azulado-claro);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin: 0 5px 5px 0;
+}

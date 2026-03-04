@@ -157,88 +157,116 @@ export function copiarAlPortapapeles(texto) {
 // ============================================
 // 🎨 MODAL DE INFORMACIÓN MEJORADO (ESTILO PUNTOTERAPIA)
 // ============================================
+
+// ============================================
+// FUNCIÓN PARA MOSTRAR MÁS INFORMACIÓN DEL PROFESIONAL (ESTILO PUNTOTERAPIA - TOGGLE)
+// ============================================
 export function showTherapistInfo(psychId) {
+    console.log('📋 Mostrando información detallada para profesional:', psychId);
+    
     const psych = state.staff.find(p => p.id == psychId);
     if (!psych) return;
-
-    // Función para convertir texto con saltos de línea en lista HTML
-    const formatAsList = (text) => {
+    
+    // Buscar la tarjeta del profesional
+    const therapistCard = document.querySelector(`.therapist-card[data-id="${psychId}"]`);
+    if (!therapistCard) return;
+    
+    // Verificar si ya existe un toggle abierto para este profesional
+    const existingToggle = document.getElementById(`toggle-${psychId}`);
+    if (existingToggle) {
+        // Si ya existe, lo cerramos y eliminamos
+        existingToggle.remove();
+        return;
+    }
+    
+    // Cerrar cualquier otro toggle abierto
+    document.querySelectorAll('.therapist-info-toggle').forEach(toggle => {
+        toggle.remove();
+    });
+    
+    // Crear el contenedor del toggle
+    const toggleDiv = document.createElement('div');
+    toggleDiv.id = `toggle-${psychId}`;
+    toggleDiv.className = 'therapist-info-toggle';
+    toggleDiv.style.cssText = `
+        margin-top: 20px;
+        margin-bottom: 20px;
+        border-radius: 32px;
+        overflow: hidden;
+        border: 1px solid rgba(123,132,113,0.19);
+        background-color: #f6f4f1;
+        animation: slideDown 0.3s ease;
+    `;
+    
+    // Función para formatear educación como lista HTML
+    const formatEducation = (text) => {
         if (!text) return '<p style="color: var(--texto-secundario);">No especificada</p>';
         const lines = text.split('\n').filter(line => line.trim() !== '');
         if (lines.length === 0) return '<p style="color: var(--texto-secundario);">No especificada</p>';
-        return `<ul style="list-style-type: disc; padding-left: 20px; color: var(--texto-secundario);">
-            ${lines.map(line => `<li style="margin-bottom: 5px;">${line}</li>`).join('')}
+        return `<ul style="list-style-type: disc; padding-left: 20px; margin: 10px 0;">
+            ${lines.map(line => `<li style="margin-bottom: 5px; color: var(--texto-principal);">${line}</li>`).join('')}
         </ul>`;
     };
-
-    const modal = document.createElement('div');
-    modal.className = 'modal therapist-info-modal';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width: 700px;">
-            <span class="modal-close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+    
+    // Construir el contenido del toggle
+    let toggleContent = `
+        <div style="padding: 30px;">
+            <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 20px; font-size: 1.5rem;">${psych.name}</h3>
             
-            <!-- Cabecera -->
-            <div style="text-align: center; margin-bottom: 30px;">
-                <h2 style="color: var(--verde-azulado-profundo); font-size: 2rem; margin-bottom: 5px;">${psych.name}</h2>
-                <p style="color: var(--texto-secundario); font-size: 1.1rem;">${psych.title || 'Psicólogo Clínico'}</p>
-            </div>
-            
-            <!-- Biografía -->
             ${psych.bio ? `
-            <div style="margin-bottom: 25px; background: var(--verde-grisaceo-claro); padding: 20px; border-radius: 20px;">
+            <div style="margin-bottom: 25px;">
                 <p style="color: var(--texto-principal); line-height: 1.6;">${psych.bio}</p>
             </div>
             ` : ''}
             
-            <!-- Grid de información -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
-                <!-- Columna izquierda: Formación -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <!-- Columna izquierda -->
                 <div>
-                    <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa fa-graduation-cap"></i> Formación
+                    <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; font-size: 1.2rem;">
+                        <i class="fa fa-graduation-cap" style="margin-right: 8px;"></i> Formación
                     </h4>
-                    ${formatAsList(psych.education)}
+                    ${formatEducation(psych.education)}
                     
-                    <h4 style="color: var(--verde-azulado-profundo); margin: 20px 0 15px; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa fa-clock"></i> Experiencia
+                    <h4 style="color: var(--verde-azulado-profundo); margin: 25px 0 15px; font-size: 1.2rem;">
+                        <i class="fa fa-clock" style="margin-right: 8px;"></i> Experiencia
                     </h4>
-                    <p style="color: var(--texto-secundario);">${psych.experience || '0'} años de experiencia clínica</p>
+                    <p style="color: var(--texto-principal);">${psych.experience || '0'} años de experiencia clínica</p>
                 </div>
                 
-                <!-- Columna derecha: Especialidades e idiomas -->
+                <!-- Columna derecha -->
                 <div>
-                    <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa fa-stethoscope"></i> Especialidades
+                    <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; font-size: 1.2rem;">
+                        <i class="fa fa-stethoscope" style="margin-right: 8px;"></i> Especialidades
                     </h4>
-                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
-                        ${Array.isArray(psych.spec) ? psych.spec.map(s => `<span class="specialty-tag" style="background: var(--verde-azulado-claro); color: white;">${s}</span>`).join('') : `<span class="specialty-tag" style="background: var(--verde-azulado-claro); color: white;">${psych.spec || 'Especialista'}</span>`}
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px;">
+                        ${Array.isArray(psych.spec) ? psych.spec.map(s => `<span style="background: var(--verde-azulado-claro); color: white; padding: 6px 14px; border-radius: 30px; font-size: 0.9rem;">${s}</span>`).join('') : `<span style="background: var(--verde-azulado-claro); color: white; padding: 6px 14px; border-radius: 30px; font-size: 0.9rem;">${psych.spec || 'Especialista'}</span>`}
                     </div>
                     
-                    <h4 style="color: var(--verde-azulado-profundo); margin: 20px 0 15px; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa fa-language"></i> Idiomas
+                    <h4 style="color: var(--verde-azulado-profundo); margin: 0 0 15px; font-size: 1.2rem;">
+                        <i class="fa fa-language" style="margin-right: 8px;"></i> Idiomas
                     </h4>
-                    <p style="color: var(--texto-secundario);">${psych.languages ? (Array.isArray(psych.languages) ? psych.languages.join(', ') : psych.languages) : 'Español'}</p>
+                    <p style="color: var(--texto-principal);">${psych.languages ? (Array.isArray(psych.languages) ? psych.languages.join(', ') : psych.languages) : 'Español'}</p>
                 </div>
             </div>
-            
-            <!-- Experiencia clínica detallada -->
-            ${psych.clinicalExperience ? `
-            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--gris-claro);">
-                <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Experiencia Clínica</h4>
-                <p style="color: var(--texto-secundario); line-height: 1.6; white-space: pre-line;">${psych.clinicalExperience}</p>
-            </div>
-            ` : ''}
-            
-            <!-- Botón para agendar -->
-            <div style="margin-top: 30px; text-align: center;">
-                <button onclick="this.closest('.modal').remove(); window.openBooking('${psych.id}')" class="btn-staff" style="background: var(--verde-azulado-profundo); padding: 14px 40px; font-size: 1.1rem;">
-                    <i class="fa fa-calendar-check"></i> AGENDA TU HORA
-                </button>
-            </div>
-        </div>
     `;
-    document.body.appendChild(modal);
+    
+    // Agregar experiencia clínica detallada si existe
+    if (psych.clinicalExperience) {
+        toggleContent += `
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--gris-claro);">
+                <h4 style="color: var(--verde-azulado-profundo); margin-bottom: 15px; font-size: 1.2rem;">Experiencia Clínica</h4>
+                <p style="color: var(--texto-principal); line-height: 1.6;">${psych.clinicalExperience}</p>
+            </div>
+        `;
+    }
+    
+    // Cerrar el div de padding
+    toggleContent += `</div>`;
+    
+    toggleDiv.innerHTML = toggleContent;
+    
+    // Insertar el toggle después de la tarjeta del profesional
+    therapistCard.parentNode.insertBefore(toggleDiv, therapistCard.nextSibling);
 }
 
 // ============================================

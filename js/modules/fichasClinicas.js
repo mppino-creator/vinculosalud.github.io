@@ -47,11 +47,11 @@ export async function guardarFichaIngreso(patientId, data) {
       fichaId = data.id;
       await db.ref(`fichasIngreso/${fichaId}`).update(ficha);
       
-      // Actualizar en state
-      const index = state.fichasIngreso.findIndex(f => f.id === fichaId);
-      if (index !== -1) {
-        state.fichasIngreso[index] = { ...ficha, id: fichaId };
-      }
+      // Actualizar en state USANDO EL SETTER
+      const fichasActualizadas = state.fichasIngreso.map(f => 
+        f.id === fichaId ? { ...ficha, id: fichaId } : f
+      );
+      state.setFichasIngreso(fichasActualizadas);
       
       showToast('Ficha de ingreso actualizada', 'success');
       console.log('✅ Ficha actualizada:', fichaId);
@@ -61,8 +61,8 @@ export async function guardarFichaIngreso(patientId, data) {
       fichaId = newRef.key;
       await newRef.set(ficha);
       
-      // Agregar al state
-      state.fichasIngreso.push({ ...ficha, id: fichaId });
+      // Agregar al state USANDO EL SETTER
+      state.setFichasIngreso([...state.fichasIngreso, { ...ficha, id: fichaId }]);
       
       showToast('Ficha de ingreso guardada', 'success');
       console.log('✅ Ficha creada con ID:', fichaId);
@@ -105,13 +105,17 @@ export async function guardarNotaSesion(patientId, data) {
   try {
     if (data.id) {
       await db.ref(`sesiones/${data.id}`).update(sesion);
-      const index = state.sesiones.findIndex(s => s.id === data.id);
-      if (index !== -1) state.sesiones[index] = { ...sesion, id: data.id };
+      // Actualizar usando setter
+      const sesionesActualizadas = state.sesiones.map(s => 
+        s.id === data.id ? { ...sesion, id: data.id } : s
+      );
+      state.setSesiones(sesionesActualizadas);
       showToast('Nota de sesión actualizada', 'success');
     } else {
       const newRef = db.ref('sesiones').push();
       await newRef.set(sesion);
-      state.sesiones.push({ ...sesion, id: newRef.key });
+      // Agregar usando setter
+      state.setSesiones([...state.sesiones, { ...sesion, id: newRef.key }]);
       showToast('Nota de sesión guardada', 'success');
     }
     return { success: true };
@@ -157,7 +161,7 @@ export async function obtenerSesionesDePaciente(patientId) {
 }
 
 // ============================================
-// CARGAR DATOS INICIALES
+// CARGAR DATOS INICIALES - CORREGIDO
 // ============================================
 
 export async function cargarTodasLasFichas() {
@@ -168,34 +172,47 @@ export async function cargarTodasLasFichas() {
     const fichasSnapshot = await db.ref('fichasIngreso').once('value');
     const fichasData = fichasSnapshot.val();
     if (fichasData) {
-      state.fichasIngreso = Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] }));
+      // ✅ CORREGIDO: Usar setter en lugar de asignación directa
+      const fichasArray = Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] }));
+      state.setFichasIngreso(fichasArray);
       console.log(`✅ Cargadas ${state.fichasIngreso.length} fichas de ingreso`);
+    } else {
+      state.setFichasIngreso([]);
     }
     
     // Cargar sesiones
     const sesionesSnapshot = await db.ref('sesiones').once('value');
     const sesionesData = sesionesSnapshot.val();
     if (sesionesData) {
-      state.sesiones = Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] }));
+      // ✅ CORREGIDO: Usar setter
+      const sesionesArray = Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] }));
+      state.setSesiones(sesionesArray);
       console.log(`✅ Cargadas ${state.sesiones.length} sesiones`);
+    } else {
+      state.setSesiones([]);
     }
     
     // Cargar informes (si existen)
     const informesSnapshot = await db.ref('informes').once('value');
     const informesData = informesSnapshot.val();
     if (informesData) {
-      state.informes = Object.keys(informesData).map(key => ({ id: key, ...informesData[key] }));
+      // ✅ CORREGIDO: Usar setter
+      const informesArray = Object.keys(informesData).map(key => ({ id: key, ...informesData[key] }));
+      state.setInformes(informesArray);
       console.log(`✅ Cargados ${state.informes.length} informes`);
+    } else {
+      state.setInformes([]);
     }
     
     console.log('✅ Fichas clínicas cargadas completamente');
   } catch (error) {
     console.error('❌ Error cargando fichas:', error);
+    showToast('Error al cargar fichas clínicas', 'error');
   }
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR FORMULARIO DE FICHA DE INGRESO (CORREGIDA)
+// FUNCIÓN PARA MOSTRAR FORMULARIO DE FICHA DE INGRESO
 // ============================================
 
 /**
@@ -448,4 +465,4 @@ if (typeof window !== 'undefined') {
   console.log('✅ window.fichasClinicas expuesto correctamente');
 }
 
-console.log('✅ fichasClinicas.js cargado correctamente con formulario de creación');
+console.log('✅ fichasClinicas.js cargado correctamente con formulario de creación y setters');

@@ -3067,8 +3067,10 @@ nav.glass {
 
 /* Pestañas de admin visibles */
 [id^="adminTab"] {
-    display: none;
-}
+/* Pestañas de admin visibles */
+[id^="adminTab"] {
+    /* display: none;  ← AHORA ESTÁ COMENTADO */
+}}
 
 /* Fix para el modal de login */
 #loginModal .modal-content {

@@ -443,7 +443,7 @@ export function cargarDashboard(role) {
     // Esta función está deshabilitada intencionalmente
 }
 
-// 🔥 VERSIÓN CORREGIDA - Mostrar dashboard inmediatamente con !important
+// 🔥 VERSIÓN DEFINITIVA - Mostrar dashboard con TODAS las pestañas visibles
 function mostrarDashboardInmediato(role, userData) {
     console.log('🔄 Mostrando dashboard inmediatamente como:', role);
     
@@ -483,7 +483,10 @@ function mostrarDashboardInmediato(role, userData) {
         dashSubtitle.innerText = `Bienvenido, ${userData.name} ${generoEmoji}`;
     }
     
-    // Configurar visibilidad de pestañas
+    // 🔥 NUEVO: FORZAR visibilidad de TODAS las pestañas (ignorando CSS)
+    console.log('🔧 Forzando visibilidad de pestañas para rol:', role);
+    
+    // Pestañas de ADMIN
     const adminTabs = [
         'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
         'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
@@ -492,24 +495,45 @@ function mostrarDashboardInmediato(role, userData) {
     
     adminTabs.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.style.display = role === 'admin' ? 'inline-block' : 'none';
+        if (el) {
+            // FORZAR con !important
+            el.style.setProperty('display', role === 'admin' ? 'inline-block' : 'none', 'important');
+            console.log(`  📌 ${id}: ${role === 'admin' ? 'VISIBLE' : 'oculto'}`);
+        } else {
+            console.log(`  ⚠️ No se encontró: ${id}`);
+        }
     });
     
+    // Pestañas de PSICÓLOGO
     const psychTabs = ['psychTab', 'configTab', 'agendarTab'];
     psychTabs.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.style.display = role === 'psych' ? 'inline-block' : 'none';
+        if (el) {
+            el.style.setProperty('display', role === 'psych' ? 'inline-block' : 'none', 'important');
+            console.log(`  📌 ${id}: ${role === 'psych' ? 'VISIBLE' : 'oculto'}`);
+        }
+    });
+    
+    // Pestañas comunes (Citas, Solicitudes, Pacientes - siempre visibles)
+    const commonTabIds = ['citas', 'solicitudes', 'pacientes'];
+    commonTabIds.forEach(tabName => {
+        const tabs = Array.from(document.querySelectorAll('.tab')).find(t => 
+            t.textContent.toLowerCase().includes(tabName)
+        );
+        if (tabs) {
+            tabs.style.setProperty('display', 'inline-block', 'important');
+        }
     });
     
     // Mostrar/ocultar botón de edición de perfil
     const profileBtn = document.getElementById('editProfileButton');
     if (profileBtn) {
         if (role === 'psych') {
-            profileBtn.style.display = 'inline-flex';
+            profileBtn.style.setProperty('display', 'inline-flex', 'important');
             profileBtn.onclick = window.openMyProfileModal;
             profileBtn.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil';
         } else {
-            profileBtn.style.display = 'none';
+            profileBtn.style.setProperty('display', 'none', 'important');
         }
     }
     
@@ -521,7 +545,7 @@ function mostrarDashboardInmediato(role, userData) {
     // Cambiar a pestaña de citas
     switchTab('citas');
     
-    console.log('✅ Dashboard forzado a visible con !important');
+    console.log('✅ Dashboard forzado a visible con todas las pestañas configuradas');
 }
 
 // ============================================

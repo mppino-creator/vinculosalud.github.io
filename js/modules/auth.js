@@ -243,10 +243,12 @@ function abrirGestionDisponibilidad() {
 }
 
 // ============================================
-// FUNCIÓN PARA IR AL DASHBOARD
+// FUNCIÓN PARA IR AL DASHBOARD - VERSIÓN CORREGIDA (CON LLAMADA A mostrarDashboardInmediato)
 // ============================================
 window.irADashboard = function() {
     console.log('📊 Cambiando a dashboard');
+    
+    // Cambiar vistas
     document.getElementById('clientView').style.setProperty('display', 'none', 'important');
     document.getElementById('dashboard').style.setProperty('display', 'block', 'important');
     document.getElementById('bookingPanel').style.setProperty('display', 'none', 'important');
@@ -255,13 +257,22 @@ window.irADashboard = function() {
     const menu = document.getElementById('staffMenu');
     if (menu) menu.remove();
     
-    // 🔥 NUEVO: Cargar datos del profesional si es necesario
-    if (state.currentUser?.role === 'psych') {
-        setTimeout(() => {
-            if (typeof loadMyConfig === 'function') {
-                loadMyConfig();
-            }
-        }, 500);
+    // 🔥 IMPORTANTE: Forzar visibilidad de pestañas según el rol
+    if (state.currentUser) {
+        const role = state.currentUser.role;
+        const userData = state.currentUser.data;
+        
+        // Llamar directamente a mostrarDashboardInmediato
+        mostrarDashboardInmediato(role, userData);
+        
+        // 🔥 NUEVO: Cargar datos del profesional si es necesario
+        if (role === 'psych') {
+            setTimeout(() => {
+                if (typeof loadMyConfig === 'function') {
+                    loadMyConfig();
+                }
+            }, 500);
+        }
     }
 };
 

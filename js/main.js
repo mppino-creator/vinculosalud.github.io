@@ -484,16 +484,23 @@ if (typeof publico.cargarDatosIniciales === 'function') {
     publico.cargarDatosIniciales();
 }
 
-// Recuperar sesión guardada
+// ============================================
+// RECUPERAR SESIÓN GUARDADA - VERSIÓN CORREGIDA (SIN DASHBOARD AUTOMÁTICO)
+// ============================================
 const savedUser = localStorage.getItem('vinculoCurrentUser');
 if (savedUser) {
     try {
-        state.setCurrentUser(JSON.parse(savedUser));
+        const userData = JSON.parse(savedUser);
+        state.setCurrentUser(userData);
+        
+        // En lugar de cargar el dashboard, solo actualizar la UI
         const checkData = setInterval(() => {
             if (state.dataLoaded) {
                 clearInterval(checkData);
-                if (typeof auth.cargarDashboard === 'function') {
-                    auth.cargarDashboard(state.currentUser.role);
+                
+                // 🔥 CAMBIO IMPORTANTE: Usar actualizarUIAdmin en lugar de cargarDashboard
+                if (typeof auth.actualizarUIAdmin === 'function') {
+                    auth.actualizarUIAdmin(userData.data, userData.role);
                 }
                 
                 // Actualizar botón de perfil
@@ -501,13 +508,14 @@ if (savedUser) {
                     setTimeout(window.updateProfileButton, 1000);
                 }
                 
-                // Si es admin, agregar botones de edición
-                if (state.currentUser.role === 'admin' && typeof admin.addEditButtonsToAdmin === 'function') {
+                // Si es admin, agregar botones de edición (pero sin ir al dashboard)
+                if (userData.role === 'admin' && typeof admin.addEditButtonsToAdmin === 'function') {
                     setTimeout(admin.addEditButtonsToAdmin, 2000);
                 }
             }
         }, 100);
     } catch (e) {
+        console.error('Error al recuperar sesión:', e);
         localStorage.removeItem('vinculoCurrentUser');
     }
 }

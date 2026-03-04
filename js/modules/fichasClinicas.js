@@ -47,7 +47,7 @@ export async function guardarFichaIngreso(patientId, data) {
       fichaId = data.id;
       await db.ref(`fichasIngreso/${fichaId}`).update(ficha);
       
-      // Actualizar en state USANDO EL SETTER
+      // ✅ CORREGIDO: Usar setter en lugar de asignación directa
       const fichasActualizadas = state.fichasIngreso.map(f => 
         f.id === fichaId ? { ...ficha, id: fichaId } : f
       );
@@ -61,7 +61,7 @@ export async function guardarFichaIngreso(patientId, data) {
       fichaId = newRef.key;
       await newRef.set(ficha);
       
-      // Agregar al state USANDO EL SETTER
+      // ✅ CORREGIDO: Usar setter
       state.setFichasIngreso([...state.fichasIngreso, { ...ficha, id: fichaId }]);
       
       showToast('Ficha de ingreso guardada', 'success');
@@ -105,7 +105,7 @@ export async function guardarNotaSesion(patientId, data) {
   try {
     if (data.id) {
       await db.ref(`sesiones/${data.id}`).update(sesion);
-      // Actualizar usando setter
+      // ✅ CORREGIDO: Usar setter
       const sesionesActualizadas = state.sesiones.map(s => 
         s.id === data.id ? { ...sesion, id: data.id } : s
       );
@@ -114,7 +114,7 @@ export async function guardarNotaSesion(patientId, data) {
     } else {
       const newRef = db.ref('sesiones').push();
       await newRef.set(sesion);
-      // Agregar usando setter
+      // ✅ CORREGIDO: Usar setter
       state.setSesiones([...state.sesiones, { ...sesion, id: newRef.key }]);
       showToast('Nota de sesión guardada', 'success');
     }

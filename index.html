@@ -2711,28 +2711,7 @@
 
     <!-- ... todos tus otros scripts ... -->
     
-    <!-- SCRIPT ULTRA EMERGENCIA PARA DASHBOARD -->
-    <script>
-    (function() {
-        console.log('🚨 ULTRA EMERGENCIA: Forzando dashboard cada segundo');
-        
-        // Verificar cada segundo si hay usuario pero no se ve el dashboard
-        setInterval(function() {
-            if (window.state?.currentUser) {
-                const dashboard = document.getElementById('dashboard');
-                const clientView = document.getElementById('clientView');
-                
-                if (dashboard && dashboard.style.display !== 'block') {
-                    console.log('⚠️ Dashboard oculto con usuario - forzando');
-                    dashboard.style.setProperty('display', 'block', 'important');
-                    if (clientView) {
-                        clientView.style.setProperty('display', 'none', 'important');
-                    }
-                }
-            }
-        }, 500);
-    })();
-    </script>
+
 </body>
 </html>
 </body>

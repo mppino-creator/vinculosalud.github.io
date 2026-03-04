@@ -1632,9 +1632,10 @@
     <header class="nav-container">
         <nav class="glass" style="display: flex; justify-content: space-between; align-items: center;">
             <!-- LOGO -->
-            <div class="logo-container" onclick="location.reload()" style="display: flex; align-items: center;">
-                <span class="logo-text">Vínculo Salud</span>
-            </div>
+<div class="logo-container" onclick="location.reload()" style="display: flex; align-items: center;">
+    <img id="headerLogo" class="logo-img" src="" style="display:none; height: 40px;" alt="Logo">
+    <span id="headerLogoText" class="logo-text">Vínculo Salud</span>
+</div>
             
             <!-- MENÚ - TODOS LOS ITEMS IGUALES -->
             <div style="display: flex; align-items: center; gap: 2rem;">
@@ -2590,12 +2591,12 @@
     </div>
 </div>
 
-<!-- SCRIPT DE EMERGENCIA PARA LOGIN Y DASHBOARD -->
+<!-- SCRIPT ÚNICO DE EMERGENCIA - VERSIÓN CORREGIDA -->
 <script>
 (function() {
-    console.log('🚨 SCRIPT DE EMERGENCIA PARA LOGIN Y DASHBOARD ACTIVADO');
+    console.log('🚨 SCRIPT DE EMERGENCIA UNIFICADO ACTIVADO');
     
-    // Forzar funciones básicas
+    // Funciones básicas
     if (!window.closeLoginModal) {
         window.closeLoginModal = function() {
             const modal = document.getElementById('loginModal');
@@ -2609,40 +2610,40 @@
         };
     }
     
-    // Función para forzar dashboard
-    window.forzarDashboard = function() {
-        console.log('🔧 Forzando visibilidad del dashboard...');
-        const dashboard = document.getElementById('dashboard');
-        const clientView = document.getElementById('clientView');
-        
-        if (dashboard) {
-            dashboard.style.setProperty('display', 'block', 'important');
-        }
-        if (clientView) {
-            clientView.style.setProperty('display', 'none', 'important');
-        }
-    };
-    
-    // Monitorear currentUser
-    const originalSetUser = window.state?.setCurrentUser;
-    if (originalSetUser) {
-        window.state.setCurrentUser = function(user) {
-            originalSetUser(user);
-            if (user) setTimeout(window.forzarDashboard, 300);
-        };
-    }
-    
-    // Verificar cada segundo
+    // NO forzar dashboard automáticamente - dejar que el usuario decida
+    // Solo actualizar el link de Staff cuando hay usuario
     setInterval(function() {
         if (window.state?.currentUser) {
-            const dashboard = document.getElementById('dashboard');
-            if (dashboard && dashboard.style.display !== 'block') {
-                window.forzarDashboard();
+            const staffLink = document.querySelector('a[onclick*="showLoginModal"]');
+            if (staffLink) {
+                const user = window.state.currentUser;
+                staffLink.setAttribute('onclick', 'mostrarMenuStaff ? mostrarMenuStaff() : showLoginModal(); return false;');
+                const icon = staffLink.querySelector('i');
+                if (icon) {
+                    icon.className = 'fa fa-user-check';
+                    icon.style.color = '#1E7A8A';
+                }
+                const textNode = staffLink.childNodes[2];
+                if (textNode) textNode.textContent = user.data.name || 'Admin';
+            }
+        } else {
+            // Restaurar link original
+            const staffLink = document.querySelector('a[onclick*="mostrarMenuStaff"]');
+            if (staffLink) {
+                staffLink.setAttribute('onclick', 'showLoginModal(); return false;');
+                const icon = staffLink.querySelector('i');
+                if (icon) {
+                    icon.className = 'fa fa-lock';
+                    icon.style.color = '#2D3E4F';
+                    icon.style.opacity = '0.6';
+                }
+                const textNode = staffLink.childNodes[2];
+                if (textNode) textNode.textContent = ' Staff';
             }
         }
     }, 1000);
     
-    console.log('✅ Script de emergencia listo');
+    console.log('✅ Script unificado listo - NO fuerza dashboard automáticamente');
 })();
 </script>
 

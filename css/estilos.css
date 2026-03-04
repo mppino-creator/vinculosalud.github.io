@@ -2420,3 +2420,25 @@ html {
 .therapist-card .btn-agendar {
     cursor: pointer;
 }
+
+/* Asegurar que la pestaña de personalización sea visible */
+#tabPersonalizacion {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 400px;
+    padding: 20px;
+}
+
+#tabPersonalizacion .admin-edit-buttons {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+#tabPersonalizacion .btn-staff {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}

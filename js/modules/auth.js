@@ -132,22 +132,35 @@ export function processLogin() {
     }
 }
 
-// 🔥 NUEVA FUNCIÓN: Mostrar dashboard inmediatamente
+// 🔥 VERSIÓN CORREGIDA - Mostrar dashboard inmediatamente con !important
 function mostrarDashboardInmediato(role, userData) {
     console.log('🔄 Mostrando dashboard inmediatamente como:', role);
     
-    // Ocultar vistas públicas
+    // Obtener elementos
     const clientView = document.getElementById('clientView');
     const bookingPanel = document.getElementById('bookingPanel');
     const dashboard = document.getElementById('dashboard');
     
-    if (clientView) clientView.style.display = 'none';
-    if (bookingPanel) bookingPanel.style.display = 'none';
-    if (dashboard) {
-        dashboard.style.display = 'block';
-        dashboard.style.visibility = 'visible';
-        dashboard.style.opacity = '1';
+    // Verificar que los elementos existen
+    if (!dashboard) {
+        console.error('❌ Elemento dashboard no encontrado');
+        return;
     }
+    
+    // FORZAR estilos con !important
+    if (clientView) {
+        clientView.style.setProperty('display', 'none', 'important');
+    }
+    
+    if (bookingPanel) {
+        bookingPanel.style.setProperty('display', 'none', 'important');
+    }
+    
+    // Forzar dashboard visible con !important
+    dashboard.style.setProperty('display', 'block', 'important');
+    dashboard.style.setProperty('visibility', 'visible', 'important');
+    dashboard.style.setProperty('opacity', '1', 'important');
+    dashboard.style.setProperty('z-index', '1000', 'important');
     
     // Actualizar títulos
     const dashTitle = document.getElementById('dashTitle');
@@ -186,6 +199,7 @@ function mostrarDashboardInmediato(role, userData) {
         if (role === 'psych') {
             profileBtn.style.display = 'inline-flex';
             profileBtn.onclick = window.openMyProfileModal;
+            profileBtn.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil';
         } else {
             profileBtn.style.display = 'none';
         }
@@ -198,6 +212,8 @@ function mostrarDashboardInmediato(role, userData) {
     
     // Cambiar a pestaña de citas
     switchTab('citas');
+    
+    console.log('✅ Dashboard forzado a visible con !important');
 }
 
 export function logout() {
@@ -286,7 +302,10 @@ export function switchTab(tabName) {
                         if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
                     }
                     else if (tabName === 'disponibilidad' && isPsych()) {
-                        if (typeof loadTimeSlots === 'function') loadTimeSlots();
+                        // Verificar si existe la función loadTimeSlots
+                        if (typeof window.loadTimeSlots === 'function') {
+                            window.loadTimeSlots();
+                        }
                     }
                     else if (tabName === 'configuracion' && isPsych()) {
                         if (typeof loadMyConfig === 'function') loadMyConfig();

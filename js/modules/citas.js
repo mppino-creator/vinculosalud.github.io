@@ -584,10 +584,11 @@ export function confirmPresencialTime(requestId, date, time) {
 }
 
 // ============================================
-// FUNCIÓN EXECUTEBOOKING - VERSIÓN CORREGIDA CON EDAD Y TUTOR
+// FUNCIÓN EXECUTEBOOKING - VERSIÓN CORREGIDA CON VALIDACIÓN DE EMAIL
 // ============================================
 
 let bookingEnProceso = false;
+let emailsEnviados = new Set(); // Para evitar duplicados
 
 export function executeBooking() {
     if (bookingEnProceso) {
@@ -601,6 +602,24 @@ export function executeBooking() {
     const name = document.getElementById('custName').value;
     const email = document.getElementById('custEmail').value;
     const birthdate = document.getElementById('custBirthdate')?.value || '';
+    
+    // ============================================
+    // 🚨 VALIDACIÓN CRÍTICA: El email NO debe ser del psicólogo
+    // ============================================
+    if (state.selectedPsych && email === state.selectedPsych.email) {
+        showToast('❌ ERROR: El email ingresado es del profesional. Debe ser el email del paciente.', 'error');
+        console.error('🚫 Intento de enviar email al psicólogo:', email);
+        bookingEnProceso = false;
+        return;
+    }
+    
+    // También verificar contra otros psicólogos (por si acaso)
+    const todosLosProfesionales = state.staff.map(p => p.email).filter(e => e);
+    if (todosLosProfesionales.includes(email)) {
+        showToast('❌ ERROR: Este email pertenece a un profesional. Usa el email del paciente.', 'error');
+        bookingEnProceso = false;
+        return;
+    }
     
     // Obtener datos del tutor si existen
     const tutorSection = document.getElementById('tutorSection');
@@ -788,7 +807,7 @@ export function executeBooking() {
                 patientId: patient.id,
                 patient: name,
                 patientRut: rut,
-                patientEmail: email,
+                patientEmail: email, // ✅ SIEMPRE el email del paciente
                 patientPhone: phone,
                 psych: state.selectedPsych.name,
                 psychId: state.selectedPsych.id,
@@ -817,12 +836,11 @@ export function executeBooking() {
             };
 
             // ============================================
-            // 🔥 AGREGAR AL ARRAY LOCAL Y ACTUALIZAR VISTA INMEDIATAMENTE
+            // 🔥 AGREGAR AL ARRAY LOCAL
             // ============================================
             if (type === 'online') {
                 state.appointments.push(appointment);
                 showToast('✅ Solicitud creada', 'success');
-                // Forzar actualización de disponibilidad ahora mismo
                 if (typeof updateAvailableTimes === 'function') {
                     updateAvailableTimes();
                 }
@@ -832,31 +850,52 @@ export function executeBooking() {
                 if (time) mensaje += ` (Preferencia: ${time})`;
                 if (preferenciaAMPM) mensaje += ` ${preferenciaAMPM}`;
                 showToast(mensaje, 'success');
-                // También actualizar disponibilidad (por si acaso)
                 if (typeof updateAvailableTimes === 'function') {
                     updateAvailableTimes();
                 }
             }
 
-            // Enviar email al paciente
+            // ============================================
+            // 📧 ENVIAR EMAIL AL PACIENTE (NUNCA AL PROFESIONAL)
+            // ============================================
             if (email && !appointment.emailEnviado) {
-                let mensaje = `Hola ${name},\n\nHemos recibido tu solicitud de cita.\n\n` +
-                    `📅 Fecha: ${date}\n` +
-                    (time ? `⏰ Hora: ${time}\n` : '') +
-                    `👨‍⚕️ Profesional: ${state.selectedPsych.name}\n\n` +
-                    `Vínculo Salud`;
-
-                const success = await sendEmailNotification(
-                    email,
-                    'Solicitud de cita - Vínculo Salud',
-                    mensaje,
-                    'solicitud_recibida',
-                    name,
-                    appointment
-                );
+                // Verificación de seguridad adicional
+                const esEmailProfesional = state.staff.some(p => p.email === email);
                 
-                if (success) {
-                    appointment.emailEnviado = true;
+                if (esEmailProfesional) {
+                    console.error('❌ ERROR CRÍTICO: Intento de enviar email a profesional:', email);
+                    showToast('⚠️ El email ingresado es de un profesional. No se envió el email.', 'warning');
+                } else {
+                    // Verificar que no se haya enviado ya este email
+                    const emailKey = `${email}_${date}_${time}`;
+                    if (emailsEnviados.has(emailKey)) {
+                        console.log('⏭️ Email ya enviado previamente, omitiendo');
+                    } else {
+                        let mensaje = `Hola ${name},\n\nHemos recibido tu solicitud de cita.\n\n` +
+                            `📅 Fecha: ${date}\n` +
+                            (time ? `⏰ Hora: ${time}\n` : '') +
+                            `👨‍⚕️ Profesional: ${state.selectedPsych.name}\n\n` +
+                            `Vínculo Salud`;
+
+                        console.log('📧 Enviando email a PACIENTE:', email);
+                        
+                        const success = await sendEmailNotification(
+                            email, // ✅ SIEMPRE al paciente
+                            'Solicitud de cita - Vínculo Salud',
+                            mensaje,
+                            'solicitud_recibida',
+                            name,
+                            appointment
+                        );
+                        
+                        if (success) {
+                            appointment.emailEnviado = true;
+                            emailsEnviados.add(emailKey);
+                            console.log('✅ Email enviado correctamente a:', email);
+                        } else {
+                            console.warn('⚠️ No se pudo enviar email a:', email);
+                        }
+                    }
                 }
             }
 
@@ -866,7 +905,7 @@ export function executeBooking() {
             // Limpiar selección
             window.horaSeleccionada = null;
             
-            // Actualizar disponibilidad nuevamente (por si acaso)
+            // Actualizar disponibilidad nuevamente
             if (typeof updateAvailableTimes === 'function') {
                 updateAvailableTimes();
             }
@@ -947,7 +986,7 @@ export function renderAppointments() {
                         </button>
                     </div>
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
-                    ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado</small>` : ''}
+                    ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado a paciente</small>` : ''}
                 </td>
             </tr>
         `;
@@ -1384,4 +1423,4 @@ window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
 window.calcularEdad = calcularEdad;
 
-console.log('✅ citas.js cargado (versión final con edad y tutor legal)');
+console.log('✅ citas.js cargado (versión con validación de email y control de duplicados)');

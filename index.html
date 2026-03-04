@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Vínculo Salud - Centro de Bienestar</title>
     
-    <!-- Fuentes y estilos externos - ACTUALIZADO CON DM SANS Y OPEN SANS -->
+    <!-- Fuentes y estilos externos -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/estilos.css">
@@ -33,90 +33,6 @@
     
     <!-- Estilos adicionales - MEJORADOS ESTILO PUNTOTERAPIA -->
     <style>
-
-        /* ============================================
-   ESTILOS PARA MENÚ HOMOGÉNEO - STAFF INTEGRADO
-   ============================================ */
-
-/* Ajustes para el contenedor del menú */
-.public-nav {
-    display: flex;
-    align-items: center;
-    gap: 2.2rem;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-/* Estilo base para TODOS los items del menú */
-.nav-item {
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: var(--texto-principal);
-    text-decoration: none;
-    padding: 0.5rem 0;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-    border-bottom: 2px solid transparent;
-    position: relative;
-}
-
-/* Efecto hover para todos los items */
-.nav-item:hover {
-    color: var(--ocre-calido);
-    border-bottom-color: var(--ocre-calido);
-}
-
-/* Item activo (Equipo) */
-.nav-item.active {
-    font-weight: 600;
-    border-bottom-color: var(--ocre-calido);
-}
-
-/* Estilo específico para Staff - mantiene misma apariencia */
-.nav-item.staff-link {
-    background: transparent !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    color: var(--texto-principal) !important;
-    padding: 0.5rem 0 !important;
-}
-
-.nav-item.staff-link i {
-    margin-right: 5px;
-    font-size: 1rem;
-    opacity: 0.7;
-}
-
-.nav-item.staff-link:hover {
-    color: var(--ocre-calido) !important;
-    border-bottom-color: var(--ocre-calido) !important;
-    background: transparent !important;
-    transform: none !important;
-}
-
-/* Eliminar el botón Staff duplicado si existe */
-.btn-staff:not(#editProfileButton):not(#loginBtn):not(#bookBtn) {
-    /* Este selector es para no afectar otros botones */
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-    .public-nav {
-        gap: 1.5rem;
-    }
-    .nav-item {
-        font-size: 1rem;
-    }
-}
-
-@media (max-width: 600px) {
-    .public-nav {
-        gap: 1rem;
-    }
-    .nav-item {
-        font-size: 0.9rem;
-    }
-}
         /* ============================================
            ESTILOS GENERALES MEJORADOS - ESTILO PUNTOTERAPIA
            ============================================ */
@@ -131,44 +47,48 @@
         }
         
         nav.glass {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 50px !important;
-            padding: 10px 30px !important;
+            border-radius: 60px !important;
+            padding: 0.5rem 2rem !important;
             margin: 0 auto;
             max-width: 1200px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.5);
         }
         
         .logo-text {
-            font-size: 1.8rem !important;
+            font-size: 2.2rem !important;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--texto-principal), var(--primario));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            background: linear-gradient(135deg, #2D3E4F, #1E7A8A) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
         }
         
-        .public-nav {
-            display: flex;
-            gap: 25px;
+        /* Estilos para los enlaces del menú */
+        nav.glass a {
+            font-size: 1.1rem !important;
+            font-weight: 500 !important;
+            color: #2D3E4F !important;
+            text-decoration: none !important;
+            padding: 0.3rem 0 !important;
+            border-bottom: 2px solid transparent !important;
+            transition: all 0.2s ease !important;
         }
         
-        .public-nav a {
-            font-weight: 500;
-            color: var(--texto-principal);
-            text-decoration: none;
-            transition: color 0.3s;
-            font-size: 0.95rem;
+        nav.glass a:hover {
+            color: #C8A161 !important;
+            border-bottom-color: #C8A161 !important;
         }
         
-        .public-nav a:hover {
-            color: var(--ocre-calido) !important;
+        nav.glass a.active {
+            border-bottom-color: #C8A161 !important;
         }
         
-        .public-nav a.active {
-            color: var(--ocre-calido);
-            border-bottom: 2px solid var(--ocre-calido);
-            padding-bottom: 5px;
+        /* Estilo para Staff con candado */
+        nav.glass a:last-child i {
+            margin-right: 5px;
+            opacity: 0.6;
         }
         
         .btn-staff {
@@ -247,22 +167,6 @@
             background: var(--primario);
             color: white;
             transform: translateY(-3px);
-        }
-        
-        /* Breadcrumbs mejorados */
-        .breadcrumbs {
-            padding: 20px 0;
-            margin-bottom: 20px;
-        }
-        
-        .breadcrumbs a {
-            color: var(--verde-azulado-claro);
-            text-decoration: none;
-        }
-        
-        .breadcrumbs span {
-            color: var(--texto-principal);
-            font-weight: 500;
         }
         
         /* Tarjetas de profesionales mejoradas */
@@ -491,26 +395,20 @@
         }
         
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             nav.glass {
                 flex-direction: column;
-                gap: 15px;
-                padding: 15px !important;
+                padding: 1rem !important;
             }
             
-            .public-nav {
+            nav.glass > div:last-child {
                 flex-wrap: wrap;
                 justify-content: center;
-                gap: 15px;
+                gap: 1rem !important;
             }
             
             .hero-section h1 {
                 font-size: 2.5rem;
-            }
-            
-            footer > div > div:first-child {
-                grid-template-columns: 1fr !important;
-                gap: 30px !important;
             }
         }
         
@@ -599,26 +497,6 @@
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
         }
 
-        /* Encabezados de sección AM/PM */
-        #amSlots h4, #pmSlots h4 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        #amSlots h4 i {
-            color: var(--azul-medico);
-        }
-
-        #pmSlots h4 i {
-            color: var(--naranja-aviso);
-        }
-
         /* ============================================
            ESTILOS PARA MODAL DE PERFIL PROFESIONAL
            ============================================ */
@@ -653,32 +531,6 @@
             border-radius: 50%;
             object-fit: cover;
             border: 3px solid var(--primario);
-        }
-
-        .profile-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-profile {
-            padding: 12px 20px;
-            border-radius: 30px;
-            border: none;
-            background: var(--fondo-secundario);
-            color: var(--texto-principal);
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-profile:hover {
-            background: var(--primario);
-            color: white;
-            transform: translateY(-2px);
         }
 
         /* ============================================
@@ -876,6 +728,20 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        /* ============================================
+           FIX URGENTE PARA DASHBOARD
+           ============================================ */
+        #dashboard[style*="display: block"] {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 1000 !important;
+        }
+
+        #clientView[style*="display: none"] {
+            display: none !important;
         }
     </style>
 </head>
@@ -1764,26 +1630,22 @@
 <!-- ============================================ -->
 <div class="container">
     <header class="nav-container">
-        <nav class="glass" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 2rem;">
+        <nav class="glass" style="display: flex; justify-content: space-between; align-items: center;">
             <!-- LOGO -->
             <div class="logo-container" onclick="location.reload()" style="display: flex; align-items: center;">
-                <span class="logo-text" style="font-size: 2.2rem; font-weight: 700; background: linear-gradient(135deg, #2D3E4F, #1E7A8A); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Vínculo Salud</span>
+                <span class="logo-text">Vínculo Salud</span>
             </div>
             
             <!-- MENÚ - TODOS LOS ITEMS IGUALES -->
             <div style="display: flex; align-items: center; gap: 2rem;">
-                <a href="#inicio" onclick="showSection('inicio'); return false;" style="font-size: 1.1rem; font-weight: 500; color: #2D3E4F; text-decoration: none; padding: 0.3rem 0; border-bottom: 2px solid transparent;">Inicio</a>
-                
-                <a href="#about" onclick="showSection('about'); return false;" style="font-size: 1.1rem; font-weight: 500; color: #2D3E4F; text-decoration: none; padding: 0.3rem 0; border-bottom: 2px solid transparent;">Quienes Somos</a>
-                
-                <a href="#equipo" onclick="showSection('equipo'); return false;" style="font-size: 1.1rem; font-weight: 500; color: #2D3E4F; text-decoration: none; padding: 0.3rem 0; border-bottom: 2px solid #C8A161;">Equipo</a>
-                
-                <a href="#atencion" onclick="showSection('atencion'); return false;" style="font-size: 1.1rem; font-weight: 500; color: #2D3E4F; text-decoration: none; padding: 0.3rem 0; border-bottom: 2px solid transparent;">Tipo de Atención</a>
-                
-                <a href="#contacto" onclick="showSection('contacto'); return false;" style="font-size: 1.1rem; font-weight: 500; color: #2D3E4F; text-decoration: none; padding: 0.3rem 0; border-bottom: 2px solid transparent;">Contacto</a>
+                <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
+                <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
+                <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
+                <a href="#atencion" onclick="showSection('atencion'); return false;">Tipo de Atención</a>
+                <a href="#contacto" onclick="showSection('contacto'); return false;">Contacto</a>
                 
                 <!-- STAFF - MISMO ESTILO, SOLO CON CANDADO -->
-                <a href="#" onclick="showLoginModal(); return false;" style="font-size: 1.1rem; font-weight: 500; color: #2D3E4F; text-decoration: none; padding: 0.3rem 0; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 5px;">
+                <a href="#" onclick="showLoginModal(); return false;" style="display: flex; align-items: center; gap: 5px;">
                     <i class="fa fa-lock" style="font-size: 0.9rem; opacity: 0.6;"></i> Staff
                 </a>
             </div>
@@ -2026,12 +1888,12 @@
     </main>
 
     <!-- Panel de Reserva -->
-    <div id="bookingPanel" class="panel">
+    <div id="bookingPanel" class="panel" style="display: none;">
         <!-- ... (tu panel de reserva original, se mantiene igual) ... -->
     </div>
 
     <!-- Panel de Dashboard -->
-    <div id="dashboard" class="panel">
+    <div id="dashboard" class="panel" style="display: none;">
         <!-- ... (tu panel de dashboard original, se mantiene igual) ... -->
     </div>
 </div>
@@ -2286,7 +2148,7 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('editMyPhotoPreview').src = e.target.result;
-                state.setTempImageData(e.target.result);
+                if (window.state) window.state.setTempImageData(e.target.result);
             };
             reader.readAsDataURL(input.files[0]);
         }
@@ -2298,7 +2160,7 @@
             reader.onload = function(e) {
                 document.getElementById('editMyQrPreview').src = e.target.result;
                 document.getElementById('editMyQrPreview').style.display = 'block';
-                state.setTempQrData(e.target.result);
+                if (window.state) window.state.setTempQrData(e.target.result);
             };
             reader.readAsDataURL(input.files[0]);
         }
@@ -2360,92 +2222,6 @@
     }, 500);
 })();
 </script>
-
-<!-- ESTILOS DE EMERGENCIA -->
-<style>
-    #patientsList {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        min-height: 400px !important;
-        padding: 20px !important;
-        background-color: #ffffff !important;
-        border: 3px solid #0071e3 !important;
-        border-radius: 12px !important;
-        margin: 20px 0 !important;
-    }
-
-    .patient-card {
-        display: block !important;
-        background-color: #f8fafc !important;
-        border: 2px solid #34c759 !important;
-        border-radius: 12px !important;
-        padding: 20px !important;
-        margin-bottom: 15px !important;
-        color: #000000 !important;
-    }
-
-    .patient-name {
-        font-size: 18px !important;
-        font-weight: bold !important;
-        color: #1e293b !important;
-        display: block !important;
-        margin-bottom: 10px !important;
-    }
-
-    .patient-contact {
-        display: block !important;
-        color: #334155 !important;
-        font-size: 14px !important;
-        line-height: 1.5 !important;
-    }
-
-    .patient-contact span {
-        display: inline-block !important;
-        margin-right: 15px !important;
-    }
-
-    .badge {
-        display: inline-block !important;
-        padding: 4px 12px !important;
-        background-color: #0071e3 !important;
-        color: white !important;
-        border-radius: 20px !important;
-        font-size: 12px !important;
-        font-weight: bold !important;
-    }
-
-    .patient-history {
-        display: block !important;
-        margin-top: 15px !important;
-        padding-top: 15px !important;
-        border-top: 1px solid #cbd5e1 !important;
-    }
-
-    .history-item {
-        display: flex !important;
-        justify-content: space-between !important;
-        padding: 8px 0 !important;
-        color: #1e293b !important;
-    }
-    
-    .btn-icon {
-        display: inline-block !important;
-        padding: 10px 16px !important;
-        border-radius: 8px !important;
-        border: none !important;
-        cursor: pointer !important;
-        font-size: 14px !important;
-        font-weight: 500 !important;
-        text-align: center !important;
-    }
-
-    #editProfileButton {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-    }
-</style>
 
 <!-- SCRIPT DE VERIFICACIÓN VISUAL -->
 <script>
@@ -2509,13 +2285,13 @@
                 if (tabName === 'pacientes' && typeof window.renderPatients === 'function') {
                     window.renderPatients();
                 }
-                if (tabName === 'citas' && typeof window.citas?.renderAppointments === 'function') {
+                if (tabName === 'citas' && window.citas && typeof window.citas.renderAppointments === 'function') {
                     window.citas.renderAppointments();
                 }
-                if (tabName === 'solicitudes' && typeof window.citas?.renderPendingRequests === 'function') {
+                if (tabName === 'solicitudes' && window.citas && typeof window.citas.renderPendingRequests === 'function') {
                     window.citas.renderPendingRequests();
                 }
-                if (tabName === 'estadisticas' && typeof window.estadisticas?.renderPanelEstadisticas === 'function') {
+                if (tabName === 'estadisticas' && window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') {
                     window.estadisticas.renderPanelEstadisticas();
                 }
             }, 300);
@@ -2527,46 +2303,6 @@
     instalarFix();
 })();
 </script>
-
-<style>
-    #staffTableBody button i.fa,
-    #staffTableBody button i.fas {
-        display: inline-block !important;
-        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
-        font-size: 14px !important;
-        margin-right: 5px !important;
-        vertical-align: middle !important;
-    }
-    
-    #staffTableBody .fa-edit:before,
-    #staffTableBody .fa-pencil:before {
-        content: "\f044" !important;
-        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
-        font-weight: 900 !important;
-    }
-    
-    #staffTableBody .fa-trash:before,
-    #staffTableBody .fa-trash-o:before {
-        content: "\f1f8" !important;
-        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
-        font-weight: 900 !important;
-    }
-    
-    #staffTableBody button {
-        background: var(--azul-medico) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 4px !important;
-        padding: 6px 10px !important;
-        cursor: pointer !important;
-        font-size: 13px !important;
-    }
-    
-    #staffTableBody button + button {
-        background: var(--rojo-alerta) !important;
-        margin-left: 5px !important;
-    }
-</style>
 
 <!-- Panel de Reserva y Dashboard (comprimido para mantener funcionalidad) -->
 <div id="bookingPanel" class="panel" style="display: none;">
@@ -2854,12 +2590,12 @@
     </div>
 </div>
 
-<!-- SCRIPT DE EMERGENCIA PARA LOGIN -->
+<!-- SCRIPT DE EMERGENCIA PARA LOGIN Y DASHBOARD -->
 <script>
 (function() {
-    console.log('🚨 SCRIPT DE EMERGENCIA PARA LOGIN ACTIVADO');
+    console.log('🚨 SCRIPT DE EMERGENCIA PARA LOGIN Y DASHBOARD ACTIVADO');
     
-    // Forzar que closeLoginModal exista
+    // Forzar funciones básicas
     if (!window.closeLoginModal) {
         window.closeLoginModal = function() {
             const modal = document.getElementById('loginModal');
@@ -2867,32 +2603,109 @@
         };
     }
     
-    // Forzar que showToast exista
     if (!window.showToast) {
         window.showToast = function(msg, type) {
             alert(msg);
         };
     }
     
-    // Monitorear cambios en currentUser
+    // Función para forzar dashboard
+    window.forzarDashboard = function() {
+        console.log('🔧 Forzando visibilidad del dashboard...');
+        const dashboard = document.getElementById('dashboard');
+        const clientView = document.getElementById('clientView');
+        
+        if (dashboard) {
+            dashboard.style.setProperty('display', 'block', 'important');
+        }
+        if (clientView) {
+            clientView.style.setProperty('display', 'none', 'important');
+        }
+    };
+    
+    // Monitorear currentUser
     const originalSetUser = window.state?.setCurrentUser;
     if (originalSetUser) {
         window.state.setCurrentUser = function(user) {
             originalSetUser(user);
-            console.log('👤 Usuario cambiado a:', user);
-            
-            // Forzar redirección si es admin
-            if (user?.role === 'admin') {
-                setTimeout(() => {
-                    document.getElementById('dashboard').style.display = 'block';
-                    document.getElementById('clientView').style.display = 'none';
-                }, 100);
-            }
+            if (user) setTimeout(window.forzarDashboard, 300);
         };
     }
+    
+    // Verificar cada segundo
+    setInterval(function() {
+        if (window.state?.currentUser) {
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard && dashboard.style.display !== 'block') {
+                window.forzarDashboard();
+            }
+        }
+    }, 1000);
     
     console.log('✅ Script de emergencia listo');
 })();
 </script>
+
+<!-- ESTILOS DE EMERGENCIA -->
+<style>
+    #patientsList {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: 400px !important;
+        padding: 20px !important;
+        background-color: #ffffff !important;
+        border: 3px solid #0071e3 !important;
+        border-radius: 12px !important;
+        margin: 20px 0 !important;
+    }
+
+    .patient-card {
+        display: block !important;
+        background-color: #f8fafc !important;
+        border: 2px solid #34c759 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        margin-bottom: 15px !important;
+        color: #000000 !important;
+    }
+
+    .patient-name {
+        font-size: 18px !important;
+        font-weight: bold !important;
+        color: #1e293b !important;
+        display: block !important;
+        margin-bottom: 10px !important;
+    }
+
+    .patient-contact {
+        display: block !important;
+        color: #334155 !important;
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+    }
+
+    .patient-contact span {
+        display: inline-block !important;
+        margin-right: 15px !important;
+    }
+
+    .badge {
+        display: inline-block !important;
+        padding: 4px 12px !important;
+        background-color: #0071e3 !important;
+        color: white !important;
+        border-radius: 20px !important;
+        font-size: 12px !important;
+        font-weight: bold !important;
+    }
+
+    #editProfileButton {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+</style>
+
 </body>
 </html>

@@ -22,10 +22,11 @@ import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
 // ============================================
-// FUNCIONES DE NAVEGACIÓN DEL MENÚ - CORREGIDAS
+// FUNCIONES DE NAVEGACIÓN DEL MENÚ - CORREGIDAS CON DOBLE EXPORTACIÓN
 // ============================================
 
-window.showSection = function(sectionId) {
+// Versión exportable para usar en otros módulos
+export function showSection(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
     
     // Definir las secciones principales que pueden ocultarse/mostrarse
@@ -59,22 +60,21 @@ window.showSection = function(sectionId) {
     }
     
     // 👉 REGLA DE ORO: El GRID DE PROFESIONALES SIEMPRE debe ser visible
-    // cuando se navega a 'equipo' o cuando se usa el botón 'AGENDA TU HORA'
     const grid = document.getElementById('publicGrid');
     const messages = document.getElementById('messagesGrid');
     const filtros = document.querySelector('.filters');
     
-    // El grid de profesionales SIEMPRE visible (excepto quizás en inicio)
+    // El grid de profesionales SIEMPRE visible
     if (grid) {
         grid.style.display = 'grid';
     }
     
-    // Los mensajes SIEMPRE visibles (son parte de la identidad del sitio)
+    // Los mensajes SIEMPRE visibles
     if (messages) {
         messages.style.display = 'grid';
     }
     
-    // Los filtros solo se muestran en la sección equipo (donde están los profesionales)
+    // Los filtros solo se muestran en la sección equipo
     if (filtros) {
         filtros.style.display = sectionId === 'equipo' ? 'flex' : 'none';
     }
@@ -94,13 +94,14 @@ window.showSection = function(sectionId) {
     }
     
     console.log(`✅ Sección ${sectionId} mostrada correctamente`);
-};
+}
 
-window.abrirAgenda = function() {
+// Versión exportable para usar en otros módulos
+export function abrirAgenda() {
     console.log('📅 Abriendo agenda con profesionales y filtros...');
     
     // Mostrar la sección equipo
-    window.showSection('equipo');
+    showSection('equipo');
     
     // Asegurar que los filtros estén visibles
     const filtros = document.querySelector('.filters');
@@ -116,9 +117,10 @@ window.abrirAgenda = function() {
     
     // Mensaje amigable para el usuario
     showToast('Selecciona un profesional para ver su disponibilidad y agendar tu hora', 'info', 3000);
-};
+}
 
-window.enviarContacto = function() {
+// Versión exportable para usar en otros módulos
+export function enviarContacto() {
     const nombre = document.getElementById('contactName')?.value;
     const email = document.getElementById('contactEmail')?.value;
     const mensaje = document.getElementById('contactMessage')?.value;
@@ -143,12 +145,12 @@ window.enviarContacto = function() {
     document.getElementById('contactName').value = '';
     document.getElementById('contactEmail').value = '';
     document.getElementById('contactMessage').value = '';
-};
+}
 
 // ============================================
 // FUNCIÓN PARA COMPARTIR PERFIL
 // ============================================
-window.compartirPerfil = function(psychId, psychName) {
+export function compartirPerfil(psychId, psychName) {
     const url = window.location.href.split('?')[0] + '?profesional=' + psychId;
     
     if (navigator.share) {
@@ -162,7 +164,7 @@ window.compartirPerfil = function(psychId, psychName) {
     } else {
         mostrarOpcionesCompartir(url, psychName);
     }
-};
+}
 
 function mostrarOpcionesCompartir(url, psychName) {
     const mensajeWhatsApp = `https://wa.me/?text=${encodeURIComponent(`📋 ${psychName} - Vínculo Salud\n${url}`)}`;
@@ -195,18 +197,18 @@ function mostrarOpcionesCompartir(url, psychName) {
     document.body.appendChild(modal);
 }
 
-window.copiarAlPortapapeles = function(texto) {
+export function copiarAlPortapapeles(texto) {
     navigator.clipboard.writeText(texto).then(() => {
         showToast('✅ Enlace copiado al portapapeles', 'success');
     }).catch(() => {
         showToast('❌ Error al copiar', 'error');
     });
-};
+}
 
 // ============================================
 // FUNCIÓN PARA MOSTRAR MÁS INFORMACIÓN DEL PROFESIONAL
 // ============================================
-window.showTherapistInfo = function(psychId) {
+export function showTherapistInfo(psychId) {
     const psych = state.staff.find(p => p.id == psychId);
     if (!psych) return;
     
@@ -226,13 +228,13 @@ window.showTherapistInfo = function(psychId) {
                 <p style="margin: 10px 0;"><i class="fa fa-clock" style="color: var(--ocre-calido); width: 25px;"></i> ${psych.experience || '0'} años de experiencia</p>
                 <p style="margin: 10px 0;"><i class="fa fa-language" style="color: var(--ocre-calido); width: 25px;"></i> ${psych.languages ? psych.languages.join(', ') : 'Español'}</p>
             </div>
-            <button onclick="this.parentElement.parentElement.remove(); openBooking('${psych.id}')" class="btn-staff" style="width:100%; margin-top:20px; background: var(--verde-azulado-profundo);">
+            <button onclick="this.parentElement.parentElement.remove(); window.openBooking('${psych.id}')" class="btn-staff" style="width:100%; margin-top:20px; background: var(--verde-azulado-profundo);">
                 AGENDAR HORA
             </button>
         </div>
     `;
     document.body.appendChild(modal);
-};
+}
 
 export function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
@@ -243,12 +245,12 @@ export function filterProfessionals() {
     let filtered = getPublicStaff().filter(p => {
         const specs = Array.isArray(p.spec) ? p.spec.join(' ') : p.spec;
         const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
-                             specs.toLowerCase().includes(searchTerm);
+                             (specs && specs.toLowerCase().includes(searchTerm));
 
         let matchesSpecialty = true;
         if (specialtyTerm) {
             const pSpecs = Array.isArray(p.spec) ? p.spec : [p.spec];
-            matchesSpecialty = pSpecs.some(s => s.toLowerCase().includes(specialtyTerm.toLowerCase()));
+            matchesSpecialty = pSpecs.some(s => s && s.toLowerCase().includes(specialtyTerm.toLowerCase()));
         }
 
         let matchesAvailability = true;
@@ -309,7 +311,7 @@ export function renderProfessionals(professionals) {
             <div class="therapist-card" data-id="${p.id}">
                 <!-- Imagen del profesional -->
                 <div class="img-container">
-                    <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}">
+                    <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}" loading="lazy">
                 </div>
                 
                 <!-- Contenido de la tarjeta -->
@@ -446,36 +448,39 @@ export function cargarDatosIniciales() {
         }
 
         // Agregar administrador
-        state.staff.push({
-            id: 9999,
-            name: 'Administrador',
-            spec: ['ADMIN_HIDDEN'],
-            priceOnline: 0,
-            pricePresencial: 0,
-            usuario: 'Admin',
-            pass: 'Nina2026',
-            email: 'admin@vinculosalud.cl',
-            img: '',
-            whatsapp: '',
-            instagram: '',
-            stars: 0,
-            genero: '',
-            address: '',
-            phone: '',
-            title: '',
-            bio: '',
-            education: '',
-            experience: 0,
-            languages: ['Español'],
-            bankDetails: {},
-            isHiddenAdmin: true,
-            isAdmin: true,
-            paymentMethods: {},
-            sessionDuration: 45,
-            breakBetween: 10,
-            availability: {},
-            paymentLinks: { online: '', presencial: '', qrCode: '' }
-        });
+        const adminExists = state.staff.some(s => s.id == 9999 || s.name === 'Administrador');
+        if (!adminExists) {
+            state.staff.push({
+                id: 9999,
+                name: 'Administrador',
+                spec: ['ADMIN_HIDDEN'],
+                priceOnline: 0,
+                pricePresencial: 0,
+                usuario: 'Admin',
+                pass: 'Nina2026',
+                email: 'admin@vinculosalud.cl',
+                img: '',
+                whatsapp: '',
+                instagram: '',
+                stars: 0,
+                genero: '',
+                address: '',
+                phone: '',
+                title: '',
+                bio: '',
+                education: '',
+                experience: 0,
+                languages: ['Español'],
+                bankDetails: {},
+                isHiddenAdmin: true,
+                isAdmin: true,
+                paymentMethods: {},
+                sessionDuration: 45,
+                breakBetween: 10,
+                availability: {},
+                paymentLinks: { online: '', presencial: '', qrCode: '' }
+            });
+        }
 
         filterProfessionals();
         if (state.currentUser?.role === 'admin') renderStaffTable();
@@ -624,15 +629,36 @@ export function forzarCargaDatos() {
 }
 
 // ============================================
-// EXPORTAR FUNCIONES GLOBALES
+// 🚨 EXPORTACIÓN EXPLÍCITA AL OBJETO WINDOW
 // ============================================
-window.forzarCargaDatos = forzarCargaDatos;
-window.forceRenderProfessionals = function() {
-    console.log('🔄 Forzando renderizado de profesionales...');
-    if (typeof filterProfessionals === 'function') {
-        filterProfessionals();
-    }
-};
-window.actualizarTodasLasSecciones = actualizarTodasLasSecciones;
+// ¡ESTA ES LA PARTE CLAVE QUE FALTABA!
+
+if (typeof window !== 'undefined') {
+    console.log('🔧 Asignando funciones de publico.js a window...');
+    
+    window.showSection = showSection;
+    window.abrirAgenda = abrirAgenda;
+    window.enviarContacto = enviarContacto;
+    window.compartirPerfil = compartirPerfil;
+    window.copiarAlPortapapeles = copiarAlPortapapeles;
+    window.showTherapistInfo = showTherapistInfo;
+    window.filterProfessionals = filterProfessionals;
+    window.forzarCargaDatos = forzarCargaDatos;
+    window.forceRenderProfessionals = function() {
+        console.log('🔄 Forzando renderizado de profesionales...');
+        if (typeof filterProfessionals === 'function') {
+            filterProfessionals();
+        }
+    };
+    window.actualizarTodasLasSecciones = actualizarTodasLasSecciones;
+    
+    console.log('✅ Funciones de publico.js asignadas correctamente a window:', {
+        showSection: typeof window.showSection,
+        abrirAgenda: typeof window.abrirAgenda,
+        enviarContacto: typeof window.enviarContacto,
+        compartirPerfil: typeof window.compartirPerfil,
+        showTherapistInfo: typeof window.showTherapistInfo
+    });
+}
 
 console.log('✅ publico.js cargado con navegación corregida y estilo Puntoterapia exacto v3.0');

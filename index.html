@@ -2617,7 +2617,7 @@
             const staffLink = document.querySelector('a[onclick*="showLoginModal"]');
             if (staffLink) {
                 const user = window.state.currentUser;
-                staffLink.setAttribute('onclick', 'mostrarMenuStaff ? mostrarMenuStaff() : showLoginModal(); return false;');
+                staffLink.setAttribute('onclick', 'mostrarMenuStaff(true); return false;');
                 const icon = staffLink.querySelector('i');
                 if (icon) {
                     icon.className = 'fa fa-user-check';
@@ -2709,8 +2709,7 @@
 </style>
 
 
-    <!-- ... todos tus otros scripts ... -->
-    
+
 
 </body>
 </html>

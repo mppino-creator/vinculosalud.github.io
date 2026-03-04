@@ -62,21 +62,23 @@ function actualizarUIAdmin(userData, role) {
         }
     }
     
-    // Mostrar botones de edición en secciones
-    const editButtons = [
-        'adminHeroEditBtn',
-        'adminAboutEditBtn', 
-        'adminAtencionEditBtn',
-        'adminContactEditBtn',
-        'adminInstagramEditBtn'
-    ];
-    
-    editButtons.forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) {
-            btn.style.display = 'flex';
-        }
-    });
+    // Mostrar botones de edición en secciones (solo para admin)
+    if (role === 'admin') {
+        const editButtons = [
+            'adminHeroEditBtn',
+            'adminAboutEditBtn', 
+            'adminAtencionEditBtn',
+            'adminContactEditBtn',
+            'adminInstagramEditBtn'
+        ];
+        
+        editButtons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.style.display = 'flex';
+            }
+        });
+    }
     
     // Mostrar mensaje de bienvenida
     const generoEmoji = userData.genero === 'M' ? '♂️' : userData.genero === 'F' ? '♀️' : '';
@@ -89,7 +91,7 @@ function actualizarUIAdmin(userData, role) {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR MENÚ STAFF - VERSIÓN CORREGIDA
+// FUNCIÓN PARA MOSTRAR MENÚ STAFF - VERSIÓN MEJORADA
 // ============================================
 window.mostrarMenuStaff = function(desdeLogin = false) {
     if (!state.currentUser) {
@@ -108,9 +110,40 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
     const oldMenu = document.getElementById('staffMenu');
     if (oldMenu) oldMenu.remove();
     
+    // Opciones según el rol
+    let opcionesMenu = '';
+    
+    if (user.role === 'admin') {
+        // Opciones para ADMIN
+        opcionesMenu = `
+            <button onclick="irADashboard()" style="padding: 12px; background: var(--primario); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+                <i class="fa fa-tachometer-alt"></i> Ir al Dashboard
+            </button>
+            <button onclick="window.showSpecialtiesModal?.()" style="padding: 12px; background: var(--verde-azulado-claro); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+                <i class="fa fa-tags"></i> Gestionar Especialidades
+            </button>
+            <button onclick="window.showPaymentMethodsModal?.()" style="padding: 12px; background: var(--exito); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+                <i class="fa fa-credit-card"></i> Métodos de Pago
+            </button>
+        `;
+    } else if (user.role === 'psych') {
+        // Opciones para PSICÓLOGO (PROFESIONAL)
+        opcionesMenu = `
+            <button onclick="window.openMyProfileModal?.()" style="padding: 12px; background: var(--primario); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+                <i class="fa fa-user-edit"></i> Editar Mi Perfil
+            </button>
+            <button onclick="abrirGestionDisponibilidad()" style="padding: 12px; background: var(--verde-azulado-claro); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+                <i class="fa fa-clock"></i> Gestionar Disponibilidad
+            </button>
+            <button onclick="irADashboard()" style="padding: 12px; background: #f5f5f5; color: var(--texto-principal); border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+                <i class="fa fa-tachometer-alt"></i> Ir al Dashboard
+            </button>
+        `;
+    }
+    
     // Crear menú contextual
     const menuHTML = `
-        <div id="staffMenu" style="position: absolute; top: 80px; right: 20px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 20px; z-index: 2000; min-width: 250px; border: 1px solid var(--gris-claro);">
+        <div id="staffMenu" style="position: absolute; top: 80px; right: 20px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 20px; z-index: 2000; min-width: 280px; border: 1px solid var(--gris-claro);">
             <div style="padding: 10px 0; border-bottom: 1px solid #eee; margin-bottom: 15px;">
                 <div style="font-weight: 700; font-size: 1.1rem; color: var(--texto-principal);">${user.data.name}</div>
                 <div style="color: var(--texto-secundario); font-size: 0.9rem; margin-top: 5px;">
@@ -119,16 +152,9 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
                     </span>
                 </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button onclick="irADashboard()" style="padding: 12px; background: var(--primario); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
-                    <i class="fa fa-tachometer-alt"></i> Ir al Dashboard
-                </button>
-                ${user.role === 'psych' ? `
-                <button onclick="window.openMyProfileModal?.()" style="padding: 12px; background: var(--verde-azulado-claro); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
-                    <i class="fa fa-user-edit"></i> Editar Mi Perfil
-                </button>
-                ` : ''}
-                <button onclick="logout()" style="padding: 12px; background: #f5f5f5; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%; color: var(--peligro);">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${opcionesMenu}
+                <button onclick="logout()" style="padding: 12px; background: #f5f5f5; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%; color: var(--peligro); margin-top: 5px;">
                     <i class="fa fa-sign-out-alt"></i> Cerrar Sesión
                 </button>
             </div>
@@ -149,6 +175,38 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
         document.addEventListener('click', cerrarMenu);
     }, 100);
 };
+
+// ============================================
+// FUNCIÓN PARA ABRIR GESTIÓN DE DISPONIBILIDAD
+// ============================================
+function abrirGestionDisponibilidad() {
+    console.log('📅 Abriendo gestión de disponibilidad');
+    
+    // Verificar que el usuario sea psicólogo
+    if (state.currentUser?.role !== 'psych') {
+        showToast('Solo profesionales pueden gestionar disponibilidad', 'error');
+        return;
+    }
+    
+    // Verificar si estamos en dashboard
+    const dashboard = document.getElementById('dashboard');
+    const clientView = document.getElementById('clientView');
+    
+    if (dashboard && dashboard.style.display === 'block') {
+        // Ya estamos en dashboard, solo cambiar pestaña
+        window.switchTab('disponibilidad');
+    } else {
+        // No estamos en dashboard, ir primero
+        window.irADashboard();
+        setTimeout(() => {
+            window.switchTab('disponibilidad');
+        }, 500);
+    }
+    
+    // Cerrar menú
+    const menu = document.getElementById('staffMenu');
+    if (menu) menu.remove();
+}
 
 // ============================================
 // FUNCIÓN PARA IR AL DASHBOARD
@@ -480,6 +538,10 @@ export function switchTab(tabName) {
                         if (typeof window.loadTimeSlots === 'function') {
                             window.loadTimeSlots();
                         }
+                        // También abrir el modal de disponibilidad si es necesario
+                        if (typeof window.showAvailabilityModal === 'function') {
+                            setTimeout(() => window.showAvailabilityModal(), 300);
+                        }
                     }
                     else if (tabName === 'configuracion' && isPsych()) {
                         if (typeof loadMyConfig === 'function') loadMyConfig();
@@ -628,6 +690,7 @@ if (typeof window !== 'undefined') {
     window.verificarSesionGuardada = verificarSesionGuardada;
     window.irADashboard = irADashboard;
     window.volverAVistaPublica = volverAVistaPublica;
+    window.abrirGestionDisponibilidad = abrirGestionDisponibilidad;
 }
 
-console.log('✅ auth.js cargado correctamente con funciones de login y perfil profesional');
+console.log('✅ auth.js cargado correctamente con funciones de login, menú mejorado y gestión de disponibilidad para profesionales');

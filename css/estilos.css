@@ -2579,3 +2579,29 @@ html {
     border-color: var(--ocre-calido);
     box-shadow: 0 0 0 4px rgba(200, 161, 97, 0.1);
 }
+
+/* Animaciones adicionales estilo Puntoterapia */
+.therapist-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.therapist-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.02);
+}
+
+.atencion-card {
+    transition: transform 0.3s ease;
+}
+
+.atencion-card:hover {
+    transform: translateY(-5px);
+}
+
+.btn-instagram, .btn-cta, .btn-contact {
+    transition: all 0.3s ease;
+}
+
+.btn-instagram:hover, .btn-cta:hover, .btn-contact:hover {
+    transform: translateY(-3px);
+}

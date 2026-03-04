@@ -2808,3 +2808,232 @@ footer a:hover {
         font-size: 2rem !important;
     }
 }
+
+/* ============================================
+   ESTILOS PARA TARJETAS ACCORDION (NUEVO)
+   ============================================ */
+.professional-card {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    border: 1px solid var(--gris-claro);
+    margin-bottom: 0;
+}
+
+.professional-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(30,122,138,0.1);
+}
+
+.professional-card .card-header {
+    padding: 24px;
+    cursor: pointer;
+}
+
+.professional-card .card-header h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--verde-azulado-profundo);
+    margin: 15px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+}
+
+.professional-card .card-subtitle {
+    color: var(--texto-secundario);
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.professional-card .rating {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: center;
+}
+
+.professional-card .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: var(--texto-secundario);
+    font-size: 0.9rem;
+    justify-content: center;
+}
+
+.professional-card .card-meta i {
+    margin-right: 5px;
+    color: var(--ocre-calido);
+}
+
+.professional-card .card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.professional-card .btn-mas-info {
+    background: transparent;
+    border: 2px solid var(--verde-azulado-claro);
+    color: var(--verde-azulado-claro);
+    padding: 10px 15px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    flex: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.professional-card .btn-mas-info:hover {
+    background: var(--verde-azulado-claro);
+    color: white;
+}
+
+.professional-card .btn-agendar {
+    background: var(--verde-azulado-profundo);
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    flex: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(30, 122, 138, 0.2);
+}
+
+.professional-card .btn-agendar:hover {
+    background: var(--primario-hover);
+    transform: translateY(-2px);
+}
+
+.professional-card .card-info {
+    padding: 0 24px 24px 24px;
+    border-top: 1px solid var(--gris-claro);
+    animation: slideDown 0.3s ease;
+    background: var(--verde-grisaceo-claro);
+    border-radius: 0 0 24px 24px;
+}
+
+.professional-card .info-section {
+    margin: 20px 0;
+}
+
+.professional-card .info-section h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--texto-principal);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.professional-card .info-section p {
+    color: var(--texto-principal);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.professional-card .specialties-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.professional-card .specialty-tag {
+    background: var(--verde-azulado-claro);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.professional-card .whatsapp-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #25D366;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.professional-card .whatsapp-link:hover {
+    background: #128C7E;
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   ESTILOS PARA MENÚ HOMOGÉNEO - STAFF INTEGRADO
+   ============================================ */
+
+/* Ajustes para el contenedor del menú */
+.public-nav {
+    display: flex;
+    align-items: center;
+    gap: 2.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Estilo base para TODOS los items del menú */
+.nav-item {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--texto-principal);
+    text-decoration: none;
+    padding: 0.5rem 0;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+    position: relative;
+}
+
+/* Efecto hover para todos los items */
+.nav-item:hover {
+    color: var(--ocre-calido);
+    border-bottom-color: var(--ocre-calido);
+}
+
+/* Item activo (Equipo) */
+.nav-item.active {
+    font-weight: 600;
+    border-bottom-color: var(--ocre-calido);
+}
+
+/* Estilo específico para Staff - mantiene misma apariencia */
+.nav-item.staff-link {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: var(--texto-principal) !important;
+    padding: 0.5rem 0 !important;
+}
+
+.nav-item.staff-link i {
+    margin-right: 5px;
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+.nav-item.staff-link:hover {
+    color: var(--ocre-calido) !important;
+    border-bottom-color: var(--ocre-calido) !important;
+    background: transparent !important;
+    transform: none !important;
+}

@@ -5,35 +5,35 @@
    ============================================ */
 
 :root {
-    /* 🎨 PALETA PERSONALIZADA - DE TU IMAGEN LOGO MEJOR.JPG */
+    /* 🎨 PALETA PERSONALIZADA - SOLO TUS 5 COLORES */
     --verde-azulado-profundo: #1E7A8A;  /* Turquesa profundo - títulos, acentos */
-    --verde--azulado-claro: #63B0C7;     /* Turquesa claro - botones, enlaces */
+    --verde-azulado-claro: #63B0C7;     /* Turquesa claro - botones, enlaces */
     --ocre-calido: #C8A161;              /* Ocre cálido - detalles, hovers */
     --verde-grisaceo-claro: #E5EADF;     /* Verde grisáceo suave - fondos de secciones */
     --crema-fondo: #FAF5EC;               /* Crema - fondo principal */
     
-    /* Textos */
+    /* Textos (derivados de tu paleta) */
     --texto-principal: #2D3E4F;           /* Gris azulado oscuro - máximo contraste */
     --texto-secundario: #5A6B7A;          /* Gris medio - textos secundarios */
     
-    /* Colores de acento - Salud mental */
+    /* Colores de acento - usando SOLO tu paleta */
     --primario: var(--verde-azulado-profundo);
-    --primario-hover: #166374;            /* Versión más oscura para hovers */
+    --primario-hover: #166374;            /* Versión más oscura para hovers (derivado) */
     --primario-soft: var(--verde-grisaceo-claro);
     
-    --exito: #5BA88C;                      /* Verde menta - pagos, confirmaciones */
-    --atencion: var(--ocre-calido);        /* Ocre - advertencias suaves */
-    --peligro: #D88C8C;                    /* Terracota suave - errores, cancelaciones */
+    --exito: var(--verde-azulado-claro);   /* Usando tu turquesa claro */
+    --atencion: var(--ocre-calido);        /* Usando tu ocre */
+    --peligro: #D88C8C;                    /* Terracota suave (necesario para errores) */
     
-    --gris-claro: #E0D9D0;                  /* Borde sutil */
-    --gris-oscuro: #C9C0B5;                 /* Bordes más definidos */
-    --sombra: rgba(30, 122, 138, 0.08);     /* Sombra con tono turquesa */
+    --gris-claro: #E0D9D0;                  /* Borde sutil (derivado) */
+    --gris-oscuro: #C9C0B5;                 /* Bordes más definidos (derivado) */
+    --sombra: rgba(30, 122, 138, 0.08);     /* Sombra con tu turquesa */
     
     --glass: rgba(255, 255, 255, 0.85);      /* Efecto vidrio */
-    --gold: #E6B857;                          /* Dorado cálido para estrellas */
-    --box-color: #A48A9C;                     /* Lila grisáceo para boxes */
+    --gold: #E6B857;                          /* Dorado cálido para estrellas (necesario) */
+    --box-color: #A48A9C;                     /* Lila grisáceo para boxes (necesario) */
     
-    /* Redes sociales (se mantienen) */
+    /* Redes sociales (colores fijos de marca) */
     --whatsapp: #25D366;
     --instagram: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);
     

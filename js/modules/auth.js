@@ -49,7 +49,7 @@ function actualizarUIAdmin(userData, role) {
     
     if (staffLink) {
         // Cambiar el onclick para que ahora muestre el menú
-        staffLink.setAttribute('onclick', 'mostrarMenuStaff(); return false;');
+        staffLink.setAttribute('onclick', 'mostrarMenuStaff(true); return false;');
         
         if (staffIcon) {
             staffIcon.className = 'fa fa-user-check';
@@ -81,15 +81,25 @@ function actualizarUIAdmin(userData, role) {
     // Mostrar mensaje de bienvenida
     const generoEmoji = userData.genero === 'M' ? '♂️' : userData.genero === 'F' ? '♀️' : '';
     showToast(`✅ Sesión iniciada como ${userData.name} ${generoEmoji}`, 'success');
+    
+    // 🔥 Mostrar el menú automáticamente después del login
+    setTimeout(() => {
+        window.mostrarMenuStaff(true);
+    }, 500);
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR MENÚ STAFF
+// FUNCIÓN PARA MOSTRAR MENÚ STAFF - VERSIÓN CORREGIDA
 // ============================================
-window.mostrarMenuStaff = function() {
+window.mostrarMenuStaff = function(desdeLogin = false) {
     if (!state.currentUser) {
         showLoginModal();
         return;
+    }
+    
+    // Si viene del login, solo mostrar el menú, NO ir al dashboard
+    if (desdeLogin) {
+        console.log('👑 Mostrando menú después de login');
     }
     
     const user = state.currentUser;
@@ -317,15 +327,11 @@ export function logout() {
 }
 
 // ============================================
-// FUNCIÓN PARA CARGAR EL DASHBOARD (ahora se llama desde el menú)
+// FUNCIÓN PARA CARGAR EL DASHBOARD (DESHABILITADA)
 // ============================================
 export function cargarDashboard(role) {
-    const userData = state.currentUser?.data;
-    if (userData) {
-        mostrarDashboardInmediato(role, userData);
-    } else {
-        console.error('❌ No hay datos de usuario para cargar dashboard');
-    }
+    console.warn('⚠️ cargarDashboard no debe usarse - usar irADashboard desde el menú');
+    // Esta función está deshabilitada intencionalmente
 }
 
 // 🔥 VERSIÓN CORREGIDA - Mostrar dashboard inmediatamente con !important

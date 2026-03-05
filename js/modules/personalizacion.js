@@ -1638,11 +1638,10 @@ if (typeof window !== 'undefined') {
     window.showContactModal = showContactModal;
     window.saveContactInfo = saveContactInfo;
     
-    // 🆕 Funciones para Instagram
-    window.showInstagramModal = showInstagramModal;
-    window.uploadInstagramImage = uploadInstagramImage;
-    window.saveInstagramData = saveInstagramData;
-    window.cargarInstagramData = cargarInstagramData;
+    window.eliminarTipoAtencion = eliminarTipoAtencion;
+    window.agregarTipoAtencion = agregarTipoAtencion;
+    window.guardarNuevoTipoAtencion = guardarNuevoTipoAtencion;
+    window.renderAtencionAdmin = renderAtencionAdmin;
+    
+    console.log('✅ Funciones de personalización expuestas en window');
 }
-
-console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas, secciones editables, SECCIÓN INSTAGRAM y FOOTER SINCRONIZADO v3.0');

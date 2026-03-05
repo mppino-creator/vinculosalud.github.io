@@ -1621,7 +1621,7 @@ export function exportMyConfig() {
     };
 }
 
-// ============================================
+// ===========================================
 // EXPORTAR FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {

@@ -485,19 +485,27 @@ export function confirmPayment(appointmentId) {
         renderAppointments();
     });
     
+    // Enviar email al PACIENTE (nunca al psicólogo)
     if (appointment.patientEmail && !appointment.emailPagoEnviado) {
-        setTimeout(() => {
-            sendEmailNotification(
-                appointment.patientEmail,
-                'Pago confirmado - Vínculo Salud',
-                `Hola ${appointment.patient},\n\nTu pago ha sido confirmado.`,
-                'pago_confirmado',
-                appointment.patient,
-                appointment
-            ).then(success => {
-                if (success) appointment.emailPagoEnviado = true;
-            });
-        }, 100);
+        // Verificar que NO sea email de profesional
+        const esEmailProfesional = state.staff.some(p => p.email === appointment.patientEmail);
+        
+        if (!esEmailProfesional) {
+            setTimeout(() => {
+                sendEmailNotification(
+                    appointment.patientEmail, // ✅ SIEMPRE al paciente
+                    'Pago confirmado - Vínculo Salud',
+                    `Hola ${appointment.patient},\n\nTu pago ha sido confirmado.`,
+                    'pago_confirmado',
+                    appointment.patient,
+                    appointment
+                ).then(success => {
+                    if (success) appointment.emailPagoEnviado = true;
+                });
+            }, 100);
+        } else {
+            console.error('❌ ERROR: Intento de enviar email de pago a profesional:', appointment.patientEmail);
+        }
     }
 }
 
@@ -517,19 +525,24 @@ export function rejectPayment(appointmentId) {
     import('../main.js').then(main => main.save());
     showToast('✅ Pago rechazado', 'success');
     
+    // Enviar email al PACIENTE (nunca al psicólogo)
     if (appointment.patientEmail && !appointment.emailRechazoEnviado) {
-        setTimeout(() => {
-            sendEmailNotification(
-                appointment.patientEmail,
-                'Pago no confirmado - Vínculo Salud',
-                `Hola ${appointment.patient},\n\nEl pago no pudo ser confirmado.`,
-                'pago_rechazado',
-                appointment.patient,
-                appointment
-            ).then(success => {
-                if (success) appointment.emailRechazoEnviado = true;
-            });
-        }, 100);
+        const esEmailProfesional = state.staff.some(p => p.email === appointment.patientEmail);
+        
+        if (!esEmailProfesional) {
+            setTimeout(() => {
+                sendEmailNotification(
+                    appointment.patientEmail, // ✅ SIEMPRE al paciente
+                    'Pago no confirmado - Vínculo Salud',
+                    `Hola ${appointment.patient},\n\nEl pago no pudo ser confirmado.`,
+                    'pago_rechazado',
+                    appointment.patient,
+                    appointment
+                ).then(success => {
+                    if (success) appointment.emailRechazoEnviado = true;
+                });
+            }, 100);
+        }
     }
 }
 
@@ -567,28 +580,60 @@ export function confirmPresencialTime(requestId, date, time) {
     import('../main.js').then(main => main.save());
     showToast('✅ Cita confirmada', 'success');
     
+    // Enviar email al PACIENTE (nunca al psicólogo)
     if (request.patientEmail && !appointment.emailConfirmacionEnviado) {
-        setTimeout(() => {
-            sendEmailNotification(
-                request.patientEmail,
-                'Cita confirmada - Vínculo Salud',
-                `Hola ${request.patient},\n\nTu cita ha sido confirmada.`,
-                'cita_confirmada',
-                request.patient,
-                appointment
-            ).then(success => {
-                if (success) appointment.emailConfirmacionEnviado = true;
-            });
-        }, 100);
+        const esEmailProfesional = state.staff.some(p => p.email === request.patientEmail);
+        
+        if (!esEmailProfesional) {
+            setTimeout(() => {
+                sendEmailNotification(
+                    request.patientEmail, // ✅ SIEMPRE al paciente
+                    'Cita confirmada - Vínculo Salud',
+                    `Hola ${request.patient},\n\nTu cita ha sido confirmada.`,
+                    'cita_confirmada',
+                    request.patient,
+                    appointment
+                ).then(success => {
+                    if (success) appointment.emailConfirmacionEnviado = true;
+                });
+            }, 100);
+        }
     }
 }
 
 // ============================================
-// FUNCIÓN EXECUTEBOOKING - VERSIÓN CORREGIDA CON VALIDACIÓN DE EMAIL
+// FUNCIÓN EXECUTEBOOKING - VERSIÓN CORREGIDA CON VALIDACIÓN ABSOLUTA DE EMAIL
 // ============================================
 
 let bookingEnProceso = false;
 let emailsEnviados = new Set(); // Para evitar duplicados
+
+// 🚨 LISTA NEGRA DE EMAILS PROHIBIDOS (todos los profesionales)
+function obtenerEmailsProfesionales() {
+    return state.staff
+        .map(p => p.email)
+        .filter(email => email && email.trim() !== '');
+}
+
+// 🚨 VALIDACIÓN ABSOLUTA: El email NO puede ser de ningún profesional
+function esEmailProfesional(email) {
+    if (!email) return false;
+    
+    const emailsProfesionales = obtenerEmailsProfesionales();
+    const emailLimpio = email.trim().toLowerCase();
+    
+    // Verificar contra lista de profesionales
+    const esProfesional = emailsProfesionales.some(profEmail => 
+        profEmail && profEmail.trim().toLowerCase() === emailLimpio
+    );
+    
+    if (esProfesional) {
+        console.error('🚫 EMAIL PROHIBIDO DETECTADO:', email);
+        console.error('📋 Lista de emails profesionales:', emailsProfesionales);
+    }
+    
+    return esProfesional;
+}
 
 export function executeBooking() {
     if (bookingEnProceso) {
@@ -604,19 +649,19 @@ export function executeBooking() {
     const birthdate = document.getElementById('custBirthdate')?.value || '';
     
     // ============================================
-    // 🚨 VALIDACIÓN CRÍTICA: El email NO debe ser del psicólogo
+    // 🚨 VALIDACIÓN ABSOLUTA #1: El email NO puede ser de ningún profesional
     // ============================================
-    if (state.selectedPsych && email === state.selectedPsych.email) {
-        showToast('❌ ERROR: El email ingresado es del profesional. Debe ser el email del paciente.', 'error');
-        console.error('🚫 Intento de enviar email al psicólogo:', email);
+    if (esEmailProfesional(email)) {
+        showToast('❌ ERROR: El email ingresado pertenece a un profesional. Debe ser el email del paciente.', 'error');
+        console.error('🚫 BLOQUEADO: Intento de reserva con email profesional:', email);
         bookingEnProceso = false;
         return;
     }
     
-    // También verificar contra otros psicólogos (por si acaso)
-    const todosLosProfesionales = state.staff.map(p => p.email).filter(e => e);
-    if (todosLosProfesionales.includes(email)) {
-        showToast('❌ ERROR: Este email pertenece a un profesional. Usa el email del paciente.', 'error');
+    // Validación específica con el psicólogo seleccionado (por si acaso)
+    if (state.selectedPsych && email === state.selectedPsych.email) {
+        showToast('❌ ERROR: No puedes usar el email del profesional. Usa el email del paciente.', 'error');
+        console.error('🚫 BLOQUEADO: Email igual al psicólogo seleccionado:', email);
         bookingEnProceso = false;
         return;
     }
@@ -743,7 +788,7 @@ export function executeBooking() {
                     id: Date.now(),
                     rut,
                     name,
-                    email,
+                    email, // ✅ Este es el email del paciente (ya validado)
                     phone,
                     birthdate: birthdate,
                     edad: edad,
@@ -807,7 +852,7 @@ export function executeBooking() {
                 patientId: patient.id,
                 patient: name,
                 patientRut: rut,
-                patientEmail: email, // ✅ SIEMPRE el email del paciente
+                patientEmail: email, // ✅ SIEMPRE el email del paciente (ya validado)
                 patientPhone: phone,
                 psych: state.selectedPsych.name,
                 psychId: state.selectedPsych.id,
@@ -859,8 +904,8 @@ export function executeBooking() {
             // 📧 ENVIAR EMAIL AL PACIENTE (NUNCA AL PROFESIONAL)
             // ============================================
             if (email && !appointment.emailEnviado) {
-                // Verificación de seguridad adicional
-                const esEmailProfesional = state.staff.some(p => p.email === email);
+                // Verificación de seguridad ULTRA ESTRICTA
+                const esEmailProfesional = esEmailProfesional(email);
                 
                 if (esEmailProfesional) {
                     console.error('❌ ERROR CRÍTICO: Intento de enviar email a profesional:', email);
@@ -891,7 +936,7 @@ export function executeBooking() {
                         if (success) {
                             appointment.emailEnviado = true;
                             emailsEnviados.add(emailKey);
-                            console.log('✅ Email enviado correctamente a:', email);
+                            console.log('✅ Email enviado correctamente a PACIENTE:', email);
                         } else {
                             console.warn('⚠️ No se pudo enviar email a:', email);
                         }
@@ -1062,19 +1107,24 @@ export function rejectRequest(requestId) {
         import('../main.js').then(main => main.save());
         showToast('Solicitud rechazada', 'success');
         
+        // Enviar email al PACIENTE
         if (request?.patientEmail && !request.emailRechazoEnviado) {
-            setTimeout(() => {
-                sendEmailNotification(
-                    request.patientEmail,
-                    'Solicitud no confirmada - Vínculo Salud',
-                    `Hola ${request.patient},\n\nTu solicitud no pudo ser confirmada.`,
-                    'rechazo',
-                    request.patient,
-                    request
-                ).then(success => {
-                    if (success) request.emailRechazoEnviado = true;
-                });
-            }, 100);
+            const esEmailProfesional = state.staff.some(p => p.email === request.patientEmail);
+            
+            if (!esEmailProfesional) {
+                setTimeout(() => {
+                    sendEmailNotification(
+                        request.patientEmail, // ✅ SIEMPRE al paciente
+                        'Solicitud no confirmada - Vínculo Salud',
+                        `Hola ${request.patient},\n\nTu solicitud no pudo ser confirmada.`,
+                        'rechazo',
+                        request.patient,
+                        request
+                    ).then(success => {
+                        if (success) request.emailRechazoEnviado = true;
+                    });
+                }, 100);
+            }
         }
     }
 }
@@ -1249,19 +1299,24 @@ export function executeTherapistBooking() {
     import('../main.js').then(main => main.save());
     showToast('✅ Cita creada', 'success');
     
+    // Enviar email al PACIENTE
     if (state.selectedPatientForTherapist.email && !appointment.emailEnviado) {
-        setTimeout(() => {
-            sendEmailNotification(
-                state.selectedPatientForTherapist.email,
-                'Cita confirmada - Vínculo Salud',
-                `Hola ${state.selectedPatientForTherapist.name},\n\nTu cita ha sido confirmada.`,
-                'cita_confirmada',
-                state.selectedPatientForTherapist.name,
-                appointment
-            ).then(success => {
-                if (success) appointment.emailEnviado = true;
-            });
-        }, 100);
+        const esEmailProfesional = state.staff.some(p => p.email === state.selectedPatientForTherapist.email);
+        
+        if (!esEmailProfesional) {
+            setTimeout(() => {
+                sendEmailNotification(
+                    state.selectedPatientForTherapist.email,
+                    'Cita confirmada - Vínculo Salud',
+                    `Hola ${state.selectedPatientForTherapist.name},\n\nTu cita ha sido confirmada.`,
+                    'cita_confirmada',
+                    state.selectedPatientForTherapist.name,
+                    appointment
+                ).then(success => {
+                    if (success) appointment.emailEnviado = true;
+                });
+            }, 100);
+        }
     }
     
     import('./auth.js').then(auth => auth.switchTab('citas'));
@@ -1274,19 +1329,24 @@ export function cancelAppointment(id) {
         import('../main.js').then(main => main.save());
         showToast('Cita cancelada', 'success');
         
+        // Enviar email al PACIENTE
         if (appointment?.patientEmail && !appointment.emailCancelacionEnviado) {
-            setTimeout(() => {
-                sendEmailNotification(
-                    appointment.patientEmail,
-                    'Cita cancelada - Vínculo Salud',
-                    `Hola ${appointment.patient},\n\nTu cita ha sido cancelada.`,
-                    'cita_cancelada',
-                    appointment.patient,
-                    appointment
-                ).then(success => {
-                    if (success) appointment.emailCancelacionEnviado = true;
-                });
-            }, 100);
+            const esEmailProfesional = state.staff.some(p => p.email === appointment.patientEmail);
+            
+            if (!esEmailProfesional) {
+                setTimeout(() => {
+                    sendEmailNotification(
+                        appointment.patientEmail,
+                        'Cita cancelada - Vínculo Salud',
+                        `Hola ${appointment.patient},\n\nTu cita ha sido cancelada.`,
+                        'cita_cancelada',
+                        appointment.patient,
+                        appointment
+                    ).then(success => {
+                        if (success) appointment.emailCancelacionEnviado = true;
+                    });
+                }, 100);
+            }
         }
     }
 }
@@ -1423,4 +1483,4 @@ window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
 window.calcularEdad = calcularEdad;
 
-console.log('✅ citas.js cargado (versión con validación de email y control de duplicados)');
+console.log('✅ citas.js cargado (versión con validación ABSOLUTA de email)');

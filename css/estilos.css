@@ -3370,7 +3370,7 @@ button:not([style*="display: none"]) {
     button:hover,
     .btn-staff:hover,
     .btn-book:hover,
-    .btn-reservar:hover {
+    .btn-reservar:hover cs{
         transform: none !important;
     }
     
@@ -3383,69 +3383,3 @@ button:not([style*="display: none"]) {
     }
 }
 
-/* ============================================
-   FIX PARA ADMIN - BORRAR TIPOS DE ATENCIÓN
-   ============================================ */
-.atencion-card .delete-btn,
-.atencion-card button.delete,
-.atencion-card .btn-delete,
-.atencion-card [onclick*="delete"] {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: var(--peligro) !important;
-    color: white !important;
-    width: 30px !important;
-    height: 30px !important;
-    border-radius: 50% !important;
-    border: none !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1rem !important;
-    z-index: 10 !important;
-}
-
-.atencion-card .delete-btn:hover,
-.atencion-card button.delete:hover {
-    background: #c0392b !important;
-    transform: scale(1.1) !important;
-}
-
-/* ============================================
-   FIX PARA GUARDAR EDICIONES
-   ============================================ */
-button[onclick*="save"],
-.save-btn,
-.btn-guardar {
-    background: var(--exito) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: var(--radius-full) !important;
-    padding: 12px 24px !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    transition: all 0.3s ease !important;
-    min-height: 44px !important;
-}
-
-button[onclick*="save"]:hover,
-.save-btn:hover,
-.btn-guardar:hover {
-    background: var(--verde-azulado-claro) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 5px 15px rgba(99, 176, 199, 0.3) !important;
-}
-
-/* ============================================
-   FIX PARA QUE APAREZCAN LOS BOTONES DE BORRAR
-   ============================================ */
-.atencion-card {
-    position: relative !important;
-}
-
-.admin-view .atencion-card .delete-btn,
-.atencion-card .delete-btn {
-    display: flex !important;
-}

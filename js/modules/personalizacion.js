@@ -1651,6 +1651,7 @@ if (typeof window !== 'undefined') {
     window.renderAtencionAdmin = renderAtencionAdmin;
     
     console.log('✅ Funciones de personalización expuestas en window');
+    
 }
 
 console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas, secciones editables, SECCIÓN INSTAGRAM, FOOTER SINCRONIZADO y GESTIÓN DE TIPOS DE ATENCIÓN v4.0');

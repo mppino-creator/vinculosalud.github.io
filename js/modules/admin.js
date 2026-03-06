@@ -26,7 +26,60 @@ export function actualizarContadoresReinicio() {
 }
 
 // ============================================
-// 🆕 FUNCIÓN PARA AGREGAR BOTONES DE EDICIÓN EN EL DASHBOARD
+// 🆕 FUNCIÓN PARA REFRESCAR LA VISTA PÚBLICA
+// ============================================
+
+window.refrescarVistaPublica = function() {
+    console.log('🔄 Refrescando vista pública...');
+    
+    // Recargar todos los datos editables desde Firebase
+    if (typeof window.cargarInstagramData === 'function') {
+        window.cargarInstagramData();
+    }
+    if (typeof window.cargarAboutTexts === 'function') {
+        window.cargarAboutTexts();
+    }
+    if (typeof window.cargarAtencionTexts === 'function') {
+        window.cargarAtencionTexts();
+    }
+    if (typeof window.cargarContactInfo === 'function') {
+        window.cargarContactInfo();
+    }
+    if (typeof window.cargarLogo === 'function') {
+        window.cargarLogo();
+    }
+    if (typeof window.cargarTextos === 'function') {
+        window.cargarTextos();
+    }
+    if (typeof window.cargarFondo === 'function') {
+        window.cargarFondo();
+    }
+    
+    // Forzar actualización de las secciones visuales
+    if (typeof window.updateInstagramSection === 'function') {
+        window.updateInstagramSection();
+    }
+    if (typeof window.updateAboutSection === 'function') {
+        window.updateAboutSection();
+    }
+    if (typeof window.updateAtencionSection === 'function') {
+        window.updateAtencionSection();
+    }
+    if (typeof window.updateContactSection === 'function') {
+        window.updateContactSection();
+    }
+    
+    // Recargar profesionales para asegurar que todo está actualizado
+    if (typeof window.filterProfessionals === 'function') {
+        setTimeout(() => window.filterProfessionals(), 500);
+    }
+    
+    showToast('✅ Vista pública actualizada', 'success');
+    console.log('✅ Vista pública refrescada correctamente');
+};
+
+// ============================================
+// 🆕 FUNCIÓN PARA AGREGAR BOTONES DE EDICIÓN EN EL DASHBOARD (ACTUALIZADA)
 // ============================================
 
 export function addEditButtonsToAdmin() {
@@ -82,7 +135,7 @@ export function addEditButtonsToAdmin() {
         title.style.marginBottom = '20px';
         tabPersonalizacion.appendChild(title);
         
-        // Crear contenedor de botones
+        // Crear contenedor de botones con estilo mejorado
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'admin-edit-buttons';
         buttonContainer.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;';
@@ -97,7 +150,6 @@ export function addEditButtonsToAdmin() {
             <button class="btn-staff" onclick="showContactModal()" style="background: var(--verde-azulado-claro); padding: 15px; font-size: 1rem;">
                 <i class="fa fa-address-card"></i> Editar Contacto
             </button>
-            <!-- 🆕 NUEVO BOTÓN INSTAGRAM -->
             <button class="btn-staff" onclick="showInstagramModal()" style="background: #d62976; padding: 15px; font-size: 1rem;">
                 <i class="fab fa-instagram"></i> Editar Sección Instagram
             </button>
@@ -109,6 +161,10 @@ export function addEditButtonsToAdmin() {
             </button>
             <button class="btn-staff" onclick="showBackgroundImageModal()" style="background: var(--exito); padding: 15px; font-size: 1rem;">
                 <i class="fa fa-wallpaper"></i> Editar Fondo
+            </button>
+            <!-- 🆕 NUEVO BOTÓN DE REFRESCAR -->
+            <button class="btn-staff" onclick="refrescarVistaPublica()" style="background: #17a2b8; padding: 15px; font-size: 1rem;">
+                <i class="fa fa-sync-alt"></i> Refrescar Vista Pública
             </button>
         `;
         
@@ -135,6 +191,11 @@ export function addEditButtonsToAdmin() {
                 <div style="background: var(--verde-grisaceo-claro); padding: 15px; border-radius: 12px;">
                     <div style="font-weight: bold; margin-bottom: 5px;">Teléfono</div>
                     <div style="font-size: 0.9rem; color: var(--texto-secundario);">${state.contactInfo?.phone || 'No definido'}</div>
+                </div>
+                <!-- 🆕 Instagram preview -->
+                <div style="background: var(--verde-grisaceo-claro); padding: 15px; border-radius: 12px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Instagram</div>
+                    <div style="font-size: 0.9rem; color: var(--texto-secundario);">${state.instagramData?.title || 'No configurado'}</div>
                 </div>
             </div>
         `;
@@ -387,7 +448,6 @@ export function exportarTodasLasFichas() {
             heroTexts: state.heroTexts,
             logoImage: state.logoImage,
             backgroundImage: state.backgroundImage,
-            // 🆕 Instagram data
             instagramData: state.instagramData
         },
         datos: {
@@ -448,7 +508,6 @@ export function importarFichas() {
                         if (backup.textosEditables.heroTexts) state.heroTexts = backup.textosEditables.heroTexts;
                         if (backup.textosEditables.logoImage) state.logoImage = backup.textosEditables.logoImage;
                         if (backup.textosEditables.backgroundImage) state.backgroundImage = backup.textosEditables.backgroundImage;
-                        // 🆕 Importar Instagram data
                         if (backup.textosEditables.instagramData) state.instagramData = backup.textosEditables.instagramData;
                     }
                     
@@ -850,6 +909,27 @@ function descargarCSV(csv, nombreArchivo) {
 }
 
 // ============================================
+// 🆕 FUNCIÓN PARA VERIFICAR PERMISOS DE FIREBASE
+// ============================================
+
+window.verificarPermisosFirebase = function() {
+    console.log('🔍 Verificando permisos de Firebase...');
+    
+    // Intentar escribir un dato de prueba
+    const testRef = db.ref('_test_permissions');
+    testRef.set({ timestamp: Date.now(), user: state.currentUser?.data?.email })
+        .then(() => {
+            console.log('✅ Permisos de escritura OK');
+            testRef.remove();
+            showToast('✅ Permisos de Firebase correctos', 'success');
+        })
+        .catch(error => {
+            console.error('❌ Error de permisos:', error);
+            showToast('❌ Error de permisos en Firebase', 'error');
+        });
+};
+
+// ============================================
 // EXPORTAR FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {
@@ -864,6 +944,8 @@ if (typeof window !== 'undefined') {
     window.limpiarFichasHuerfanas = limpiarFichasHuerfanas;
     window.renderAdminPanel = renderAdminPanel;
     window.addEditButtonsToAdmin = addEditButtonsToAdmin;
+    window.refrescarVistaPublica = refrescarVistaPublica;
+    window.verificarPermisosFirebase = verificarPermisosFirebase;
     
     // Llamar a la función para agregar botones después de un tiempo
     setTimeout(() => {
@@ -873,4 +955,4 @@ if (typeof window !== 'undefined') {
     }, 3000);
 }
 
-console.log('✅ admin.js cargado con estadísticas integradas, botones de edición y sección Instagram v3.0');
+console.log('✅ admin.js cargado con estadísticas integradas, botones de edición, sección Instagram y REFRESCO DE VISTA v3.0');

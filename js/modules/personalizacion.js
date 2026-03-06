@@ -787,7 +787,7 @@ export function showAboutModal() {
                 </div>
                 
                 <div style="display:flex; gap:15px;">
-                    <button class="btn-staff" style="background:var(--exito); flex:1;" onclick="saveAboutTexts()">Guardar</button>
+                    <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="saveAboutTexts()">Guardar</button>
                     <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('aboutModal').style.display='none'">Cancelar</button>
                 </div>
             </div>
@@ -877,7 +877,7 @@ export function saveAboutTexts() {
 }
 
 // ============================================
-// 🆕 FUNCIONES PARA SECCIÓN TIPO DE ATENCIÓN (ACTUALIZADO CON BOTONES DE ELIMINAR)
+// 🆕 FUNCIONES PARA SECCIÓN TIPO DE ATENCIÓN
 // ============================================
 
 export function cargarAtencionTexts() {
@@ -891,229 +891,25 @@ export function cargarAtencionTexts() {
 }
 
 export function updateAtencionSection() {
-    const atencionGrid = document.getElementById('atencionGrid');
-    if (!atencionGrid) return;
+    const onlineTitle = document.getElementById('atencionOnlineTitle');
+    const onlineDesc = document.getElementById('atencionOnlineDesc');
+    const presencialTitle = document.getElementById('atencionPresencialTitle');
+    const presencialDesc = document.getElementById('atencionPresencialDesc');
+    const parejaTitle = document.getElementById('atencionParejaTitle');
+    const parejaDesc = document.getElementById('atencionParejaDesc');
+    const familiarTitle = document.getElementById('atencionFamiliarTitle');
+    const familiarDesc = document.getElementById('atencionFamiliarDesc');
     
-    // Determinar si el usuario es admin
-    const esAdmin = state.currentUser?.data?.isAdmin || false;
-    
-    let html = '';
-    
-    // Convertir atencionTexts a array para iterar
-    const tiposAtencion = Object.entries(atencionTexts).map(([key, value]) => ({
-        id: key,
-        titulo: value.title || key,
-        descripcion: value.description || '',
-        icono: getIconForTipo(key) // Función auxiliar para iconos
-    }));
-    
-    tiposAtencion.forEach((tipo, index) => {
-        html += `
-            <div class="atencion-card" data-tipo-id="${tipo.id}" data-index="${index}" style="position: relative;">
-                <i class="${tipo.icono}"></i>
-                <h3 id="atencion${capitalize(tipo.id)}Title">${tipo.titulo}</h3>
-                <p id="atencion${capitalize(tipo.id)}Desc">${tipo.descripcion}</p>
-                ${esAdmin ? `
-                    <button class="delete-atencion-btn" onclick="window.eliminarTipoAtencion('${tipo.id}')" 
-                            style="position: absolute; top: 10px; right: 10px; background: var(--peligro); color: white; width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-trash" style="font-size: 14px;"></i>
-                    </button>
-                ` : ''}
-            </div>
-        `);
-    });
-    
-    atencionGrid.innerHTML = html;
+    if (onlineTitle) onlineTitle.innerText = atencionTexts.online?.title || 'Online';
+    if (onlineDesc) onlineDesc.innerText = atencionTexts.online?.description || 'Sesiones por videollamada desde la comodidad de tu hogar';
+    if (presencialTitle) presencialTitle.innerText = atencionTexts.presencial?.title || 'Presencial';
+    if (presencialDesc) presencialDesc.innerText = atencionTexts.presencial?.description || 'Atención en nuestro consultorio con todos los protocolos';
+    if (parejaTitle) parejaTitle.innerText = atencionTexts.pareja?.title || 'Pareja';
+    if (parejaDesc) parejaDesc.innerText = atencionTexts.pareja?.description || 'Terapia para fortalecer vínculos y mejorar la comunicación';
+    if (familiarTitle) familiarTitle.innerText = atencionTexts.familiar?.title || 'Familiar';
+    if (familiarDesc) familiarDesc.innerText = atencionTexts.familiar?.description || 'Espacio de diálogo y crecimiento para toda la familia';
 }
 
-// Función auxiliar para obtener iconos según el tipo
-function getIconForTipo(tipo) {
-    const iconos = {
-        online: 'fas fa-video',
-        presencial: 'fas fa-building',
-        pareja: 'fas fa-heart',
-        familiar: 'fas fa-users'
-    };
-    return iconos[tipo] || 'fas fa-circle';
-}
-
-// Función auxiliar para capitalizar
-function capitalize(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-// 🆕 NUEVA FUNCIÓN: Eliminar tipo de atención
-export function eliminarTipoAtencion(tipoId) {
-    if (!confirm('¿Estás seguro de eliminar este tipo de atención?')) return;
-    
-    // Verificar que sea admin
-    if (!state.currentUser?.data?.isAdmin) {
-        showToast('No tienes permisos para eliminar', 'error');
-        return;
-    }
-    
-    // Eliminar del objeto atencionTexts
-    const nuevosTextos = { ...atencionTexts };
-    delete nuevosTextos[tipoId];
-    
-    atencionTexts = nuevosTextos;
-    
-    // Guardar en Firebase
-    db.ref('AtencionTexts').set(atencionTexts)
-        .then(() => {
-            showToast('✅ Tipo de atención eliminado', 'success');
-            updateAtencionSection(); // Actualizar la vista
-        })
-        .catch(error => {
-            console.error('Error al eliminar:', error);
-            showToast('❌ Error al eliminar', 'error');
-        });
-}
-
-// 🆕 NUEVA FUNCIÓN: Agregar tipo de atención
-export function agregarTipoAtencion() {
-    const modal = document.getElementById('agregarTipoAtencionModal');
-    if (!modal) {
-        // Crear modal si no existe
-        const modalHTML = `
-        <div id="agregarTipoAtencionModal" class="modal">
-            <div class="modal-content" style="max-width: 500px;">
-                <span class="modal-close" onclick="document.getElementById('agregarTipoAtencionModal').style.display='none'">&times;</span>
-                <h2 style="margin-bottom: 25px;">➕ Agregar Tipo de Atención</h2>
-                
-                <div class="form-group">
-                    <label>ID único (ej: "terapia-infantil")</label>
-                    <input type="text" id="nuevoTipoId" class="filter-input" placeholder="terapia-infantil" required>
-                    <small>Sin espacios, usa guiones</small>
-                </div>
-                
-                <div class="form-group">
-                    <label>Título</label>
-                    <input type="text" id="nuevoTitulo" class="filter-input" placeholder="Terapia Infantil" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea id="nuevaDescripcion" rows="3" class="filter-input" placeholder="Describe este tipo de atención..." required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Icono (opcional)</label>
-                    <select id="nuevoIcono" class="filter-input">
-                        <option value="fas fa-video">📹 Videollamada</option>
-                        <option value="fas fa-building">🏢 Presencial</option>
-                        <option value="fas fa-heart">❤️ Pareja</option>
-                        <option value="fas fa-users">👥 Familiar</option>
-                        <option value="fas fa-child">🧒 Infantil</option>
-                        <option value="fas fa-brain">🧠 Neuropsicología</option>
-                        <option value="fas fa-comments">💬 Terapia</option>
-                    </select>
-                </div>
-                
-                <div style="display:flex; gap:15px;">
-                    <button class="btn-staff" style="background:var(--exito); flex:1;" onclick="window.guardarNuevoTipoAtencion()">Guardar</button>
-                    <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('agregarTipoAtencionModal').style.display='none'">Cancelar</button>
-                </div>
-            </div>
-        </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-    }
-    
-    // Limpiar campos
-    const idInput = document.getElementById('nuevoTipoId');
-    const tituloInput = document.getElementById('nuevoTitulo');
-    const descInput = document.getElementById('nuevaDescripcion');
-    const iconoSelect = document.getElementById('nuevoIcono');
-    
-    if (idInput) idInput.value = '';
-    if (tituloInput) tituloInput.value = '';
-    if (descInput) descInput.value = '';
-    if (iconoSelect) iconoSelect.value = 'fas fa-video';
-    
-    const modal = document.getElementById('agregarTipoAtencionModal');
-    if (modal) modal.style.display = 'flex';
-}
-
-// 🆕 NUEVA FUNCIÓN: Guardar nuevo tipo de atención
-export function guardarNuevoTipoAtencion() {
-    const idInput = document.getElementById('nuevoTipoId');
-    const tituloInput = document.getElementById('nuevoTitulo');
-    const descInput = document.getElementById('nuevaDescripcion');
-    
-    if (!idInput || !tituloInput || !descInput) return;
-    
-    const nuevoId = idInput.value.trim();
-    const nuevoTitulo = tituloInput.value.trim();
-    const nuevaDesc = descInput.value.trim();
-    
-    // Validaciones
-    if (!nuevoId || !nuevoTitulo || !nuevaDesc) {
-        showToast('Completa todos los campos', 'error');
-        return;
-    }
-    
-    if (atencionTexts[nuevoId]) {
-        showToast('Ya existe un tipo con ese ID', 'error');
-        return;
-    }
-    
-    // Agregar al objeto
-    atencionTexts[nuevoId] = {
-        title: nuevoTitulo,
-        description: nuevaDesc
-    };
-    
-    // Guardar en Firebase
-    db.ref('AtencionTexts').set(atencionTexts)
-        .then(() => {
-            showToast('✅ Tipo de atención agregado', 'success');
-            updateAtencionSection(); // Actualizar la vista
-            
-            // Cerrar modal
-            const modal = document.getElementById('agregarTipoAtencionModal');
-            if (modal) modal.style.display = 'none';
-        })
-        .catch(error => {
-            console.error('Error al guardar:', error);
-            showToast('❌ Error al guardar', 'error');
-        });
-}
-
-// 🆕 NUEVA FUNCIÓN: Renderizar tipos de atención en admin
-export function renderAtencionAdmin() {
-    const container = document.getElementById('atencionAdminList');
-    if (!container) return;
-    
-    let html = '<h3>Tipos de Atención Actuales</h3>';
-    
-    Object.entries(atencionTexts).forEach(([id, data]) => {
-        html += `
-            <div style="border: 1px solid var(--gris-claro); padding: 15px; border-radius: 12px; margin-bottom: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong style="font-size: 1.1rem;">${data.title}</strong><br>
-                        <small style="color: var(--texto-secundario);">ID: ${id}</small><br>
-                        <p style="margin-top: 5px;">${data.description}</p>
-                    </div>
-                    <button class="btn-icon" style="background: var(--peligro); color: white;" onclick="window.eliminarTipoAtencion('${id}')">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-    
-    html += `
-        <button class="btn-staff" style="margin-top: 20px;" onclick="window.agregarTipoAtencion()">
-            <i class="fas fa-plus"></i> Agregar Nuevo Tipo
-        </button>
-    `;
-    
-    container.innerHTML = html;
-}
-
-// Modificar showAtencionModal para incluir vista admin
 export function showAtencionModal() {
     // Crear modal si no existe
     if (!document.getElementById('atencionModal')) {
@@ -1123,34 +919,58 @@ export function showAtencionModal() {
                 <span class="modal-close" onclick="document.getElementById('atencionModal').style.display='none'">&times;</span>
                 <h2 style="margin-bottom: 25px;">📝 Editar Tipos de Atención</h2>
                 
-                <div style="display: grid; gap: 20px; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
-                    ${Object.entries(atencionTexts).map(([id, data]) => `
-                        <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px; position: relative;">
-                            <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">${data.title}</h3>
-                            <div class="form-group">
-                                <label>Título</label>
-                                <input type="text" id="atencion_${id}_title" class="filter-input" value="${data.title}">
-                            </div>
-                            <div class="form-group">
-                                <label>Descripción</label>
-                                <textarea id="atencion_${id}_desc" rows="2" class="filter-input">${data.description}</textarea>
-                            </div>
-                            <button class="delete-atencion-btn" onclick="window.eliminarTipoAtencion('${id}')" 
-                                    style="position: absolute; top: 10px; right: 10px; background: var(--peligro); color: white; width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;">
-                                <i class="fas fa-trash" style="font-size: 14px;"></i>
-                            </button>
+                <div style="display: grid; gap: 20px;">
+                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
+                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Online</h3>
+                        <div class="form-group">
+                            <label>Título</label>
+                            <input type="text" id="atencionOnlineTitleInput" class="filter-input">
                         </div>
-                    `).join('')}
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea id="atencionOnlineDescInput" rows="2" class="filter-input"></textarea>
+                        </div>
+                    </div>
                     
-                    <div style="border: 2px dashed var(--gris-claro); padding: 20px; border-radius: 16px; text-align: center;">
-                        <button class="btn-staff" onclick="window.agregarTipoAtencion()" style="background: var(--exito);">
-                            <i class="fas fa-plus"></i> Agregar Nuevo Tipo
-                        </button>
+                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
+                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Presencial</h3>
+                        <div class="form-group">
+                            <label>Título</label>
+                            <input type="text" id="atencionPresencialTitleInput" class="filter-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea id="atencionPresencialDescInput" rows="2" class="filter-input"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
+                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Pareja</h3>
+                        <div class="form-group">
+                            <label>Título</label>
+                            <input type="text" id="atencionParejaTitleInput" class="filter-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea id="atencionParejaDescInput" rows="2" class="filter-input"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
+                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Familiar</h3>
+                        <div class="form-group">
+                            <label>Título</label>
+                            <input type="text" id="atencionFamiliarTitleInput" class="filter-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea id="atencionFamiliarDescInput" rows="2" class="filter-input"></textarea>
+                        </div>
                     </div>
                 </div>
                 
                 <div style="display:flex; gap:15px; margin-top: 30px;">
-                    <button class="btn-staff" style="background:var(--exito); flex:1;" onclick="saveAtencionTexts()">Guardar Cambios</button>
+                    <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="saveAtencionTexts()">Guardar</button>
                     <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('atencionModal').style.display='none'">Cancelar</button>
                 </div>
             </div>
@@ -1159,42 +979,65 @@ export function showAtencionModal() {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
     
+    // Cargar datos actuales
+    const onlineTitle = document.getElementById('atencionOnlineTitleInput');
+    const onlineDesc = document.getElementById('atencionOnlineDescInput');
+    const presencialTitle = document.getElementById('atencionPresencialTitleInput');
+    const presencialDesc = document.getElementById('atencionPresencialDescInput');
+    const parejaTitle = document.getElementById('atencionParejaTitleInput');
+    const parejaDesc = document.getElementById('atencionParejaDescInput');
+    const familiarTitle = document.getElementById('atencionFamiliarTitleInput');
+    const familiarDesc = document.getElementById('atencionFamiliarDescInput');
+    
+    if (onlineTitle) onlineTitle.value = atencionTexts.online?.title || 'Online';
+    if (onlineDesc) onlineDesc.value = atencionTexts.online?.description || '';
+    if (presencialTitle) presencialTitle.value = atencionTexts.presencial?.title || 'Presencial';
+    if (presencialDesc) presencialDesc.value = atencionTexts.presencial?.description || '';
+    if (parejaTitle) parejaTitle.value = atencionTexts.pareja?.title || 'Pareja';
+    if (parejaDesc) parejaDesc.value = atencionTexts.pareja?.description || '';
+    if (familiarTitle) familiarTitle.value = atencionTexts.familiar?.title || 'Familiar';
+    if (familiarDesc) familiarDesc.value = atencionTexts.familiar?.description || '';
+    
     const modal = document.getElementById('atencionModal');
     if (modal) modal.style.display = 'flex';
 }
 
 export function saveAtencionTexts() {
-    // Recopilar todos los valores del modal
-    const nuevosTextos = {};
+    const onlineTitle = document.getElementById('atencionOnlineTitleInput');
+    const onlineDesc = document.getElementById('atencionOnlineDescInput');
+    const presencialTitle = document.getElementById('atencionPresencialTitleInput');
+    const presencialDesc = document.getElementById('atencionPresencialDescInput');
+    const parejaTitle = document.getElementById('atencionParejaTitleInput');
+    const parejaDesc = document.getElementById('atencionParejaDescInput');
+    const familiarTitle = document.getElementById('atencionFamiliarTitleInput');
+    const familiarDesc = document.getElementById('atencionFamiliarDescInput');
     
-    Object.keys(atencionTexts).forEach(id => {
-        const titleInput = document.getElementById(`atencion_${id}_title`);
-        const descInput = document.getElementById(`atencion_${id}_desc`);
-        
-        if (titleInput && descInput) {
-            nuevosTextos[id] = {
-                title: titleInput.value,
-                description: descInput.value
-            };
-        } else {
-            // Mantener el valor original si no hay inputs
-            nuevosTextos[id] = atencionTexts[id];
+    atencionTexts = {
+        online: {
+            title: onlineTitle?.value || 'Online',
+            description: onlineDesc?.value || 'Sesiones por videollamada desde la comodidad de tu hogar'
+        },
+        presencial: {
+            title: presencialTitle?.value || 'Presencial',
+            description: presencialDesc?.value || 'Atención en nuestro consultorio con todos los protocolos'
+        },
+        pareja: {
+            title: parejaTitle?.value || 'Pareja',
+            description: parejaDesc?.value || 'Terapia para fortalecer vínculos y mejorar la comunicación'
+        },
+        familiar: {
+            title: familiarTitle?.value || 'Familiar',
+            description: familiarDesc?.value || 'Espacio de diálogo y crecimiento para toda la familia'
         }
-    });
+    };
     
-    atencionTexts = nuevosTextos;
+    db.ref('AtencionTexts').set(atencionTexts);
+    updateAtencionSection();
     
-    db.ref('AtencionTexts').set(atencionTexts)
-        .then(() => {
-            updateAtencionSection();
-            const modal = document.getElementById('atencionModal');
-            if (modal) modal.style.display = 'none';
-            showToast('Tipos de atención actualizados', 'success');
-        })
-        .catch(error => {
-            console.error('Error al guardar:', error);
-            showToast('Error al guardar los cambios', 'error');
-        });
+    const modal = document.getElementById('atencionModal');
+    if (modal) modal.style.display = 'none';
+    
+    showToast('Tipos de atención actualizados', 'success');
 }
 
 // ============================================
@@ -1263,7 +1106,7 @@ export function showContactModal() {
                 </div>
                 
                 <div style="display:flex; gap:15px;">
-                    <button class="btn-staff" style="background:var(--exito); flex:1;" onclick="saveContactInfo()">Guardar</button>
+                    <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="saveContactInfo()">Guardar</button>
                     <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('contactModal').style.display='none'">Cancelar</button>
                 </div>
             </div>
@@ -1643,12 +1486,6 @@ if (typeof window !== 'undefined') {
     window.uploadInstagramImage = uploadInstagramImage;
     window.saveInstagramData = saveInstagramData;
     window.cargarInstagramData = cargarInstagramData;
-    
-    // 🆕 NUEVAS FUNCIONES PARA TIPOS DE ATENCIÓN
-    window.eliminarTipoAtencion = eliminarTipoAtencion;
-    window.agregarTipoAtencion = agregarTipoAtencion;
-    window.guardarNuevoTipoAtencion = guardarNuevoTipoAtencion;
-    window.renderAtencionAdmin = renderAtencionAdmin;
 }
 
-console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas, secciones editables, SECCIÓN INSTAGRAM, FOOTER SINCRONIZADO y GESTIÓN DE TIPOS DE ATENCIÓN v4.0');
+console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas, secciones editables, SECCIÓN INSTAGRAM y FOOTER SINCRONIZADO v3.0');

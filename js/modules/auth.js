@@ -790,4 +790,47 @@ if (typeof window !== 'undefined') {
     window.abrirGestionDisponibilidad = abrirGestionDisponibilidad;
 }
 
+// ============================================
+// FORZAR VERIFICACIÓN DE SESIÓN AL INICIAR
+// ============================================
+(function initAuth() {
+    console.log('🔧 Inicializando autenticación...');
+    
+    // Verificar sesión guardada inmediatamente
+    setTimeout(() => {
+        const savedUser = localStorage.getItem('vinculoCurrentUser');
+        if (savedUser) {
+            try {
+                const userData = JSON.parse(savedUser);
+                console.log('📦 Sesión encontrada en localStorage:', userData);
+                
+                // Buscar datos completos en staff
+                if (userData.role === 'admin') {
+                    const adminFullData = state.staff.find(s => s.id == userData.data.id) || userData.data;
+                    state.setCurrentUser({ role: 'admin', data: adminFullData });
+                    
+                    // Actualizar UI
+                    const staffLink = document.querySelector('a[onclick*="showLoginModal"]');
+                    if (staffLink) {
+                        staffLink.setAttribute('onclick', 'mostrarMenuStaff(true); return false;');
+                        const icon = staffLink.querySelector('i');
+                        if (icon) {
+                            icon.className = 'fa fa-user-check';
+                            icon.style.color = '#1E7A8A';
+                        }
+                        const textNode = staffLink.childNodes[2];
+                        if (textNode) textNode.textContent = adminFullData.name || 'Admin';
+                    }
+                    
+                    console.log('✅ Sesión de admin restaurada automáticamente');
+                }
+            } catch (e) {
+                console.error('❌ Error restaurando sesión:', e);
+            }
+        } else {
+            console.log('ℹ️ No hay sesión guardada');
+        }
+    }, 1000);
+})();
+
 console.log('✅ auth.js cargado correctamente con funciones de login, menú mejorado y gestión de disponibilidad para profesionales');

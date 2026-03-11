@@ -4129,3 +4129,151 @@ button:not([style*="display: none"]) {
 /* ============================================
    FIN DE MEJORAS VISUALES v5.1
    ============================================ */
+
+   /* ============================================
+   HOTFIX URGENTE - BOTONES CLICKEABLES
+   ============================================ */
+
+/* 1. FIX: Asegurar que todos los botones sean clickeables */
+button,
+.btn-staff,
+.btn-book,
+.btn-new-message,
+.btn-icon,
+.btn-reservar,
+.btn-cta,
+.btn-instagram,
+.btn-contact,
+.btn-mas-info,
+.btn-agendar,
+#bookBtn,
+#loginBtn,
+#logoutBtn,
+#registerBtn,
+#saveProfileBtn,
+#cancelBtn,
+#deleteBtn,
+#printBtn,
+#applyBtn,
+#clearBtn,
+#generateBtn,
+#addBtn,
+#publishBtn,
+#saveBtn,
+.edit-btn,
+.delete-btn,
+.close-btn,
+.modal-close,
+.tab-btn,
+.filter-btn,
+.submit-btn,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+button[onclick*="crearFicha"],
+button[onclick*="mostrarFormularioFichaIngreso"],
+button[onclick*="window.fichasClinicas"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 999 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-flex !important;
+}
+
+/* 2. FIX: El botón específico de crear ficha */
+.detalle-paciente button,
+#emergencyFichaModal button,
+button:has(.fa-plus-circle),
+button:has(.fa-file-medical),
+button[style*="var(--verde-exito)"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 9999 !important;
+    position: relative !important;
+    background: var(--verde-exito) !important;
+    color: white !important;
+    padding: 12px 24px !important;
+    border-radius: 40px !important;
+    border: none !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 8px 20px rgba(52, 199, 89, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.detalle-paciente button:hover,
+button:has(.fa-plus-circle):hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 28px rgba(52, 199, 89, 0.4) !important;
+}
+
+/* 3. FIX: Eliminar cualquier elemento que pueda estar encima */
+.detalle-paciente,
+.panel,
+.modal,
+.modal-content,
+.glass,
+.booking-grid,
+#patientsList,
+.patient-card,
+.detalle-paciente > div,
+#modalFichaIngreso,
+#emergencyFichaModal {
+    z-index: auto !important;
+}
+
+/* 4. FIX: Asegurar que el modal de ficha sea clickeable */
+#modalFichaIngreso button,
+#emergencyFichaModal button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10000 !important;
+    position: relative !important;
+}
+
+/* 5. FIX: Para el contenedor del detalle del paciente */
+.detalle-paciente {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.detalle-paciente > div {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* 6. FIX: Garantizar que los botones no estén ocultos por otros elementos */
+button:active,
+button:focus,
+.btn-staff:active,
+.btn-staff:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(30, 122, 138, 0.3) !important;
+}
+
+/* 7. FIX: Override para cualquier estilo que esté bloqueando clicks */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.no-click {
+    pointer-events: none !important;
+}
+
+/* 8. FIX: Asegurar que el botón verde de crear ficha sea visible y clickeable */
+button[style*="background: var(--verde-exito)"] {
+    background: #34c759 !important;
+    color: white !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    transform: scale(1) !important;
+    transition: all 0.2s ease !important;
+}
+
+button[style*="background: var(--verde-exito)"]:hover {
+    transform: scale(1.02) !important;
+    background: #2db44e !important;
+}

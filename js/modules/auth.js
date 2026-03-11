@@ -38,7 +38,7 @@ export function closeLoginModal() {
 }
 
 // ============================================
-// FUNCIÓN PARA ACTUALIZAR UI SIN CAMBIAR DE VISTA - VERSIÓN CORREGIDA
+// FUNCIÓN PARA ACTUALIZAR UI SIN CAMBIAR DE VISTA
 // ============================================
 function actualizarUIAdmin(userData, role) {
     console.log('👑 Actualizando UI para:', role);
@@ -117,7 +117,7 @@ function actualizarUIAdmin(userData, role) {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR MENÚ STAFF - VERSIÓN CORREGIDA (SIN BOXES)
+// FUNCIÓN PARA MOSTRAR MENÚ STAFF
 // ============================================
 window.mostrarMenuStaff = function(desdeLogin = false) {
     if (!state.currentUser) {
@@ -244,7 +244,7 @@ function abrirGestionDisponibilidad() {
 }
 
 // ============================================
-// FUNCIÓN PARA IR AL DASHBOARD - VERSIÓN CORREGIDA
+// FUNCIÓN PARA IR AL DASHBOARD
 // ============================================
 window.irADashboard = function() {
     console.log('📊 Cambiando a dashboard');
@@ -293,9 +293,9 @@ window.volverAVistaPublica = function() {
 };
 
 // ============================================
-// FUNCIÓN DE LOGIN MODIFICADA
+// 🔥 FUNCIÓN DE LOGIN CORREGIDA CON FIREBASE AUTH
 // ============================================
-export function processLogin() {
+export async function processLogin() {
     const user = document.getElementById('loginUser')?.value;
     const pass = document.getElementById('loginPass')?.value;
     const btn = document.getElementById('loginBtn');
@@ -310,83 +310,131 @@ export function processLogin() {
         btn.disabled = true;
     }
 
-    // Admin por defecto
-    if (user === "Admin" && pass === "Nina2026") {
-        console.log("✅ Acceso Admin concedido");
+    try {
+        // 🔥 PASO 1: Verificar credenciales en Firebase Auth
+        let email = user;
         
-        const adminUser = {
-            id: 9999,
-            name: 'Administrador',
-            usuario: 'Admin',
-            pass: 'Nina2026',
-            email: 'admin@vinculosalud.cl',
-            isAdmin: true
-        };
-        
-        state.setCurrentUser({ role: 'admin', data: adminUser });
-        closeLoginModal();
-        
-        // Guardar en localStorage
-        localStorage.setItem('vinculoCurrentUser', JSON.stringify({ role: 'admin', data: adminUser }));
-        
-        // 🔥 IMPORTANTE: Actualizar UI sin cambiar de vista
-        actualizarUIAdmin(adminUser, 'admin');
-        
-        if (btn) {
-            btn.innerHTML = 'Ingresar al Panel';
-            btn.disabled = false;
+        // Si el usuario no es un email, buscar en staff para obtener el email
+        if (!user.includes('@')) {
+            const staffUser = state.staff.find(s => s.usuario === user || s.name === user);
+            if (staffUser && staffUser.email) {
+                email = staffUser.email;
+            } else {
+                // Usuario por defecto para admin si no se encuentra
+                if (user === "Admin") {
+                    email = "admin@vinculosalud.cl";
+                } else {
+                    throw new Error('Usuario no encontrado');
+                }
+            }
         }
-        return;
-    }
 
-    // Buscar en staff
-    const foundUser = state.staff.find(s => 
-        (s.usuario === user || s.name === user) && s.pass === pass
-    );
+        // 🔥 Iniciar sesión en Firebase Authentication
+        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, pass);
+        console.log('✅ Firebase Auth login exitoso:', userCredential.user.uid);
+        
+        // PASO 2: Verificar si es admin por defecto
+        if (user === "Admin" && pass === "Nina2026") {
+            console.log("✅ Acceso Admin concedido");
+            
+            const adminUser = {
+                id: 9999,
+                name: 'Administrador',
+                usuario: 'Admin',
+                pass: 'Nina2026',
+                email: email,
+                isAdmin: true
+            };
+            
+            state.setCurrentUser({ role: 'admin', data: adminUser });
+            closeLoginModal();
+            
+            // Guardar en localStorage
+            localStorage.setItem('vinculoCurrentUser', JSON.stringify({ 
+                role: 'admin', 
+                data: adminUser,
+                firebaseUid: userCredential.user.uid 
+            }));
+            
+            // Actualizar UI
+            actualizarUIAdmin(adminUser, 'admin');
+            
+            if (btn) {
+                btn.innerHTML = 'Ingresar al Panel';
+                btn.disabled = false;
+            }
+            return;
+        }
 
-    if (foundUser) {
-        console.log("✅ Acceso profesional concedido:", foundUser.name);
+        // PASO 3: Buscar en staff por email
+        const foundUser = state.staff.find(s => 
+            s.email && s.email.toLowerCase() === email.toLowerCase()
+        );
+
+        if (foundUser) {
+            console.log("✅ Acceso profesional concedido:", foundUser.name);
+            
+            const role = foundUser.isAdmin ? 'admin' : 'psych';
+            
+            // Buscar datos completos del profesional en STAFF
+            const psychFullData = state.staff.find(s => s.id == foundUser.id) || foundUser;
+            
+            // Guardar usuario con TODOS los datos
+            state.setCurrentUser({ 
+                role, 
+                data: psychFullData
+            });
+            
+            closeLoginModal();
+            
+            // Guardar en localStorage (con Firebase UID)
+            const userToStore = {
+                role: role,
+                firebaseUid: userCredential.user.uid,
+                data: {
+                    id: psychFullData.id,
+                    name: psychFullData.name,
+                    email: psychFullData.email,
+                    isAdmin: psychFullData.isAdmin || false,
+                    usuario: psychFullData.usuario || '',
+                    genero: psychFullData.genero || ''
+                }
+            };
+            localStorage.setItem('vinculoCurrentUser', JSON.stringify(userToStore));
+            
+            // Actualizar UI
+            actualizarUIAdmin(psychFullData, role);
+            
+            // Cargar configuración en background
+            setTimeout(() => {
+                if (typeof loadMyConfig === 'function') {
+                    console.log('⚙️ Cargando configuración del profesional...');
+                    loadMyConfig();
+                }
+            }, 2000);
+            
+        } else {
+            showToast('Usuario no autorizado en el sistema', 'error');
+            
+            // Si el usuario existe en Firebase Auth pero no en Staff, cerrar sesión
+            await firebase.auth().signOut();
+        }
         
-        const role = foundUser.isAdmin ? 'admin' : 'psych';
+    } catch (error) {
+        console.error('❌ Error de autenticación:', error);
         
-        // 🔥 BUSCAR DATOS COMPLETOS DEL PROFESIONAL EN STAFF
-        const psychFullData = state.staff.find(s => s.id == foundUser.id) || foundUser;
+        let mensajeError = 'Error al iniciar sesión';
+        if (error.code === 'auth/user-not-found') {
+            mensajeError = 'Usuario no encontrado';
+        } else if (error.code === 'auth/wrong-password') {
+            mensajeError = 'Contraseña incorrecta';
+        } else if (error.code === 'auth/invalid-email') {
+            mensajeError = 'Email inválido';
+        } else if (error.message === 'Usuario no encontrado') {
+            mensajeError = 'Usuario no encontrado en el sistema';
+        }
         
-        // Guardar usuario con TODOS los datos
-        state.setCurrentUser({ 
-            role, 
-            data: psychFullData
-        });
-        
-        closeLoginModal();
-        
-        // Guardar en localStorage (solo datos básicos para no exceder espacio)
-        const userToStore = {
-            role: role,
-            data: {
-                id: psychFullData.id,
-                name: psychFullData.name,
-                email: psychFullData.email,
-                isAdmin: psychFullData.isAdmin || false,
-                usuario: psychFullData.usuario || '',
-                genero: psychFullData.genero || ''
-            }
-        };
-        localStorage.setItem('vinculoCurrentUser', JSON.stringify(userToStore));
-        
-        // 🔥 IMPORTANTE: Actualizar UI sin cambiar de vista
-        actualizarUIAdmin(psychFullData, role);
-        
-        // 🔥 NUEVO: Cargar configuración en background
-        setTimeout(() => {
-            if (typeof loadMyConfig === 'function') {
-                console.log('⚙️ Cargando configuración del profesional...');
-                loadMyConfig();
-            }
-        }, 2000);
-        
-    } else {
-        showToast('Usuario o contraseña incorrectos', 'error');
+        showToast(mensajeError, 'error');
     }
     
     if (btn) {
@@ -396,10 +444,18 @@ export function processLogin() {
 }
 
 // ============================================
-// FUNCIÓN DE LOGOUT
+// FUNCIÓN DE LOGOUT CORREGIDA
 // ============================================
-export function logout() {
+export async function logout() {
     console.log('🚪 Cerrando sesión');
+    
+    try {
+        // 🔥 Cerrar sesión en Firebase Auth
+        await firebase.auth().signOut();
+        console.log('✅ Sesión de Firebase Auth cerrada');
+    } catch (error) {
+        console.error('❌ Error al cerrar sesión en Firebase:', error);
+    }
     
     state.setCurrentUser(null);
     localStorage.removeItem('vinculoCurrentUser');
@@ -497,7 +553,7 @@ function mostrarDashboardInmediato(role, userData) {
         dashSubtitle.innerText = `Bienvenido, ${userData.name} ${generoEmoji}`;
     }
     
-    // 🔥 NUEVO: FORZAR visibilidad de TODAS las pestañas (ignorando CSS)
+    // Forzar visibilidad de pestañas
     console.log('🔧 Forzando visibilidad de pestañas para rol:', role);
     
     // Pestañas de ADMIN - SIN BOXES
@@ -510,7 +566,6 @@ function mostrarDashboardInmediato(role, userData) {
     adminTabs.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            // FORZAR con !important
             el.style.setProperty('display', role === 'admin' ? 'inline-block' : 'none', 'important');
             console.log(`  📌 ${id}: ${role === 'admin' ? 'VISIBLE' : 'oculto'}`);
         } else {
@@ -528,7 +583,7 @@ function mostrarDashboardInmediato(role, userData) {
         }
     });
     
-    // Pestañas comunes (Citas, Solicitudes, Pacientes - siempre visibles)
+    // Pestañas comunes
     const commonTabIds = ['citas', 'solicitudes', 'pacientes'];
     commonTabIds.forEach(tabName => {
         const tabs = Array.from(document.querySelectorAll('.tab')).find(t => 
@@ -563,7 +618,7 @@ function mostrarDashboardInmediato(role, userData) {
 }
 
 // ============================================
-// FUNCIÓN SWITCH TAB (ACTUALIZADA - VERSIÓN CORREGIDA)
+// FUNCIÓN SWITCH TAB
 // ============================================
 
 export function switchTab(tabName) {
@@ -754,10 +809,10 @@ export function updateProfileButton() {
 }
 
 // ============================================
-// VERIFICAR SESIÓN GUARDADA - VERSIÓN CORREGIDA
+// 🔥 VERIFICAR SESIÓN GUARDADA CORREGIDA
 // ============================================
 
-export function verificarSesionGuardada() {
+export async function verificarSesionGuardada() {
     console.log('🔍 Verificando sesión guardada...');
     
     const savedUser = localStorage.getItem('vinculoCurrentUser');
@@ -770,14 +825,33 @@ export function verificarSesionGuardada() {
         const userData = JSON.parse(savedUser);
         console.log('📦 Sesión encontrada:', userData);
         
+        // 🔥 Verificar si hay un UID de Firebase guardado
+        if (userData.firebaseUid) {
+            try {
+                // Intentar restaurar sesión en Firebase Auth
+                // Nota: Firebase maneja la persistencia automáticamente
+                const currentUser = firebase.auth().currentUser;
+                if (currentUser && currentUser.uid === userData.firebaseUid) {
+                    console.log('✅ Sesión de Firebase Auth activa:', currentUser.uid);
+                } else {
+                    console.log('⚠️ No hay sesión activa en Firebase Auth');
+                    // No podemos restaurar automáticamente, requerimos nuevo login
+                    localStorage.removeItem('vinculoCurrentUser');
+                    return false;
+                }
+            } catch (e) {
+                console.error('❌ Error verificando Firebase Auth:', e);
+            }
+        }
+        
         if (userData.role === 'admin') {
-            state.setCurrentUser(userData);
+            state.setCurrentUser({ role: 'admin', data: userData.data });
             actualizarUIAdmin(userData.data, 'admin');
             return true;
         } else {
             const psychExists = state.staff.some(s => s.id == userData.data.id);
             if (psychExists) {
-                // 🔥 NUEVO: Obtener datos completos del staff
+                // Obtener datos completos del staff
                 const psychFullData = state.staff.find(s => s.id == userData.data.id);
                 state.setCurrentUser({ 
                     role: 'psych', 
@@ -824,10 +898,52 @@ if (typeof window !== 'undefined') {
 }
 
 // ============================================
-// FORZAR VERIFICACIÓN DE SESIÓN AL INICIAR
+// 🔥 INICIALIZACIÓN CORREGIDA
 // ============================================
 (function initAuth() {
     console.log('🔧 Inicializando autenticación...');
+    
+    // Escuchar cambios en el estado de autenticación de Firebase
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            console.log('✅ Usuario autenticado en Firebase:', user.uid);
+            
+            // Verificar si tenemos sesión guardada
+            const savedUser = localStorage.getItem('vinculoCurrentUser');
+            if (savedUser) {
+                try {
+                    const userData = JSON.parse(savedUser);
+                    if (userData.firebaseUid === user.uid) {
+                        console.log('📦 Sesión sincronizada con Firebase');
+                        
+                        // Restaurar estado si es necesario
+                        if (!state.currentUser) {
+                            if (userData.role === 'admin') {
+                                state.setCurrentUser({ role: 'admin', data: userData.data });
+                                actualizarUIAdmin(userData.data, 'admin');
+                            } else {
+                                const psychFullData = state.staff.find(s => s.id == userData.data.id);
+                                if (psychFullData) {
+                                    state.setCurrentUser({ role: 'psych', data: psychFullData });
+                                    actualizarUIAdmin(psychFullData, 'psych');
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('❌ Error procesando sesión guardada:', e);
+                }
+            }
+        } else {
+            console.log('ℹ️ No hay usuario autenticado en Firebase');
+            // Solo limpiar estado si no hay sesión guardada que intentar restaurar
+            const savedUser = localStorage.getItem('vinculoCurrentUser');
+            if (!savedUser && state.currentUser) {
+                console.log('🧹 Limpiando estado local sin sesión');
+                state.setCurrentUser(null);
+            }
+        }
+    });
     
     // Verificar sesión guardada inmediatamente
     setTimeout(() => {
@@ -866,4 +982,4 @@ if (typeof window !== 'undefined') {
     }, 1000);
 })();
 
-console.log('✅ auth.js cargado correctamente con funciones de login, menú mejorado y gestión de disponibilidad para profesionales (sin boxes)');
+console.log('✅ auth.js cargado correctamente con Firebase Authentication integrado');

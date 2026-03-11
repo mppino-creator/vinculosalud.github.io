@@ -571,14 +571,22 @@ window.previewMyQR = function(input) {
 };
 
 // ============================================
-// 🆕 FUNCIÓN PARA GUARDAR PERFIL PROFESIONAL
+// 🔥 FUNCIÓN PARA GUARDAR PERFIL PROFESIONAL CORREGIDA
 // ============================================
 
-export function saveMyProfile() {
+export async function saveMyProfile() {
     if (!state.currentUser || state.currentUser.role !== 'psych') {
         showToast('No autorizado', 'error');
         return;
     }
+    
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        showToast('Debes iniciar sesión en Firebase', 'error');
+        return;
+    }
+    
+    console.log('💾 Guardando perfil profesional para UID:', user.uid);
     
     const psych = state.currentUser.data;
     if (!psych) return;
@@ -701,24 +709,56 @@ export function saveMyProfile() {
         if (editMyPhone) psych.phone = editMyPhone.value;
         if (editMyAddress) psych.address = editMyAddress.value;
         
-        // Guardar en Firebase
-        import('../main.js').then(main => {
-            main.save();
-            showToast('✅ Perfil actualizado correctamente', 'success');
-            
-            // Limpiar datos temporales
-            state.setTempImageData(null);
-            state.setTempQrData(null);
-            
-            // Cerrar modal
-            const modal = document.getElementById('editMyProfileModal');
-            if (modal) modal.style.display = 'none';
-            
-            // Actualizar vista si es necesario
-            if (typeof window.filterProfessionals === 'function') {
-                window.filterProfessionals();
+        // 🔥 GUARDAR DIRECTAMENTE EN FIREBASE EN LA RUTA CORRECTA
+        // En lugar de llamar a main.save(), guardamos directamente en Staff/UID
+        
+        // Preparar datos para guardar (sin campos undefined)
+        const cleanData = JSON.parse(JSON.stringify(psych));
+        
+        // Agregar timestamp
+        cleanData.updatedAt = new Date().toISOString();
+        
+        // Guardar en Firebase en la ruta específica del profesional
+        await firebase.database().ref(`Staff/${user.uid}`).update(cleanData);
+        
+        console.log('✅ Perfil guardado correctamente en Firebase');
+        showToast('✅ Perfil actualizado correctamente', 'success');
+        
+        // Actualizar también en el array de staff para mantener consistencia
+        const staffIndex = state.staff.findIndex(s => s.id == psych.id);
+        if (staffIndex !== -1) {
+            state.staff[staffIndex] = { ...state.staff[staffIndex], ...cleanData };
+        }
+        
+        // Actualizar currentUser.data
+        state.currentUser.data = { ...state.currentUser.data, ...cleanData };
+        
+        // Guardar en localStorage para persistencia
+        localStorage.setItem('vinculoCurrentUser', JSON.stringify({
+            role: 'psych',
+            firebaseUid: user.uid,
+            data: {
+                id: psych.id,
+                name: psych.name,
+                email: psych.email,
+                isAdmin: false,
+                usuario: psych.usuario || '',
+                genero: psych.genero || ''
             }
-        });
+        }));
+        
+        // Limpiar datos temporales
+        state.setTempImageData(null);
+        state.setTempQrData(null);
+        
+        // Cerrar modal
+        const modal = document.getElementById('editMyProfileModal');
+        if (modal) modal.style.display = 'none';
+        
+        // Actualizar vista si es necesario
+        if (typeof window.filterProfessionals === 'function') {
+            window.filterProfessionals();
+        }
         
     } catch (error) {
         console.error('❌ Error guardando perfil:', error);

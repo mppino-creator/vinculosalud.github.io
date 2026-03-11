@@ -118,8 +118,13 @@ window.showPaymentDetails = citas.showPaymentDetails;
 window.renderPendingRequests = citas.renderPendingRequests;
 window.renderAppointments = citas.renderAppointments;
 // Ya son expuestas directamente por citas.js
-window.selectTimeSlot = citas.selectTimeSlot;
-window.selectTimePref = citas.selectTimePref;
+if (typeof citas.selectTimeSlot === 'function') {
+    window.selectTimeSlot = citas.selectTimeSlot;
+    window.selectTimePref = citas.selectTimePref;
+    console.log('✅ selectTimeSlot asignada correctamente');
+} else {
+    console.error('❌ citas.selectTimeSlot no es una función');
+}
 
 // ============================================
 // FUNCIONES DE DISPONIBILIDAD

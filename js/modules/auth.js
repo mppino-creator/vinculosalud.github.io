@@ -500,7 +500,7 @@ function mostrarDashboardInmediato(role, userData) {
     // 🔥 NUEVO: FORZAR visibilidad de TODAS las pestañas (ignorando CSS)
     console.log('🔧 Forzando visibilidad de pestañas para rol:', role);
     
-    // Pestañas de ADMIN
+    // Pestañas de ADMIN - SIN BOXES
     const adminTabs = [
         'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
         'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
@@ -563,7 +563,7 @@ function mostrarDashboardInmediato(role, userData) {
 }
 
 // ============================================
-// FUNCIÓN SWITCH TAB (ACTUALIZADA - SIN BOXES)
+// FUNCIÓN SWITCH TAB (ACTUALIZADA - VERSIÓN CORREGIDA)
 // ============================================
 
 export function switchTab(tabName) {
@@ -572,10 +572,19 @@ export function switchTab(tabName) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     
-    const activeTab = Array.from(document.querySelectorAll('.tab')).find(t => 
-        t.textContent.toLowerCase().includes(tabName.toLowerCase())
-    );
-    if (activeTab) activeTab.classList.add('active');
+    // Buscar la pestaña por ID exacto primero
+    const tabId = getTabIdFromName(tabName);
+    const exactTab = document.getElementById(tabId);
+    
+    if (exactTab) {
+        exactTab.classList.add('active');
+    } else {
+        // Si no encuentra por ID, buscar por texto
+        const activeTab = Array.from(document.querySelectorAll('.tab')).find(t => 
+            t.textContent.toLowerCase().includes(tabName.toLowerCase())
+        );
+        if (activeTab) activeTab.classList.add('active');
+    }
     
     const tabMap = {
         'citas': 'tabCitas',
@@ -595,9 +604,9 @@ export function switchTab(tabName) {
         'estadisticas': 'tabEstadisticas'
     };
     
-    const tabId = tabMap[tabName];
-    if (tabId) {
-        const tabElement = document.getElementById(tabId);
+    const tabContentId = tabMap[tabName];
+    if (tabContentId) {
+        const tabElement = document.getElementById(tabContentId);
         if (tabElement) {
             tabElement.classList.add('active');
             
@@ -622,7 +631,6 @@ export function switchTab(tabName) {
                         if (typeof window.loadTimeSlots === 'function') {
                             window.loadTimeSlots();
                         }
-                        // También abrir el modal de disponibilidad si es necesario
                         if (typeof window.showAvailabilityModal === 'function') {
                             setTimeout(() => window.showAvailabilityModal(), 300);
                         }
@@ -638,15 +646,42 @@ export function switchTab(tabName) {
                     }
                     else if (tabName === 'estadisticas' && isAdmin()) {
                         if (window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') {
+                            console.log('📊 Llamando a renderPanelEstadisticas para:', tabName);
                             window.estadisticas.renderPanelEstadisticas();
+                        } else {
+                            console.error('❌ window.estadisticas no disponible');
                         }
                     }
                 } catch (error) {
                     console.error('❌ Error cargando datos:', error);
                 }
             }, 100);
+        } else {
+            console.warn(`⚠️ No se encontró el elemento con ID: ${tabContentId}`);
         }
     }
+}
+
+// Función auxiliar para obtener ID de pestaña desde nombre
+function getTabIdFromName(tabName) {
+    const tabIdMap = {
+        'citas': 'tabCitas',
+        'solicitudes': 'tabSolicitudes',
+        'pacientes': 'tabPacientes',
+        'profesionales': 'tabProfesionales',
+        'especialidades': 'tabEspecialidades',
+        'pagos': 'tabPagos',
+        'fondo': 'tabFondo',
+        'textos': 'tabTextos',
+        'logo': 'tabLogo',
+        'reinicio': 'tabReinicio',
+        'disponibilidad': 'tabDisponibilidad',
+        'configuracion': 'tabConfiguracion',
+        'mensajes': 'tabMensajes',
+        'agendar': 'tabAgendar',
+        'estadisticas': 'tabEstadisticas'
+    };
+    return tabIdMap[tabName] || `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
 }
 
 // ============================================

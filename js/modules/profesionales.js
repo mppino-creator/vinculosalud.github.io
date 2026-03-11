@@ -571,7 +571,7 @@ window.previewMyQR = function(input) {
 };
 
 // ============================================
-// 🔥 FUNCIÓN PARA GUARDAR PERFIL PROFESIONAL CORREGIDA
+// 🔥 FUNCIÓN PARA GUARDAR PERFIL PROFESIONAL
 // ============================================
 
 export async function saveMyProfile() {
@@ -709,31 +709,24 @@ export async function saveMyProfile() {
         if (editMyPhone) psych.phone = editMyPhone.value;
         if (editMyAddress) psych.address = editMyAddress.value;
         
-        // 🔥 GUARDAR DIRECTAMENTE EN FIREBASE EN LA RUTA CORRECTA
-        // En lugar de llamar a main.save(), guardamos directamente en Staff/UID
-        
-        // Preparar datos para guardar (sin campos undefined)
+        // 🔥 GUARDAR DIRECTAMENTE EN FIREBASE
         const cleanData = JSON.parse(JSON.stringify(psych));
-        
-        // Agregar timestamp
         cleanData.updatedAt = new Date().toISOString();
         
-        // Guardar en Firebase en la ruta específica del profesional
         await firebase.database().ref(`Staff/${user.uid}`).update(cleanData);
         
         console.log('✅ Perfil guardado correctamente en Firebase');
         showToast('✅ Perfil actualizado correctamente', 'success');
         
-        // Actualizar también en el array de staff para mantener consistencia
+        // Actualizar estado local
         const staffIndex = state.staff.findIndex(s => s.id == psych.id);
         if (staffIndex !== -1) {
             state.staff[staffIndex] = { ...state.staff[staffIndex], ...cleanData };
         }
         
-        // Actualizar currentUser.data
         state.currentUser.data = { ...state.currentUser.data, ...cleanData };
         
-        // Guardar en localStorage para persistencia
+        // Guardar en localStorage
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({
             role: 'psych',
             firebaseUid: user.uid,
@@ -747,15 +740,12 @@ export async function saveMyProfile() {
             }
         }));
         
-        // Limpiar datos temporales
         state.setTempImageData(null);
         state.setTempQrData(null);
         
-        // Cerrar modal
         const modal = document.getElementById('editMyProfileModal');
         if (modal) modal.style.display = 'none';
         
-        // Actualizar vista si es necesario
         if (typeof window.filterProfessionals === 'function') {
             window.filterProfessionals();
         }
@@ -776,7 +766,6 @@ export function openMyAvailabilityModal() {
         return;
     }
     
-    // Verificar que existe la función en disponibilidad.js
     if (typeof window.openAvailabilityModal === 'function') {
         window.openAvailabilityModal(state.currentUser.data.id);
     } else {
@@ -796,7 +785,6 @@ export function viewMyPublicProfile() {
     
     const psychId = state.currentUser.data.id;
     
-    // Cambiar a vista pública y seleccionar este profesional
     const clientView = document.getElementById('clientView');
     const bookingPanel = document.getElementById('bookingPanel');
     const loginPanel = document.getElementById('loginPanel');
@@ -805,7 +793,6 @@ export function viewMyPublicProfile() {
     if (bookingPanel) bookingPanel.style.display = 'none';
     if (loginPanel) loginPanel.style.display = 'none';
     
-    // Seleccionar el profesional en la vista pública
     setTimeout(() => {
         const psychCard = document.querySelector(`.therapist-card[data-id="${psychId}"], .staff-card[data-id="${psychId}"]`);
         if (psychCard) {
@@ -834,7 +821,6 @@ export function loadSpecialtiesInProfileSelects() {
     
     editMySpec.innerHTML = specialtiesHtml;
     
-    // Si hay un profesional logueado, seleccionar sus especialidades
     if (state.currentUser?.role === 'psych' && state.currentUser.data) {
         const psych = state.currentUser.data;
         const psychSpecs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
@@ -845,7 +831,7 @@ export function loadSpecialtiesInProfileSelects() {
 }
 
 // ============================================
-// RENDERIZAR TABLA DE PROFESIONALES (EXISTENTE)
+// RENDERIZAR TABLA DE PROFESIONALES
 // ============================================
 export function renderStaffTable() {
     const tb = document.getElementById('staffTableBody');
@@ -1137,28 +1123,108 @@ export function updateTherapist() {
     showToast('Profesional actualizado', 'success');
 }
 
-export function deleteStaff(id) {
+// ============================================
+// 🔥 FUNCIÓN PARA ELIMINAR PROFESIONAL (CORREGIDA - SIN ERROR DE PERMISOS)
+// ============================================
+export async function deleteStaff(id) {
     const therapist = state.staff.find(s => s.id == id);
     if (therapist?.isHiddenAdmin) {
         showToast('No se puede eliminar al admin', 'error');
         return;
     }
     
-    if (confirm('¿Eliminar profesional y todos sus datos?')) {
+    if (!confirm('¿Eliminar profesional y todos sus datos?')) return;
+    
+    try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            showToast('Debes iniciar sesión', 'error');
+            return;
+        }
+        
+        console.log('🗑️ Eliminando profesional:', id);
+        showToast('Eliminando profesional y sus datos...', 'info');
+        
+        // Buscar pacientes de este profesional
         const patientIds = state.patients
             .filter(p => p.psychId == id)
             .map(p => p.id);
         
+        console.log(`📋 Profesional tiene ${patientIds.length} pacientes`);
+        
+        // 1. ELIMINAR DE STAFF
+        await firebase.database().ref(`Staff/${id}`).remove();
+        console.log('✅ Profesional eliminado de Staff');
+        
+        // 2. ELIMINAR CITAS
+        const appointmentsToDelete = state.appointments.filter(a => a.psychId == id);
+        for (const apt of appointmentsToDelete) {
+            if (apt.id) {
+                await firebase.database().ref(`Appointments/${apt.id}`).remove();
+            }
+        }
+        console.log(`✅ ${appointmentsToDelete.length} citas eliminadas`);
+        
+        // 3. ELIMINAR SOLICITUDES
+        const requestsToDelete = state.pendingRequests.filter(r => r.psychId == id);
+        for (const req of requestsToDelete) {
+            if (req.id) {
+                await firebase.database().ref(`PendingRequests/${req.id}`).remove();
+            }
+        }
+        console.log(`✅ ${requestsToDelete.length} solicitudes eliminadas`);
+        
+        // 4. ELIMINAR PACIENTES Y SUS DATOS
+        for (const patientId of patientIds) {
+            // Eliminar fichas de ingreso
+            const fichasToDelete = state.fichasIngreso.filter(f => f.patientId == patientId);
+            for (const ficha of fichasToDelete) {
+                if (ficha.id) {
+                    await firebase.database().ref(`fichasIngreso/${ficha.id}`).remove();
+                }
+            }
+            
+            // Eliminar sesiones
+            const sesionesToDelete = state.sesiones.filter(s => s.patientId == patientId);
+            for (const sesion of sesionesToDelete) {
+                if (sesion.id) {
+                    await firebase.database().ref(`sesiones/${sesion.id}`).remove();
+                }
+            }
+            
+            // Eliminar informes
+            const informesToDelete = state.informes.filter(i => i.patientId == patientId);
+            for (const informe of informesToDelete) {
+                if (informe.id) {
+                    await firebase.database().ref(`informes/${informe.id}`).remove();
+                }
+            }
+            
+            // Eliminar el paciente
+            await firebase.database().ref(`Patients/${patientId}`).remove();
+        }
+        console.log(`✅ ${patientIds.length} pacientes y sus datos eliminados`);
+        
+        // 5. ACTUALIZAR ESTADO LOCAL
+        state.setStaff(state.staff.filter(s => s.id != id));
         state.setAppointments(state.appointments.filter(a => a.psychId != id));
+        state.setPendingRequests(state.pendingRequests.filter(r => r.psychId != id));
         state.setPatients(state.patients.filter(p => p.psychId != id));
         state.setFichasIngreso(state.fichasIngreso.filter(f => !patientIds.includes(f.patientId)));
         state.setSesiones(state.sesiones.filter(s => !patientIds.includes(s.patientId)));
         state.setInformes(state.informes.filter(i => !patientIds.includes(i.patientId)));
-        state.setStaff(state.staff.filter(s => s.id != id));
         
-        import('../main.js').then(main => main.save());
+        // 6. ACTUALIZAR VISTA
         renderStaffTable();
-        showToast('Profesional y todos sus datos eliminados', 'success');
+        
+        // 7. Disparar evento de actualización
+        window.dispatchEvent(new CustomEvent('staff-updated'));
+        
+        showToast('✅ Profesional y todos sus datos eliminados', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error eliminando profesional:', error);
+        showToast('Error al eliminar: ' + error.message, 'error');
     }
 }
 
@@ -1291,14 +1357,11 @@ export function loadSpecialtiesInSelects() {
 // ============================================
 
 export function addProfileButtonToDashboard() {
-    // Buscar el header del dashboard
     const dashboardHeader = document.querySelector('.dashboard-header');
     if (!dashboardHeader) return;
     
-    // Verificar si ya existe el botón
     if (document.getElementById('editProfileButton')) return;
     
-    // Crear botón
     const button = document.createElement('button');
     button.id = 'editProfileButton';
     button.className = 'btn-staff';
@@ -1307,7 +1370,6 @@ export function addProfileButtonToDashboard() {
     button.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil';
     button.onclick = openMyProfileModal;
     
-    // Agregar al header
     dashboardHeader.appendChild(button);
 }
 
@@ -1329,7 +1391,6 @@ if (typeof window !== 'undefined') {
     window.getRecentSessions = getRecentSessions;
     window.loadSpecialtiesInSelects = loadSpecialtiesInSelects;
     
-    // NUEVAS FUNCIONES EXPORTADAS
     window.openMyProfileModal = openMyProfileModal;
     window.saveMyProfile = saveMyProfile;
     window.openMyAvailabilityModal = openMyAvailabilityModal;
@@ -1337,7 +1398,6 @@ if (typeof window !== 'undefined') {
     window.loadSpecialtiesInProfileSelects = loadSpecialtiesInProfileSelects;
     window.addProfileButtonToDashboard = addProfileButtonToDashboard;
     
-    // Agregar botón al dashboard cuando se carga
     setTimeout(addProfileButtonToDashboard, 2000);
 }
 

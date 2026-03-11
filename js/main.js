@@ -1,4 +1,5 @@
 // js/main.js - VERSIÓN COMPLETA CON SECCIONES EDITABLES E INSTAGRAM v3.0
+// 🚀 ACTUALIZADO: Módulo boxes desactivado - Las citas presenciales se coordinan directamente
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -15,6 +16,7 @@ import * as pacientes from './modules/pacientes.js';
 import * as profesionales from './modules/profesionales.js';
 import * as citas from './modules/citas.js';
 import * as disponibilidad from './modules/disponibilidad.js';
+// ⚠️ BOXES DESACTIVADO - Se importa pero no se usa
 import * as boxes from './modules/boxes.js';
 import * as mensajes from './modules/mensajes.js';
 import * as personalizacion from './modules/personalizacion.js';
@@ -72,9 +74,7 @@ window.closeEditTherapistModal = profesionales.closeEditTherapistModal;
 window.updateTherapist = profesionales.updateTherapist;
 window.deleteStaff = profesionales.deleteStaff;
 
-// ============================================
 // 🆕 NUEVAS FUNCIONES DE PERFIL PROFESIONAL
-// ============================================
 window.openMyProfileModal = profesionales.openMyProfileModal;
 window.saveMyProfile = profesionales.saveMyProfile;
 window.openMyAvailabilityModal = profesionales.openMyAvailabilityModal;
@@ -136,8 +136,9 @@ window.loadTimeSlots = disponibilidad.loadTimeSlots;
 window.addOvercupo = disponibilidad.addOvercupo;
 
 // ============================================
-// FUNCIONES DE BOXES
+// ⚠️ FUNCIONES DE BOXES (DESACTIVADAS)
 // ============================================
+// Estas funciones están desactivadas - Las citas presenciales se coordinan directamente
 window.showBoxModal = boxes.showBoxModal;
 window.closeBoxModal = boxes.closeBoxModal;
 window.saveBox = boxes.saveBox;
@@ -322,7 +323,9 @@ console.log('✅ miPerfil asignada:', typeof window.miPerfil);
 console.log('✅ showAboutModal asignada:', typeof window.showAboutModal);
 console.log('✅ showAtencionModal asignada:', typeof window.showAtencionModal);
 console.log('✅ showContactModal asignada:', typeof window.showContactModal);
-console.log('✅ showInstagramModal asignada:', typeof window.showInstagramModal); // 🆕
+console.log('✅ showInstagramModal asignada:', typeof window.showInstagramModal);
+// ⚠️ Funciones de boxes (desactivadas)
+console.log('⚠️ showBoxModal (desactivado):', typeof window.showBoxModal);
 console.log('✅ verTextos asignada:', typeof window.verTextos);
 
 // ============================================
@@ -361,7 +364,7 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (ACTUALIZADA CON INSTAGRAM)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (ACTUALIZADA CON INSTAGRAM Y SIN BOXES)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -370,6 +373,7 @@ export function save() {
     const staffObj = {};
     state.staff.forEach(item => { staffObj[item.id] = item; });
 
+    // ⚠️ BOXES DESACTIVADO - Se guarda pero no se usa
     const boxesObj = {};
     state.boxes.forEach(item => { boxesObj[item.id] = item; });
 
@@ -415,7 +419,7 @@ export function save() {
 
     const updates = {
         '/Staff': staffObj,
-        '/Boxes': boxesObj,
+        '/Boxes': boxesObj,      // Se mantiene por compatibilidad
         '/Patients': patientsObj,
         '/Appointments': appointmentsObj,
         '/PendingRequests': pendingRequestsObj,
@@ -445,7 +449,8 @@ export function save() {
                 if (state.currentUser.role === 'admin') {
                     if (typeof profesionales.renderStaffTable === 'function') profesionales.renderStaffTable();
                     if (typeof mensajes.renderMessagesTable === 'function') mensajes.renderMessagesTable();
-                    if (typeof boxes.renderBoxesTable === 'function') boxes.renderBoxesTable();
+                    // ⚠️ Boxes desactivado - no se renderiza
+                    // if (typeof boxes.renderBoxesTable === 'function') boxes.renderBoxesTable();
                     
                     // Actualizar botones de admin
                     if (typeof admin.addEditButtonsToAdmin === 'function') {
@@ -454,7 +459,8 @@ export function save() {
                 }
                 if (state.currentUser.role === 'psych') {
                     if (typeof pacientes.renderPatients === 'function') pacientes.renderPatients();
-                    if (typeof boxes.renderBoxOccupancy === 'function') boxes.renderBoxOccupancy();
+                    // ⚠️ Boxes desactivado - no se renderiza
+                    // if (typeof boxes.renderBoxOccupancy === 'function') boxes.renderBoxOccupancy();
                 }
             }
             
@@ -548,3 +554,4 @@ window.addEventListener('load', function() {
 import './modules/admin.js';
 
 console.log('✅ main.js cargado completamente con todas las funciones de secciones editables e INSTAGRAM v3.0');
+console.log('⚠️ Módulo BOXES DESACTIVADO - Las citas presenciales se coordinan directamente');

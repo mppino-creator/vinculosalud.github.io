@@ -22,10 +22,45 @@ if (typeof window !== 'undefined' && typeof emailjs !== 'undefined') {
 const emailsEnviados = new Set();
 
 // ============================================
-// FUNCIÓN PARA ENVIAR EMAILS
+// FUNCIÓN PARA VERIFICAR SI UN EMAIL ES DE PROFESIONAL
+// ============================================
+
+/**
+ * Verifica si un email pertenece a algún profesional
+ * @param {string} email - Email a verificar
+ * @returns {boolean} true si es email de profesional
+ */
+export function esEmailProfesional(email) {
+    if (!email) return false;
+    
+    const emailsProfesionales = state.staff
+        .map(p => p.email)
+        .filter(email => email && email.trim() !== '')
+        .map(e => e.trim().toLowerCase());
+    
+    const emailLimpio = email.trim().toLowerCase();
+    
+    const esProfesional = emailsProfesionales.includes(emailLimpio);
+    
+    if (esProfesional) {
+        console.warn('🚫 EMAIL DE PROFESIONAL DETECTADO:', email);
+    }
+    
+    return esProfesional;
+}
+
+// ============================================
+// FUNCIÓN PARA ENVIAR EMAILS (MEJORADA)
 // ============================================
 
 export async function sendEmailNotification(to, subject, message, tipo = 'general', patientName = null, appointmentData = {}) {
+  
+  // 🚨 VALIDACIÓN CRÍTICA: NO enviar emails a profesionales
+  if (esEmailProfesional(to)) {
+    console.error('❌ BLOQUEADO: Intento de enviar email a profesional:', to);
+    console.warn('📋 Los emails solo deben enviarse a pacientes');
+    return false;
+  }
   
   const emailId = `${to}_${tipo}_${appointmentData.id || Date.now()}`;
   
@@ -294,6 +329,7 @@ if (typeof window !== 'undefined') {
   window.calculateAge = calculateAge;
   window.getPsychNameById = getPsychNameById;
   window.getPatientNameById = getPatientNameById;
+  window.esEmailProfesional = esEmailProfesional; // Exportar para uso global
 }
 
-console.log('✅ utils.js cargado (versión final corregida)');
+console.log('✅ utils.js cargado con validación de emails mejorada (sin boxes)');

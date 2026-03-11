@@ -231,6 +231,7 @@ export function showPaymentDetails() {
         detailsDiv.innerHTML = `
             <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
                 <p>El pago se realizará en el consultorio.</p>
+                <p style="font-size:0.9rem; margin-top:10px;"><strong>Importante:</strong> La dirección exacta se coordinará directamente con el psicólogo.</p>
             </div>
         `;
     }
@@ -284,7 +285,7 @@ export function updateAvailableTimes() {
             presencialWarning.style.display = 'block';
             presencialWarning.innerHTML = `
                 <i class="fa fa-info-circle"></i> 
-                <strong>Solicitud Presencial:</strong> El profesional confirmará la hora.
+                <strong>Solicitud Presencial:</strong> El profesional confirmará la hora y coordinará la dirección.
                 <div style="margin-top:15px;">
                     <label>Preferencia de horario (opcional):</label>
                     <div style="display:flex; gap:15px;">
@@ -293,6 +294,9 @@ export function updateAvailableTimes() {
                         <label><input type="radio" name="presencialTimePref" value="" checked> Sin preferencia</label>
                     </div>
                 </div>
+                <p style="margin-top:15px; background:#fff3cd; padding:10px; border-radius:8px;">
+                    <i class="fa fa-map-marker-alt"></i> La dirección exacta se coordinará directamente con el psicólogo.
+                </p>
             `;
         }
         if (onlineMsg) onlineMsg.style.display = 'none';
@@ -916,11 +920,17 @@ export function executeBooking() {
                     if (emailsEnviados.has(emailKey)) {
                         console.log('⏭️ Email ya enviado previamente, omitiendo');
                     } else {
+                        // Construir mensaje según tipo de cita
                         let mensaje = `Hola ${name},\n\nHemos recibido tu solicitud de cita.\n\n` +
                             `📅 Fecha: ${date}\n` +
                             (time ? `⏰ Hora: ${time}\n` : '') +
-                            `👨‍⚕️ Profesional: ${state.selectedPsych.name}\n\n` +
-                            `Vínculo Salud`;
+                            `👨‍⚕️ Profesional: ${state.selectedPsych.name}\n\n`;
+                        
+                        if (type === 'presencial') {
+                            mensaje += `📍 La dirección exacta será coordinada directamente con el profesional.\n\n`;
+                        }
+                        
+                        mensaje += `Vínculo Salud`;
 
                         console.log('📧 Enviando email a PACIENTE:', email);
                         
@@ -1016,7 +1026,7 @@ export function renderAppointments() {
                 <td>${a.psych || '—'}</td>
                 <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
                 <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>${a.boxName ? `<span style="background:var(--box-color); color:white; padding:4px 8px; border-radius:6px;">${a.boxName}</span>` : '—'}</td>
+                <td>—</td>
                 <td><span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span></td>
                 <td><span style="color:${statusColor};">${statusText}</span></td>
                 <td>
@@ -1032,6 +1042,7 @@ export function renderAppointments() {
                     </div>
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado a paciente</small>` : ''}
+                    ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                 </td>
             </tr>
         `;
@@ -1071,7 +1082,7 @@ export function renderPendingRequests() {
             <td>${r.date}</td>
             <td>${r.time || 'A coordinar'}</td>
             <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-            <td>${r.boxName || '—'}</td>
+            <td>—</td>
             <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
             <td>
                 <div style="display:flex; flex-direction:column; gap:5px;">
@@ -1094,6 +1105,7 @@ export function renderPendingRequests() {
                             <i class="fa fa-times"></i> Rechazar
                         </button>
                     </div>
+                    ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                 </div>
             </td>
         </tr>
@@ -1212,7 +1224,8 @@ export function updateTherapistBookingDetails() {
     document.getElementById('therapistTypeDisplay').innerText = type === 'online' ? 'Online' : 'Presencial';
 
     if (type === 'presencial') {
-        document.getElementById('therapistBoxField').style.display = 'block';
+        document.getElementById('therapistBoxField').style.display = 'none'; // Ocultar campo de box
+        document.getElementById('therapistBoxDisplay').style.display = 'none';
     } else {
         document.getElementById('therapistBoxField').style.display = 'none';
         document.getElementById('therapistBoxDisplay').style.display = 'none';
@@ -1483,4 +1496,4 @@ window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
 window.calcularEdad = calcularEdad;
 
-console.log('✅ citas.js cargado (versión con validación ABSOLUTA de email)');
+console.log('✅ citas.js cargado (versión con validación ABSOLUTA de email y sin boxes)');

@@ -11,7 +11,7 @@ import { showToast } from './utils.js';
  * @returns {boolean} true si es admin
  */
 function isAdmin() {
-    return state.currentUser?.data?.isAdmin === true;
+    return state.currentUser?.data?.isAdmin === true || state.currentUser?.role === 'admin';
 }
 
 /**
@@ -55,7 +55,17 @@ function obtenerMetodoPagoMasUsado() {
         }
     });
     
-    return maxMetodo;
+    // Traducir métodos de pago
+    const traducciones = {
+        'transfer': 'Transferencia',
+        'card-presencial': 'Tarjeta Presencial',
+        'card-online': 'Tarjeta Online',
+        'cash': 'Efectivo',
+        'mercadopago': 'Mercado Pago',
+        'webpay': 'Webpay'
+    };
+    
+    return traducciones[maxMetodo] || maxMetodo;
 }
 
 /**
@@ -754,6 +764,7 @@ export function exportarEstadisticasCSV() {
     csv += `Financiero,Ingresos este mes,${stats.pagos.ingresosEsteMes}\n`;
     csv += `Financiero,Deuda total,${stats.pagos.deudaTotal}\n`;
     csv += `Financiero,Promedio por cita,${stats.pagos.promedioPorCita}\n`;
+    csv += `Financiero,Método más usado,${stats.pagos.metodoPagoMasUsado}\n`;
     
     // Profesionales
     csv += `Profesionales,Total,${stats.profesionales.total}\n`;
@@ -900,4 +911,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ estadisticas.js cargado - Módulo exclusivo para admin');
+console.log('✅ estadisticas.js cargado - Módulo exclusivo para admin (sin boxes)');

@@ -44,18 +44,24 @@ export async function guardarInforme(patientId, tipo, data) {
     let docRef;
     if (data.id) {
       // Actualizar existente
-      await db.collection('informes').doc(data.id).update(informe);
+      await db.ref(`informes/${data.id}`).update(informe);
       docRef = { id: data.id };
       
-      // Actualizar state
-      const index = state.informes.findIndex(i => i.id == data.id);
-      if (index !== -1) state.informes[index] = { ...informe, id: data.id };
+      // Actualizar state usando setter
+      const informesActualizados = state.informes.map(i => 
+        i.id === data.id ? { ...informe, id: data.id } : i
+      );
+      state.setInformes(informesActualizados);
       
       showToast('Informe actualizado correctamente', 'success');
     } else {
       // Crear nuevo
-      docRef = await db.collection('informes').add(informe);
-      state.informes.push({ ...informe, id: docRef.id });
+      const newRef = db.ref('informes').push();
+      docRef = { id: newRef.key };
+      await newRef.set(informe);
+      
+      // Actualizar state usando setter
+      state.setInformes([...state.informes, { ...informe, id: newRef.key }]);
       
       showToast('Informe guardado correctamente', 'success');
     }
@@ -88,20 +94,23 @@ export async function obtenerInformesDePaciente(patientId) {
     }
     
     // Si no, buscar en Firebase
-    const snapshot = await db.collection('informes')
-      .where('patientId', '==', patientId)
-      .orderBy('fechaCreacion', 'desc')
-      .get();
+    const snapshot = await db.ref('informes')
+      .orderByChild('patientId')
+      .equalTo(patientId)
+      .once('value');
+    
+    const data = snapshot.val();
+    if (data) {
+      const informes = Object.keys(data).map(key => ({ id: key, ...data[key] }));
       
-    const informes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Actualizar state usando setter
+      const otrosInformes = state.informes.filter(i => i.patientId != patientId);
+      state.setInformes([...otrosInformes, ...informes]);
+      
+      return informes.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+    }
     
-    // Actualizar state
-    state.informes = [
-      ...state.informes.filter(i => i.patientId != patientId),
-      ...informes
-    ];
-    
-    return informes;
+    return [];
   } catch (error) {
     console.error('Error obteniendo informes:', error);
     return [];
@@ -120,9 +129,9 @@ export async function obtenerInformePorId(informeId) {
     if (informeLocal) return informeLocal;
     
     // Buscar en Firebase
-    const doc = await db.collection('informes').doc(informeId).get();
-    if (doc.exists) {
-      return { id: doc.id, ...doc.data() };
+    const snapshot = await db.ref(`informes/${informeId}`).once('value');
+    if (snapshot.exists()) {
+      return { id: snapshot.key, ...snapshot.val() };
     }
     return null;
   } catch (error) {
@@ -634,11 +643,13 @@ export async function generarPDFInforme(informeId) {
     }
     
     // Guardar URL en Firebase
-    await db.collection('informes').doc(informeId).update({ pdfUrl });
+    await db.ref(`informes/${informeId}`).update({ pdfUrl });
     
-    // Actualizar state
-    const index = state.informes.findIndex(i => i.id == informeId);
-    if (index !== -1) state.informes[index].pdfUrl = pdfUrl;
+    // Actualizar state usando setter
+    const informesActualizados = state.informes.map(i => 
+      i.id === informeId ? { ...i, pdfUrl } : i
+    );
+    state.setInformes(informesActualizados);
     
     showToast('PDF generado correctamente', 'success');
     
@@ -717,4 +728,4 @@ if (typeof window !== 'undefined') {
   };
 }
 
-console.log('✅ informes.js cargado con todas las funcionalidades');
+console.log('✅ informes.js cargado con todas las funcionalidades (sin boxes)');

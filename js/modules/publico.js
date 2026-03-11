@@ -17,7 +17,8 @@ import {
     updateContactSection
 } from './personalizacion.js';
 import { renderStaffTable } from './profesionales.js';
-import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
+// ⚠️ Boxes desactivado - no se importa
+// import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
 import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
@@ -407,7 +408,7 @@ export function renderProfessionals(professionals) {
 }
 
 // ============================================
-// CARGA INICIAL DE DATOS
+// CARGA INICIAL DE DATOS (ACTUALIZADA - SIN BOXES)
 // ============================================
 export function cargarDatosIniciales() {
     console.log('🚀 Cargando datos iniciales...');
@@ -510,13 +511,13 @@ export function cargarDatosIniciales() {
         filterProfessionals();
     });
 
-    // Cargar otros datos (boxes, pacientes, etc.)
-    db.ref('Boxes').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setBoxes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-        if (state.currentUser?.role === 'admin') renderBoxesTable();
-        if (state.currentUser?.role === 'psych') renderBoxOccupancy();
-    });
+    // ⚠️ Boxes desactivado - no se carga
+    // db.ref('Boxes').on('value', (snapshot) => {
+    //     const data = snapshot.val();
+    //     state.setBoxes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    //     if (state.currentUser?.role === 'admin') renderBoxesTable();
+    //     if (state.currentUser?.role === 'psych') renderBoxOccupancy();
+    // });
 
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -536,7 +537,8 @@ export function cargarDatosIniciales() {
                     if (typeof window.updateStats === 'function') window.updateStats();
                     renderPendingRequests();
                 }
-                if (state.currentUser?.role === 'psych') renderBoxOccupancy();
+                // ⚠️ Boxes desactivado - no se renderiza ocupación
+                // if (state.currentUser?.role === 'psych') renderBoxOccupancy();
             }
         } else if (state.appointments.length > 0) state.setAppointments([]);
     });
@@ -613,4 +615,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js cargado con navegación corregida y estilo accordion v4.0');
+console.log('✅ publico.js cargado con navegación corregida, estilo accordion v4.0 y SIN BOXES');

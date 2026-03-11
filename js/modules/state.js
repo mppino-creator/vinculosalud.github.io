@@ -7,7 +7,7 @@
 export let staff = [];
 export let patients = [];
 export let appointments = [];
-export let boxes = [];
+export let boxes = [];               // Se mantiene por compatibilidad, aunque desactivado
 export let messages = [];
 export let pendingRequests = [];
 export let specialties = [];
@@ -30,8 +30,8 @@ export let currentUser = null;
 export let currentRating = 5;
 export let generatedSlots = [];
 export let selectedWeekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'];
-export let selectedBoxId = null;
-export let selectedTherapistBoxId = null;
+export let selectedBoxId = null;           // Se mantiene por compatibilidad
+export let selectedTherapistBoxId = null;  // Se mantiene por compatibilidad
 export let tempImageData = null;
 export let tempBackgroundImageData = null;
 export let tempLogoData = null;
@@ -109,7 +109,7 @@ export let ui = {
 export function setStaff(newStaff) { staff = newStaff; }
 export function setPatients(newPatients) { patients = newPatients; }
 export function setAppointments(newApps) { appointments = newApps; }
-export function setBoxes(newBoxes) { boxes = newBoxes; }
+export function setBoxes(newBoxes) { boxes = newBoxes; }  // Se mantiene por compatibilidad
 export function setMessages(newMessages) { messages = newMessages; }
 export function setPendingRequests(newReqs) { pendingRequests = newReqs; }
 export function setSpecialties(newSpecs) { specialties = newSpecs; }
@@ -198,8 +198,8 @@ export function setSelectedPsych(psych) { selectedPsych = psych; }
 export function setCurrentRating(rating) { currentRating = rating; }
 export function setGeneratedSlots(slots) { generatedSlots = slots; }
 export function setSelectedWeekdays(days) { selectedWeekdays = days; }
-export function setSelectedBoxId(id) { selectedBoxId = id; }
-export function setSelectedTherapistBoxId(id) { selectedTherapistBoxId = id; }
+export function setSelectedBoxId(id) { selectedBoxId = id; }        // Se mantiene por compatibilidad
+export function setSelectedTherapistBoxId(id) { selectedTherapistBoxId = id; }  // Se mantiene por compatibilidad
 export function setTempImageData(data) { tempImageData = data; }
 export function setTempBackgroundImageData(data) { tempBackgroundImageData = data; }
 export function setTempLogoData(data) { tempLogoData = data; }
@@ -343,7 +343,7 @@ export function resetAllState() {
     staff = [];
     patients = [];
     appointments = [];
-    boxes = [];
+    boxes = [];              // Se mantiene por compatibilidad
     messages = [];
     pendingRequests = [];
     specialties = [];
@@ -447,7 +447,7 @@ export function getStateSummary() {
         staff: staff.length,
         patients: patients.length,
         appointments: appointments.length,
-        boxes: boxes.length,
+        boxes: boxes.length,              // Se mantiene por compatibilidad
         messages: messages.length,
         pendingRequests: pendingRequests.length,
         specialties: specialties.length,
@@ -468,7 +468,7 @@ const state = {
     staff,
     patients,
     appointments,
-    boxes,
+    boxes,                     // Se mantiene por compatibilidad
     messages,
     pendingRequests,
     specialties,
@@ -481,8 +481,8 @@ const state = {
     currentRating,
     generatedSlots,
     selectedWeekdays,
-    selectedBoxId,
-    selectedTherapistBoxId,
+    selectedBoxId,             // Se mantiene por compatibilidad
+    selectedTherapistBoxId,    // Se mantiene por compatibilidad
     tempImageData,
     tempBackgroundImageData,
     tempLogoData,
@@ -513,7 +513,7 @@ const state = {
     setStaff,
     setPatients,
     setAppointments,
-    setBoxes,
+    setBoxes,                  // Se mantiene por compatibilidad
     setMessages,
     setPendingRequests,
     setSpecialties,
@@ -526,8 +526,8 @@ const state = {
     setCurrentRating,
     setGeneratedSlots,
     setSelectedWeekdays,
-    setSelectedBoxId,
-    setSelectedTherapistBoxId,
+    setSelectedBoxId,          // Se mantiene por compatibilidad
+    setSelectedTherapistBoxId, // Se mantiene por compatibilidad
     setTempImageData,
     setTempBackgroundImageData,
     setTempLogoData,
@@ -579,7 +579,7 @@ export default state;
 // ============================================
 if (typeof window !== 'undefined') {
     window.state = state;
-    console.log('📦 state.js cargado con fichas clínicas, datos de profesionales, secciones editables y SECCIÓN INSTAGRAM v3.0');
+    console.log('📦 state.js cargado con fichas clínicas, datos de profesionales, secciones editables y SECCIÓN INSTAGRAM v3.0 (boxes desactivado - mantenido por compatibilidad)');
     
     // Función de ayuda en consola
     window.estado = function() {

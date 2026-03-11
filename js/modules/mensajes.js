@@ -7,22 +7,33 @@ import { showToast } from './utils.js';
 // ============================================
 
 export function showMessageModal() {
-    document.getElementById('messageModal').style.display = 'flex';
+    const modal = document.getElementById('messageModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
     loadTherapistsForMessage();
     setRating(5);
 }
 
 export function closeMessageModal() {
-    document.getElementById('messageModal').style.display = 'none';
-    document.getElementById('messageName').value = '';
-    document.getElementById('messageEmail').value = '';
-    document.getElementById('messageWhatsapp').value = '';
-    document.getElementById('messageText').value = '';
+    const modal = document.getElementById('messageModal');
+    if (modal) modal.style.display = 'none';
+    
+    const nameInput = document.getElementById('messageName');
+    const emailInput = document.getElementById('messageEmail');
+    const whatsappInput = document.getElementById('messageWhatsapp');
+    const textInput = document.getElementById('messageText');
+    
+    if (nameInput) nameInput.value = '';
+    if (emailInput) emailInput.value = '';
+    if (whatsappInput) whatsappInput.value = '';
+    if (textInput) textInput.value = '';
 }
 
 function loadTherapistsForMessage() {
     const select = document.getElementById('messageTherapist');
     if (!select) return;
+    
     select.innerHTML = '<option value="">Mensaje general para todos</option>';
     const publicStaff = state.staff.filter(s => s.spec && s.spec.length > 0 && !s.isHiddenAdmin);
     publicStaff.forEach(t => {
@@ -32,7 +43,10 @@ function loadTherapistsForMessage() {
 
 export function setRating(rating) {
     state.setCurrentRating(rating);
-    document.getElementById('messageRating').value = rating;
+    
+    const ratingInput = document.getElementById('messageRating');
+    if (ratingInput) ratingInput.value = rating;
+    
     for (let i = 1; i <= 5; i++) {
         const star = document.getElementById(`star${i}`);
         if (star) {
@@ -46,12 +60,19 @@ export function setRating(rating) {
 // ============================================
 
 export function saveMessage() {
-    const name = document.getElementById('messageName').value;
-    const email = document.getElementById('messageEmail').value;
-    const whatsapp = document.getElementById('messageWhatsapp').value;
-    const therapistId = document.getElementById('messageTherapist').value;
-    const rating = document.getElementById('messageRating').value;
-    const text = document.getElementById('messageText').value;
+    const nameInput = document.getElementById('messageName');
+    const emailInput = document.getElementById('messageEmail');
+    const whatsappInput = document.getElementById('messageWhatsapp');
+    const therapistSelect = document.getElementById('messageTherapist');
+    const ratingInput = document.getElementById('messageRating');
+    const textInput = document.getElementById('messageText');
+    
+    const name = nameInput?.value || '';
+    const email = emailInput?.value || '';
+    const whatsapp = whatsappInput?.value || '';
+    const therapistId = therapistSelect?.value || '';
+    const rating = ratingInput?.value || '5';
+    const text = textInput?.value || '';
 
     if (!name || !text) {
         showToast('Nombre y mensaje son obligatorios', 'error');
@@ -435,6 +456,15 @@ export function restoreSampleMessages() {
 // EXPORTAR FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {
+    window.showMessageModal = showMessageModal;
+    window.closeMessageModal = closeMessageModal;
+    window.setRating = setRating;
+    window.saveMessage = saveMessage;
+    window.deleteMessage = deleteMessage;
+    window.renderMessages = renderMessages;
+    window.renderMessagesTable = renderMessagesTable;
+    window.updateMarquee = updateMarquee;
+    
     window.getMessageStats = getMessageStats;
     window.getMessagesByTherapist = getMessagesByTherapist;
     window.getFeaturedMessages = getFeaturedMessages;
@@ -445,4 +475,4 @@ if (typeof window !== 'undefined') {
     window.restoreSampleMessages = restoreSampleMessages;
 }
 
-console.log('✅ mensajes.js cargado con estadísticas y funciones admin');
+console.log('✅ mensajes.js cargado con estadísticas y funciones admin (sin boxes)');

@@ -6,7 +6,7 @@ import { obtenerSesionesDePaciente, obtenerFichasIngresoDePaciente } from './fic
 import { obtenerInformesDePaciente } from './informes.js';
 
 // ============================================
-// RENDERIZAR LISTA DE PACIENTES (MEJORADA)
+// RENDERIZAR LISTA DE PACIENTES (MEJORADA - SIN BOXES)
 // ============================================
 
 export function renderPatients() {
@@ -77,7 +77,6 @@ export function renderPatients() {
                 ${nextAppt ? `
                     <div style="background:#e6f7e6; padding:8px; border-radius:8px; margin-top:10px;">
                         <i class="fa fa-calendar-check"></i> Próxima: ${nextAppt.date} ${nextAppt.time} con ${nextAppt.psych}
-                        ${nextAppt.boxName ? `<span class="history-box">${nextAppt.boxName}</span>` : ''}
                     </div>
                 ` : ''}
                 
@@ -89,7 +88,6 @@ export function renderPatients() {
                                 <span class="history-date">${a.date}</span>
                                 <span class="history-psych">${a.psych}</span>
                                 <span class="history-type">${a.type === 'online' ? '🌐' : '🏢'}</span>
-                                ${a.boxName ? `<span class="history-box">${a.boxName}</span>` : ''}
                                 <span class="history-amount">$${a.price.toLocaleString()}</span>
                             </div>
                         `).join('')}
@@ -678,7 +676,6 @@ export function viewPatientDetails(id) {
                 <span class="history-date">${a.date} ${a.time}</span>
                 <span class="history-psych">${a.psych}</span>
                 <span class="history-type">${a.type === 'online' ? 'Online' : 'Presencial'}</span>
-                ${a.boxName ? `<span class="history-box">${a.boxName}</span>` : ''}
                 <span class="history-amount">$${a.price.toLocaleString()}</span>
                 <span style="color:${a.paymentStatus === 'pagado' ? 'var(--verde-exito)' : 'var(--naranja-aviso)'}">
                     ${a.paymentStatus === 'pagado' ? '✓' : '⏳'}
@@ -830,7 +827,6 @@ export function printPatientSummary() {
                         <th>Hora</th>
                         <th>Profesional</th>
                         <th>Tipo</th>
-                        <th>Box</th>
                         <th>Valor</th>
                         <th>Estado</th>
                     </tr>
@@ -847,7 +843,6 @@ export function printPatientSummary() {
                 <td>${a.time}</td>
                 <td>${a.psych}</td>
                 <td>${a.type === 'online' ? 'Online' : 'Presencial'}</td>
-                <td>${a.boxName || '—'}</td>
                 <td>$${a.price.toLocaleString()}</td>
                 <td>${a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td>
             </tr>
@@ -889,4 +884,4 @@ if (typeof window !== 'undefined') {
     window.volverALista = volverALista;
 }
 
-console.log('✅ pacientes.js cargado con todas las funciones de fichas clínicas');
+console.log('✅ pacientes.js cargado con todas las funciones de fichas clínicas (sin boxes)');

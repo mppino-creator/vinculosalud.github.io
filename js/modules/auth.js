@@ -3,7 +3,8 @@ import * as state from './state.js';
 import { showToast } from './utils.js';
 import { renderStaffTable } from './profesionales.js';
 import { renderMessagesTable } from './mensajes.js';
-import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
+// ⚠️ Boxes desactivado - no se importa
+// import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
 import { updatePaymentMethodsInfo, loadMyConfig } from './personalizacion.js';
 import { renderPatients } from './pacientes.js';
 import { renderPendingRequests, renderAppointments } from './citas.js';
@@ -116,7 +117,7 @@ function actualizarUIAdmin(userData, role) {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR MENÚ STAFF - VERSIÓN CORREGIDA
+// FUNCIÓN PARA MOSTRAR MENÚ STAFF - VERSIÓN CORREGIDA (SIN BOXES)
 // ============================================
 window.mostrarMenuStaff = function(desdeLogin = false) {
     if (!state.currentUser) {
@@ -243,7 +244,7 @@ function abrirGestionDisponibilidad() {
 }
 
 // ============================================
-// FUNCIÓN PARA IR AL DASHBOARD - VERSIÓN CORREGIDA (CON LLAMADA A mostrarDashboardInmediato)
+// FUNCIÓN PARA IR AL DASHBOARD - VERSIÓN CORREGIDA
 // ============================================
 window.irADashboard = function() {
     console.log('📊 Cambiando a dashboard');
@@ -454,7 +455,9 @@ export function cargarDashboard(role) {
     // Esta función está deshabilitada intencionalmente
 }
 
-// 🔥 VERSIÓN DEFINITIVA - Mostrar dashboard con TODAS las pestañas visibles
+// ============================================
+// VERSIÓN DEFINITIVA - Mostrar dashboard con TODAS las pestañas visibles
+// ============================================
 function mostrarDashboardInmediato(role, userData) {
     console.log('🔄 Mostrando dashboard inmediatamente como:', role);
     
@@ -501,7 +504,7 @@ function mostrarDashboardInmediato(role, userData) {
     const adminTabs = [
         'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
         'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
-        'messagesTab', 'boxesTab', 'adminTabEstadisticas'
+        'messagesTab', 'adminTabEstadisticas'
     ];
     
     adminTabs.forEach(id => {
@@ -560,7 +563,7 @@ function mostrarDashboardInmediato(role, userData) {
 }
 
 // ============================================
-// FUNCIÓN SWITCH TAB
+// FUNCIÓN SWITCH TAB (ACTUALIZADA - SIN BOXES)
 // ============================================
 
 export function switchTab(tabName) {
@@ -588,7 +591,6 @@ export function switchTab(tabName) {
         'disponibilidad': 'tabDisponibilidad',
         'configuracion': 'tabConfiguracion',
         'mensajes': 'tabMensajes',
-        'boxes': 'tabBoxes',
         'agendar': 'tabAgendar',
         'estadisticas': 'tabEstadisticas'
     };
@@ -615,10 +617,6 @@ export function switchTab(tabName) {
                     }
                     else if (tabName === 'mensajes' && isAdmin() && typeof renderMessagesTable === 'function') {
                         renderMessagesTable();
-                    }
-                    else if (tabName === 'boxes') {
-                        if (typeof renderBoxesTable === 'function') renderBoxesTable();
-                        if (typeof renderBoxOccupancy === 'function') renderBoxOccupancy();
                     }
                     else if (tabName === 'disponibilidad' && isPsych()) {
                         if (typeof window.loadTimeSlots === 'function') {
@@ -833,4 +831,4 @@ if (typeof window !== 'undefined') {
     }, 1000);
 })();
 
-console.log('✅ auth.js cargado correctamente con funciones de login, menú mejorado y gestión de disponibilidad para profesionales');
+console.log('✅ auth.js cargado correctamente con funciones de login, menú mejorado y gestión de disponibilidad para profesionales (sin boxes)');

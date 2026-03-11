@@ -1,4 +1,5 @@
 // js/modules/admin.js
+import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast } from './utils.js';
 
@@ -79,7 +80,7 @@ window.refrescarVistaPublica = function() {
 };
 
 // ============================================
-// 🆕 FUNCIÓN PARA AGREGAR BOTONES DE EDICIÓN EN EL DASHBOARD (ACTUALIZADA)
+// 🆕 FUNCIÓN PARA AGREGAR BOTONES DE EDICIÓN EN EL DASHBOARD (ACTUALIZADA - SIN BOXES)
 // ============================================
 
 export function addEditButtonsToAdmin() {
@@ -458,7 +459,7 @@ export function exportarTodasLasFichas() {
             citas: state.appointments,
             mensajes: state.messages,
             profesionales: state.staff,
-            boxes: state.boxes,
+            boxes: state.boxes, // Se mantiene por compatibilidad
             specialties: state.specialties
         }
     };
@@ -534,7 +535,7 @@ export function importarFichas() {
                         state.setStaff([...state.staff, ...backup.datos.profesionales]);
                     }
                     if (backup.datos?.boxes) {
-                        state.setBoxes([...state.boxes, ...backup.datos.boxes]);
+                        state.setBoxes([...state.boxes, ...backup.datos.boxes]); // Se mantiene por compatibilidad
                     }
                     if (backup.datos?.specialties) {
                         state.setSpecialties([...state.specialties, ...backup.datos.specialties]);
@@ -955,4 +956,4 @@ if (typeof window !== 'undefined') {
     }, 3000);
 }
 
-console.log('✅ admin.js cargado con estadísticas integradas, botones de edición, sección Instagram y REFRESCO DE VISTA v3.0');
+console.log('✅ admin.js cargado con estadísticas integradas, botones de edición, sección Instagram y REFRESCO DE VISTA v3.0 (sin boxes)');

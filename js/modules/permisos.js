@@ -134,6 +134,60 @@ export async function puedeEditarInforme(patientId) {
 }
 
 // ============================================
+// FUNCIONES PARA PROFESIONALES Y ADMIN
+// ============================================
+
+/**
+ * Verifica si el usuario actual puede editar un profesional específico
+ * @param {string|number} professionalId - ID del profesional
+ * @returns {boolean} true si puede editar
+ */
+export function puedeEditarProfesional(professionalId) {
+  const user = state.currentUser;
+  if (!user) return false;
+  
+  // Admin puede editar cualquier profesional
+  if (user.role === 'admin' || user.data?.isAdmin) return true;
+  
+  // Psicólogo solo puede editar su propio perfil
+  const userId = user.data?.id || user.id;
+  return userId == professionalId;
+}
+
+/**
+ * Verifica si el usuario actual puede ver estadísticas
+ */
+export function puedeVerEstadisticas() {
+  const user = state.currentUser;
+  if (!user) return false;
+  
+  // Admin y psicólogos pueden ver estadísticas
+  return user.role === 'admin' || user.role === 'psych';
+}
+
+/**
+ * Verifica si el usuario actual puede exportar datos a Excel
+ */
+export function puedeExportarExcel() {
+  const user = state.currentUser;
+  if (!user) return false;
+  
+  // Solo admin puede exportar datos completos
+  return user.role === 'admin' || user.data?.isAdmin === true;
+}
+
+/**
+ * Verifica si el usuario actual puede editar textos del sitio
+ */
+export function puedeEditarTextosSitio() {
+  const user = state.currentUser;
+  if (!user) return false;
+  
+  // Solo admin puede editar textos del sitio
+  return user.role === 'admin' || user.data?.isAdmin === true;
+}
+
+// ============================================
 // FUNCIONES DE PERMISOS POR ROL (síncronas)
 // ============================================
 
@@ -158,8 +212,48 @@ export function getPermisosResumen() {
     esPsicologo: isPsychologist(),
     misPacientes: isPsychologist() && userId
       ? state.patients?.filter(p => p.psychId == userId).length || 0
-      : 0
+      : 0,
+    puedeEditarTextos: puedeEditarTextosSitio(),
+    puedeExportarExcel: puedeExportarExcel(),
+    puedeVerEstadisticas: puedeVerEstadisticas()
   };
+}
+
+// ============================================
+// FUNCIONES PARA VERIFICAR ACCESO A MÓDULOS
+// ============================================
+
+/**
+ * Verifica si el usuario puede acceder al módulo de pacientes
+ */
+export function puedeVerPacientes() {
+  const user = state.currentUser;
+  if (!user) return false;
+  
+  // Admin y psicólogos pueden ver pacientes
+  return user.role === 'admin' || user.role === 'psych';
+}
+
+/**
+ * Verifica si el usuario puede acceder al módulo de citas
+ */
+export function puedeVerCitas() {
+  const user = state.currentUser;
+  if (!user) return false;
+  
+  // Admin y psicólogos pueden ver citas
+  return user.role === 'admin' || user.role === 'psych';
+}
+
+/**
+ * Verifica si el usuario puede acceder al módulo de profesionales
+ */
+export function puedeVerProfesionales() {
+  const user = state.currentUser;
+  if (!user) return false;
+  
+  // Solo admin puede ver lista de profesionales
+  return user.role === 'admin';
 }
 
 // ============================================
@@ -167,15 +261,31 @@ export function getPermisosResumen() {
 // ============================================
 if (typeof window !== 'undefined') {
   window.permisos = {
+    // Funciones principales
     puedeAccederAPaciente,
     puedeEditarFichas,
     filtrarSoloMisPacientes,
+    
+    // Fichas clínicas
     puedeVerFichaIngreso,
     puedeVerSesion,
     puedeVerInforme,
     puedeEditarFichaIngreso,
     puedeEditarSesion,
     puedeEditarInforme,
+    
+    // Profesionales y admin
+    puedeEditarProfesional,
+    puedeVerEstadisticas,
+    puedeExportarExcel,
+    puedeEditarTextosSitio,
+    
+    // Módulos
+    puedeVerPacientes,
+    puedeVerCitas,
+    puedeVerProfesionales,
+    
+    // Roles
     isAdmin,
     isPsychologist,
     getPermisosResumen
@@ -183,4 +293,4 @@ if (typeof window !== 'undefined') {
   console.log('✅ window.permisos expuesto correctamente');
 }
 
-console.log('✅ permisos.js cargado con funciones para fichas clínicas (versión asíncrona)');
+console.log('✅ permisos.js cargado con funciones para fichas clínicas, profesionales y módulos (versión asíncrona, sin boxes)');

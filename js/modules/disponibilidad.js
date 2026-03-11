@@ -7,25 +7,35 @@ import { showToast } from './utils.js';
 // ============================================
 
 export function showAvailabilityModal() {
-    document.getElementById('availabilityModal').style.display = 'flex';
+    const modal = document.getElementById('availabilityModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
 
     const today = new Date();
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
 
-    document.getElementById('rangeStartDate').value = today.toISOString().split('T')[0];
-    document.getElementById('rangeEndDate').value = nextWeek.toISOString().split('T')[0];
+    const rangeStartDate = document.getElementById('rangeStartDate');
+    const rangeEndDate = document.getElementById('rangeEndDate');
+    
+    if (rangeStartDate) rangeStartDate.value = today.toISOString().split('T')[0];
+    if (rangeEndDate) rangeEndDate.value = nextWeek.toISOString().split('T')[0];
 
     if (state.currentUser?.data) {
-        document.getElementById('sessionDuration').value = state.currentUser.data.sessionDuration || 45;
-        document.getElementById('breakBetween').value = state.currentUser.data.breakBetween || 10;
+        const sessionDuration = document.getElementById('sessionDuration');
+        const breakBetween = document.getElementById('breakBetween');
+        
+        if (sessionDuration) sessionDuration.value = state.currentUser.data.sessionDuration || 45;
+        if (breakBetween) breakBetween.value = state.currentUser.data.breakBetween || 10;
     }
 
     generateTimeSlots();
 }
 
 export function closeAvailabilityModal() {
-    document.getElementById('availabilityModal').style.display = 'none';
+    const modal = document.getElementById('availabilityModal');
+    if (modal) modal.style.display = 'none';
 }
 
 // ============================================
@@ -48,10 +58,10 @@ export function toggleWeekday(day) {
 // ============================================
 
 export function generateTimeSlots() {
-    const start = document.getElementById('startTime').value;
-    const end = document.getElementById('endTime').value;
-    const duration = parseInt(document.getElementById('sessionDuration').value);
-    const breakTime = parseInt(document.getElementById('breakBetween').value);
+    const start = document.getElementById('startTime')?.value;
+    const end = document.getElementById('endTime')?.value;
+    const duration = parseInt(document.getElementById('sessionDuration')?.value || '45');
+    const breakTime = parseInt(document.getElementById('breakBetween')?.value || '10');
 
     if (!start || !end) {
         showToast('Define horario de inicio y fin', 'error');
@@ -87,6 +97,8 @@ export function generateTimeSlots() {
 
 function renderGeneratedSlots() {
     const container = document.getElementById('generatedTimeSlots');
+    if (!container) return;
+    
     container.innerHTML = '';
     state.generatedSlots.forEach(slot => {
         const slotDiv = document.createElement('div');
@@ -114,8 +126,8 @@ function toggleGeneratedSlot(time) {
 // ============================================
 
 export function blockTimeRange() {
-    const startTime = document.getElementById('blockStartTime').value;
-    const endTime = document.getElementById('blockEndTime').value;
+    const startTime = document.getElementById('blockStartTime')?.value;
+    const endTime = document.getElementById('blockEndTime')?.value;
 
     if (!startTime || !endTime) {
         showToast('Selecciona hora de inicio y fin', 'error');
@@ -133,10 +145,18 @@ export function blockTimeRange() {
 // ============================================
 
 export function applyGeneratedSlots() {
-    const startDate = new Date(document.getElementById('rangeStartDate').value);
-    const endDate = new Date(document.getElementById('rangeEndDate').value);
+    const startDateInput = document.getElementById('rangeStartDate');
+    const endDateInput = document.getElementById('rangeEndDate');
+    
+    if (!startDateInput || !endDateInput) {
+        showToast('Error con los campos de fecha', 'error');
+        return;
+    }
+    
+    const startDate = new Date(startDateInput.value);
+    const endDate = new Date(endDateInput.value);
 
-    if (!startDate || !endDate) {
+    if (!startDateInput.value || !endDateInput.value) {
         showToast('Selecciona rango de fechas', 'error');
         return;
     }
@@ -190,10 +210,15 @@ export function clearAllSlots() {
 // ============================================
 
 export function loadTimeSlots() {
-    const date = document.getElementById('availDate').value;
+    const dateInput = document.getElementById('availDate');
+    if (!dateInput) return;
+    
+    const date = dateInput.value;
     if (!date || !state.currentUser?.data) return;
 
     const container = document.getElementById('timeSlotsContainer');
+    if (!container) return;
+    
     const currentAvailability = state.currentUser.data.availability || {};
     const selectedSlots = currentAvailability[date] || [];
     const showOvercupo = document.getElementById('showOvercupo')?.checked || false;
@@ -242,7 +267,10 @@ export function loadTimeSlots() {
 function toggleTimeSlot(time, isOvercupo = false) {
     if (!state.currentUser?.data) return;
 
-    const date = document.getElementById('availDate').value;
+    const dateInput = document.getElementById('availDate');
+    if (!dateInput) return;
+    
+    const date = dateInput.value;
     if (!date) {
         showToast('Selecciona una fecha', 'warning');
         return;
@@ -269,7 +297,10 @@ function toggleTimeSlot(time, isOvercupo = false) {
 // ============================================
 
 export function addOvercupo() {
-    const date = document.getElementById('availDate').value;
+    const dateInput = document.getElementById('availDate');
+    if (!dateInput) return;
+    
+    const date = dateInput.value;
     if (!date) {
         showToast('Selecciona una fecha', 'error');
         return;
@@ -379,6 +410,16 @@ if (typeof window !== 'undefined') {
     window.getAvailabilityStats = getAvailabilityStats;
     window.getAvailableSlotsForDate = getAvailableSlotsForDate;
     window.getNextAvailableSlot = getNextAvailableSlot;
+    window.showAvailabilityModal = showAvailabilityModal;
+    window.closeAvailabilityModal = closeAvailabilityModal;
+    window.generateTimeSlots = generateTimeSlots;
+    window.toggleWeekday = toggleWeekday;
+    window.blockTimeRange = blockTimeRange;
+    window.applyGeneratedSlots = applyGeneratedSlots;
+    window.clearAllSlots = clearAllSlots;
+    window.saveAvailability = saveAvailability;
+    window.loadTimeSlots = loadTimeSlots;
+    window.addOvercupo = addOvercupo;
 }
 
-console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada');
+console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada (sin boxes)');

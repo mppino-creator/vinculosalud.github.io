@@ -314,6 +314,11 @@ export async function mostrarFormularioFichaIngreso(patientId) {
         const title = modal.querySelector('h2');
         if (title) title.textContent = 'Crear Ficha de Ingreso';
         
+        const patientInfo = modal.querySelector('p');
+        if (patientInfo) {
+            patientInfo.innerHTML = `Paciente: <strong>${patient.name}</strong> (${patient.rut})`;
+        }
+        
         document.getElementById('fichaPatientId').value = patientId;
         document.getElementById('fichaId').value = '';
         document.getElementById('motivoConsulta').value = '';
@@ -348,19 +353,42 @@ function llenarDatosFichaParaEdicion(ficha) {
     const title = document.querySelector('#modalFichaIngreso h2');
     if (title) title.textContent = 'Editar Ficha de Ingreso';
     
-    document.getElementById('fichaId').value = ficha.id;
-    document.getElementById('fichaPatientId').value = ficha.patientId;
-    document.getElementById('motivoConsulta').value = ficha.motivoConsulta || '';
-    
-    if (ficha.sintomatologia) {
-        document.getElementById('fechaInicio').value = ficha.sintomatologia.fechaInicio || '';
-        document.getElementById('progresion').value = ficha.sintomatologia.progresion || '';
-        document.getElementById('tratamientosPrevios').value = ficha.sintomatologia.tratamientosPrevios || '';
-        document.getElementById('medicamentos').value = ficha.sintomatologia.medicamentos || '';
+    const patientInfo = document.querySelector('#modalFichaIngreso p');
+    if (patientInfo) {
+        const patient = state.patients.find(p => p.id == ficha.patientId);
+        if (patient) {
+            patientInfo.innerHTML = `Paciente: <strong>${patient.name}</strong> (${patient.rut})`;
+        }
     }
     
-    document.getElementById('composicionFamiliar').value = ficha.composicionFamiliar || '';
-    document.getElementById('otrosAntecedentes').value = ficha.otrosAntecedentes || '';
+    const fichaIdInput = document.getElementById('fichaId');
+    if (fichaIdInput) fichaIdInput.value = ficha.id;
+    
+    const patientIdInput = document.getElementById('fichaPatientId');
+    if (patientIdInput) patientIdInput.value = ficha.patientId;
+    
+    const motivoConsulta = document.getElementById('motivoConsulta');
+    if (motivoConsulta) motivoConsulta.value = ficha.motivoConsulta || '';
+    
+    if (ficha.sintomatologia) {
+        const fechaInicio = document.getElementById('fechaInicio');
+        if (fechaInicio) fechaInicio.value = ficha.sintomatologia.fechaInicio || '';
+        
+        const progresion = document.getElementById('progresion');
+        if (progresion) progresion.value = ficha.sintomatologia.progresion || '';
+        
+        const tratamientosPrevios = document.getElementById('tratamientosPrevios');
+        if (tratamientosPrevios) tratamientosPrevios.value = ficha.sintomatologia.tratamientosPrevios || '';
+        
+        const medicamentos = document.getElementById('medicamentos');
+        if (medicamentos) medicamentos.value = ficha.sintomatologia.medicamentos || '';
+    }
+    
+    const composicionFamiliar = document.getElementById('composicionFamiliar');
+    if (composicionFamiliar) composicionFamiliar.value = ficha.composicionFamiliar || '';
+    
+    const otrosAntecedentes = document.getElementById('otrosAntecedentes');
+    if (otrosAntecedentes) otrosAntecedentes.value = ficha.otrosAntecedentes || '';
     
     const modal = document.getElementById('modalFichaIngreso');
     if (modal) modal.style.display = 'flex';
@@ -438,12 +466,43 @@ export function verNotaSesion(sesionId) {
         return;
     }
     
-    // Mostrar detalle de la sesión (puedes implementar un modal)
-    alert(JSON.stringify(sesion, null, 2));
+    // Crear modal para ver la sesión completa
+    let modal = document.getElementById('modalVerSesion');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalVerSesion';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <button class="modal-close" onclick="document.getElementById('modalVerSesion').style.display='none'">&times;</button>
+                <h2>Detalle de Sesión</h2>
+                <div id="detalleSesionContent"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    const content = document.getElementById('detalleSesionContent');
+    if (content) {
+        content.innerHTML = `
+            <p><strong>Fecha:</strong> ${sesion.fechaAtencion || 'No especificada'}</p>
+            <p><strong>Tipo:</strong> ${sesion.tipoAtencion || 'No especificado'}</p>
+            <p><strong>Notas:</strong> ${sesion.notas || 'Sin notas'}</p>
+            <p><strong>Evolución:</strong> ${sesion.evolucion || 'Sin evolución'}</p>
+            <p><strong>Registrado por:</strong> ${sesion.realizadoPorNombre || 'Desconocido'}</p>
+            <p><strong>Fecha registro:</strong> ${new Date(sesion.fechaGuardado || sesion.fechaCreacion).toLocaleString()}</p>
+        `;
+    }
+    
+    modal.style.display = 'flex';
 }
 
 export function mostrarFormularioNotaSesion(patientId) {
+    // Por implementar - crear modal para nueva sesión
     showToast('Función de nueva sesión en desarrollo', 'info');
+    
+    // Aquí puedes implementar el modal para crear una nueva sesión
+    console.log('📝 Mostrar formulario de nueva sesión para paciente:', patientId);
 }
 
 // ============================================
@@ -465,4 +524,4 @@ if (typeof window !== 'undefined') {
   console.log('✅ window.fichasClinicas expuesto correctamente');
 }
 
-console.log('✅ fichasClinicas.js cargado correctamente con formulario de creación y setters');
+console.log('✅ fichasClinicas.js cargado correctamente con formulario de creación y setters (sin boxes)');

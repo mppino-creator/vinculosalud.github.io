@@ -1087,58 +1087,6 @@
     </div>
 </div>
 
-<!-- Modal de Boxes -->
-<div class="modal" id="boxModal">
-    <div class="modal-content" style="max-width: 800px;">
-        <button class="modal-close" onclick="closeBoxModal()">&times;</button>
-        <h2 style="margin-bottom: 25px;">Gestión de Boxes</h2>
-        <div class="admin-form" style="grid-template-columns: 1fr 1fr;">
-            <div class="form-group">
-                <label>Nombre del Box *</label>
-                <input type="text" id="boxName">
-            </div>
-            <div class="form-group">
-                <label>Ubicación</label>
-                <input type="text" id="boxLocation">
-            </div>
-            <div class="form-group">
-                <label>Hora inicio *</label>
-                <input type="time" id="boxStartTime" value="09:00">
-            </div>
-            <div class="form-group">
-                <label>Hora fin *</label>
-                <input type="time" id="boxEndTime" value="20:00">
-            </div>
-            <div class="form-group" style="grid-column:1/-1;">
-                <label>Días de operación *</label>
-                <div style="display:flex; gap:15px; flex-wrap:wrap;">
-                    <label><input type="checkbox" class="box-day" value="1" checked> Lunes</label>
-                    <label><input type="checkbox" class="box-day" value="2" checked> Martes</label>
-                    <label><input type="checkbox" class="box-day" value="3" checked> Miércoles</label>
-                    <label><input type="checkbox" class="box-day" value="4" checked> Jueves</label>
-                    <label><input type="checkbox" class="box-day" value="5" checked> Viernes</label>
-                    <label><input type="checkbox" class="box-day" value="6"> Sábado</label>
-                    <label><input type="checkbox" class="box-day" value="0"> Domingo</label>
-                </div>
-            </div>
-            <div class="form-group" style="grid-column:1/-1;">
-                <label>Descripción</label>
-                <textarea id="boxDescription" rows="2"></textarea>
-            </div>
-            <button class="btn-staff" style="background:var(--verde-exito); grid-column:1/-1;" onclick="saveBox()" id="saveBoxBtn">Guardar</button>
-        </div>
-        <h3 style="margin:30px 0 15px;">Lista de Boxes</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr><th>Nombre</th><th>Ubicación</th><th>Horario</th><th>Días</th><th>Estado</th><th>Acciones</th></tr>
-                </thead>
-                <tbody id="boxTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 <!-- Modal para Añadir Profesional -->
 <div class="modal" id="addStaffModal">
     <div class="modal-content" style="max-width: 800px;">
@@ -2021,7 +1969,7 @@
                 
                 <div id="presencialWarning" style="background:#e8f4fd; padding:15px; border-radius:12px; margin:15px 0; display:none;">
                     <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Solicitud Presencial:</strong> El profesional confirmará la hora
+                    <strong>Solicitud Presencial:</strong> El profesional confirmará la hora y coordinará la dirección.
                 </div>
                 
                 <div class="form-group">
@@ -2134,7 +2082,7 @@
             <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
             <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
             <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
-            <div class="tab" id="boxesTab" style="display:none;" onclick="switchTab('boxes')">Boxes</div>
+            <!-- Pestaña de Boxes eliminada -->
             <div class="tab" id="agendarTab" style="display:none;" onclick="switchTab('agendar')">Agendar</div>
         </div>
 
@@ -2143,7 +2091,7 @@
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Box</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
+                        <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
                 </table>
@@ -2155,7 +2103,7 @@
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Box</th><th>Motivo</th><th>Acciones</th></tr>
+                        <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
                 </table>

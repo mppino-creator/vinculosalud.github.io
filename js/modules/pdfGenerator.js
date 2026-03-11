@@ -312,12 +312,162 @@ export async function generarFichaIngresoPDF(fichaIngreso) {
   }
 }
 
+/**
+ * Genera un resumen completo del paciente en PDF
+ * @param {Object} patient - Datos del paciente
+ * @param {Array} fichas - Fichas de ingreso
+ * @param {Array} sesiones - Sesiones
+ * @param {Array} informes - Informes
+ * @returns {Promise<string>} URL del PDF
+ */
+export async function generarResumenPacientePDF(patient, fichas = [], sesiones = [], informes = []) {
+  try {
+    console.log('📊 Generando resumen completo del paciente:', patient.name);
+    
+    if (typeof window.jspdf === 'undefined') {
+      return simuladorPDF(patient, 'resumen');
+    }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Título
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RESUMEN CLÍNICO DEL PACIENTE', 20, 20);
+    
+    // Línea
+    doc.setLineWidth(0.5);
+    doc.line(20, 25, 190, 25);
+    
+    let yPos = 35;
+    
+    // Datos del paciente
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Datos del Paciente:', 20, yPos);
+    yPos += 7;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Nombre: ${patient.name}`, 25, yPos);
+    yPos += 6;
+    doc.text(`RUT: ${patient.rut || 'No registrado'}`, 25, yPos);
+    yPos += 6;
+    doc.text(`Email: ${patient.email || 'No registrado'}`, 25, yPos);
+    yPos += 6;
+    doc.text(`Teléfono: ${patient.phone || 'No registrado'}`, 25, yPos);
+    yPos += 6;
+    doc.text(`Fecha registro: ${patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'No registrada'}`, 25, yPos);
+    yPos += 10;
+    
+    // Fichas de ingreso
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Fichas de Ingreso (${fichas.length})`, 20, yPos);
+    yPos += 7;
+    
+    if (fichas.length > 0) {
+      fichas.forEach((f, index) => {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setFont('helvetica', 'bolditalic');
+        doc.text(`Ficha ${index + 1}:`, 25, yPos);
+        yPos += 5;
+        doc.setFont('helvetica', 'normal');
+        const motivo = f.motivoConsulta || 'Sin motivo especificado';
+        const motivoLines = doc.splitTextToSize(motivo, 160);
+        motivoLines.forEach(line => {
+          doc.text(line, 30, yPos);
+          yPos += 5;
+        });
+        yPos += 5;
+      });
+    } else {
+      doc.text('No hay fichas de ingreso registradas', 25, yPos);
+      yPos += 7;
+    }
+    
+    yPos += 5;
+    
+    // Sesiones
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Sesiones Registradas (${sesiones.length})`, 20, yPos);
+    yPos += 7;
+    
+    if (sesiones.length > 0) {
+      sesiones.slice(0, 10).forEach((s, index) => {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setFont('helvetica', 'bolditalic');
+        doc.text(`Sesión ${index + 1}: ${s.fechaAtencion || 'Fecha no especificada'}`, 25, yPos);
+        yPos += 5;
+        doc.setFont('helvetica', 'normal');
+        const notas = s.notas ? s.notas.substring(0, 100) : 'Sin notas';
+        doc.text(notas + (s.notas?.length > 100 ? '...' : ''), 30, yPos);
+        yPos += 5;
+      });
+      
+      if (sesiones.length > 10) {
+        doc.text(`... y ${sesiones.length - 10} sesiones más`, 25, yPos);
+        yPos += 7;
+      }
+    } else {
+      doc.text('No hay sesiones registradas', 25, yPos);
+      yPos += 7;
+    }
+    
+    yPos += 5;
+    
+    // Informes
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Informes (${informes.length})`, 20, yPos);
+    yPos += 7;
+    
+    if (informes.length > 0) {
+      informes.forEach((inf, index) => {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setFont('helvetica', 'bolditalic');
+        doc.text(`${inf.tipo === 'psicodiagnostico' ? 'Psicodiagnóstico' : 'Cierre'} ${index + 1}:`, 25, yPos);
+        yPos += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Creado: ${new Date(inf.fechaCreacion).toLocaleDateString()}`, 30, yPos);
+        yPos += 5;
+      });
+    } else {
+      doc.text('No hay informes generados', 25, yPos);
+    }
+    
+    const pdfBlob = doc.output('blob');
+    return URL.createObjectURL(pdfBlob);
+  } catch (error) {
+    console.error('Error generando resumen del paciente:', error);
+    return simuladorPDF(patient, 'resumen');
+  }
+}
+
 // Exportar funciones al objeto window para uso global
 if (typeof window !== 'undefined') {
   window.generarPDF = generarPDF;
   window.exportarFichaCompletaPaciente = exportarFichaCompletaPaciente;
   window.generarNotaSesionPDF = generarNotaSesionPDF;
   window.generarFichaIngresoPDF = generarFichaIngresoPDF;
+  window.generarResumenPacientePDF = generarResumenPacientePDF;
 }
 
-console.log('✅ pdfGenerator.js cargado correctamente');
+console.log('✅ pdfGenerator.js cargado correctamente con generación de resúmenes de pacientes (sin boxes)');

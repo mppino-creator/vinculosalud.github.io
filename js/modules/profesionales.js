@@ -8,27 +8,53 @@ import { showToast } from './utils.js';
 // ============================================
 
 export function showAddStaffModal() {
-    document.getElementById('addStaffModal').style.display = 'flex';
-    document.getElementById('addName').value = '';
-    document.getElementById('addEmail').value = '';
-    document.getElementById('addSpec').selectedIndex = -1;
-    document.getElementById('addUser').value = '';
-    document.getElementById('addPass').value = '';
-    document.getElementById('addWhatsapp').value = '';
-    document.getElementById('addInstagram').value = '';
-    document.getElementById('addAddress').value = '';
-    document.getElementById('addPhone').value = '';
-    document.getElementById('addPriceOnline').value = '';
-    document.getElementById('addPricePresencial').value = '';
-    document.getElementById('addBank').value = '';
-    document.getElementById('addAccountType').value = 'corriente';
-    document.getElementById('addAccountNumber').value = '';
-    document.getElementById('addBankRut').value = '';
-    document.getElementById('addBankEmail').value = '';
-    document.getElementById('addPaymentLinkOnline').value = '';
-    document.getElementById('addPaymentLinkPresencial').value = '';
-    document.getElementById('addPhotoPreview').style.display = 'none';
-    document.getElementById('addQrPreview').style.display = 'none';
+    const modal = document.getElementById('addStaffModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    
+    // Limpiar campos
+    const addName = document.getElementById('addName');
+    const addEmail = document.getElementById('addEmail');
+    const addSpec = document.getElementById('addSpec');
+    const addUser = document.getElementById('addUser');
+    const addPass = document.getElementById('addPass');
+    const addWhatsapp = document.getElementById('addWhatsapp');
+    const addInstagram = document.getElementById('addInstagram');
+    const addAddress = document.getElementById('addAddress');
+    const addPhone = document.getElementById('addPhone');
+    const addPriceOnline = document.getElementById('addPriceOnline');
+    const addPricePresencial = document.getElementById('addPricePresencial');
+    const addBank = document.getElementById('addBank');
+    const addAccountType = document.getElementById('addAccountType');
+    const addAccountNumber = document.getElementById('addAccountNumber');
+    const addBankRut = document.getElementById('addBankRut');
+    const addBankEmail = document.getElementById('addBankEmail');
+    const addPaymentLinkOnline = document.getElementById('addPaymentLinkOnline');
+    const addPaymentLinkPresencial = document.getElementById('addPaymentLinkPresencial');
+    const addPhotoPreview = document.getElementById('addPhotoPreview');
+    const addQrPreview = document.getElementById('addQrPreview');
+    
+    if (addName) addName.value = '';
+    if (addEmail) addEmail.value = '';
+    if (addSpec) addSpec.selectedIndex = -1;
+    if (addUser) addUser.value = '';
+    if (addPass) addPass.value = '';
+    if (addWhatsapp) addWhatsapp.value = '';
+    if (addInstagram) addInstagram.value = '';
+    if (addAddress) addAddress.value = '';
+    if (addPhone) addPhone.value = '';
+    if (addPriceOnline) addPriceOnline.value = '';
+    if (addPricePresencial) addPricePresencial.value = '';
+    if (addBank) addBank.value = '';
+    if (addAccountType) addAccountType.value = 'corriente';
+    if (addAccountNumber) addAccountNumber.value = '';
+    if (addBankRut) addBankRut.value = '';
+    if (addBankEmail) addBankEmail.value = '';
+    if (addPaymentLinkOnline) addPaymentLinkOnline.value = '';
+    if (addPaymentLinkPresencial) addPaymentLinkPresencial.value = '';
+    if (addPhotoPreview) addPhotoPreview.style.display = 'none';
+    if (addQrPreview) addQrPreview.style.display = 'none';
     
     // Limpiar campo de género
     const addGenero = document.getElementById('addGenero');
@@ -39,7 +65,8 @@ export function showAddStaffModal() {
 }
 
 export function closeAddStaffModal() {
-    document.getElementById('addStaffModal').style.display = 'none';
+    const modal = document.getElementById('addStaffModal');
+    if (modal) modal.style.display = 'none';
 }
 
 // ============================================
@@ -65,16 +92,40 @@ export function openMyProfileModal() {
     crearModalEdicionProfesional();
     
     // Llenar el modal con los datos actuales
-    document.getElementById('editMyName').value = psych.name || '';
-    document.getElementById('editMyEmail').value = psych.email || '';
-    document.getElementById('editMyTitle').value = psych.title || '';
+    const editMyName = document.getElementById('editMyName');
+    const editMyEmail = document.getElementById('editMyEmail');
+    const editMyTitle = document.getElementById('editMyTitle');
+    const editMyGenero = document.getElementById('editMyGenero');
+    const editMySpec = document.getElementById('editMySpec');
+    const editMyBio = document.getElementById('editMyBio');
+    const editMyProfessionalId = document.getElementById('editMyProfessionalId');
+    const editMyExperience = document.getElementById('editMyExperience');
+    const editMyEducation = document.getElementById('editMyEducation');
+    const editMyLanguages = document.getElementById('editMyLanguages');
+    const editMyLinkedin = document.getElementById('editMyLinkedin');
+    const editMyInstagram = document.getElementById('editMyInstagram');
+    const editMyWebsite = document.getElementById('editMyWebsite');
+    const editMyPriceOnline = document.getElementById('editMyPriceOnline');
+    const editMyPricePresencial = document.getElementById('editMyPricePresencial');
+    const editMyDuration = document.getElementById('editMyDuration');
+    const editMyBank = document.getElementById('editMyBank');
+    const editMyAccountType = document.getElementById('editMyAccountType');
+    const editMyAccountNumber = document.getElementById('editMyAccountNumber');
+    const editMyBankRut = document.getElementById('editMyBankRut');
+    const editMyBankEmail = document.getElementById('editMyBankEmail');
+    const editMyPaymentLinkOnline = document.getElementById('editMyPaymentLinkOnline');
+    const editMyPaymentLinkPresencial = document.getElementById('editMyPaymentLinkPresencial');
+    const photoPreview = document.getElementById('editMyPhotoPreview');
+    const qrPreview = document.getElementById('editMyQrPreview');
+    
+    if (editMyName) editMyName.value = psych.name || '';
+    if (editMyEmail) editMyEmail.value = psych.email || '';
+    if (editMyTitle) editMyTitle.value = psych.title || '';
     
     // Género
-    const editMyGenero = document.getElementById('editMyGenero');
     if (editMyGenero) editMyGenero.value = psych.genero || '';
     
     // Especialidades
-    const editMySpec = document.getElementById('editMySpec');
     if (editMySpec) {
         const psychSpecs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
         Array.from(editMySpec.options).forEach(opt => {
@@ -83,47 +134,53 @@ export function openMyProfileModal() {
     }
     
     // Biografía / Descripción
-    document.getElementById('editMyBio').value = psych.bio || '';
+    if (editMyBio) editMyBio.value = psych.bio || '';
     
     // Registro profesional
-    document.getElementById('editMyProfessionalId').value = psych.professionalId || '';
-    document.getElementById('editMyExperience').value = psych.experience || '';
-    document.getElementById('editMyEducation').value = psych.education || '';
-    document.getElementById('editMyLanguages').value = psych.languages ? psych.languages.join(', ') : '';
+    if (editMyProfessionalId) editMyProfessionalId.value = psych.professionalId || '';
+    if (editMyExperience) editMyExperience.value = psych.experience || '';
+    if (editMyEducation) editMyEducation.value = psych.education || '';
+    if (editMyLanguages) editMyLanguages.value = psych.languages ? psych.languages.join(', ') : '';
     
     // Redes sociales
-    document.getElementById('editMyLinkedin').value = psych.socialLinks?.linkedin || '';
-    document.getElementById('editMyInstagram').value = psych.socialLinks?.instagram || '';
-    document.getElementById('editMyWebsite').value = psych.socialLinks?.website || '';
+    if (editMyLinkedin) editMyLinkedin.value = psych.socialLinks?.linkedin || '';
+    if (editMyInstagram) editMyInstagram.value = psych.socialLinks?.instagram || '';
+    if (editMyWebsite) editMyWebsite.value = psych.socialLinks?.website || '';
     
     // Precios
-    document.getElementById('editMyPriceOnline').value = psych.priceOnline || '';
-    document.getElementById('editMyPricePresencial').value = psych.pricePresencial || '';
-    document.getElementById('editMyDuration').value = psych.sessionDuration || 45;
+    if (editMyPriceOnline) editMyPriceOnline.value = psych.priceOnline || '';
+    if (editMyPricePresencial) editMyPricePresencial.value = psych.pricePresencial || '';
+    if (editMyDuration) editMyDuration.value = psych.sessionDuration || 45;
     
     // Métodos de pago (checkboxes)
     const methods = psych.paymentMethods || state.globalPaymentMethods;
-    document.getElementById('editMyPaymentTransfer').checked = methods.transfer || false;
-    document.getElementById('editMyPaymentCardPresencial').checked = methods.cardPresencial || false;
-    document.getElementById('editMyPaymentCash').checked = methods.cash || false;
-    document.getElementById('editMyPaymentCardOnline').checked = methods.cardOnline || false;
-    document.getElementById('editMyPaymentMercadopago').checked = methods.mercadopago || false;
-    document.getElementById('editMyPaymentWebpay').checked = methods.webpay || false;
+    const editMyPaymentTransfer = document.getElementById('editMyPaymentTransfer');
+    const editMyPaymentCardPresencial = document.getElementById('editMyPaymentCardPresencial');
+    const editMyPaymentCash = document.getElementById('editMyPaymentCash');
+    const editMyPaymentCardOnline = document.getElementById('editMyPaymentCardOnline');
+    const editMyPaymentMercadopago = document.getElementById('editMyPaymentMercadopago');
+    const editMyPaymentWebpay = document.getElementById('editMyPaymentWebpay');
+    
+    if (editMyPaymentTransfer) editMyPaymentTransfer.checked = methods.transfer || false;
+    if (editMyPaymentCardPresencial) editMyPaymentCardPresencial.checked = methods.cardPresencial || false;
+    if (editMyPaymentCash) editMyPaymentCash.checked = methods.cash || false;
+    if (editMyPaymentCardOnline) editMyPaymentCardOnline.checked = methods.cardOnline || false;
+    if (editMyPaymentMercadopago) editMyPaymentMercadopago.checked = methods.mercadopago || false;
+    if (editMyPaymentWebpay) editMyPaymentWebpay.checked = methods.webpay || false;
     
     // Datos bancarios
     const bank = psych.bankDetails || {};
-    document.getElementById('editMyBank').value = bank.bank || '';
-    document.getElementById('editMyAccountType').value = bank.accountType || 'corriente';
-    document.getElementById('editMyAccountNumber').value = bank.accountNumber || '';
-    document.getElementById('editMyBankRut').value = bank.rut || '';
-    document.getElementById('editMyBankEmail').value = bank.email || '';
+    if (editMyBank) editMyBank.value = bank.bank || '';
+    if (editMyAccountType) editMyAccountType.value = bank.accountType || 'corriente';
+    if (editMyAccountNumber) editMyAccountNumber.value = bank.accountNumber || '';
+    if (editMyBankRut) editMyBankRut.value = bank.rut || '';
+    if (editMyBankEmail) editMyBankEmail.value = bank.email || '';
     
     // Links de pago
-    document.getElementById('editMyPaymentLinkOnline').value = psych.paymentLinks?.online || '';
-    document.getElementById('editMyPaymentLinkPresencial').value = psych.paymentLinks?.presencial || '';
+    if (editMyPaymentLinkOnline) editMyPaymentLinkOnline.value = psych.paymentLinks?.online || '';
+    if (editMyPaymentLinkPresencial) editMyPaymentLinkPresencial.value = psych.paymentLinks?.presencial || '';
     
     // Foto de perfil
-    const photoPreview = document.getElementById('editMyPhotoPreview');
     if (photoPreview) {
         if (psych.img || psych.photoURL) {
             photoPreview.src = psych.img || psych.photoURL;
@@ -135,7 +192,6 @@ export function openMyProfileModal() {
     }
     
     // QR
-    const qrPreview = document.getElementById('editMyQrPreview');
     if (qrPreview) {
         if (psych.paymentLinks?.qrCode) {
             qrPreview.src = psych.paymentLinks.qrCode;
@@ -146,7 +202,8 @@ export function openMyProfileModal() {
     }
     
     // Mostrar modal
-    document.getElementById('editMyProfileModal').style.display = 'flex';
+    const modal = document.getElementById('editMyProfileModal');
+    if (modal) modal.style.display = 'flex';
 }
 
 // ============================================
@@ -179,7 +236,7 @@ function crearModalEdicionProfesional() {
             
             <!-- TAB 1: DATOS BÁSICOS -->
             <div id="tabBasic" class="profile-tab" style="display: block;">
-                <div style="display: flex; gap: 30px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 30px; margin-bottom: 20px; flex-wrap: wrap;">
                     <!-- Foto de perfil -->
                     <div style="flex: 0 0 150px; text-align: center;">
                         <div style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin-bottom: 10px; border: 3px solid var(--primario);">
@@ -198,12 +255,12 @@ function crearModalEdicionProfesional() {
                             <input type="text" id="editMyName" class="filter-input" required>
                         </div>
                         
-                        <div class="form-row" style="display: flex; gap: 15px;">
+                        <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <div class="form-group" style="flex: 1;">
                                 <label>Email *</label>
                                 <input type="email" id="editMyEmail" class="filter-input" required>
                             </div>
-                            <div class="form-group" style="flex: 0.5;">
+                            <div class="form-group" style="flex: 0.5; min-width: 150px;">
                                 <label>Género</label>
                                 <select id="editMyGenero" class="filter-input">
                                     <option value="">Selecciona</option>
@@ -214,18 +271,17 @@ function crearModalEdicionProfesional() {
                             </div>
                         </div>
                         
-                        <div class="form-row" style="display: flex; gap: 15px;">
-                            <div class="form-group" style="flex: 1;">
-                                <label>Título profesional</label>
-                                <input type="text" id="editMyTitle" class="filter-input" placeholder="Ej: Psicólogo Clínico">
-                            </div>
-                            <div class="form-group" style="flex: 1;">
-                                <label>Especialidades</label>
-                                <select id="editMySpec" class="filter-input" multiple size="4">
-                                    ${specialtiesHtml}
-                                </select>
-                                <small>Ctrl+click para múltiples</small>
-                            </div>
+                        <div class="form-group">
+                            <label>Título profesional</label>
+                            <input type="text" id="editMyTitle" class="filter-input" placeholder="Ej: Psicólogo Clínico">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Especialidades</label>
+                            <select id="editMySpec" class="filter-input" multiple size="4">
+                                ${specialtiesHtml}
+                            </select>
+                            <small>Ctrl+click para múltiples</small>
                         </div>
                         
                         <div class="form-group">
@@ -235,10 +291,10 @@ function crearModalEdicionProfesional() {
                     </div>
                 </div>
                 
-                <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 10px;">
+                <div style="border-top: 1px solid #eee; padding-top: 20px;">
                     <h4 style="margin-bottom: 15px;">📋 Información profesional</h4>
                     
-                    <div class="form-row" style="display: flex; gap: 15px;">
+                    <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
                         <div class="form-group" style="flex: 1;">
                             <label>Número de registro profesional</label>
                             <input type="text" id="editMyProfessionalId" class="filter-input" placeholder="Ej: 12345">
@@ -265,7 +321,7 @@ function crearModalEdicionProfesional() {
             <div id="tabPrices" class="profile-tab" style="display: none;">
                 <h4 style="margin-bottom: 15px;">💰 Precios de consulta</h4>
                 
-                <div class="form-row" style="display: flex; gap: 15px;">
+                <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div class="form-group" style="flex: 1;">
                         <label>Precio consulta ONLINE ($)</label>
                         <input type="number" id="editMyPriceOnline" class="filter-input" required>
@@ -297,7 +353,7 @@ function crearModalEdicionProfesional() {
             <div id="tabPayment" class="profile-tab" style="display: none;">
                 <h4 style="margin-bottom: 15px;">💳 Métodos de pago que acepto</h4>
                 
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
                     <label style="display: flex; align-items: center; gap: 10px;">
                         <input type="checkbox" id="editMyPaymentTransfer"> Transferencia bancaria
                     </label>
@@ -320,7 +376,7 @@ function crearModalEdicionProfesional() {
                 
                 <h4 style="margin-bottom: 15px;">🏦 Datos bancarios (para transferencias)</h4>
                 
-                <div class="form-row" style="display: flex; gap: 15px;">
+                <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div class="form-group" style="flex: 1;">
                         <label>Banco</label>
                         <input type="text" id="editMyBank" class="filter-input">
@@ -336,7 +392,7 @@ function crearModalEdicionProfesional() {
                     </div>
                 </div>
                 
-                <div class="form-row" style="display: flex; gap: 15px;">
+                <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div class="form-group" style="flex: 1;">
                         <label>Número de cuenta</label>
                         <input type="text" id="editMyAccountNumber" class="filter-input">
@@ -366,7 +422,7 @@ function crearModalEdicionProfesional() {
                 
                 <div class="form-group">
                     <label>Código QR de pago</label>
-                    <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
                         <div style="width: 100px; height: 100px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
                             <img id="editMyQrPreview" src="" style="width: 100%; height: 100%; object-fit: contain; display: none;">
                         </div>
@@ -416,11 +472,11 @@ function crearModalEdicionProfesional() {
             </div>
             
             <!-- BOTONES -->
-            <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
-                <button onclick="document.getElementById('editMyProfileModal').style.display='none'" class="btn-secondary">
+            <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; flex-wrap: wrap;">
+                <button onclick="document.getElementById('editMyProfileModal').style.display='none'" class="btn-secondary" style="padding:12px 25px;">
                     Cancelar
                 </button>
-                <button onclick="saveMyProfile()" class="btn-primary" style="background: var(--exito);">
+                <button onclick="saveMyProfile()" class="btn-primary" style="background: var(--exito); color:white; padding:12px 25px; border:none; border-radius:30px; cursor:pointer;">
                     <i class="fa fa-save"></i> Guardar cambios
                 </button>
             </div>
@@ -487,7 +543,8 @@ window.previewMyPhoto = function(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('editMyPhotoPreview').src = e.target.result;
+            const preview = document.getElementById('editMyPhotoPreview');
+            if (preview) preview.src = e.target.result;
             state.setTempImageData(e.target.result);
         };
         reader.readAsDataURL(input.files[0]);
@@ -502,8 +559,11 @@ window.previewMyQR = function(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('editMyQrPreview').src = e.target.result;
-            document.getElementById('editMyQrPreview').style.display = 'block';
+            const preview = document.getElementById('editMyQrPreview');
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
             state.setTempQrData(e.target.result);
         };
         reader.readAsDataURL(input.files[0]);
@@ -525,55 +585,90 @@ export function saveMyProfile() {
     
     try {
         // 📝 DATOS BÁSICOS
-        psych.name = document.getElementById('editMyName').value;
-        psych.email = document.getElementById('editMyEmail').value;
-        psych.genero = document.getElementById('editMyGenero').value;
-        psych.title = document.getElementById('editMyTitle').value;
+        const editMyName = document.getElementById('editMyName');
+        const editMyEmail = document.getElementById('editMyEmail');
+        const editMyGenero = document.getElementById('editMyGenero');
+        const editMyTitle = document.getElementById('editMyTitle');
+        const editMySpec = document.getElementById('editMySpec');
+        const editMyBio = document.getElementById('editMyBio');
+        const editMyProfessionalId = document.getElementById('editMyProfessionalId');
+        const editMyExperience = document.getElementById('editMyExperience');
+        const editMyEducation = document.getElementById('editMyEducation');
+        const editMyLanguages = document.getElementById('editMyLanguages');
+        
+        if (editMyName) psych.name = editMyName.value;
+        if (editMyEmail) psych.email = editMyEmail.value;
+        if (editMyGenero) psych.genero = editMyGenero.value;
+        if (editMyTitle) psych.title = editMyTitle.value;
         
         // Especialidades
-        const editMySpec = document.getElementById('editMySpec');
         if (editMySpec) {
             psych.spec = Array.from(editMySpec.selectedOptions).map(opt => opt.value);
         }
         
         // Biografía
-        psych.bio = document.getElementById('editMyBio').value;
+        if (editMyBio) psych.bio = editMyBio.value;
         
         // Información profesional
-        psych.professionalId = document.getElementById('editMyProfessionalId').value;
-        psych.experience = parseInt(document.getElementById('editMyExperience').value) || 0;
-        psych.education = document.getElementById('editMyEducation').value;
+        if (editMyProfessionalId) psych.professionalId = editMyProfessionalId.value;
+        if (editMyExperience) psych.experience = parseInt(editMyExperience.value) || 0;
+        if (editMyEducation) psych.education = editMyEducation.value;
         
         // Idiomas
-        const languagesInput = document.getElementById('editMyLanguages').value;
-        psych.languages = languagesInput ? languagesInput.split(',').map(l => l.trim()) : [];
+        if (editMyLanguages) {
+            const languagesInput = editMyLanguages.value;
+            psych.languages = languagesInput ? languagesInput.split(',').map(l => l.trim()) : [];
+        }
         
         // 💰 PRECIOS
-        psych.priceOnline = parseInt(document.getElementById('editMyPriceOnline').value) || 0;
-        psych.pricePresencial = parseInt(document.getElementById('editMyPricePresencial').value) || 0;
-        psych.sessionDuration = parseInt(document.getElementById('editMyDuration').value) || 45;
+        const editMyPriceOnline = document.getElementById('editMyPriceOnline');
+        const editMyPricePresencial = document.getElementById('editMyPricePresencial');
+        const editMyDuration = document.getElementById('editMyDuration');
+        
+        if (editMyPriceOnline) psych.priceOnline = parseInt(editMyPriceOnline.value) || 0;
+        if (editMyPricePresencial) psych.pricePresencial = parseInt(editMyPricePresencial.value) || 0;
+        if (editMyDuration) psych.sessionDuration = parseInt(editMyDuration.value) || 45;
         
         // 💳 MÉTODOS DE PAGO
         if (!psych.paymentMethods) psych.paymentMethods = {};
-        psych.paymentMethods.transfer = document.getElementById('editMyPaymentTransfer').checked;
-        psych.paymentMethods.cardPresencial = document.getElementById('editMyPaymentCardPresencial').checked;
-        psych.paymentMethods.cash = document.getElementById('editMyPaymentCash').checked;
-        psych.paymentMethods.cardOnline = document.getElementById('editMyPaymentCardOnline').checked;
-        psych.paymentMethods.mercadopago = document.getElementById('editMyPaymentMercadopago').checked;
-        psych.paymentMethods.webpay = document.getElementById('editMyPaymentWebpay').checked;
+        
+        const editMyPaymentTransfer = document.getElementById('editMyPaymentTransfer');
+        const editMyPaymentCardPresencial = document.getElementById('editMyPaymentCardPresencial');
+        const editMyPaymentCash = document.getElementById('editMyPaymentCash');
+        const editMyPaymentCardOnline = document.getElementById('editMyPaymentCardOnline');
+        const editMyPaymentMercadopago = document.getElementById('editMyPaymentMercadopago');
+        const editMyPaymentWebpay = document.getElementById('editMyPaymentWebpay');
+        
+        if (editMyPaymentTransfer) psych.paymentMethods.transfer = editMyPaymentTransfer.checked;
+        if (editMyPaymentCardPresencial) psych.paymentMethods.cardPresencial = editMyPaymentCardPresencial.checked;
+        if (editMyPaymentCash) psych.paymentMethods.cash = editMyPaymentCash.checked;
+        if (editMyPaymentCardOnline) psych.paymentMethods.cardOnline = editMyPaymentCardOnline.checked;
+        if (editMyPaymentMercadopago) psych.paymentMethods.mercadopago = editMyPaymentMercadopago.checked;
+        if (editMyPaymentWebpay) psych.paymentMethods.webpay = editMyPaymentWebpay.checked;
         
         // 🏦 DATOS BANCARIOS
         if (!psych.bankDetails) psych.bankDetails = {};
-        psych.bankDetails.bank = document.getElementById('editMyBank').value;
-        psych.bankDetails.accountType = document.getElementById('editMyAccountType').value;
-        psych.bankDetails.accountNumber = document.getElementById('editMyAccountNumber').value;
-        psych.bankDetails.rut = document.getElementById('editMyBankRut').value;
-        psych.bankDetails.email = document.getElementById('editMyBankEmail').value;
+        
+        const editMyBank = document.getElementById('editMyBank');
+        const editMyAccountType = document.getElementById('editMyAccountType');
+        const editMyAccountNumber = document.getElementById('editMyAccountNumber');
+        const editMyBankRut = document.getElementById('editMyBankRut');
+        const editMyBankEmail = document.getElementById('editMyBankEmail');
+        
+        if (editMyBank) psych.bankDetails.bank = editMyBank.value;
+        if (editMyAccountType) psych.bankDetails.accountType = editMyAccountType.value;
+        if (editMyAccountNumber) psych.bankDetails.accountNumber = editMyAccountNumber.value;
+        if (editMyBankRut) psych.bankDetails.rut = editMyBankRut.value;
+        if (editMyBankEmail) psych.bankDetails.email = editMyBankEmail.value;
         
         // 🔗 LINKS DE PAGO
         if (!psych.paymentLinks) psych.paymentLinks = {};
-        psych.paymentLinks.online = document.getElementById('editMyPaymentLinkOnline').value;
-        psych.paymentLinks.presencial = document.getElementById('editMyPaymentLinkPresencial').value;
+        
+        const editMyPaymentLinkOnline = document.getElementById('editMyPaymentLinkOnline');
+        const editMyPaymentLinkPresencial = document.getElementById('editMyPaymentLinkPresencial');
+        
+        if (editMyPaymentLinkOnline) psych.paymentLinks.online = editMyPaymentLinkOnline.value;
+        if (editMyPaymentLinkPresencial) psych.paymentLinks.presencial = editMyPaymentLinkPresencial.value;
         
         // QR
         if (state.tempQrData) {
@@ -588,14 +683,23 @@ export function saveMyProfile() {
         
         // 🌐 REDES SOCIALES
         if (!psych.socialLinks) psych.socialLinks = {};
-        psych.socialLinks.linkedin = document.getElementById('editMyLinkedin').value;
-        psych.socialLinks.instagram = document.getElementById('editMyInstagram').value;
-        psych.socialLinks.website = document.getElementById('editMyWebsite').value;
+        
+        const editMyLinkedin = document.getElementById('editMyLinkedin');
+        const editMyInstagram = document.getElementById('editMyInstagram');
+        const editMyWebsite = document.getElementById('editMyWebsite');
+        
+        if (editMyLinkedin) psych.socialLinks.linkedin = editMyLinkedin.value;
+        if (editMyInstagram) psych.socialLinks.instagram = editMyInstagram.value;
+        if (editMyWebsite) psych.socialLinks.website = editMyWebsite.value;
         
         // Contacto
-        psych.whatsapp = document.getElementById('editMyWhatsapp').value;
-        psych.phone = document.getElementById('editMyPhone').value;
-        psych.address = document.getElementById('editMyAddress').value;
+        const editMyWhatsapp = document.getElementById('editMyWhatsapp');
+        const editMyPhone = document.getElementById('editMyPhone');
+        const editMyAddress = document.getElementById('editMyAddress');
+        
+        if (editMyWhatsapp) psych.whatsapp = editMyWhatsapp.value;
+        if (editMyPhone) psych.phone = editMyPhone.value;
+        if (editMyAddress) psych.address = editMyAddress.value;
         
         // Guardar en Firebase
         import('../main.js').then(main => {
@@ -607,7 +711,8 @@ export function saveMyProfile() {
             state.setTempQrData(null);
             
             // Cerrar modal
-            document.getElementById('editMyProfileModal').style.display = 'none';
+            const modal = document.getElementById('editMyProfileModal');
+            if (modal) modal.style.display = 'none';
             
             // Actualizar vista si es necesario
             if (typeof window.filterProfessionals === 'function') {
@@ -652,13 +757,17 @@ export function viewMyPublicProfile() {
     const psychId = state.currentUser.data.id;
     
     // Cambiar a vista pública y seleccionar este profesional
-    document.getElementById('clientView').style.display = 'block';
-    document.getElementById('bookingPanel').style.display = 'none';
-    document.getElementById('loginPanel').style.display = 'none';
+    const clientView = document.getElementById('clientView');
+    const bookingPanel = document.getElementById('bookingPanel');
+    const loginPanel = document.getElementById('loginPanel');
+    
+    if (clientView) clientView.style.display = 'block';
+    if (bookingPanel) bookingPanel.style.display = 'none';
+    if (loginPanel) loginPanel.style.display = 'none';
     
     // Seleccionar el profesional en la vista pública
     setTimeout(() => {
-        const psychCard = document.querySelector(`.staff-card[data-id="${psychId}"]`);
+        const psychCard = document.querySelector(`.therapist-card[data-id="${psychId}"], .staff-card[data-id="${psychId}"]`);
         if (psychCard) {
             psychCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
             psychCard.style.boxShadow = '0 0 0 3px var(--exito)';
@@ -748,14 +857,14 @@ export function renderStaffTable() {
 }
 
 export function addStaff() {
-    const name = document.getElementById('addName').value;
-    const email = document.getElementById('addEmail').value;
+    const name = document.getElementById('addName')?.value;
+    const email = document.getElementById('addEmail')?.value;
     const specSelect = document.getElementById('addSpec');
-    const selectedSpecs = Array.from(specSelect.selectedOptions).map(opt => opt.value);
-    const priceOnline = document.getElementById('addPriceOnline').value;
-    const pricePresencial = document.getElementById('addPricePresencial').value;
-    const usuario = document.getElementById('addUser').value;
-    const pass = document.getElementById('addPass').value;
+    const selectedSpecs = specSelect ? Array.from(specSelect.selectedOptions).map(opt => opt.value) : [];
+    const priceOnline = document.getElementById('addPriceOnline')?.value;
+    const pricePresencial = document.getElementById('addPricePresencial')?.value;
+    const usuario = document.getElementById('addUser')?.value;
+    const pass = document.getElementById('addPass')?.value;
     
     const genero = document.getElementById('addGenero')?.value || '';
     
@@ -830,98 +939,148 @@ export function editTherapist(id) {
     const therapist = state.staff.find(s => s.id == id);
     if (!therapist) return;
     
-    document.getElementById('editTherapistId').value = therapist.id;
-    document.getElementById('editName').value = therapist.name || '';
-    document.getElementById('editEmail').value = therapist.email || '';
-    
+    const editTherapistId = document.getElementById('editTherapistId');
+    const editName = document.getElementById('editName');
+    const editEmail = document.getElementById('editEmail');
     const editSpecSelect = document.getElementById('editSpec');
-    const therapistSpecs = Array.isArray(therapist.spec) ? therapist.spec : [therapist.spec];
-    Array.from(editSpecSelect.options).forEach(opt => {
-        opt.selected = therapistSpecs.includes(opt.value);
-    });
-    
-    document.getElementById('editUser').value = therapist.usuario || '';
-    document.getElementById('editPass').value = '';
-    document.getElementById('editWhatsapp').value = therapist.whatsapp || '';
-    document.getElementById('editInstagram').value = therapist.instagram || '';
-    document.getElementById('editAddress').value = therapist.address || '';
-    document.getElementById('editPhone').value = therapist.phone || '';
-    document.getElementById('editPriceOnline').value = therapist.priceOnline || '';
-    document.getElementById('editPricePresencial').value = therapist.pricePresencial || '';
-    
+    const editUser = document.getElementById('editUser');
+    const editPass = document.getElementById('editPass');
+    const editWhatsapp = document.getElementById('editWhatsapp');
+    const editInstagram = document.getElementById('editInstagram');
+    const editAddress = document.getElementById('editAddress');
+    const editPhone = document.getElementById('editPhone');
+    const editPriceOnline = document.getElementById('editPriceOnline');
+    const editPricePresencial = document.getElementById('editPricePresencial');
     const editGenero = document.getElementById('editGenero');
+    const editBank = document.getElementById('editBank');
+    const editAccountType = document.getElementById('editAccountType');
+    const editAccountNumber = document.getElementById('editAccountNumber');
+    const editBankRut = document.getElementById('editBankRut');
+    const editBankEmail = document.getElementById('editBankEmail');
+    const editPaymentLinkOnline = document.getElementById('editPaymentLinkOnline');
+    const editPaymentLinkPresencial = document.getElementById('editPaymentLinkPresencial');
+    const editQrPreview = document.getElementById('editQrPreview');
+    const editPhotoPreview = document.getElementById('editPhotoPreview');
+    
+    if (editTherapistId) editTherapistId.value = therapist.id;
+    if (editName) editName.value = therapist.name || '';
+    if (editEmail) editEmail.value = therapist.email || '';
+    
+    const therapistSpecs = Array.isArray(therapist.spec) ? therapist.spec : [therapist.spec];
+    if (editSpecSelect) {
+        Array.from(editSpecSelect.options).forEach(opt => {
+            opt.selected = therapistSpecs.includes(opt.value);
+        });
+    }
+    
+    if (editUser) editUser.value = therapist.usuario || '';
+    if (editPass) editPass.value = '';
+    if (editWhatsapp) editWhatsapp.value = therapist.whatsapp || '';
+    if (editInstagram) editInstagram.value = therapist.instagram || '';
+    if (editAddress) editAddress.value = therapist.address || '';
+    if (editPhone) editPhone.value = therapist.phone || '';
+    if (editPriceOnline) editPriceOnline.value = therapist.priceOnline || '';
+    if (editPricePresencial) editPricePresencial.value = therapist.pricePresencial || '';
+    
     if (editGenero) {
         editGenero.value = therapist.genero || '';
     }
 
     const bank = therapist.bankDetails || {};
-    document.getElementById('editBank').value = bank.bank || '';
-    document.getElementById('editAccountType').value = bank.accountType || 'corriente';
-    document.getElementById('editAccountNumber').value = bank.accountNumber || '';
-    document.getElementById('editBankRut').value = bank.rut || '';
-    document.getElementById('editBankEmail').value = bank.email || '';
+    if (editBank) editBank.value = bank.bank || '';
+    if (editAccountType) editAccountType.value = bank.accountType || 'corriente';
+    if (editAccountNumber) editAccountNumber.value = bank.accountNumber || '';
+    if (editBankRut) editBankRut.value = bank.rut || '';
+    if (editBankEmail) editBankEmail.value = bank.email || '';
     
-    document.getElementById('editPaymentLinkOnline').value = therapist.paymentLinks?.online || '';
-    document.getElementById('editPaymentLinkPresencial').value = therapist.paymentLinks?.presencial || '';
+    if (editPaymentLinkOnline) editPaymentLinkOnline.value = therapist.paymentLinks?.online || '';
+    if (editPaymentLinkPresencial) editPaymentLinkPresencial.value = therapist.paymentLinks?.presencial || '';
     
-    if (therapist.paymentLinks?.qrCode) {
-        document.getElementById('editQrPreview').src = therapist.paymentLinks.qrCode;
-        document.getElementById('editQrPreview').style.display = 'block';
-    } else {
-        document.getElementById('editQrPreview').style.display = 'none';
+    if (editQrPreview) {
+        if (therapist.paymentLinks?.qrCode) {
+            editQrPreview.src = therapist.paymentLinks.qrCode;
+            editQrPreview.style.display = 'block';
+        } else {
+            editQrPreview.style.display = 'none';
+        }
     }
     
-    if (therapist.img) {
-        document.getElementById('editPhotoPreview').src = therapist.img;
-        document.getElementById('editPhotoPreview').style.display = 'block';
-    } else {
-        document.getElementById('editPhotoPreview').style.display = 'none';
+    if (editPhotoPreview) {
+        if (therapist.img) {
+            editPhotoPreview.src = therapist.img;
+            editPhotoPreview.style.display = 'block';
+        } else {
+            editPhotoPreview.style.display = 'none';
+        }
     }
     
     state.setTempImageData(null);
     state.setTempQrData(null);
-    document.getElementById('editTherapistModal').style.display = 'flex';
+    
+    const modal = document.getElementById('editTherapistModal');
+    if (modal) modal.style.display = 'flex';
 }
 
 export function closeEditTherapistModal() {
-    document.getElementById('editTherapistModal').style.display = 'none';
+    const modal = document.getElementById('editTherapistModal');
+    if (modal) modal.style.display = 'none';
 }
 
 export function updateTherapist() {
-    const id = document.getElementById('editTherapistId').value;
+    const id = document.getElementById('editTherapistId')?.value;
     const therapist = state.staff.find(s => s.id == id);
     if (!therapist) return;
 
-    therapist.name = document.getElementById('editName').value;
-    therapist.email = document.getElementById('editEmail').value;
-    
+    const editName = document.getElementById('editName');
+    const editEmail = document.getElementById('editEmail');
     const editSpecSelect = document.getElementById('editSpec');
-    therapist.spec = Array.from(editSpecSelect.selectedOptions).map(opt => opt.value);
-    
-    therapist.usuario = document.getElementById('editUser').value;
-    therapist.whatsapp = document.getElementById('editWhatsapp').value;
-    therapist.instagram = document.getElementById('editInstagram').value;
-    therapist.address = document.getElementById('editAddress').value;
-    therapist.phone = document.getElementById('editPhone').value;
-    therapist.priceOnline = parseInt(document.getElementById('editPriceOnline').value);
-    therapist.pricePresencial = parseInt(document.getElementById('editPricePresencial').value);
-    
+    const editUser = document.getElementById('editUser');
+    const editWhatsapp = document.getElementById('editWhatsapp');
+    const editInstagram = document.getElementById('editInstagram');
+    const editAddress = document.getElementById('editAddress');
+    const editPhone = document.getElementById('editPhone');
+    const editPriceOnline = document.getElementById('editPriceOnline');
+    const editPricePresencial = document.getElementById('editPricePresencial');
     const editGenero = document.getElementById('editGenero');
+    const editBank = document.getElementById('editBank');
+    const editAccountType = document.getElementById('editAccountType');
+    const editAccountNumber = document.getElementById('editAccountNumber');
+    const editBankRut = document.getElementById('editBankRut');
+    const editBankEmail = document.getElementById('editBankEmail');
+    const editPaymentLinkOnline = document.getElementById('editPaymentLinkOnline');
+    const editPaymentLinkPresencial = document.getElementById('editPaymentLinkPresencial');
+    const editPass = document.getElementById('editPass');
+
+    if (editName) therapist.name = editName.value;
+    if (editEmail) therapist.email = editEmail.value;
+    
+    if (editSpecSelect) {
+        therapist.spec = Array.from(editSpecSelect.selectedOptions).map(opt => opt.value);
+    }
+    
+    if (editUser) therapist.usuario = editUser.value;
+    if (editWhatsapp) therapist.whatsapp = editWhatsapp.value;
+    if (editInstagram) therapist.instagram = editInstagram.value;
+    if (editAddress) therapist.address = editAddress.value;
+    if (editPhone) therapist.phone = editPhone.value;
+    if (editPriceOnline) therapist.priceOnline = parseInt(editPriceOnline.value);
+    if (editPricePresencial) therapist.pricePresencial = parseInt(editPricePresencial.value);
+    
     if (editGenero) {
         therapist.genero = editGenero.value;
     }
     
     therapist.bankDetails = {
-        bank: document.getElementById('editBank').value,
-        accountType: document.getElementById('editAccountType').value,
-        accountNumber: document.getElementById('editAccountNumber').value,
-        rut: document.getElementById('editBankRut').value,
-        email: document.getElementById('editBankEmail').value
+        bank: editBank?.value || '',
+        accountType: editAccountType?.value || 'corriente',
+        accountNumber: editAccountNumber?.value || '',
+        rut: editBankRut?.value || '',
+        email: editBankEmail?.value || ''
     };
 
     therapist.paymentLinks = {
-        online: document.getElementById('editPaymentLinkOnline').value,
-        presencial: document.getElementById('editPaymentLinkPresencial').value,
+        online: editPaymentLinkOnline?.value || '',
+        presencial: editPaymentLinkPresencial?.value || '',
         qrCode: state.tempQrData || therapist.paymentLinks?.qrCode || ''
     };
 
@@ -929,7 +1088,7 @@ export function updateTherapist() {
         therapist.img = state.tempImageData;
     }
 
-    const newPass = document.getElementById('editPass').value;
+    const newPass = editPass?.value;
     if (newPass) therapist.pass = newPass;
 
     import('../main.js').then(main => main.save());
@@ -950,12 +1109,12 @@ export function deleteStaff(id) {
             .filter(p => p.psychId == id)
             .map(p => p.id);
         
-        state.appointments = state.appointments.filter(a => a.psychId != id);
-        state.patients = state.patients.filter(p => p.psychId != id);
-        state.fichasIngreso = state.fichasIngreso.filter(f => !patientIds.includes(f.patientId));
-        state.sesiones = state.sesiones.filter(s => !patientIds.includes(s.patientId));
-        state.informes = state.informes.filter(i => !patientIds.includes(i.patientId));
-        state.staff = state.staff.filter(s => s.id != id);
+        state.setAppointments(state.appointments.filter(a => a.psychId != id));
+        state.setPatients(state.patients.filter(p => p.psychId != id));
+        state.setFichasIngreso(state.fichasIngreso.filter(f => !patientIds.includes(f.patientId)));
+        state.setSesiones(state.sesiones.filter(s => !patientIds.includes(s.patientId)));
+        state.setInformes(state.informes.filter(i => !patientIds.includes(i.patientId)));
+        state.setStaff(state.staff.filter(s => s.id != id));
         
         import('../main.js').then(main => main.save());
         renderStaffTable();
@@ -1142,4 +1301,4 @@ if (typeof window !== 'undefined') {
     setTimeout(addProfileButtonToDashboard, 2000);
 }
 
-console.log('✅ profesionales.js cargado con funciones de fichas clínicas y edición de perfil profesional');
+console.log('✅ profesionales.js cargado con funciones de fichas clínicas y edición de perfil profesional (sin boxes)');

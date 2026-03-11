@@ -2120,6 +2120,155 @@
             <input type="text" class="filter-input" id="patientSearch" placeholder="Buscar paciente..." oninput="renderPatients()" style="width:100%;">
             <div id="patientsList"></div>
         </div>
+
+        <!-- ============================================ -->
+        <!-- CONTENEDORES DE PESTAÑAS FALTANTES AGREGADOS -->
+        <!-- ============================================ -->
+
+        <div id="tabProfesionales" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Profesionales</h3>
+                <button class="btn-staff" style="background:var(--verde-exito)" onclick="showAddStaffModal()">
+                    <i class="fa fa-plus"></i> Nuevo Profesional
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="staffTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tabEspecialidades" class="tab-content">
+            <h3>Gestión de Especialidades</h3>
+            <div class="admin-form" style="grid-template-columns: 1fr;">
+                <div class="form-group">
+                    <label>Nueva Especialidad</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="newSpecialty" placeholder="Ej: Psicología Infantil" style="flex:1;">
+                        <button class="btn-staff" onclick="addSpecialty()">Agregar</button>
+                    </div>
+                </div>
+            </div>
+            <div id="specialtiesList" class="specialties-container" style="margin-top:20px;"></div>
+        </div>
+
+        <div id="tabPagos" class="tab-content">
+            <h3>Métodos de Pago Globales</h3>
+            <div class="admin-form">
+                <div class="payment-method-item">
+                    <input type="checkbox" id="globalTransfer" checked> <label>Transferencia</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="globalCardPresencial" checked> <label>Tarjeta presencial</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="globalCardOnline"> <label>Tarjeta online</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="globalCash" checked> <label>Efectivo</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="globalMercadoPago"> <label>Mercado Pago</label>
+                </div>
+                <div class="payment-method-item">
+                    <input type="checkbox" id="globalWebpay"> <label>Webpay</label>
+                </div>
+                <button class="btn-staff" style="background:var(--verde-exito); margin-top:20px;" onclick="saveGlobalPaymentMethods()">Guardar</button>
+            </div>
+        </div>
+
+        <div id="tabFondo" class="tab-content">
+            <h3>Imagen de Fondo</h3>
+            <div class="admin-form">
+                <div class="file-upload" onclick="document.getElementById('backgroundImageInput').click()">
+                    <i class="fa fa-cloud-upload-alt"></i> Seleccionar imagen
+                </div>
+                <input type="file" id="backgroundImageInput" accept="image/*" style="display:none;" onchange="previewBackgroundImage(this)">
+                <div class="form-group">
+                    <label>Transparencia</label>
+                    <input type="range" id="backgroundOpacity" min="0" max="100" value="10" onchange="updateBackgroundOpacity()">
+                    <span id="opacityValue">10%</span>
+                </div>
+                <img id="backgroundPreview" src="" style="max-width:100%; max-height:200px; border-radius:8px; display:none;">
+                <button class="btn-staff" style="background:var(--verde-exito); margin-top:20px;" onclick="saveBackgroundImage()">Guardar</button>
+                <button class="btn-staff" style="background:var(--rojo-alerta); margin-top:10px;" onclick="removeBackgroundImage()">Eliminar</button>
+            </div>
+        </div>
+
+        <div id="tabTextos" class="tab-content">
+            <h3>Textos de Portada</h3>
+            <div class="admin-form">
+                <div class="form-group">
+                    <label>Título Principal</label>
+                    <input type="text" id="heroTitle" value="Tu bienestar comienza con un buen vínculo">
+                </div>
+                <div class="form-group">
+                    <label>Subtítulo</label>
+                    <textarea id="heroSubtitle" rows="3">Atención psicológica profesional, ética y cercana</textarea>
+                </div>
+                <button class="btn-staff" style="background:var(--verde-exito);" onclick="saveHeroTexts()">Guardar</button>
+            </div>
+        </div>
+
+        <div id="tabLogo" class="tab-content">
+            <h3>Logo del Sitio</h3>
+            <div class="admin-form">
+                <div class="file-upload" onclick="document.getElementById('logoInput').click()">
+                    <i class="fa fa-cloud-upload-alt"></i> Seleccionar logo
+                </div>
+                <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="previewLogo(this)">
+                <div class="form-group">
+                    <label>Texto del Logo</label>
+                    <input type="text" id="logoText" value="Vínculo Salud">
+                </div>
+                <img id="logoPreview" src="" style="max-width:200px; max-height:80px; border-radius:8px; display:none;">
+                <button class="btn-staff" style="background:var(--verde-exito); margin-top:20px;" onclick="saveLogo()">Guardar</button>
+                <button class="btn-staff" style="background:var(--rojo-alerta); margin-top:10px;" onclick="removeLogo()">Eliminar</button>
+            </div>
+        </div>
+
+        <div id="tabEstadisticas" class="tab-content">
+            <!-- El contenido se genera dinámicamente desde estadisticas.js -->
+        </div>
+
+        <div id="tabReinicio" class="tab-content">
+            <h3>🔄 Reinicio del Sistema</h3>
+            <div class="reinicio-card">
+                <h4>Pacientes <span class="total-badge" id="totalPacientes">0</span></h4>
+                <button class="btn-staff" style="background:var(--peligro);" onclick="eliminarTodosLosPacientes()">Eliminar todos los pacientes</button>
+                <button class="btn-staff" style="background:var(--atencion);" onclick="eliminarPacientesPrueba()">Eliminar solo pacientes de prueba</button>
+            </div>
+            <div class="reinicio-card">
+                <h4>Mensajes <span class="total-badge" id="totalMensajes">0</span></h4>
+                <button class="btn-staff" style="background:var(--peligro);" onclick="eliminarTodosLosMensajes()">Eliminar todos los mensajes</button>
+                <button class="btn-staff" style="background:var(--exito);" onclick="restaurarMensajesIniciales()">Restaurar mensajes iniciales</button>
+            </div>
+            <div class="reinicio-card">
+                <h4>Citas <span class="total-badge" id="totalCitas">0</span></h4>
+                <button class="btn-staff" style="background:var(--peligro);" onclick="eliminarTodasLasCitas()">Eliminar todas las citas</button>
+                <button class="btn-staff" style="background:var(--atencion);" onclick="eliminarCitasPrueba()">Eliminar citas de prueba</button>
+            </div>
+            <div class="reinicio-card">
+                <h4>Fichas Clínicas <span class="total-badge" id="totalFichas">0</span> <span class="total-badge" id="totalSesiones">0</span> <span class="total-badge" id="totalInformes">0</span></h4>
+                <button class="btn-staff" style="background:var(--peligro);" onclick="eliminarTodasLasFichasIngreso()">Eliminar todas las fichas de ingreso</button>
+                <button class="btn-staff" style="background:var(--peligro);" onclick="eliminarTodasLasSesiones()">Eliminar todas las sesiones</button>
+                <button class="btn-staff" style="background:var(--peligro);" onclick="eliminarTodosLosInformes()">Eliminar todos los informes</button>
+                <button class="btn-staff" style="background:var(--exito);" onclick="limpiarFichasHuerfanas()">Limpiar fichas huérfanas</button>
+            </div>
+            <div class="reinicio-card warning">
+                <h4>⚠️ Reinicio Completo</h4>
+                <button class="btn-staff" style="background:var(--peligro);" onclick="reinicioCompleto()">REINICIAR TODO EL SISTEMA</button>
+            </div>
+            <div class="reinicio-card">
+                <h4>📦 Respaldo</h4>
+                <button class="btn-staff" style="background:var(--exito);" onclick="exportarTodasLasFichas()">Exportar backup</button>
+                <button class="btn-staff" style="background:var(--azul-medico);" onclick="importarFichas()">Importar backup</button>
+            </div>
+        </div>
     </div>
 </div>
 

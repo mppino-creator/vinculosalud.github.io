@@ -32,7 +32,7 @@ function getAverageRating(psychId) {
 }
 
 // ============================================
-// FUNCIÓN PARA TOGGLE DE INFORMACIÓN (ACCORDION)
+// FUNCIÓN PARA TOGGLE DE INFORMACIÓN (ACCORDION) - MEJORADA
 // ============================================
 window.toggleInfo = function(button) {
     // Buscar la tarjeta más cercana
@@ -59,7 +59,7 @@ window.toggleInfo = function(button) {
         if (psych.education) {
             infoHTML += `
                 <div class="info-section">
-                    <h4>Formación</h4>
+                    <h4><i class="fa fa-graduation-cap"></i> Formación</h4>
                     <p>${psych.education}</p>
                 </div>
             `;
@@ -69,7 +69,7 @@ window.toggleInfo = function(button) {
             const specs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
             infoHTML += `
                 <div class="info-section">
-                    <h4>Especialidades</h4>
+                    <h4><i class="fa fa-tags"></i> Especialidades</h4>
                     <div class="specialties-list">
                         ${specs.map(s => `<span class="specialty-tag">${s}</span>`).join('')}
                     </div>
@@ -80,8 +80,8 @@ window.toggleInfo = function(button) {
         if (psych.experience) {
             infoHTML += `
                 <div class="info-section">
-                    <h4>Experiencia clínica</h4>
-                    <p>${psych.experience}</p>
+                    <h4><i class="fa fa-briefcase"></i> Experiencia</h4>
+                    <p>${psych.experience} años de experiencia clínica</p>
                 </div>
             `;
         }
@@ -89,7 +89,7 @@ window.toggleInfo = function(button) {
         if (psych.clinicalExperience) {
             infoHTML += `
                 <div class="info-section">
-                    <h4>Experiencia detallada</h4>
+                    <h4><i class="fa fa-heart"></i> Enfoque clínico</h4>
                     <p>${psych.clinicalExperience}</p>
                 </div>
             `;
@@ -99,7 +99,7 @@ window.toggleInfo = function(button) {
             const langs = Array.isArray(psych.languages) ? psych.languages.join(', ') : psych.languages;
             infoHTML += `
                 <div class="info-section">
-                    <h4>Idiomas</h4>
+                    <h4><i class="fa fa-language"></i> Idiomas</h4>
                     <p>${langs}</p>
                 </div>
             `;
@@ -108,7 +108,7 @@ window.toggleInfo = function(button) {
         if (psych.whatsapp) {
             infoHTML += `
                 <div class="info-section">
-                    <h4>Contacto</h4>
+                    <h4><i class="fa fa-phone"></i> Contacto</h4>
                     <a href="https://wa.me/${psych.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank" class="whatsapp-link">
                         <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
                     </a>
@@ -124,16 +124,21 @@ window.toggleInfo = function(button) {
     const isHidden = infoSection.style.display === 'none' || !infoSection.style.display;
     infoSection.style.display = isHidden ? 'block' : 'none';
     
-    // Cambiar el icono del botón
+    // Cambiar el icono y texto del botón
     const icon = button.querySelector('i');
-    if (icon) {
-        icon.className = isHidden ? 'fa fa-chevron-up' : 'fa fa-chevron-down';
+    const buttonText = button.querySelector('span') || button;
+    
+    if (isHidden) {
+        button.innerHTML = '<i class="fa fa-chevron-up"></i> <span>Menos información</span>';
+    } else {
+        button.innerHTML = '<i class="fa fa-chevron-down"></i> <span>Más información</span>';
     }
     
-    // Cambiar el texto del botón
-    const buttonText = button.innerHTML.replace(/<i.*<\/i>/, '').trim();
-    button.innerHTML = isHidden ? `Menos Información <i class="fa fa-chevron-up"></i>` : `Más Información <i class="fa fa-chevron-down"></i>`;
-}
+    // Animación suave
+    if (infoSection.style.display === 'block') {
+        infoSection.style.animation = 'slideDown 0.3s ease';
+    }
+};
 
 // ============================================
 // FUNCIONES DE NAVEGACIÓN DEL MENÚ
@@ -299,7 +304,7 @@ export function showTherapistInfo(psychId) {
 }
 
 // ============================================
-// FILTRO Y RENDERIZADO DE PROFESIONALES
+// FILTRO Y RENDERIZADO DE PROFESIONALES - VERSIÓN MEJORADA
 // ============================================
 export function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
@@ -349,7 +354,7 @@ export function renderProfessionals(professionals) {
     }
 
     if (professionals.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">No se encontraron profesionales</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; background:white; border-radius:20px;"><i class="fa fa-user-md" style="font-size:48px; color:#ccc;"></i><p style="margin-top:20px; color:#666;">No se encontraron profesionales</p></div>';
         return;
     }
 
@@ -366,45 +371,42 @@ export function renderProfessionals(professionals) {
         const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
         const totalReseñas = state.messages.filter(m => m.therapistId == p.id).length;
 
-        // Construir HTML de la tarjeta con estructura accordion
+        // Construir HTML de la tarjeta con botones optimizados
         return `
             <div class="professional-card therapist-card" data-id="${p.id}">
-                <!-- HEADER DE LA TARJETA (SIEMPRE VISIBLE) -->
-                <div class="card-header">
-                    <div class="img-container">
-                        <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}" loading="lazy">
-                    </div>
+                <div class="img-container">
+                    <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}" loading="lazy">
+                </div>
+                <div class="card-body">
                     <h3>${p.name}</h3>
-                    <p class="card-subtitle">${p.title || 'Psicólogo Clínico de Adultos y Adolescentes, Terapeuta Familiar y de Parejas.'}</p>
+                    <p class="card-subtitle">${p.title || 'Psicólogo Clínico'}</p>
                     
                     ${rating > 0 ? `
                     <div class="rating">
-                        <span style="color: var(--gold);">${stars}</span>
-                        <span style="color: var(--texto-secundario); font-size: 0.85rem;">(${totalReseñas} reseñas)</span>
+                        <span class="stars">${stars}</span>
+                        <span class="reviews">(${totalReseñas})</span>
                     </div>
                     ` : ''}
                     
                     <div class="card-meta">
-                        <span><i class="fa fa-map-marker-alt"></i> ${p.address || 'Dirección no especificada'}</span>
-                        <span><i class="fa fa-clock"></i> ${horasLibres > 0 ? `${horasLibres} horario(s) disponible(s) hoy` : 'Sin disponibilidad hoy'}</span>
+                        <span><i class="fa fa-map-marker-alt"></i> <span class="meta-text">${p.address || 'Dirección no especificada'}</span></span>
+                        <span><i class="fa fa-clock"></i> <span class="meta-text">${horasLibres > 0 ? `${horasLibres} disponible(s) hoy` : 'Sin disponibilidad'}</span></span>
                     </div>
                     
                     <div class="card-actions">
                         <button class="btn-mas-info" onclick="event.stopPropagation(); window.toggleInfo(this)">
-                            Más Información <i class="fa fa-chevron-down"></i>
+                            <i class="fa fa-chevron-down"></i> <span>Más info</span>
                         </button>
                         <button class="btn-agendar" onclick="event.stopPropagation(); openBooking('${p.id}')">
-                            AGENDA TU HORA
+                            <i class="fa fa-calendar-check"></i> <span>Agendar</span>
                         </button>
                     </div>
                 </div>
-                
-                <!-- INFORMACIÓN ADICIONAL (SE GENERA DINÁMICAMENTE AL HACER CLIC) -->
             </div>
         `;
     }).join('');
     
-    console.log(`✅ Renderizados ${professionals.length} profesionales con estilo accordion`);
+    console.log(`✅ Renderizados ${professionals.length} profesionales con botones optimizados`);
 }
 
 // ============================================
@@ -414,7 +416,7 @@ export function cargarDatosIniciales() {
     console.log('🚀 Cargando datos iniciales...');
     
     const grid = document.getElementById('equipo');
-    if (grid) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-3x" style="color:var(--primario);"></i><p>Cargando profesionales...</p></div>';
+    if (grid) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px;"><div class="loader-spinner" style="margin:0 auto 20px;"></div><p style="color:#666;">Cargando profesionales...</p></div>';
 
     const filtros = document.querySelector('.filters');
     if (filtros) filtros.style.display = 'none';
@@ -511,14 +513,6 @@ export function cargarDatosIniciales() {
         filterProfessionals();
     });
 
-    // ⚠️ Boxes desactivado - no se carga
-    // db.ref('Boxes').on('value', (snapshot) => {
-    //     const data = snapshot.val();
-    //     state.setBoxes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-    //     if (state.currentUser?.role === 'admin') renderBoxesTable();
-    //     if (state.currentUser?.role === 'psych') renderBoxOccupancy();
-    // });
-
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
         console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
@@ -537,8 +531,6 @@ export function cargarDatosIniciales() {
                     if (typeof window.updateStats === 'function') window.updateStats();
                     renderPendingRequests();
                 }
-                // ⚠️ Boxes desactivado - no se renderiza ocupación
-                // if (state.currentUser?.role === 'psych') renderBoxOccupancy();
             }
         } else if (state.appointments.length > 0) state.setAppointments([]);
     });
@@ -615,4 +607,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js cargado con navegación corregida, estilo accordion v4.0 y SIN BOXES');
+console.log('✅ publico.js cargado con botones optimizados y responsive (sin boxes)');

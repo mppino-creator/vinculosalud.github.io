@@ -1586,7 +1586,7 @@
 </div>
             
             <!-- MENÚ - TODOS LOS ITEMS IGUALES -->
-            <div style="display: flex; align-items: center; gap: 2rem;">
+            <div style="display: flex; align-items: center; gap: 3rem;">
                 <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
                 <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
                 <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
@@ -1594,9 +1594,8 @@
                 <a href="#contacto" onclick="showSection('contacto'); return false;">Contacto</a>
                 
                 <!-- STAFF - MISMO ESTILO, SOLO CON CANDADO -->
-                <a href="#" onclick="showLoginModal(); return false;" style="display: flex; align-items: center; gap: 5px;">
-                    <i class="fa fa-lock" style="font-size: 0.9rem; opacity: 0.6;"></i> Staff
-                </a>
+                <a href="#" onclick="mostrarMenuStaff(true); return false;" style="display: flex; align-items: center; gap: 5px;">
+                    <i class="fa fa-user-check" style="font-size: 0.9rem; color: #1E7A8A;"></i>Administrador</a>
             </div>
         </nav>
     </header>
@@ -1750,8 +1749,8 @@
         <div class="messages-section">
             <div class="messages-header">
                 <h2>💬 Experiencias de pacientes</h2>
-                <button class="btn-new-message" onclick="showMessageModal()">
-                    <i class="fa fa-pen"></i> Dejar mensaje
+                <button class="btn-new-message" onclick="showMessageModal()" style="min-width: 140px;">
+                    <i class="fa fa-pen"></i> <span>Dejar mensaje</span>
                 </button>
             </div>
             <div class="messages-grid" id="messagesGrid"></div>
@@ -1830,8 +1829,8 @@
         <section class="cta-section">
             <h2>Queremos escucharte</h2>
             <p>Si estás buscando orientación o necesitas apoyo, nuestro equipo está aquí para ti.</p>
-            <button onclick="showSection('contacto')" class="btn-cta">
-                <i class="fa fa-comment"></i> Contáctanos
+            <button onclick="showSection('contacto')" class="btn-cta" style="min-width: 140px;">
+                <i class="fa fa-comment"></i> <span>Contáctanos</span>
             </button>
         </section>
     </main>
@@ -2043,11 +2042,11 @@
                 <p id="dashSubtitle">Bienvenido</p>
             </div>
             <div class="profile-actions">
-                <button id="editProfileButton" class="btn-staff" style="background: var(--primario);" onclick="openMyProfileModal()">
-                    <i class="fa fa-user-edit"></i> Editar Mi Perfil
+                <button id="editProfileButton" class="btn-staff" style="background: var(--primario); display: none; min-width: 140px;" onclick="openMyProfileModal()">
+                    <i class="fa fa-user-edit"></i> <span>Editar Mi Perfil</span>
                 </button>
-                <button class="btn-staff" style="background:var(--rojo-alerta)" onclick="logout()">
-                    <i class="fa fa-sign-out-alt"></i> Cerrar Sesión
+                <button class="btn-staff" style="background:var(--rojo-alerta); min-width: 120px;" onclick="logout()">
+                    <i class="fa fa-sign-out-alt"></i> <span>Cerrar Sesión</span>
                 </button>
             </div>
         </div>
@@ -2233,6 +2232,46 @@
 
         <div id="tabEstadisticas" class="tab-content">
             <!-- El contenido se genera dinámicamente desde estadisticas.js -->
+        </div>
+
+        <div id="tabMensajes" class="tab-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3>Gestión de Mensajes</h3>
+                <div>
+                    <button class="btn-staff" style="background:var(--exito); margin-right:10px;" onclick="exportMessages()">
+                        <i class="fa fa-download"></i> Exportar
+                    </button>
+                    <button class="btn-staff" style="background:var(--azul-medico);" onclick="importMessages()">
+                        <i class="fa fa-upload"></i> Importar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Nombre</th>
+                            <th>Profesional</th>
+                            <th>Calificación</th>
+                            <th>Mensaje</th>
+                            <th>Contacto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messagesTableBody"></tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">
+                <button class="btn-staff" style="background:var(--peligro);" onclick="deleteAllMessages()">
+                    <i class="fa fa-trash"></i> Eliminar todos
+                </button>
+                <button class="btn-staff" style="background:var(--exito);" onclick="restoreSampleMessages()">
+                    <i class="fa fa-refresh"></i> Restaurar ejemplos
+                </button>
+            </div>
         </div>
 
         <div id="tabReinicio" class="tab-content">

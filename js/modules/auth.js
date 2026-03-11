@@ -38,6 +38,23 @@ export function closeLoginModal() {
 }
 
 // ============================================
+// FUNCIÓN PARA OBTENER EMAIL DESDE USUARIO
+// ============================================
+function getEmailFromUsername(username) {
+    // Si ya es un email, devolverlo
+    if (username.includes('@')) return username;
+    
+    // Buscar en staff por usuario o nombre (case insensitive)
+    const staff = state.staff || [];
+    const found = staff.find(p => 
+        (p.usuario && p.usuario.toLowerCase() === username.toLowerCase()) ||
+        (p.name && p.name.toLowerCase() === username.toLowerCase())
+    );
+    
+    return found?.email || null;
+}
+
+// ============================================
 // FUNCIÓN PARA ACTUALIZAR UI SIN CAMBIAR DE VISTA
 // ============================================
 function actualizarUIAdmin(userData, role) {
@@ -81,7 +98,7 @@ function actualizarUIAdmin(userData, role) {
         });
     }
     
-    // 🔥 NUEVO: Si es psicólogo, cargar datos completos desde staff
+    // 🔥 Si es psicólogo, cargar datos completos desde staff
     if (role === 'psych') {
         // Buscar datos completos del profesional en staff
         const psychFullData = state.staff.find(s => s.id == userData.id);
@@ -125,7 +142,7 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
         return;
     }
     
-    // 🔥 NUEVO: Actualizar datos del profesional desde staff antes de mostrar el menú
+    // 🔥 Actualizar datos del profesional desde staff antes de mostrar el menú
     if (state.currentUser.role === 'psych') {
         const psychFullData = state.staff.find(s => s.id == state.currentUser.data.id);
         if (psychFullData) {
@@ -266,7 +283,7 @@ window.irADashboard = function() {
         // Llamar directamente a mostrarDashboardInmediato
         mostrarDashboardInmediato(role, userData);
         
-        // 🔥 NUEVO: Cargar datos del profesional si es necesario
+        // 🔥 Cargar datos del profesional si es necesario
         if (role === 'psych') {
             setTimeout(() => {
                 if (typeof loadMyConfig === 'function') {
@@ -293,14 +310,14 @@ window.volverAVistaPublica = function() {
 };
 
 // ============================================
-// 🔥 FUNCIÓN DE LOGIN CORREGIDA CON FIREBASE AUTH
+// 🔥 FUNCIÓN DE LOGIN HÍBRIDO (usuario o email)
 // ============================================
 export async function processLogin() {
-    const user = document.getElementById('loginUser')?.value;
+    const userInput = document.getElementById('loginUser')?.value;
     const pass = document.getElementById('loginPass')?.value;
     const btn = document.getElementById('loginBtn');
 
-    if (!user || !pass) {
+    if (!userInput || !pass) {
         showToast('Ingresa usuario y contraseña', 'error');
         return;
     }
@@ -311,30 +328,37 @@ export async function processLogin() {
     }
 
     try {
-        // 🔥 PASO 1: Verificar credenciales en Firebase Auth
-        let email = user;
+        // 🔥 PASO 1: Obtener email (soporta usuario o email)
+        let email = userInput;
         
-        // Si el usuario no es un email, buscar en staff para obtener el email
-        if (!user.includes('@')) {
-            const staffUser = state.staff.find(s => s.usuario === user || s.name === user);
-            if (staffUser && staffUser.email) {
-                email = staffUser.email;
+        // Si no es email, buscar en staff
+        if (!userInput.includes('@')) {
+            const foundEmail = getEmailFromUsername(userInput);
+            
+            if (foundEmail) {
+                email = foundEmail;
+                console.log('📧 Usuario mapeado a email:', email);
             } else {
-                // Usuario por defecto para admin si no se encuentra
-                if (user === "Admin") {
+                // Última oportunidad: verificar si es Admin
+                if (userInput === "Admin") {
                     email = "admin@vinculosalud.cl";
                 } else {
-                    throw new Error('Usuario no encontrado');
+                    showToast('Usuario no encontrado. Verifica el nombre o usa tu email.', 'error');
+                    if (btn) {
+                        btn.innerHTML = 'Ingresar al Panel';
+                        btn.disabled = false;
+                    }
+                    return;
                 }
             }
         }
 
-        // 🔥 Iniciar sesión en Firebase Authentication
+        // 🔥 PASO 2: Iniciar sesión en Firebase Authentication
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, pass);
         console.log('✅ Firebase Auth login exitoso:', userCredential.user.uid);
         
-        // PASO 2: Verificar si es admin por defecto
-        if (user === "Admin" && pass === "Nina2026") {
+        // PASO 3: Verificar si es admin por defecto
+        if (userInput === "Admin" && pass === "Nina2026") {
             console.log("✅ Acceso Admin concedido");
             
             const adminUser = {
@@ -366,7 +390,7 @@ export async function processLogin() {
             return;
         }
 
-        // PASO 3: Buscar en staff por email
+        // PASO 4: Buscar en staff por email
         const foundUser = state.staff.find(s => 
             s.email && s.email.toLowerCase() === email.toLowerCase()
         );
@@ -425,11 +449,13 @@ export async function processLogin() {
         
         let mensajeError = 'Error al iniciar sesión';
         if (error.code === 'auth/user-not-found') {
-            mensajeError = 'Usuario no encontrado';
+            mensajeError = 'Usuario no encontrado en Authentication';
         } else if (error.code === 'auth/wrong-password') {
             mensajeError = 'Contraseña incorrecta';
         } else if (error.code === 'auth/invalid-email') {
             mensajeError = 'Email inválido';
+        } else if (error.code === 'auth/invalid-login-credentials') {
+            mensajeError = 'Credenciales inválidas. Verifica usuario y contraseña.';
         } else if (error.message === 'Usuario no encontrado') {
             mensajeError = 'Usuario no encontrado en el sistema';
         }
@@ -982,4 +1008,4 @@ if (typeof window !== 'undefined') {
     }, 1000);
 })();
 
-console.log('✅ auth.js cargado correctamente con Firebase Authentication integrado');
+console.log('✅ auth.js cargado correctamente con Firebase Authentication integrado y login híbrido');

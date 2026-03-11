@@ -23,12 +23,17 @@ import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
 // ============================================
-// FUNCIÓN AUXILIAR PARA CALIFICACIONES
+// FUNCIÓN AUXILIAR PARA CALIFICACIONES (CORREGIDA)
 // ============================================
 function getAverageRating(psychId) {
-    const psychMessages = state.messages.filter(m => m.therapistId == psychId);
+    // 🔥 CORREGIDO: Verificar que messages existe y es un array
+    const messages = state.messages || [];
+    const psychMessages = messages.filter(m => m && m.therapistId == psychId);
     if (psychMessages.length === 0) return 0;
-    return psychMessages.reduce((sum, m) => sum + m.rating, 0) / psychMessages.length;
+    
+    // 🔥 CORREGIDO: Verificar que rating existe
+    const sum = psychMessages.reduce((sum, m) => sum + (m.rating || 0), 0);
+    return sum / psychMessages.length;
 }
 
 // ============================================
@@ -53,7 +58,7 @@ window.toggleInfo = function(button) {
         infoSection.className = 'card-info';
         infoSection.style.display = 'none';
         
-        // Construir el contenido
+        // Construir el contenido con verificaciones de undefined
         let infoHTML = '';
         
         if (psych.education) {
@@ -71,7 +76,7 @@ window.toggleInfo = function(button) {
                 <div class="info-section">
                     <h4><i class="fa fa-tags"></i> Especialidades</h4>
                     <div class="specialties-list">
-                        ${specs.map(s => `<span class="specialty-tag">${s}</span>`).join('')}
+                        ${specs.map(s => s ? `<span class="specialty-tag">${s}</span>` : '').join('')}
                     </div>
                 </div>
             `;
@@ -125,9 +130,6 @@ window.toggleInfo = function(button) {
     infoSection.style.display = isHidden ? 'block' : 'none';
     
     // Cambiar el icono y texto del botón
-    const icon = button.querySelector('i');
-    const buttonText = button.querySelector('span') || button;
-    
     if (isHidden) {
         button.innerHTML = '<i class="fa fa-chevron-up"></i> <span>Menos información</span>';
     } else {
@@ -304,44 +306,54 @@ export function showTherapistInfo(psychId) {
 }
 
 // ============================================
-// FILTRO Y RENDERIZADO DE PROFESIONALES - VERSIÓN MEJORADA
+// FILTRO Y RENDERIZADO DE PROFESIONALES - VERSIÓN MEJORADA (CORREGIDA)
 // ============================================
 export function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
-    console.log('📊 Total staff en state antes de filtrar:', state.staff.length);
     
-    const searchTerm = document.getElementById('searchFilter')?.value.toLowerCase() || '';
+    const staff = state.staff || [];
+    console.log('📊 Total staff en state antes de filtrar:', staff.length);
+    
+    const searchTerm = document.getElementById('searchFilter')?.value?.toLowerCase() || '';
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
     const availabilityFilter = document.getElementById('availabilityFilter')?.value || '';
 
+    // 🔥 CORREGIDO: Usar getPublicStaff() y manejar undefined
     let filtered = getPublicStaff().filter(p => {
-        const specs = Array.isArray(p.spec) ? p.spec.join(' ') : p.spec;
-        const matchesSearch = p.name.toLowerCase().includes(searchTerm) || (specs && specs.toLowerCase().includes(searchTerm));
+        if (!p) return false;
+        
+        // 🔥 CORREGIDO: Verificar que name existe
+        const name = p.name || '';
+        const specs = p.spec ? (Array.isArray(p.spec) ? p.spec : [p.spec]) : [];
+        const specsText = specs.join(' ').toLowerCase();
+        
+        // Búsqueda por nombre o especialidad
+        const matchesSearch = name.toLowerCase().includes(searchTerm) || specsText.includes(searchTerm);
 
+        // Filtro por especialidad
         let matchesSpecialty = true;
         if (specialtyTerm) {
-            const pSpecs = Array.isArray(p.spec) ? p.spec : [p.spec];
-            matchesSpecialty = pSpecs.some(s => s && s.toLowerCase().includes(specialtyTerm.toLowerCase()));
+            matchesSpecialty = specs.some(s => s && s.toLowerCase().includes(specialtyTerm.toLowerCase()));
         }
 
+        // Filtro por disponibilidad
         let matchesAvailability = true;
-        if (availabilityFilter === 'available') {
+        if (availabilityFilter === 'available' || availabilityFilter === 'today') {
             const today = new Date().toISOString().split('T')[0];
-            matchesAvailability = p.availability && p.availability[today] && p.availability[today].length > 0;
-        } else if (availabilityFilter === 'today') {
-            const today = new Date().toISOString().split('T')[0];
-            matchesAvailability = p.availability && p.availability[today] && p.availability[today].length > 0;
+            const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
+            matchesAvailability = slotsHoy.length > 0;
         } else if (availabilityFilter === 'tomorrow') {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
-            matchesAvailability = p.availability && p.availability[tomorrowStr] && p.availability[tomorrowStr].length > 0;
+            const slotsManana = p.availability && p.availability[tomorrowStr] ? p.availability[tomorrowStr] : [];
+            matchesAvailability = slotsManana.length > 0;
         }
 
         return matchesSearch && matchesSpecialty && matchesAvailability;
     });
 
-    filtered.sort((a, b) => a.name.localeCompare(b.name));
+    filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     console.log('📊 Profesionales después de filtro:', filtered.length);
     renderProfessionals(filtered);
 }
@@ -353,12 +365,13 @@ export function renderProfessionals(professionals) {
         return;
     }
 
-    if (professionals.length === 0) {
+    if (!professionals || professionals.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; background:white; border-radius:20px;"><i class="fa fa-user-md" style="font-size:48px; color:#ccc;"></i><p style="margin-top:20px; color:#666;">No se encontraron profesionales</p></div>';
         return;
     }
 
     grid.innerHTML = professionals.map(p => {
+        // 🔥 CORREGIDO: Verificar cada propiedad antes de usarla
         const today = new Date().toISOString().split('T')[0];
         const citasHoy = window.state?.appointments?.filter(a => a.psychId == p.id && a.date === today && (a.status === 'confirmada' || a.status === 'pendiente')) || [];
         const solicitudesHoy = window.state?.pendingRequests?.filter(r => r.psychId == p.id && r.date === today && r.time && r.time !== 'Pendiente') || [];
@@ -369,17 +382,24 @@ export function renderProfessionals(professionals) {
         // Calcular calificación y estrellas
         const rating = getAverageRating(p.id);
         const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
-        const totalReseñas = state.messages.filter(m => m.therapistId == p.id).length;
+        const totalReseñas = (state.messages || []).filter(m => m && m.therapistId == p.id).length;
+
+        // Valores por defecto seguros
+        const name = p.name || 'Profesional';
+        const title = p.title || (p.genero === 'M' ? 'Psicólogo' : p.genero === 'F' ? 'Psicóloga' : 'Psicólogo/a');
+        const img = p.img || p.photoURL || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
+        const address = p.address || 'Dirección no especificada';
+        const disponibilidad = horasLibres > 0 ? `${horasLibres} disponible(s) hoy` : 'Sin disponibilidad hoy';
 
         // Construir HTML de la tarjeta con botones optimizados
         return `
             <div class="professional-card therapist-card" data-id="${p.id}">
                 <div class="img-container">
-                    <img src="${p.img || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500'}" alt="${p.name}" loading="lazy">
+                    <img src="${img}" alt="${name}" loading="lazy">
                 </div>
                 <div class="card-body">
-                    <h3>${p.name}</h3>
-                    <p class="card-subtitle">${p.title || 'Psicólogo Clínico'}</p>
+                    <h3>${name}</h3>
+                    <p class="card-subtitle">${title}</p>
                     
                     ${rating > 0 ? `
                     <div class="rating">
@@ -389,8 +409,8 @@ export function renderProfessionals(professionals) {
                     ` : ''}
                     
                     <div class="card-meta">
-                        <span><i class="fa fa-map-marker-alt"></i> <span class="meta-text">${p.address || 'Dirección no especificada'}</span></span>
-                        <span><i class="fa fa-clock"></i> <span class="meta-text">${horasLibres > 0 ? `${horasLibres} disponible(s) hoy` : 'Sin disponibilidad'}</span></span>
+                        <span><i class="fa fa-map-marker-alt"></i> <span class="meta-text">${address}</span></span>
+                        <span><i class="fa fa-clock"></i> <span class="meta-text">${disponibilidad}</span></span>
                     </div>
                     
                     <div class="card-actions">

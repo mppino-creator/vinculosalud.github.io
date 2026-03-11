@@ -6,30 +6,62 @@ import { obtenerSesionesDePaciente, obtenerFichasIngresoDePaciente } from './fic
 import { obtenerInformesDePaciente } from './informes.js';
 
 // ============================================
-// RENDERIZAR LISTA DE PACIENTES (MEJORADA - SIN BOXES)
+// RENDERIZAR LISTA DE PACIENTES (VERSIÓN CORREGIDA Y MEJORADA)
 // ============================================
 
 export function renderPatients() {
+    console.log('📋 Ejecutando renderPatients...');
     const container = document.getElementById('patientsList');
-    if (!container) return;
-
-    const searchTerm = document.getElementById('patientSearch')?.value.toLowerCase() || '';
-
-    let filteredPatients = state.currentUser?.role === 'admin' 
-        ? state.patients 
-        : state.patients.filter(p => p.psychId == state.currentUser?.data?.id);
-
-    filteredPatients = filteredPatients.filter(p => 
-        p.name.toLowerCase().includes(searchTerm) || 
-        p.email.toLowerCase().includes(searchTerm) ||
-        (p.rut && p.rut.includes(searchTerm))
-    );
-
-    if (filteredPatients.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px;">No hay pacientes</div>';
+    if (!container) {
+        console.error('❌ Container #patientsList no encontrado');
         return;
     }
 
+    const searchTerm = document.getElementById('patientSearch')?.value.toLowerCase() || '';
+
+    // Verificar si hay usuario logueado
+    if (!state.currentUser) {
+        console.log('👤 Usuario no logueado - No mostrar pacientes');
+        container.innerHTML = '<div style="text-align:center; padding:60px; background:white; border-radius:12px;"><i class="fa fa-lock" style="font-size:48px; color:#ccc;"></i><p style="margin:20px 0; color:#666;">Inicia sesión para ver pacientes</p></div>';
+        return;
+    }
+
+    // Obtener pacientes según el rol del usuario
+    let filteredPatients = [];
+    if (state.currentUser?.role === 'admin') {
+        filteredPatients = state.patients.filter(p => !p.isHiddenAdmin);
+        console.log('👑 Admin - Total pacientes:', filteredPatients.length);
+    } else if (state.currentUser?.role === 'psych') {
+        filteredPatients = state.patients.filter(p => p.psychId == state.currentUser?.data?.id);
+        console.log('👤 Psicólogo - Mis pacientes:', filteredPatients.length);
+    }
+
+    // Aplicar filtro de búsqueda
+    if (searchTerm) {
+        filteredPatients = filteredPatients.filter(p => 
+            p.name.toLowerCase().includes(searchTerm) || 
+            p.email.toLowerCase().includes(searchTerm) ||
+            (p.rut && p.rut.includes(searchTerm))
+        );
+    }
+
+    if (filteredPatients.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:60px; background:white; border-radius:12px;">
+                <i class="fa fa-users" style="font-size:48px; color:#ccc;"></i>
+                <p style="margin:20px 0; color:#666;">No hay pacientes</p>
+                <button class="btn-staff" onclick="showNewPatientModal()" style="background:var(--exito);">
+                    <i class="fa fa-plus"></i> Crear primer paciente
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    // Ordenar por nombre
+    filteredPatients.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Renderizar cada paciente
     container.innerHTML = filteredPatients.map(p => {
         const patientApps = state.appointments.filter(a => a.patientId == p.id)
             .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -46,8 +78,10 @@ export function renderPatients() {
             .filter(s => s.patientId == p.id)
             .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion))[0];
 
+        const profesional = state.staff.find(s => s.id == p.psychId);
+
         return `
-            <div class="patient-card">
+            <div class="patient-card" data-id="${p.id}" style="cursor:pointer;" onclick="verFichaCompleta('${p.id}')">
                 <div class="patient-header">
                     <span class="patient-name">${p.name}</span>
                     <div style="display:flex; gap:5px;">
@@ -62,33 +96,38 @@ export function renderPatients() {
                     ${p.phone ? `<span><i class="fa fa-phone"></i> ${p.phone}</span>` : ''}
                 </div>
                 
+                <div style="margin-top:10px; font-size:0.85rem;">
+                    <span style="background:var(--primario-soft); padding:2px 8px; border-radius:30px;">
+                        <i class="fa fa-user-md"></i> ${profesional?.name || 'Sin asignar'}
+                    </span>
+                </div>
+                
                 <div style="display:flex; gap:15px; margin-top:10px; font-size:0.8rem;">
-                    <span><i class="fa fa-credit-card"></i> Pagado: $${totalPaid.toLocaleString()}</span>
-                    <span><i class="fa fa-clock"></i> Total: $${totalAmount.toLocaleString()}</span>
+                    <span><i class="fa fa-credit-card" style="color:var(--exito);"></i> Pagado: $${totalPaid.toLocaleString()}</span>
+                    <span><i class="fa fa-clock" style="color:var(--atencion);"></i> Total: $${totalAmount.toLocaleString()}</span>
                 </div>
                 
                 ${totalSesionesRegistradas > 0 ? `
                     <div style="background:#e6f7e6; padding:8px; border-radius:8px; margin-top:10px;">
-                        <i class="fa fa-file-text"></i> ${totalSesionesRegistradas} sesiones registradas
+                        <i class="fa fa-file-text" style="color:var(--exito);"></i> ${totalSesionesRegistradas} sesiones registradas
                         ${ultimaSesion ? `<br><small>Última: ${formatDate(ultimaSesion.fechaAtencion)}</small>` : ''}
                     </div>
                 ` : ''}
                 
                 ${nextAppt ? `
-                    <div style="background:#e6f7e6; padding:8px; border-radius:8px; margin-top:10px;">
-                        <i class="fa fa-calendar-check"></i> Próxima: ${nextAppt.date} ${nextAppt.time} con ${nextAppt.psych}
+                    <div style="background:#e8f4fd; padding:8px; border-radius:8px; margin-top:10px;">
+                        <i class="fa fa-calendar-check" style="color:var(--azul-medico);"></i> Próxima: ${nextAppt.date} ${nextAppt.time}
                     </div>
                 ` : ''}
                 
                 ${recentApps.length > 0 ? `
-                    <div class="patient-history">
-                        <strong>Últimas atenciones:</strong>
+                    <div class="patient-history" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--gris-claro);">
+                        <small><strong>Últimas atenciones:</strong></small>
                         ${recentApps.map(a => `
-                            <div class="history-item">
-                                <span class="history-date">${a.date}</span>
-                                <span class="history-psych">${a.psych}</span>
-                                <span class="history-type">${a.type === 'online' ? '🌐' : '🏢'}</span>
-                                <span class="history-amount">$${a.price.toLocaleString()}</span>
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-top:5px;">
+                                <span>${a.date}</span>
+                                <span>${a.psych}</span>
+                                <span>$${a.price.toLocaleString()}</span>
                             </div>
                         `).join('')}
                     </div>
@@ -96,11 +135,11 @@ export function renderPatients() {
                 
                 <!-- BOTONES DE ACCIÓN -->
                 <div style="margin-top:15px; display:flex; gap:10px;">
-                    <button class="btn-icon" onclick="verFichaCompleta('${p.id}')" 
+                    <button class="btn-icon" onclick="event.stopPropagation(); verFichaCompleta('${p.id}')" 
                             style="background: var(--azul-apple); color: white; flex:1;">
-                        <i class="fa fa-folder-medical"></i> Ver Ficha Clínica
+                        <i class="fa fa-folder-medical"></i> Ver Ficha
                     </button>
-                    <button class="btn-icon" onclick="viewPatientDetails(${p.id})" 
+                    <button class="btn-icon" onclick="event.stopPropagation(); viewPatientDetails('${p.id}')" 
                             style="background: var(--text-light); color: white;">
                         <i class="fa fa-edit"></i>
                     </button>
@@ -108,6 +147,8 @@ export function renderPatients() {
             </div>
         `;
     }).join('');
+    
+    console.log(`✅ Renderizados ${filteredPatients.length} pacientes`);
 }
 
 // ============================================
@@ -777,6 +818,9 @@ export function savePatient() {
     }
 
     showToast('Paciente guardado', 'success');
+    
+    // Actualizar la lista de pacientes
+    setTimeout(() => renderPatients(), 500);
 }
 
 export function printPatientSummary() {

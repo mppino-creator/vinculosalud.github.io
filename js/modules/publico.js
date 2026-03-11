@@ -23,165 +23,119 @@ import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
 // ============================================
-// FUNCIÓN AUXILIAR PARA CALIFICACIONES (CORREGIDA)
+// FUNCIÓN AUXILIAR PARA CALIFICACIONES
 // ============================================
 function getAverageRating(psychId) {
-    // 🔥 CORREGIDO: Verificar que messages existe y es un array
     const messages = state.messages || [];
     const psychMessages = messages.filter(m => m && m.therapistId == psychId);
     if (psychMessages.length === 0) return 0;
-    
-    // 🔥 CORREGIDO: Verificar que rating existe
     const sum = psychMessages.reduce((sum, m) => sum + (m.rating || 0), 0);
     return sum / psychMessages.length;
 }
 
 // ============================================
-// FUNCIÓN PARA TOGGLE DE INFORMACIÓN (ACCORDION) - MEJORADA
+// FUNCIÓN PARA TOGGLE DE INFORMACIÓN (ACCORDION)
 // ============================================
 window.toggleInfo = function(button) {
-    // Buscar la tarjeta más cercana
-    const card = button.closest('.professional-card, .therapist-card');
+    const card = button?.closest('.professional-card, .therapist-card');
     if (!card) return;
     
-    // Buscar o crear la sección de información
+    const psychId = card.getAttribute('data-id');
+    const psych = state.staff?.find(p => p.id == psychId);
+    if (!psych) return;
+    
     let infoSection = card.querySelector('.card-info');
     
     if (!infoSection) {
-        // Si no existe, obtener el ID del profesional
-        const psychId = card.getAttribute('data-id');
-        const psych = state.staff.find(p => p.id == psychId);
-        if (!psych) return;
-        
-        // Crear la sección de información
         infoSection = document.createElement('div');
         infoSection.className = 'card-info';
         infoSection.style.display = 'none';
         
-        // Construir el contenido con verificaciones de undefined
         let infoHTML = '';
         
         if (psych.education) {
-            infoHTML += `
-                <div class="info-section">
-                    <h4><i class="fa fa-graduation-cap"></i> Formación</h4>
-                    <p>${psych.education}</p>
-                </div>
-            `;
+            infoHTML += `<div class="info-section"><h4><i class="fa fa-graduation-cap"></i> Formación</h4><p>${psych.education}</p></div>`;
         }
         
         if (psych.spec && psych.spec.length) {
             const specs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
-            infoHTML += `
-                <div class="info-section">
-                    <h4><i class="fa fa-tags"></i> Especialidades</h4>
-                    <div class="specialties-list">
-                        ${specs.map(s => s ? `<span class="specialty-tag">${s}</span>` : '').join('')}
-                    </div>
-                </div>
-            `;
+            infoHTML += `<div class="info-section"><h4><i class="fa fa-tags"></i> Especialidades</h4><div class="specialties-list">${specs.filter(s => s).map(s => `<span class="specialty-tag">${s}</span>`).join('')}</div></div>`;
         }
         
         if (psych.experience) {
-            infoHTML += `
-                <div class="info-section">
-                    <h4><i class="fa fa-briefcase"></i> Experiencia</h4>
-                    <p>${psych.experience} años de experiencia clínica</p>
-                </div>
-            `;
+            infoHTML += `<div class="info-section"><h4><i class="fa fa-briefcase"></i> Experiencia</h4><p>${psych.experience} años de experiencia clínica</p></div>`;
         }
         
         if (psych.clinicalExperience) {
-            infoHTML += `
-                <div class="info-section">
-                    <h4><i class="fa fa-heart"></i> Enfoque clínico</h4>
-                    <p>${psych.clinicalExperience}</p>
-                </div>
-            `;
+            infoHTML += `<div class="info-section"><h4><i class="fa fa-heart"></i> Enfoque clínico</h4><p>${psych.clinicalExperience}</p></div>`;
         }
         
         if (psych.languages) {
             const langs = Array.isArray(psych.languages) ? psych.languages.join(', ') : psych.languages;
-            infoHTML += `
-                <div class="info-section">
-                    <h4><i class="fa fa-language"></i> Idiomas</h4>
-                    <p>${langs}</p>
-                </div>
-            `;
+            infoHTML += `<div class="info-section"><h4><i class="fa fa-language"></i> Idiomas</h4><p>${langs}</p></div>`;
         }
         
         if (psych.whatsapp) {
-            infoHTML += `
-                <div class="info-section">
-                    <h4><i class="fa fa-phone"></i> Contacto</h4>
-                    <a href="https://wa.me/${psych.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank" class="whatsapp-link">
-                        <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
-                    </a>
-                </div>
-            `;
+            infoHTML += `<div class="info-section"><h4><i class="fa fa-phone"></i> Contacto</h4><a href="https://wa.me/${psych.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> Contactar por WhatsApp</a></div>`;
         }
         
         infoSection.innerHTML = infoHTML;
         card.appendChild(infoSection);
     }
     
-    // Toggle visibility
     const isHidden = infoSection.style.display === 'none' || !infoSection.style.display;
     infoSection.style.display = isHidden ? 'block' : 'none';
     
-    // Cambiar el icono y texto del botón
-    if (isHidden) {
-        button.innerHTML = '<i class="fa fa-chevron-up"></i> <span>Menos información</span>';
-    } else {
-        button.innerHTML = '<i class="fa fa-chevron-down"></i> <span>Más información</span>';
-    }
+    button.innerHTML = isHidden ? 
+        '<i class="fa fa-chevron-up"></i> <span>Menos información</span>' : 
+        '<i class="fa fa-chevron-down"></i> <span>Más información</span>';
     
-    // Animación suave
     if (infoSection.style.display === 'block') {
         infoSection.style.animation = 'slideDown 0.3s ease';
     }
 };
 
 // ============================================
-// FUNCIONES DE NAVEGACIÓN DEL MENÚ
+// 🆕 FUNCIÓN DE NAVEGACIÓN MEJORADA - VERSIÓN CORREGIDA
 // ============================================
 export function showSection(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
     
-    // Breadcrumbs
+    // 1. DEFINIR TODAS LAS SECCIONES DISPONIBLES
+    const secciones = ['inicio', 'about', 'equipo', 'atencion', 'contacto'];
+    
+    // 2. OCULTAR TODAS LAS SECCIONES (esto es clave)
+    secciones.forEach(sec => {
+        const elemento = document.getElementById(sec);
+        if (elemento) {
+            elemento.style.display = 'none';
+        }
+    });
+    
+    // 3. MOSTRAR SOLO LA SECCIÓN SELECCIONADA
+    const seccionAMostrar = document.getElementById(sectionId);
+    if (seccionAMostrar) {
+        seccionAMostrar.style.display = 'block';
+        seccionAMostrar.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // 4. ACTUALIZAR CLASES ACTIVAS EN EL MENÚ
+    document.querySelectorAll('.public-nav a').forEach(link => {
+        link.classList.remove('active');
+        link.style.borderBottom = 'none';
+        link.style.paddingBottom = '0';
+        
+        if (link.getAttribute('onclick')?.includes(sectionId)) {
+            link.classList.add('active');
+            link.style.borderBottom = '2px solid var(--ocre-calido)';
+            link.style.paddingBottom = '5px';
+        }
+    });
+    
+    // 5. ACTUALIZAR BREADCRUMBS
     const breadcrumbs = document.querySelector('.breadcrumbs');
     const currentPageSpan = document.getElementById('currentPage');
     
-    const sections = {
-        'inicio': document.getElementById('inicio'),
-        'about': document.getElementById('about'),
-        'equipo': document.getElementById('equipo'),
-        'atencion': document.getElementById('atencion'),
-        'contacto': document.getElementById('contacto')
-    };
-    
-    Object.values(sections).forEach(section => {
-        if (section) section.style.display = 'none';
-    });
-    
-    if (sections[sectionId]) {
-        sections[sectionId].style.display = 'block';
-        sections[sectionId].scrollIntoView({ behavior: 'smooth' });
-        
-        if (sectionId === 'about') updateAboutSection();
-        else if (sectionId === 'atencion') updateAtencionSection();
-        else if (sectionId === 'contacto') updateContactSection();
-    }
-    
-    const grid = document.getElementById('equipo');
-    const messages = document.getElementById('messagesGrid');
-    const filtros = document.querySelector('.filters');
-    
-    if (grid) grid.style.display = 'grid';
-    if (messages) messages.style.display = 'grid';
-    if (filtros) filtros.style.display = sectionId === 'equipo' ? 'flex' : 'none';
-    
-    // Actualizar breadcrumbs
     if (breadcrumbs) {
         if (sectionId !== 'inicio') {
             breadcrumbs.style.display = 'block';
@@ -197,22 +151,40 @@ export function showSection(sectionId) {
         }
     }
     
-    document.querySelectorAll('.public-nav a').forEach(link => {
-        link.classList.remove('active');
-        link.style.borderBottom = 'none';
-        link.style.paddingBottom = '0';
-    });
-    
-    const activeLink = document.querySelector(`.public-nav a[onclick*="${sectionId}"]`);
-    if (activeLink) {
-        activeLink.classList.add('active');
-        activeLink.style.borderBottom = '2px solid var(--ocre-calido)';
-        activeLink.style.paddingBottom = '5px';
+    // 6. LÓGICA ESPECÍFICA POR SECCIÓN
+    if (sectionId === 'equipo') {
+        // Solo en EQUIPO se muestran los profesionales
+        const grid = document.getElementById('equipo');
+        if (grid) grid.style.display = 'block';
+        
+        const filtros = document.querySelector('.filters');
+        if (filtros) filtros.style.display = 'flex';
+        
+        // Cargar profesionales
+        if (typeof filterProfessionals === 'function') {
+            filterProfessionals();
+        }
+    } else {
+        // En las demás secciones, ocultar filtros
+        const filtros = document.querySelector('.filters');
+        if (filtros) filtros.style.display = 'none';
+        
+        // Cargar contenido específico de cada sección
+        if (sectionId === 'about') {
+            updateAboutSection();
+        } else if (sectionId === 'atencion') {
+            updateAtencionSection();
+        } else if (sectionId === 'contacto') {
+            updateContactSection();
+        }
     }
     
     console.log(`✅ Sección ${sectionId} mostrada correctamente`);
 }
 
+// ============================================
+// FUNCIÓN PARA ABRIR AGENDA
+// ============================================
 export function abrirAgenda() {
     console.log('📅 Abriendo agenda con profesionales y filtros...');
     showSection('equipo');
@@ -221,11 +193,14 @@ export function abrirAgenda() {
     if (filtros) filtros.style.display = 'flex';
     
     const grid = document.getElementById('equipo');
-    if (grid) grid.style.display = 'grid';
+    if (grid) grid.style.display = 'block';
     
     showToast('Selecciona un profesional para ver su disponibilidad y agendar tu hora', 'info', 3000);
 }
 
+// ============================================
+// FUNCIÓN PARA ENVIAR CONTACTO
+// ============================================
 export function enviarContacto() {
     const nombre = document.getElementById('contactName')?.value;
     const email = document.getElementById('contactEmail')?.value;
@@ -306,7 +281,7 @@ export function showTherapistInfo(psychId) {
 }
 
 // ============================================
-// FILTRO Y RENDERIZADO DE PROFESIONALES - VERSIÓN MEJORADA (CORREGIDA)
+// FILTRO Y RENDERIZADO DE PROFESIONALES
 // ============================================
 export function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
@@ -318,25 +293,20 @@ export function filterProfessionals() {
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
     const availabilityFilter = document.getElementById('availabilityFilter')?.value || '';
 
-    // 🔥 CORREGIDO: Usar getPublicStaff() y manejar undefined
     let filtered = getPublicStaff().filter(p => {
         if (!p) return false;
         
-        // 🔥 CORREGIDO: Verificar que name existe
         const name = p.name || '';
         const specs = p.spec ? (Array.isArray(p.spec) ? p.spec : [p.spec]) : [];
         const specsText = specs.join(' ').toLowerCase();
         
-        // Búsqueda por nombre o especialidad
         const matchesSearch = name.toLowerCase().includes(searchTerm) || specsText.includes(searchTerm);
 
-        // Filtro por especialidad
         let matchesSpecialty = true;
         if (specialtyTerm) {
             matchesSpecialty = specs.some(s => s && s.toLowerCase().includes(specialtyTerm.toLowerCase()));
         }
 
-        // Filtro por disponibilidad
         let matchesAvailability = true;
         if (availabilityFilter === 'available' || availabilityFilter === 'today') {
             const today = new Date().toISOString().split('T')[0];
@@ -371,7 +341,6 @@ export function renderProfessionals(professionals) {
     }
 
     grid.innerHTML = professionals.map(p => {
-        // 🔥 CORREGIDO: Verificar cada propiedad antes de usarla
         const today = new Date().toISOString().split('T')[0];
         const citasHoy = window.state?.appointments?.filter(a => a.psychId == p.id && a.date === today && (a.status === 'confirmada' || a.status === 'pendiente')) || [];
         const solicitudesHoy = window.state?.pendingRequests?.filter(r => r.psychId == p.id && r.date === today && r.time && r.time !== 'Pendiente') || [];
@@ -379,19 +348,16 @@ export function renderProfessionals(professionals) {
         const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
         const horasLibres = slotsHoy.length - totalOcupadosHoy;
 
-        // Calcular calificación y estrellas
         const rating = getAverageRating(p.id);
         const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
         const totalReseñas = (state.messages || []).filter(m => m && m.therapistId == p.id).length;
 
-        // Valores por defecto seguros
         const name = p.name || 'Profesional';
         const title = p.title || (p.genero === 'M' ? 'Psicólogo' : p.genero === 'F' ? 'Psicóloga' : 'Psicólogo/a');
         const img = p.img || p.photoURL || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
         const address = p.address || 'Dirección no especificada';
         const disponibilidad = horasLibres > 0 ? `${horasLibres} disponible(s) hoy` : 'Sin disponibilidad hoy';
 
-        // Construir HTML de la tarjeta con botones optimizados
         return `
             <div class="professional-card therapist-card" data-id="${p.id}">
                 <div class="img-container">
@@ -430,7 +396,7 @@ export function renderProfessionals(professionals) {
 }
 
 // ============================================
-// CARGA INICIAL DE DATOS (ACTUALIZADA - SIN BOXES)
+// CARGA INICIAL DE DATOS
 // ============================================
 export function cargarDatosIniciales() {
     console.log('🚀 Cargando datos iniciales...');
@@ -486,7 +452,6 @@ export function cargarDatosIniciales() {
             state.setStaff([]);
         }
 
-        // Agregar administrador oculto
         const adminExists = state.staff.some(s => s.id == 9999 || s.name === 'Administrador');
         if (!adminExists) {
             state.staff.push({

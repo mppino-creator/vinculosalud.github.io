@@ -1,5 +1,5 @@
 /* ============================================
-   VÍNCULO SALUD v5.0 - ESTILOS PRINCIPALES
+   VÍNCULO SALUD v5.1 - ESTILOS PRINCIPALES
    Diseño Puntoterapia con paleta personalizada
    Versión optimizada para móvil y escritorio
    ============================================ */
@@ -278,6 +278,71 @@ nav {
 }
 
 /* ============================================
+   PUBLIC NAV - Nuevo menú horizontal
+   ============================================ */
+.public-nav {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.public-nav a,
+.nav-item {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--texto-principal);
+    text-decoration: none;
+    padding: 0.5rem 0;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    position: relative;
+    border-bottom: 2px solid transparent;
+}
+
+.public-nav a:hover:not(:last-child),
+.nav-item:hover {
+    color: var(--ocre-calido);
+    border-bottom-color: var(--ocre-calido);
+}
+
+.public-nav a.active,
+.nav-item.active {
+    border-bottom: 2px solid var(--ocre-calido);
+    padding-bottom: 0.5rem;
+    color: var(--texto-principal);
+    font-weight: 600;
+}
+
+/* Estilo específico para Staff - integrado */
+.nav-item.staff-link,
+.public-nav a:last-child {
+    background: transparent !important;
+    color: var(--texto-principal) !important;
+    padding: 0.5rem 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin-left: 0 !important;
+}
+
+.nav-item.staff-link i,
+.public-nav a:last-child i {
+    margin-right: 5px;
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+.nav-item.staff-link:hover,
+.public-nav a:last-child:hover {
+    color: var(--ocre-calido) !important;
+    border-bottom-color: var(--ocre-calido) !important;
+    background: transparent !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ============================================
    BUTTONS - Botones estilo Apple
    ============================================ */
 .btn-staff, .btn-book, .btn-new-message, .btn-icon {
@@ -470,118 +535,262 @@ nav {
 }
 
 /* ============================================
-   TARJETAS DE PROFESIONALES - Estilo Puntoterapia
+   TARJETAS DE PROFESIONALES - Estilo Puntoterapia MEJORADO
    ============================================ */
 .therapist-card {
     background: white;
-    border-radius: 24px;
+    border-radius: 28px;
     overflow: hidden;
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid rgba(0,0,0,0.03);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
     position: relative;
-    cursor: pointer;
-    border: 1px solid var(--gris-claro);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
+    animation: fadeIn 0.5s ease;
 }
 
 .therapist-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 25px -5px rgba(30, 122, 138, 0.1), 0 10px 10px -5px rgba(0,0,0,0.02);
+    transform: translateY(-8px);
+    box-shadow: 0 25px 40px rgba(30,122,138,0.12);
     border-color: var(--verde-azulado-claro);
 }
 
-.img-container {
+/* Imagen con tamaño fijo y centrado */
+.therapist-card .img-container {
     height: 240px;
     width: 100%;
-    position: relative;
     overflow: hidden;
-    background: var(--primario-soft);
+    background: linear-gradient(145deg, #f5f7fa, #e4e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
-.img-container img {
+.therapist-card .img-container img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    object-position: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .therapist-card:hover .img-container img {
-    transform: scale(1.05);
+    transform: scale(1.08);
 }
 
-.card-body {
-    padding: var(--spacing-lg);
+/* Si la imagen es muy cuadrada o logo */
+.therapist-card .img-container img.contain {
+    object-fit: contain;
+    padding: 20px;
+    background: white;
 }
 
-.card-body h3 {
-    font-size: 1.3rem;
-    margin-bottom: var(--spacing-sm);
-    line-height: 1.3;
-    color: var(--texto-principal);
-    font-weight: 600;
-}
-
-.tag {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--verde-azulado-claro);
-    margin-bottom: var(--spacing-sm);
-    display: block;
-}
-
-.card-body p {
-    color: var(--texto-secundario);
-    line-height: 1.6;
-    margin-bottom: var(--spacing-md);
-    font-size: 0.95rem;
-}
-
-.price-box {
+/* Contenido de la tarjeta */
+.therapist-card .card-body {
+    padding: 24px;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--gris-claro);
 }
 
-@media (min-width: 480px) {
-    .price-box {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
+/* Título con altura fija para alineación */
+.therapist-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    min-height: 3.4rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--texto-principal);
 }
 
-.price-details {
-    display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-}
-
-.price-details small {
+/* Subtítulo/título profesional */
+.therapist-card .card-subtitle {
+    font-size: 0.9rem;
     color: var(--texto-secundario);
-    font-size: 0.8rem;
-    background: var(--primario-soft);
-    padding: 4px 10px;
-    border-radius: var(--radius-full);
+    margin-bottom: 12px;
+    line-height: 1.4;
+    min-height: 2.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-.btn-reservar {
-    background: var(--verde-azulado-claro);
-    color: white;
-    border: none;
-    padding: 10px 25px;
-    border-radius: 40px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s;
+/* Información de contacto y disponibilidad */
+.therapist-card .card-meta {
+    margin: 12px 0;
+    font-size: 0.85rem;
+    color: var(--texto-secundario);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.therapist-card .card-meta span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.therapist-card .card-meta i {
+    width: 16px;
+    color: var(--ocre-calido);
     font-size: 0.9rem;
 }
 
-.btn-reservar:hover {
-    background: var(--ocre-calido);
+/* Estrellas de calificación */
+.therapist-card .rating {
+    margin: 8px 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.therapist-card .rating .stars {
+    color: var(--gold);
+    letter-spacing: 2px;
+}
+
+.therapist-card .rating .reviews {
+    font-size: 0.8rem;
+    color: var(--texto-secundario);
+}
+
+/* Botones de acción */
+.therapist-card .card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.therapist-card .btn-mas-info {
+    flex: 1;
+    background: transparent;
+    border: 2px solid var(--verde-azulado-claro);
+    color: var(--verde-azulado-claro);
+    padding: 12px 8px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.therapist-card .btn-mas-info:hover {
+    background: var(--verde-azulado-claro);
+    color: white;
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(200, 161, 97, 0.3);
+    box-shadow: 0 4px 12px rgba(99, 176, 199, 0.3);
+}
+
+.therapist-card .btn-agendar {
+    flex: 1;
+    background: var(--verde-azulado-profundo);
+    border: none;
+    color: white;
+    padding: 12px 8px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 4px 10px rgba(30, 122, 138, 0.2);
+}
+
+.therapist-card .btn-agendar:hover {
+    background: #166374;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(30, 122, 138, 0.3);
+}
+
+/* Información adicional (toggle) */
+.therapist-card .card-info {
+    margin-top: 16px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 20px;
+    border-left: 4px solid var(--ocre-calido);
+    animation: slideDown 0.3s ease;
+}
+
+.therapist-card .card-info h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    color: var(--texto-principal);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.therapist-card .card-info h4:first-child {
+    margin-top: 0;
+}
+
+.therapist-card .card-info h4 i {
+    color: var(--ocre-calido);
+    font-size: 0.9rem;
+}
+
+.therapist-card .card-info p {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--texto-secundario);
+    margin-bottom: 12px;
+}
+
+.therapist-card .specialty-tag {
+    display: inline-block;
+    background: var(--verde-grisaceo-claro);
+    color: var(--texto-principal);
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    margin: 2px;
+    transition: all 0.2s;
+}
+
+.therapist-card .specialty-tag:hover {
+    background: var(--ocre-calido);
+    color: white;
+}
+
+.therapist-card .whatsapp-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #25D366;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    margin-top: 8px;
+    transition: all 0.2s;
+}
+
+.therapist-card .whatsapp-link:hover {
+    background: #20bd5a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
 }
 
 /* ============================================
@@ -720,55 +929,60 @@ nav {
 }
 
 .message-card {
-    background: var(--verde-grisaceo-claro);
-    border-radius: 20px;
-    padding: var(--spacing-lg);
-    border-left: 4px solid var(--primario);
-    transition: all 0.2s;
+    background: var(--verde-grisaceo-claro) !important;
+    border-radius: 20px !important;
+    padding: 24px !important;
+    border-left: 4px solid var(--primario) !important;
+    transition: all 0.2s !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 2px 8px var(--sombra) !important;
+    border: 1px solid var(--gris-claro) !important;
 }
 
 .message-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--sombra);
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px var(--sombra) !important;
 }
 
 .message-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-sm);
-    font-size: 0.9rem;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 12px !important;
+    font-size: 0.9rem !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
 }
 
 .message-author {
-    font-weight: 600;
-    color: var(--texto-principal);
+    font-weight: 600 !important;
+    color: var(--texto-principal) !important;
+    font-size: 1rem !important;
 }
 
 .message-rating {
-    color: var(--gold);
+    color: var(--gold) !important;
+    font-size: 0.9rem !important;
 }
 
 .message-text {
-    color: var(--texto-principal);
-    line-height: 1.5;
-    margin-bottom: var(--spacing-md);
-    font-size: 0.95rem;
+    color: var(--texto-principal) !important;
+    line-height: 1.5 !important;
+    margin-bottom: 12px !important;
+    font-size: 0.95rem !important;
 }
 
 .message-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--texto-secundario);
-    font-size: 0.8rem;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    color: var(--texto-secundario) !important;
+    font-size: 0.8rem !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
 }
 
 .message-footer i {
-    margin-right: 4px;
+    margin-right: 4px !important;
 }
 
 /* ============================================
@@ -1876,259 +2090,6 @@ h3, h4, h5,
 }
 
 /* ============================================
-   ESTILOS ADICIONALES PUNTOTERAPIA
-   ============================================ */
-
-/* Estilos para las tarjetas estilo Puntoterapia */
-.therapist-card button {
-    transition: all 0.3s ease;
-}
-
-.therapist-card button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-.therapist-card button:first-child:hover {
-    background: var(--verde-azulado-claro);
-    color: white;
-}
-
-.therapist-card button:last-child:hover {
-    background: var(--primario-hover);
-}
-
-/* Estilos para el menú de navegación pública */
-.public-nav {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    padding: 20px 0 30px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--gris-claro);
-    flex-wrap: wrap;
-    background: white;
-    border-radius: 0 0 30px 30px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-}
-
-.public-nav a {
-    color: var(--texto-principal);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-    padding: 5px 0;
-}
-
-.public-nav a:hover:not(:last-child) {
-    color: var(--ocre-calido);
-}
-
-.public-nav a.active {
-    border-bottom: 2px solid var(--ocre-calido);
-    padding-bottom: 5px;
-}
-
-.public-nav a:last-child {
-    background: var(--verde-azulado-profundo);
-    color: white;
-    padding: 8px 22px;
-    border-radius: 40px;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.public-nav a:last-child:hover {
-    background: var(--primario-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(30, 122, 138, 0.3);
-}
-
-/* Estilos para la sección Quiénes Somos editable */
-.about-section {
-    position: relative;
-    margin: 60px 0;
-    padding: 40px;
-    background: white;
-    border-radius: 48px;
-    box-shadow: 0 8px 30px var(--sombra);
-}
-
-.about-section h2 {
-    color: var(--verde-azulado-profundo);
-    font-size: 2.2rem;
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.about-section .mission-vision-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    margin-top: 30px;
-}
-
-.about-section .mission-box,
-.about-section .vision-box {
-    background: var(--verde-grisaceo-claro);
-    padding: 30px;
-    border-radius: 24px;
-    text-align: center;
-}
-
-.about-section .mission-box i,
-.about-section .vision-box i {
-    font-size: 2.5rem;
-    color: var(--ocre-calido);
-    margin-bottom: 15px;
-}
-
-.about-section .mission-box h3,
-.about-section .vision-box h3 {
-    color: var(--verde-azulado-profundo);
-    font-size: 1.5rem;
-    margin-bottom: 15px;
-}
-
-.about-section .mission-box p,
-.about-section .vision-box p {
-    color: var(--texto-secundario);
-    line-height: 1.6;
-}
-
-/* Estilos para la sección Tipo de Atención */
-.atencion-section {
-    margin: 60px 0;
-    padding: 40px;
-    background: white;
-    border-radius: 48px;
-}
-
-.atencion-section h2 {
-    color: var(--verde-azulado-profundo);
-    text-align: center;
-    margin-bottom: 40px;
-    font-size: 2.2rem;
-}
-
-.atencion-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
-}
-
-.atencion-card {
-    text-align: center;
-    padding: 30px;
-}
-
-.atencion-card i {
-    font-size: 3rem;
-    color: var(--ocre-calido);
-    margin-bottom: 20px;
-}
-
-.atencion-card h3 {
-    color: var(--verde-azulado-profundo);
-    font-size: 1.3rem;
-    margin-bottom: 10px;
-}
-
-.atencion-card p {
-    color: var(--texto-secundario);
-}
-
-/* Estilos para la sección Contacto */
-.contact-section {
-    margin: 60px 0;
-    padding: 40px;
-    background: white;
-    border-radius: 48px;
-}
-
-.contact-section h2 {
-    color: var(--verde-azulado-profundo);
-    text-align: center;
-    margin-bottom: 40px;
-    font-size: 2.2rem;
-}
-
-.contact-form {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.contact-form .form-group {
-    margin-bottom: 20px;
-}
-
-.contact-form input,
-.contact-form textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid var(--gris-claro);
-    border-radius: 12px;
-    font-size: 1rem;
-    transition: all 0.3s;
-}
-
-.contact-form input:focus,
-.contact-form textarea:focus {
-    outline: none;
-    border-color: var(--ocre-calido);
-    box-shadow: 0 0 0 3px rgba(200, 161, 97, 0.1);
-}
-
-.contact-form button {
-    width: 100%;
-    background: var(--ocre-calido);
-    color: white;
-    border: none;
-    padding: 14px;
-    border-radius: 40px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.contact-form button:hover {
-    background: var(--verde-azulado-claro);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(99, 176, 199, 0.3);
-}
-
-/* Botón de edición para admin */
-.admin-edit-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: var(--primario);
-    color: white;
-    padding: 8px 15px;
-    border-radius: 30px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s;
-}
-
-.admin-edit-btn:hover {
-    background: var(--primario-hover);
-    transform: translateY(-2px);
-}
-
-/* Scroll suave para las secciones */
-html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 100px;
-}
-
-/* ============================================
    SECCIÓN INSTAGRAM - ESTILO PUNTOTERAPIA
    ============================================ */
 .instagram-section {
@@ -2283,6 +2244,166 @@ html {
 }
 
 /* ============================================
+   ESTILOS PARA SECCIONES EDITABLES (Quiénes Somos, Atención, Contacto)
+   ============================================ */
+.about-section,
+.atencion-section,
+.contact-section {
+    position: relative;
+    margin: 60px 0;
+    padding: 40px;
+    background: white;
+    border-radius: 48px;
+    box-shadow: 0 8px 30px var(--sombra);
+}
+
+.about-section h2,
+.atencion-section h2,
+.contact-section h2 {
+    color: var(--verde-azulado-profundo);
+    font-size: 2.2rem;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.about-section .mission-vision-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 30px;
+}
+
+.about-section .mission-box,
+.about-section .vision-box {
+    background: var(--verde-grisaceo-claro);
+    padding: 30px;
+    border-radius: 24px;
+    text-align: center;
+}
+
+.about-section .mission-box i,
+.about-section .vision-box i {
+    font-size: 2.5rem;
+    color: var(--ocre-calido);
+    margin-bottom: 15px;
+}
+
+.about-section .mission-box h3,
+.about-section .vision-box h3 {
+    color: var(--verde-azulado-profundo);
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.about-section .mission-box p,
+.about-section .vision-box p {
+    color: var(--texto-secundario);
+    line-height: 1.6;
+}
+
+.atencion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+}
+
+.atencion-card {
+    text-align: center;
+    padding: 30px;
+}
+
+.atencion-card i {
+    font-size: 3rem;
+    color: var(--ocre-calido);
+    margin-bottom: 20px;
+}
+
+.atencion-card h3 {
+    color: var(--verde-azulado-profundo);
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.atencion-card p {
+    color: var(--texto-secundario);
+}
+
+.contact-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.contact-form .form-group {
+    margin-bottom: 20px;
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--gris-claro);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: none;
+    border-color: var(--ocre-calido);
+    box-shadow: 0 0 0 3px rgba(200, 161, 97, 0.1);
+}
+
+.contact-form button {
+    width: 100%;
+    background: var(--ocre-calido);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 40px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.contact-form button:hover {
+    background: var(--verde-azulado-claro);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(99, 176, 199, 0.3);
+}
+
+/* Botón de edición para admin */
+.admin-edit-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--primario);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    z-index: 10;
+}
+
+.admin-edit-btn:hover {
+    background: var(--primario-hover);
+    transform: translateY(-2px);
+}
+
+/* Scroll suave para las secciones */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px;
+}
+
+/* ============================================
    TARJETAS DE PROFESIONALES - AJUSTES
    ============================================ */
 .therapist-card {
@@ -2353,7 +2474,7 @@ html {
 }
 
 /* ============================================
-   TOGGLE DE INFORMACIÓN DEL PROFESIONAL (ESTILO PUNTOTERAPIA)
+   TOGGLE DE INFORMACIÓN DEL PROFESIONAL
    ============================================ */
 @keyframes slideDown {
     from {
@@ -2409,16 +2530,6 @@ html {
     margin: 0 5px 5px 0;
 }
 
-/* Hover effects para tarjetas */
-.therapist-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.therapist-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(30, 122, 138, 0.15);
-}
-
 /* Estrellas de calificación */
 .rating .fa-star, .rating .fa-star-o {
     color: var(--gold);
@@ -2433,155 +2544,6 @@ html {
 .filter-input:focus, .filter-select:focus {
     border-color: var(--ocre-calido);
     box-shadow: 0 0 0 4px rgba(200, 161, 97, 0.1);
-}
-
-/* Animaciones adicionales estilo Puntoterapia */
-.atencion-card {
-    transition: transform 0.3s ease;
-}
-
-.atencion-card:hover {
-    transform: translateY(-5px);
-}
-
-.btn-instagram, .btn-cta, .btn-contact {
-    transition: all 0.3s ease;
-}
-
-.btn-instagram:hover, .btn-cta:hover, .btn-contact:hover {
-    transform: translateY(-3px);
-}
-
-/* ============================================
-   ESTILOS ADICIONALES ESTILO PUNTOTERAPIA
-   ============================================ */
-
-/* Tipografía general */
-body {
-    font-family: 'DM Sans', 'Open Sans', sans-serif;
-}
-
-/* Hover effects para enlaces del footer */
-footer a:hover {
-    color: var(--ocre-calido) !important;
-    transform: translateX(5px);
-}
-
-/* Botón flotante WhatsApp */
-.whatsapp-float:hover {
-    transform: scale(1.1) translateY(-5px);
-    box-shadow: 0 8px 25px rgba(37,211,102,0.4);
-}
-
-/* Badges de especialidades */
-.specialty-badge {
-    transition: all 0.3s;
-}
-
-.specialty-badge:hover {
-    background: var(--ocre-calido) !important;
-    color: white !important;
-    transform: translateY(-2px);
-}
-
-/* Tarjetas de profesionales mejoradas */
-.therapist-card {
-    border-radius: 28px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
-}
-
-.therapist-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(30,122,138,0.15);
-}
-
-/* Imagen circular en tarjetas (opcional) */
-.therapist-card .img-container img {
-    transition: transform 0.5s ease;
-    border-radius: 50%;
-    width: 200px;
-    height: 200px;
-    margin: 20px auto 0;
-    border: 4px solid white;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-/* ============================================
-   HEADER MEJORADO - MENÚ EQUILIBRADO
-   ============================================ */
-
-/* Ajustes para el contenedor del menú */
-.public-nav {
-    display: flex;
-    align-items: center;
-    gap: 2.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-/* Estilo base para todos los enlaces del menú */
-.public-nav a,
-.nav-item {
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: var(--texto-principal);
-    text-decoration: none;
-    padding: 0.5rem 0;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-    position: relative;
-    border-bottom: 2px solid transparent;
-}
-
-/* Efecto hover elegante */
-.public-nav a:hover:not(:last-child),
-.nav-item:hover {
-    color: var(--ocre-calido);
-    border-bottom-color: var(--ocre-calido);
-}
-
-/* Estilo para el enlace activo */
-.public-nav a.active,
-.nav-item.active {
-    border-bottom: 2px solid var(--ocre-calido);
-    padding-bottom: 0.5rem;
-    color: var(--texto-principal);
-    font-weight: 600;
-}
-
-/* Estilo específico para Staff - integrado */
-.nav-item.staff-link,
-.public-nav a:last-child {
-    background: transparent !important;
-    color: var(--texto-principal) !important;
-    padding: 0.5rem 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    margin-left: 0 !important;
-}
-
-.nav-item.staff-link i,
-.public-nav a:last-child i {
-    margin-right: 5px;
-    font-size: 1rem;
-    opacity: 0.7;
-}
-
-.nav-item.staff-link:hover,
-.public-nav a:last-child:hover {
-    color: var(--ocre-calido) !important;
-    border-bottom-color: var(--ocre-calido) !important;
-    background: transparent !important;
-    transform: none !important;
-    box-shadow: none !important;
-}
-
-/* Animación para el hover */
-@keyframes slideIn {
-    from { width: 0; opacity: 0; }
-    to { width: 100%; opacity: 1; }
 }
 
 /* ============================================
@@ -2931,7 +2893,7 @@ button:not([style*="display: none"]) {
 }
 
 /* ============================================
-   RESPONSIVE MOBILE-FIRST - VERSIÓN OPTIMIZADA 2024
+   RESPONSIVE MOBILE-FIRST - VERSIÓN OPTIMIZADA
    ============================================ */
 
 /* Móviles pequeños (menos de 480px) */
@@ -3029,25 +2991,23 @@ button:not([style*="display: none"]) {
         margin-bottom: 0.25rem !important;
     }
     
-    .card-body p {
-        font-size: 0.9rem !important;
-        line-height: 1.4 !important;
-        margin-bottom: 0.5rem !important;
+    .card-body .card-subtitle {
+        font-size: 0.85rem !important;
+        min-height: 2.2rem;
     }
     
-    .price-box {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
+    .card-meta {
+        margin: 8px 0 !important;
     }
     
-    .price-details {
-        justify-content: center !important;
+    .card-actions {
+        flex-direction: column;
     }
     
-    .btn-reservar {
-        width: 100% !important;
-        padding: 12px !important;
-        font-size: 1rem !important;
+    .btn-mas-info,
+    .btn-agendar {
+        width: 100%;
+        padding: 14px 8px !important;
     }
     
     /* Badges */
@@ -3370,7 +3330,7 @@ button:not([style*="display: none"]) {
     button:hover,
     .btn-staff:hover,
     .btn-book:hover,
-    .btn-reservar:hover cs{
+    .btn-reservar:hover {
         transform: none !important;
     }
     
@@ -3385,7 +3345,6 @@ button:not([style*="display: none"]) {
 
 /* ============================================
    🎨 MEJORAS VISUALES v5.1 - DISEÑO PROFESIONAL
-   Agregar al final del archivo estilos.css
    ============================================ */
 
 /* ------------------------------------------------------------------
@@ -3506,265 +3465,7 @@ button:not([style*="display: none"]) {
 }
 
 /* ------------------------------------------------------------------
-   2. TARJETAS DE PROFESIONALES - VERSIÓN MEJORADA
-   ------------------------------------------------------------------ */
-.therapist-card {
-    background: white;
-    border-radius: 28px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    border: 1px solid rgba(0,0,0,0.03);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-    position: relative;
-}
-
-.therapist-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 25px 40px rgba(30,122,138,0.12);
-    border-color: var(--verde-azulado-claro);
-}
-
-/* Imagen con tamaño fijo y centrado */
-.therapist-card .img-container {
-    height: 240px;
-    width: 100%;
-    overflow: hidden;
-    background: linear-gradient(145deg, #f5f7fa, #e4e7eb);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.therapist-card .img-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.therapist-card:hover .img-container img {
-    transform: scale(1.08);
-}
-
-/* Si la imagen es muy cuadrada o logo */
-.therapist-card .img-container img.contain {
-    object-fit: contain;
-    padding: 20px;
-    background: white;
-}
-
-/* Contenido de la tarjeta */
-.therapist-card .card-body {
-    padding: 24px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Título con altura fija para alineación */
-.therapist-card h3 {
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-    line-height: 1.3;
-    min-height: 3.4rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    color: var(--texto-principal);
-}
-
-/* Subtítulo/título profesional */
-.therapist-card .card-subtitle {
-    font-size: 0.9rem;
-    color: var(--texto-secundario);
-    margin-bottom: 12px;
-    line-height: 1.4;
-    min-height: 2.5rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-/* Información de contacto y disponibilidad */
-.therapist-card .card-meta {
-    margin: 12px 0;
-    font-size: 0.85rem;
-    color: var(--texto-secundario);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.therapist-card .card-meta span {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.therapist-card .card-meta i {
-    width: 16px;
-    color: var(--ocre-calido);
-    font-size: 0.9rem;
-}
-
-/* Estrellas de calificación */
-.therapist-card .rating {
-    margin: 8px 0;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.therapist-card .rating .stars {
-    color: var(--gold);
-    letter-spacing: 2px;
-}
-
-.therapist-card .rating .reviews {
-    font-size: 0.8rem;
-    color: var(--texto-secundario);
-}
-
-/* Botones de acción */
-.therapist-card .card-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: auto;
-    padding-top: 16px;
-    border-top: 1px solid rgba(0,0,0,0.05);
-}
-
-.therapist-card .btn-mas-info {
-    flex: 1;
-    background: transparent;
-    border: 2px solid var(--verde-azulado-claro);
-    color: var(--verde-azulado-claro);
-    padding: 12px 8px;
-    border-radius: 40px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.therapist-card .btn-mas-info:hover {
-    background: var(--verde-azulado-claro);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 176, 199, 0.3);
-}
-
-.therapist-card .btn-agendar {
-    flex: 1;
-    background: var(--verde-azulado-profundo);
-    border: none;
-    color: white;
-    padding: 12px 8px;
-    border-radius: 40px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    box-shadow: 0 4px 10px rgba(30, 122, 138, 0.2);
-}
-
-.therapist-card .btn-agendar:hover {
-    background: #166374;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(30, 122, 138, 0.3);
-}
-
-/* Información adicional (toggle) */
-.therapist-card .card-info {
-    margin-top: 16px;
-    padding: 20px;
-    background: #f8fafc;
-    border-radius: 20px;
-    border-left: 4px solid var(--ocre-calido);
-    animation: slideDown 0.3s ease;
-}
-
-.therapist-card .card-info h4 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 16px 0 8px;
-    color: var(--texto-principal);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.therapist-card .card-info h4:first-child {
-    margin-top: 0;
-}
-
-.therapist-card .card-info h4 i {
-    color: var(--ocre-calido);
-    font-size: 0.9rem;
-}
-
-.therapist-card .card-info p {
-    font-size: 0.85rem;
-    line-height: 1.6;
-    color: var(--texto-secundario);
-    margin-bottom: 12px;
-}
-
-.therapist-card .specialty-tag {
-    display: inline-block;
-    background: var(--verde-grisaceo-claro);
-    color: var(--texto-principal);
-    padding: 4px 12px;
-    border-radius: 30px;
-    font-size: 0.75rem;
-    margin: 2px;
-    transition: all 0.2s;
-}
-
-.therapist-card .specialty-tag:hover {
-    background: var(--ocre-calido);
-    color: white;
-}
-
-.therapist-card .whatsapp-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #25D366;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 30px;
-    font-size: 0.85rem;
-    text-decoration: none;
-    margin-top: 8px;
-    transition: all 0.2s;
-}
-
-.therapist-card .whatsapp-link:hover {
-    background: #20bd5a;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
-}
-
-/* ------------------------------------------------------------------
-   3. PANEL DE ADMINISTRACIÓN - ESTILO PROFESIONAL
+   2. PANEL DE ADMINISTRACIÓN - ESTILO PROFESIONAL
    ------------------------------------------------------------------ */
 .dashboard-header {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
@@ -3852,7 +3553,7 @@ button:not([style*="display: none"]) {
 }
 
 /* ------------------------------------------------------------------
-   4. ANIMACIONES SUAVES
+   3. ANIMACIONES SUAVES
    ------------------------------------------------------------------ */
 @keyframes fadeIn {
     from { 
@@ -3913,7 +3614,7 @@ button:not([style*="display: none"]) {
 }
 
 /* ------------------------------------------------------------------
-   5. RESPONSIVE MEJORADO PARA TARJETAS
+   4. RESPONSIVE MEJORADO PARA TARJETAS
    ------------------------------------------------------------------ */
 @media (max-width: 480px) {
     .therapist-card .card-actions {
@@ -3975,7 +3676,7 @@ button:not([style*="display: none"]) {
 }
 
 /* ------------------------------------------------------------------
-   6. UTILIDADES ADICIONALES
+   5. UTILIDADES ADICIONALES
    ------------------------------------------------------------------ */
 .text-truncate-2 {
     display: -webkit-box;
@@ -4007,44 +3708,8 @@ button:not([style*="display: none"]) {
     box-shadow: 0 12px 24px rgba(0,0,0,0.1);
 }
 
-/* Badge flotante para disponibilidad */
-.availability-badge {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    padding: 6px 12px;
-    border-radius: 30px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    z-index: 5;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.availability-badge.online { 
-    color: var(--exito); 
-}
-
-.availability-badge.busy { 
-    color: var(--atencion); 
-}
-
-.availability-badge.offline { 
-    color: var(--texto-secundario); 
-}
-
-.availability-badge i {
-    font-size: 0.6rem;
-}
-
 /* ------------------------------------------------------------------
-   7. FIX PARA BOTONES DE ACCIÓN EN MÓVIL (REFORZADO)
+   6. FIX PARA BOTONES DE ACCIÓN EN MÓVIL (REFORZADO)
    ------------------------------------------------------------------ */
 @media (max-width: 768px) {
     .btn-staff,
@@ -4084,7 +3749,7 @@ button:not([style*="display: none"]) {
 }
 
 /* ------------------------------------------------------------------
-   8. ESTILOS PARA ESTADOS VACÍOS Y LOADING
+   7. ESTILOS PARA ESTADOS VACÍOS Y LOADING
    ------------------------------------------------------------------ */
 .empty-state {
     text-align: center;
@@ -4127,227 +3792,5 @@ button:not([style*="display: none"]) {
 }
 
 /* ============================================
-   FIN DE MEJORAS VISUALES v5.1
+   FIN DE ESTILOS v5.1
    ============================================ */
-
-   /* ============================================
-   HOTFIX URGENTE - BOTONES CLICKEABLES
-   ============================================ */
-
-/* 1. FIX: Asegurar que todos los botones sean clickeables */
-button,
-.btn-staff,
-.btn-book,
-.btn-new-message,
-.btn-icon,
-.btn-reservar,
-.btn-cta,
-.btn-instagram,
-.btn-contact,
-.btn-mas-info,
-.btn-agendar,
-#bookBtn,
-#loginBtn,
-#logoutBtn,
-#registerBtn,
-#saveProfileBtn,
-#cancelBtn,
-#deleteBtn,
-#printBtn,
-#applyBtn,
-#clearBtn,
-#generateBtn,
-#addBtn,
-#publishBtn,
-#saveBtn,
-.edit-btn,
-.delete-btn,
-.close-btn,
-.modal-close,
-.tab-btn,
-.filter-btn,
-.submit-btn,
-[role="button"],
-input[type="submit"],
-input[type="button"],
-button[onclick*="crearFicha"],
-button[onclick*="mostrarFormularioFichaIngreso"],
-button[onclick*="window.fichasClinicas"] {
-    pointer-events: auto !important;
-    cursor: pointer !important;
-    position: relative !important;
-    z-index: 999 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: inline-flex !important;
-}
-
-/* 2. FIX: El botón específico de crear ficha */
-.detalle-paciente button,
-#emergencyFichaModal button,
-button:has(.fa-plus-circle),
-button:has(.fa-file-medical),
-button[style*="var(--verde-exito)"] {
-    pointer-events: auto !important;
-    cursor: pointer !important;
-    z-index: 9999 !important;
-    position: relative !important;
-    background: var(--verde-exito) !important;
-    color: white !important;
-    padding: 12px 24px !important;
-    border-radius: 40px !important;
-    border: none !important;
-    font-size: 16px !important;
-    font-weight: 600 !important;
-    box-shadow: 0 8px 20px rgba(52, 199, 89, 0.3) !important;
-    transition: all 0.3s ease !important;
-}
-
-.detalle-paciente button:hover,
-button:has(.fa-plus-circle):hover {
-    transform: translateY(-3px) !important;
-    box-shadow: 0 12px 28px rgba(52, 199, 89, 0.4) !important;
-}
-
-/* 3. FIX: Eliminar cualquier elemento que pueda estar encima */
-.detalle-paciente,
-.panel,
-.modal,
-.modal-content,
-.glass,
-.booking-grid,
-#patientsList,
-.patient-card,
-.detalle-paciente > div,
-#modalFichaIngreso,
-#emergencyFichaModal {
-    z-index: auto !important;
-}
-
-/* 4. FIX: Asegurar que el modal de ficha sea clickeable */
-#modalFichaIngreso button,
-#emergencyFichaModal button {
-    pointer-events: auto !important;
-    cursor: pointer !important;
-    z-index: 10000 !important;
-    position: relative !important;
-}
-
-/* 5. FIX: Para el contenedor del detalle del paciente */
-.detalle-paciente {
-    position: relative !important;
-    z-index: 1 !important;
-}
-
-.detalle-paciente > div {
-    position: relative !important;
-    z-index: 2 !important;
-}
-
-/* 6. FIX: Garantizar que los botones no estén ocultos por otros elementos */
-button:active,
-button:focus,
-.btn-staff:active,
-.btn-staff:focus {
-    outline: none !important;
-    box-shadow: 0 0 0 3px rgba(30, 122, 138, 0.3) !important;
-}
-
-/* 7. FIX: Override para cualquier estilo que esté bloqueando clicks */
-* {
-    -webkit-tap-highlight-color: transparent;
-}
-
-.no-click {
-    pointer-events: none !important;
-}
-
-/* 8. FIX: Asegurar que el botón verde de crear ficha sea visible y clickeable */
-button[style*="background: var(--verde-exito)"] {
-    background: #34c759 !important;
-    color: white !important;
-    pointer-events: auto !important;
-    cursor: pointer !important;
-    opacity: 1 !important;
-    transform: scale(1) !important;
-    transition: all 0.2s ease !important;
-}
-
-button[style*="background: var(--verde-exito)"]:hover {
-    transform: scale(1.02) !important;
-    background: #2db44e !important;
-}
-
-/* ============================================
-   HOTFIX URGENTE v6.0 - CORRECCIÓN DE TESTIMONIOS
-   ============================================ */
-
-/* Restaurar estilos de tarjetas de mensajes */
-.message-card {
-    background: var(--verde-grisaceo-claro) !important;
-    border-radius: 20px !important;
-    padding: 24px !important;
-    border-left: 4px solid var(--primario) !important;
-    transition: all 0.2s !important;
-    margin-bottom: 16px !important;
-    box-shadow: 0 2px 8px var(--sombra) !important;
-    border: 1px solid var(--gris-claro) !important;
-}
-
-.message-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px var(--sombra) !important;
-}
-
-.message-header {
-    display: flex !important;
-    justify-content: space-between !important;
-    margin-bottom: 12px !important;
-    font-size: 0.9rem !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-}
-
-.message-author {
-    font-weight: 600 !important;
-    color: var(--texto-principal) !important;
-    font-size: 1rem !important;
-}
-
-.message-rating {
-    color: var(--gold) !important;
-    font-size: 0.9rem !important;
-}
-
-.message-text {
-    color: var(--texto-principal) !important;
-    line-height: 1.5 !important;
-    margin-bottom: 12px !important;
-    font-size: 0.95rem !important;
-}
-
-.message-footer {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    color: var(--texto-secundario) !important;
-    font-size: 0.8rem !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-}
-
-.message-footer i {
-    margin-right: 4px !important;
-}
-
-.messages-grid {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 20px !important;
-}
-
-@media (min-width: 768px) {
-    .messages-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}

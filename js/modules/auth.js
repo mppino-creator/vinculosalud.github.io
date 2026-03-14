@@ -134,7 +134,7 @@ function actualizarUIAdmin(userData, role) {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR MENÚ STAFF
+// FUNCIÓN PARA MOSTRAR MENÚ STAFF (VERSIÓN MEJORADA)
 // ============================================
 window.mostrarMenuStaff = function(desdeLogin = false) {
     if (!state.currentUser) {
@@ -162,58 +162,204 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
     const oldMenu = document.getElementById('staffMenu');
     if (oldMenu) oldMenu.remove();
     
-    // Opciones según el rol
+    // Opciones según el rol (SIN DUPLICADOS)
     let opcionesMenu = '';
     
     if (user.role === 'admin') {
-        // Opciones para ADMIN
+        // Opciones para ADMIN - Solo las esenciales, el resto en dashboard
         opcionesMenu = `
-            <button onclick="irADashboard()" style="padding: 12px; background: var(--primario); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+            <button onclick="irADashboard()" class="menu-btn primary-action">
                 <i class="fa fa-tachometer-alt"></i> Ir al Dashboard
             </button>
-            <button onclick="window.showSpecialtiesModal?.()" style="padding: 12px; background: var(--verde-azulado-claro); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+            <div class="menu-divider"></div>
+            <div class="menu-section-title">ACCESOS RÁPIDOS</div>
+            <button onclick="window.showSpecialtiesModal?.()" class="menu-btn">
                 <i class="fa fa-tags"></i> Gestionar Especialidades
             </button>
-            <button onclick="window.showPaymentMethodsModal?.()" style="padding: 12px; background: var(--exito); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+            <button onclick="window.showPaymentMethodsModal?.()" class="menu-btn">
                 <i class="fa fa-credit-card"></i> Métodos de Pago
             </button>
         `;
     } else if (user.role === 'psych') {
-        // Opciones para PSICÓLOGO (PROFESIONAL)
+        // Opciones para PSICÓLOGO
         opcionesMenu = `
-            <button onclick="window.openMyProfileModal?.()" style="padding: 12px; background: var(--primario); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+            <button onclick="window.openMyProfileModal?.()" class="menu-btn primary-action">
                 <i class="fa fa-user-edit"></i> Editar Mi Perfil
             </button>
-            <button onclick="abrirGestionDisponibilidad()" style="padding: 12px; background: var(--verde-azulado-claro); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+            <button onclick="abrirGestionDisponibilidad()" class="menu-btn secondary-action">
                 <i class="fa fa-clock"></i> Gestionar Disponibilidad
             </button>
-            <button onclick="irADashboard()" style="padding: 12px; background: #f5f5f5; color: var(--texto-principal); border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%;">
+            <div class="menu-divider"></div>
+            <button onclick="irADashboard()" class="menu-btn">
                 <i class="fa fa-tachometer-alt"></i> Ir al Dashboard
             </button>
         `;
     }
     
-    // Crear menú contextual
+    // Crear menú contextual con estilos mejorados
     const menuHTML = `
-        <div id="staffMenu" style="position: absolute; top: 80px; right: 20px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); padding: 20px; z-index: 2000; min-width: 280px; border: 1px solid var(--gris-claro);">
-            <div style="padding: 10px 0; border-bottom: 1px solid #eee; margin-bottom: 15px;">
-                <div style="font-weight: 700; font-size: 1.1rem; color: var(--texto-principal);">${user.data.name}</div>
-                <div style="color: var(--texto-secundario); font-size: 0.9rem; margin-top: 5px;">
-                    <span style="background: ${user.role === 'admin' ? 'var(--primario)' : 'var(--exito)'}; color: white; padding: 3px 10px; border-radius: 30px; font-size: 0.8rem;">
+        <div id="staffMenu">
+            <div class="menu-header">
+                <div class="user-name">${user.data.name}</div>
+                <div class="user-role">
+                    <span class="role-badge ${user.role}">
                         ${user.role === 'admin' ? 'Administrador' : 'Profesional'}
                     </span>
                 </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="menu-content">
                 ${opcionesMenu}
-                <button onclick="logout()" style="padding: 12px; background: #f5f5f5; border: none; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 10px; width: 100%; color: var(--peligro); margin-top: 5px;">
-                    <i class="fa fa-sign-out-alt"></i> Cerrar Sesión
+            </div>
+            <div class="menu-footer">
+                <button onclick="logout()" class="menu-btn logout-btn">
+                    <i class="fa fa-sign-out-alt"></i> <span>Cerrar Sesión</span>
                 </button>
             </div>
         </div>
     `;
     
     document.body.insertAdjacentHTML('beforeend', menuHTML);
+    
+    // Agregar estilos específicos para el menú (si no existen en CSS)
+    const style = document.createElement('style');
+    style.textContent = `
+        #staffMenu {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            width: 280px;
+            z-index: 9999;
+            overflow: hidden;
+            border: 1px solid var(--gris-claro);
+            animation: slideDown 0.2s ease;
+        }
+        
+        #staffMenu .menu-header {
+            padding: 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+        
+        #staffMenu .user-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--texto-principal);
+            margin-bottom: 4px;
+        }
+        
+        #staffMenu .user-role {
+            margin-top: 4px;
+        }
+        
+        #staffMenu .role-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        #staffMenu .role-badge.admin {
+            background: var(--primario);
+            color: white;
+        }
+        
+        #staffMenu .role-badge.psych {
+            background: var(--exito);
+            color: white;
+        }
+        
+        #staffMenu .menu-content {
+            padding: 8px;
+        }
+        
+        #staffMenu .menu-footer {
+            padding: 8px;
+            border-top: 1px solid #eee;
+        }
+        
+        #staffMenu .menu-divider {
+            height: 1px;
+            background: #eee;
+            margin: 8px 0;
+        }
+        
+        #staffMenu .menu-section-title {
+            font-size: 0.75rem;
+            color: var(--texto-secundario);
+            padding: 4px 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        #staffMenu .menu-btn {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 2px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: transparent;
+            color: var(--texto-principal);
+        }
+        
+        #staffMenu .menu-btn:hover {
+            background: #f0f0f0;
+            transform: translateX(4px);
+        }
+        
+        #staffMenu .menu-btn.primary-action {
+            background: var(--primario);
+            color: white;
+        }
+        
+        #staffMenu .menu-btn.primary-action:hover {
+            background: var(--primario-hover);
+        }
+        
+        #staffMenu .menu-btn.secondary-action {
+            background: var(--verde-azulado-claro);
+            color: white;
+        }
+        
+        #staffMenu .menu-btn.secondary-action:hover {
+            background: var(--primario);
+        }
+        
+        #staffMenu .logout-btn {
+            color: #dc2626;
+        }
+        
+        #staffMenu .logout-btn:hover {
+            background: #fee2e2;
+        }
+        
+        #staffMenu .menu-btn i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        #staffMenu .menu-btn span {
+            color: inherit;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    `;
+    document.head.appendChild(style);
     
     // Cerrar al hacer clic fuera
     setTimeout(() => {

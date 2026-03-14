@@ -43,6 +43,12 @@
     --whatsapp: #25D366;
     --instagram: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5);
     
+    /* 🆕 Colores faltantes para botones */
+    --rojo-alerta: #dc3545;
+    --azul-medico: #007bff;
+    --naranja-aviso: #fd7e14;
+    --verde-exito: #28a745;
+    
     /* 📏 Espaciado */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
@@ -266,6 +272,37 @@ nav.glass {
     white-space: nowrap;
 }
 
+/* Estilos para enlaces del menú principal (FIX) */
+nav.glass a {
+    color: var(--texto-principal) !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    padding: 0.3rem 0 !important;
+    border-bottom: 2px solid transparent !important;
+    transition: all 0.2s ease !important;
+}
+
+nav.glass a:hover {
+    color: var(--ocre-calido) !important;
+    border-bottom-color: var(--ocre-calido) !important;
+}
+
+nav.glass a.active {
+    border-bottom-color: var(--ocre-calido) !important;
+}
+
+nav.glass a:last-child i {
+    margin-right: 5px;
+    opacity: 0.6;
+}
+
+nav.glass a:last-child {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
 /* Public Nav - VERSIÓN ÚNICA MEJORADA */
 .public-nav {
     display: flex;
@@ -343,39 +380,39 @@ nav.glass {
     justify-content: center;
     gap: 8px;
     box-shadow: var(--shadow-sm);
+    color: white !important;
 }
 
-.btn-staff, .btn-book, .btn-new-message { background: var(--primario); color: white; }
+.btn-staff, .btn-book, .btn-new-message { background: var(--primario); }
 .btn-staff:hover, .btn-book:hover, .btn-new-message:hover { 
     background: var(--primario-hover); 
     transform: translateY(-2px); 
     box-shadow: var(--shadow-md); 
 }
 
-.btn-cta { background: var(--ocre-calido); color: white; }
+.btn-cta { background: var(--ocre-calido); }
 .btn-cta:hover { background: var(--verde-azulado-claro); transform: translateY(-2px); }
 
 .btn-cta-outline { 
     background: transparent; 
-    color: var(--primario); 
+    color: var(--primario) !important; 
     border: 2px solid var(--primario); 
 }
-.btn-cta-outline:hover { background: var(--primario); color: white; }
+.btn-cta-outline:hover { background: var(--primario); color: white !important; }
 
 .btn-mas-info { 
     background: transparent; 
     border: 2px solid var(--verde-azulado-claro); 
-    color: var(--verde-azulado-claro); 
+    color: var(--verde-azulado-claro) !important; 
 }
 .btn-mas-info:hover { 
     background: var(--verde-azulado-claro); 
-    color: white; 
+    color: white !important; 
     transform: translateY(-2px); 
 }
 
 .btn-agendar, .btn-reservar { 
     background: var(--verde-azulado-profundo); 
-    color: white; 
 }
 .btn-agendar:hover, .btn-reservar:hover { 
     background: #166374; 
@@ -384,13 +421,11 @@ nav.glass {
 
 .btn-instagram { 
     background: var(--instagram); 
-    color: white; 
 }
 .btn-instagram:hover { transform: translateY(-3px); }
 
 .btn-contact { 
     background: var(--ocre-calido); 
-    color: white; 
     width: 100%; 
 }
 .btn-contact:hover { background: var(--verde-azulado-claro); }
@@ -398,9 +433,31 @@ nav.glass {
 .btn-icon { 
     padding: 0.5rem 1rem; 
     background: var(--gris-claro); 
-    color: var(--texto-principal); 
+    color: var(--texto-principal) !important; 
+    box-shadow: none;
 }
 .btn-icon:hover { background: var(--gris-oscuro); }
+
+/* Botones específicos con colores personalizados */
+button[style*="background:var(--rojo-alerta)"] {
+    background: var(--rojo-alerta) !important;
+    color: white !important;
+}
+
+button[style*="background:var(--azul-medico)"] {
+    background: var(--azul-medico) !important;
+    color: white !important;
+}
+
+button[style*="background:var(--naranja-aviso)"] {
+    background: var(--naranja-aviso) !important;
+    color: white !important;
+}
+
+button[style*="background:var(--verde-exito)"] {
+    background: var(--verde-exito) !important;
+    color: white !important;
+}
 
 /* ============================================
    HERO SECTION
@@ -1085,7 +1142,7 @@ nav.glass {
 .stat-item h4 { font-size: 2.4rem; font-weight: 700; color: var(--verde-azulado-profundo); margin-top: 8px; }
 
 /* ============================================
-   MENÚ DE ADMINISTRADOR (STAFF MENU)
+   MENÚ DE ADMINISTRADOR (STAFF MENU) - VERSIÓN MEJORADA
    ============================================ */
 #staffMenu {
     position: fixed !important;
@@ -1097,7 +1154,47 @@ nav.glass {
     padding: 16px !important;
     z-index: 9999 !important;
     min-width: 280px !important;
+    max-width: 320px !important;
     animation: slideDown 0.2s ease !important;
+    border: 1px solid var(--gris-claro) !important;
+}
+
+#staffMenu .menu-header {
+    padding-bottom: 12px !important;
+    margin-bottom: 12px !important;
+    border-bottom: 1px solid #e9ecef !important;
+}
+
+#staffMenu .user-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--texto-principal);
+}
+
+#staffMenu .user-role {
+    font-size: 0.8rem;
+    color: var(--texto-secundario);
+    margin-top: 4px;
+}
+
+#staffMenu .role-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#staffMenu .role-badge.admin {
+    background: var(--primario);
+    color: white;
+}
+
+#staffMenu .role-badge.psych {
+    background: var(--exito);
+    color: white;
 }
 
 #staffMenu button {
@@ -1112,17 +1209,55 @@ nav.glass {
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
-    transition: all 0.2s !important;
+    transition: all 0.2s ease !important;
     cursor: pointer !important;
     background: #f8f9fa !important;
     color: #2D3E4F !important;
 }
 
-#staffMenu button:hover { background: #e9ecef !important; transform: translateX(4px) !important; }
+#staffMenu button i {
+    width: 20px !important;
+    text-align: center !important;
+    font-size: 1.1rem !important;
+    color: inherit !important;
+}
+
+#staffMenu button:not(:last-child):hover {
+    background: #e9ecef !important;
+    transform: translateX(4px) !important;
+}
+
 #staffMenu button:last-child {
     background: #fee2e2 !important;
     color: #dc2626 !important;
     margin-top: 8px !important;
+    border-top: 1px solid #fecaca !important;
+}
+
+#staffMenu button:last-child:hover {
+    background: #fecaca !important;
+}
+
+#staffMenu button.primary-action {
+    background: var(--primario) !important;
+    color: white !important;
+}
+
+#staffMenu button.primary-action:hover {
+    background: var(--primario-hover) !important;
+}
+
+#staffMenu button.secondary-action {
+    background: var(--verde-azulado-claro) !important;
+    color: white !important;
+}
+
+#staffMenu button.secondary-action:hover {
+    background: var(--primario) !important;
+}
+
+#staffMenu button span {
+    color: inherit !important;
 }
 
 /* ============================================
@@ -1561,51 +1696,6 @@ button, .btn-staff, [role="button"], input[type="submit"] {
 #tiposAtencionList::-webkit-scrollbar-thumb:hover { background: var(--primario-hover); }
 
 /* ============================================
-   RESPONSIVE
-   ============================================ */
-@media (max-width: 768px) {
-    nav.glass { flex-direction: column !important; }
-    .logo-text { font-size: 1.8rem !important; }
-    .public-nav a { font-size: 0.9rem !important; }
-    
-    button, .btn-staff, .btn-book, .btn-reservar {
-        min-height: 48px !important;
-        padding: 0.75rem 1rem !important;
-    }
-    
-    .filter-input, .filter-select {
-        width: 100% !important;
-        min-width: 100% !important;
-        font-size: 16px !important;
-    }
-    
-    input, select, textarea { font-size: 16px !important; }
-    
-    .tipo-atencion-card > div[style*="grid-template-columns: 1fr 1fr"] {
-        grid-template-columns: 1fr !important;
-    }
-    
-    #atencionModal .modal-content { padding: 20px 15px; width: 95%; }
-}
-
-@media (max-width: 480px) {
-    .grid { grid-template-columns: 1fr !important; }
-    .therapist-card .img-container { height: 180px !important; }
-    .messages-section { margin: 2rem 0.5rem !important; }
-    .cta-section { padding: 2rem 1rem !important; }
-    .instagram-content { padding: 1.5rem !important; }
-    .instagram-content h3 { font-size: 2rem !important; }
-}
-
-/* Fix para inputs en iOS */
-@media (max-width: 768px) {
-    input[type="text"], input[type="email"], input[type="tel"],
-    input[type="password"], input[type="number"], select, textarea {
-        font-size: 16px !important;
-    }
-}
-
-/* ============================================
    ESTILOS PARA PESTAÑAS DEL DASHBOARD
    ============================================ */
 
@@ -1706,14 +1796,97 @@ button, .btn-staff, [role="button"], input[type="submit"] {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* ============================================
+   FIX PARA TEXTOS EN BOTONES Y MENÚS
+   ============================================ */
 
+/* Garantizar que el texto de los botones sea visible */
+.btn-staff,
+button.btn-staff,
+[class*="btn-"],
+#staffMenu button span,
+#staffMenu button i + span {
+    color: inherit;
+}
 
+/* Fix específico para el botón de cerrar sesión */
+#staffMenu button:last-child,
+#staffMenu button.logout-btn {
+    color: #dc2626 !important;
+}
 
+#staffMenu button:last-child span,
+#staffMenu button.logout-btn span {
+    color: #dc2626 !important;
+}
 
+/* Fix para enlaces de Instagram */
+.btn-instagram,
+a.btn-instagram {
+    color: white !important;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
 
+.btn-instagram:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Fix para el texto de "Guardar" en textos */
+#textsModal .btn-staff,
+#heroModal .btn-staff,
+#atencionModal .btn-staff {
+    color: white !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    nav.glass { flex-direction: column !important; }
+    .logo-text { font-size: 1.8rem !important; }
+    .public-nav a { font-size: 0.9rem !important; }
+    
+    button, .btn-staff, .btn-book, .btn-reservar {
+        min-height: 48px !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .filter-input, .filter-select {
+        width: 100% !important;
+        min-width: 100% !important;
+        font-size: 16px !important;
+    }
+    
+    input, select, textarea { font-size: 16px !important; }
+    
+    .tipo-atencion-card > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    
+    #atencionModal .modal-content { padding: 20px 15px; width: 95%; }
+}
+
+@media (max-width: 480px) {
+    .grid { grid-template-columns: 1fr !important; }
+    .therapist-card .img-container { height: 180px !important; }
+    .messages-section { margin: 2rem 0.5rem !important; }
+    .cta-section { padding: 2rem 1rem !important; }
+    .instagram-content { padding: 1.5rem !important; }
+    .instagram-content h3 { font-size: 2rem !important; }
+}
+
+/* Fix para inputs en iOS */
+@media (max-width: 768px) {
+    input[type="text"], input[type="email"], input[type="tel"],
+    input[type="password"], input[type="number"], select, textarea {
+        font-size: 16px !important;
+    }
+}
 
 /* ============================================
    FIN DE ESTILOS V6.0 - VERSIÓN UNIFICADA
    ============================================ */
-
-

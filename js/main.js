@@ -1,5 +1,6 @@
 // js/main.js - VERSIÓN COMPLETA CON SECCIONES EDITABLES E INSTAGRAM v3.0
 // 🚀 ACTUALIZADO: Módulo boxes desactivado - Las citas presenciales se coordinan directamente
+// 🚀 CORREGIDO: Función save() con escrituras por nodo individual
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -369,10 +370,15 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (ACTUALIZADA CON INSTAGRAM Y SIN BOXES)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA - ESCRITURA POR NODO)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
+    
+    // Mostrar toast de inicio
+    if (typeof utils.showToast === 'function') {
+        utils.showToast('Guardando datos...', 'info');
+    }
     
     // Preparar objetos para Firebase
     const staffObj = {};
@@ -407,7 +413,7 @@ export function save() {
     const informesObj = {};
     state.informes.forEach(item => { informesObj[item.id] = item; });
 
-    // 🆕 Guardar textos editables (incluyendo Instagram)
+    // Guardar textos editables (incluyendo Instagram)
     const textosEditablesObj = {
         missionText: state.missionText,
         visionText: state.visionText,
@@ -419,34 +425,82 @@ export function save() {
         logoImage: state.logoImage,
         backgroundImage: state.backgroundImage,
         globalPaymentMethods: state.globalPaymentMethods,
-        instagramData: state.instagramData // 🆕 NUEVO
+        instagramData: state.instagramData
     };
 
-    const updates = {
-        '/Staff': staffObj,
-        '/Boxes': boxesObj,      // Se mantiene por compatibilidad
-        '/Patients': patientsObj,
-        '/Appointments': appointmentsObj,
-        '/PendingRequests': pendingRequestsObj,
-        '/Messages': messagesObj,
-        '/FichasIngreso': fichasIngresoObj,
-        '/Sesiones': sesionesObj,
-        '/Informes': informesObj,
-        '/TextosEditables': textosEditablesObj
-    };
+    // Guardar especialidades
+    const specialtiesObj = {};
+    state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
 
-    db.ref().update(updates)
-        .then(() => {
-            console.log('✅ Datos guardados correctamente en Firebase');
+    // Crear array de promesas para cada nodo (ESCRITURA INDIVIDUAL)
+    const promises = [];
+
+    promises.push(db.ref('Staff').set(staffObj).catch(err => {
+        console.error('❌ Error en Staff:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('Boxes').set(boxesObj).catch(err => {
+        console.error('❌ Error en Boxes:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('Patients').set(patientsObj).catch(err => {
+        console.error('❌ Error en Patients:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('Appointments').set(appointmentsObj).catch(err => {
+        console.error('❌ Error en Appointments:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('PendingRequests').set(pendingRequestsObj).catch(err => {
+        console.error('❌ Error en PendingRequests:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('Messages').set(messagesObj).catch(err => {
+        console.error('❌ Error en Messages:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('FichasIngreso').set(fichasIngresoObj).catch(err => {
+        console.error('❌ Error en FichasIngreso:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('Sesiones').set(sesionesObj).catch(err => {
+        console.error('❌ Error en Sesiones:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('Informes').set(informesObj).catch(err => {
+        console.error('❌ Error en Informes:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('TextosEditables').set(textosEditablesObj).catch(err => {
+        console.error('❌ Error en TextosEditables:', err);
+        return null;
+    }));
+    
+    promises.push(db.ref('Specialties').set(specialtiesObj).catch(err => {
+        console.error('❌ Error en Specialties:', err);
+        return null;
+    }));
+
+    // Esperar a que todas las promesas se resuelvan
+    Promise.all(promises)
+        .then((results) => {
+            // Verificar cuántas operaciones fueron exitosas
+            const successful = results.filter(r => r !== null).length;
+            const total = promises.length;
+            
+            console.log(`✅ ${successful}/${total} nodos guardados correctamente en Firebase`);
             console.log('✅ Pacientes guardados:', state.patients.length);
             
-            const specialtiesObj = {};
-            state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
-            return db.ref('Specialties').set(specialtiesObj);
-        })
-        .then(() => {
-            console.log('✅ Especialidades guardadas correctamente');
-            
+            // Actualizar vistas según el rol del usuario
             if (state.currentUser) {
                 if (typeof auth.updateStats === 'function') auth.updateStats();
                 if (typeof citas.renderPendingRequests === 'function') citas.renderPendingRequests();
@@ -454,8 +508,6 @@ export function save() {
                 if (state.currentUser.role === 'admin') {
                     if (typeof profesionales.renderStaffTable === 'function') profesionales.renderStaffTable();
                     if (typeof mensajes.renderMessagesTable === 'function') mensajes.renderMessagesTable();
-                    // ⚠️ Boxes desactivado - no se renderiza
-                    // if (typeof boxes.renderBoxesTable === 'function') boxes.renderBoxesTable();
                     
                     // Actualizar botones de admin
                     if (typeof admin.addEditButtonsToAdmin === 'function') {
@@ -464,11 +516,10 @@ export function save() {
                 }
                 if (state.currentUser.role === 'psych') {
                     if (typeof pacientes.renderPatients === 'function') pacientes.renderPatients();
-                    // ⚠️ Boxes desactivado - no se renderiza
-                    // if (typeof boxes.renderBoxOccupancy === 'function') boxes.renderBoxOccupancy();
                 }
             }
             
+            // Actualizar vistas públicas
             if (typeof publico.filterProfessionals === 'function') publico.filterProfessionals();
             if (typeof mensajes.renderMessages === 'function') mensajes.renderMessages();
             if (typeof mensajes.updateMarquee === 'function') mensajes.updateMarquee();
@@ -477,14 +528,22 @@ export function save() {
             if (typeof personalizacion.updateAboutSection === 'function') personalizacion.updateAboutSection();
             if (typeof personalizacion.updateAtencionSection === 'function') personalizacion.updateAtencionSection();
             if (typeof personalizacion.updateContactSection === 'function') personalizacion.updateContactSection();
-            if (typeof personalizacion.updateInstagramSection === 'function') personalizacion.updateInstagramSection(); // 🆕 NUEVO
+            if (typeof personalizacion.updateInstagramSection === 'function') personalizacion.updateInstagramSection();
             
             // Mostrar toast de éxito
-            if (typeof utils.showToast === 'function') utils.showToast('✅ Datos guardados', 'success');
+            if (typeof utils.showToast === 'function') {
+                if (successful === total) {
+                    utils.showToast('✅ Todos los datos guardados', 'success');
+                } else {
+                    utils.showToast(`⚠️ ${successful}/${total} datos guardados`, 'warning');
+                }
+            }
         })
         .catch(err => {
-            console.error('❌ Error al guardar en Firebase:', err);
-            if (typeof utils.showToast === 'function') utils.showToast('Error al guardar los datos', 'error');
+            console.error('❌ Error general al guardar en Firebase:', err);
+            if (typeof utils.showToast === 'function') {
+                utils.showToast('Error al guardar los datos', 'error');
+            }
         });
 }
 

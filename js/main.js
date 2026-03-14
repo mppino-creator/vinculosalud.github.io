@@ -1,6 +1,6 @@
 // js/main.js - VERSIÓN COMPLETA CON SECCIONES EDITABLES E INSTAGRAM v3.0
 // 🚀 ACTUALIZADO: Módulo boxes desactivado - Las citas presenciales se coordinan directamente
-// 🚀 CORREGIDO: Función save() con escrituras por nodo individual
+// 🚀 CORREGIDO: Nombres de nodos en minúsculas para coincidir con reglas de Firebase
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -370,7 +370,7 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA - ESCRITURA POR NODO)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA - CON NOMBRES EN MINÚSCULAS)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -403,7 +403,7 @@ export function save() {
     const messagesObj = {};
     state.messages.forEach(item => { messagesObj[item.id] = item; });
 
-    // Guardar fichas clínicas
+    // Guardar fichas clínicas - NOMBRES EN MINÚSCULAS (para coincidir con reglas)
     const fichasIngresoObj = {};
     state.fichasIngreso.forEach(item => { fichasIngresoObj[item.id] = item; });
 
@@ -432,7 +432,7 @@ export function save() {
     const specialtiesObj = {};
     state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
 
-    // Crear array de promesas para cada nodo (ESCRITURA INDIVIDUAL)
+    // Crear array de promesas para cada nodo - NOMBRES EN MINÚSCULAS
     const promises = [];
 
     promises.push(db.ref('Staff').set(staffObj).catch(err => {
@@ -465,18 +465,19 @@ export function save() {
         return null;
     }));
     
-    promises.push(db.ref('FichasIngreso').set(fichasIngresoObj).catch(err => {
-        console.error('❌ Error en FichasIngreso:', err);
+    // ✅ CORREGIDO: Usar minúsculas para coincidir con reglas de Firebase
+    promises.push(db.ref('fichasIngreso').set(fichasIngresoObj).catch(err => {
+        console.error('❌ Error en fichasIngreso:', err);
         return null;
     }));
     
-    promises.push(db.ref('Sesiones').set(sesionesObj).catch(err => {
-        console.error('❌ Error en Sesiones:', err);
+    promises.push(db.ref('sesiones').set(sesionesObj).catch(err => {
+        console.error('❌ Error en sesiones:', err);
         return null;
     }));
     
-    promises.push(db.ref('Informes').set(informesObj).catch(err => {
-        console.error('❌ Error en Informes:', err);
+    promises.push(db.ref('informes').set(informesObj).catch(err => {
+        console.error('❌ Error en informes:', err);
         return null;
     }));
     

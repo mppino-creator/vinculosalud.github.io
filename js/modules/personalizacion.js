@@ -555,7 +555,7 @@ function guardarEspecialidades() {
 }
 
 // ============================================
-// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM
+// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM (ACTUALIZADAS)
 // ============================================
 
 export function cargarInstagramData() {
@@ -584,7 +584,14 @@ export function updateInstagramSection() {
     if (quoteEl) quoteEl.innerHTML = instagramData.quote;
     if (textEl) textEl.innerText = instagramData.text;
     if (messageEl) messageEl.innerText = instagramData.message;
-    if (linkEl) linkEl.href = instagramData.link;
+    
+    // ACTUALIZAR EL ENLACE DE INSTAGRAM
+    if (linkEl) {
+        linkEl.href = instagramData.link || 'https://instagram.com/vinculo.salud';
+        linkEl.target = '_blank';
+        linkEl.rel = 'noopener noreferrer';
+        console.log('🔗 Enlace de Instagram actualizado a:', linkEl.href);
+    }
     
     if (imageEl) {
         if (instagramData.image) {
@@ -702,6 +709,9 @@ export function uploadInstagramImage() {
     reader.readAsDataURL(input.files[0]);
 }
 
+// ============================================
+// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN MEJORADA
+// ============================================
 export function saveInstagramData() {
     const titleInput = document.getElementById('instagramTitleInput');
     const subtitleInput = document.getElementById('instagramSubtitleInput');
@@ -710,6 +720,7 @@ export function saveInstagramData() {
     const messageInput = document.getElementById('instagramMessageInput');
     const linkInput = document.getElementById('instagramLinkInput');
     
+    // Actualizar los datos locales
     instagramData = {
         title: titleInput?.value || instagramData.title,
         subtitle: subtitleInput?.value || instagramData.subtitle,
@@ -720,13 +731,31 @@ export function saveInstagramData() {
         image: instagramData.image
     };
     
-    db.ref('InstagramData').set(instagramData);
-    updateInstagramSection();
+    console.log('💾 Guardando InstagramData:', instagramData);
     
+    // Guardar en Firebase
+    db.ref('InstagramData').set(instagramData)
+        .then(() => {
+            console.log('✅ InstagramData guardado en Firebase');
+            
+            // FORZAR ACTUALIZACIÓN INMEDIATA DE LA VISTA
+            updateInstagramSection();
+            
+            // También actualizar el estado global si existe
+            if (window.state && typeof window.state.setInstagramData === 'function') {
+                window.state.setInstagramData(instagramData);
+            }
+            
+            showToast('Sección Instagram actualizada', 'success');
+        })
+        .catch((error) => {
+            console.error('❌ Error guardando InstagramData:', error);
+            showToast('Error al guardar', 'error');
+        });
+    
+    // Cerrar el modal
     const modal = document.getElementById('instagramModal');
     if (modal) modal.style.display = 'none';
-    
-    showToast('Sección Instagram actualizada', 'success');
 }
 
 // ============================================

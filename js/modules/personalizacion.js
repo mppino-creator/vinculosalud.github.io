@@ -613,7 +613,7 @@ export function showInstagramModal() {
                 </div>
                 
                 <div class="form-group">
-                    <label>Subtítulo (PUNTO)</label>
+                    <label>Subtítulo (VINCULO)</label>
                     <input type="text" id="instagramSubtitleInput" class="filter-input" placeholder="VÍNCULO">
                 </div>
                 

@@ -83,7 +83,7 @@ export let contactInfo = {
 // 🆕 NUEVA VARIABLE PARA SECCIÓN INSTAGRAM
 export let instagramData = {
     title: 'Sigue Nuestro Instagram',
-    subtitle: 'PUNTO',
+    subtitle: 'VINCULO',
     quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
     text: 'Detente aquí un segundo',
     message: 'Esto también se aprende.',
@@ -414,7 +414,7 @@ export function resetAllState() {
     // 🆕 Reiniciar Instagram data
     instagramData = {
         title: 'Sigue Nuestro Instagram',
-        subtitle: 'PUNTO',
+        subtitle: 'VINCULO',
         quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
         text: 'Detente aquí un segundo',
         message: 'Esto también se aprende.',

@@ -1606,5 +1606,114 @@ button, .btn-staff, [role="button"], input[type="submit"] {
 }
 
 /* ============================================
+   ESTILOS PARA PESTAÑAS DEL DASHBOARD
+   ============================================ */
+
+/* Contenedor de pestañas */
+#dashboardTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 20px 0;
+    padding: 10px;
+    background: white;
+    border-radius: 50px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gris-claro);
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Estilo base para todas las pestañas */
+#dashboardTabs .tab {
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: var(--texto-secundario);
+    border: none;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+/* Hover effect */
+#dashboardTabs .tab:hover {
+    background: var(--verde-grisaceo-claro);
+    color: var(--texto-principal);
+    transform: translateY(-2px);
+}
+
+/* Pestaña activa */
+#dashboardTabs .tab.active {
+    background: var(--primario) !important;
+    color: white !important;
+    box-shadow: 0 4px 10px rgba(30, 122, 138, 0.2);
+}
+
+/* Contenedores de contenido */
+.tab-content {
+    display: none;
+    padding: 25px;
+    background: white;
+    border-radius: 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gris-claro);
+    margin-top: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block !important;
+}
+
+/* Asegurar que los títulos sean visibles */
+.tab-content h3 {
+    margin-bottom: 20px;
+    color: var(--texto-principal);
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+/* Estilos para los botones dentro de las pestañas */
+.tab-content .btn-staff {
+    margin: 5px;
+}
+
+/* Responsive para pestañas */
+@media (max-width: 768px) {
+    #dashboardTabs {
+        padding: 8px;
+        gap: 5px;
+    }
+    
+    #dashboardTabs .tab {
+        padding: 8px 15px;
+        font-size: 0.85rem;
+    }
+    
+    .tab-content {
+        padding: 15px;
+    }
+}
+
+/* Animación de fadeIn */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+
+
+
+
+
+/* ============================================
    FIN DE ESTILOS V6.0 - VERSIÓN UNIFICADA
    ============================================ */
+
+

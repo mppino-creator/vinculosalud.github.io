@@ -644,29 +644,60 @@ function mostrarDashboardInmediato(role, userData) {
 }
 
 // ============================================
-// FUNCIÓN SWITCH TAB
+// FUNCIÓN SWITCH TAB MEJORADA - VERSIÓN FINAL
 // ============================================
 
 export function switchTab(tabName) {
     console.log('🔄 Cambiando a pestaña:', tabName);
     
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    // 1. Remover clase active de todas las pestañas
+    document.querySelectorAll('#dashboardTabs .tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
     
-    // Buscar la pestaña por ID exacto primero
-    const tabId = getTabIdFromName(tabName);
-    const exactTab = document.getElementById(tabId);
+    // 2. Remover clase active de todos los contenidos
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
     
-    if (exactTab) {
-        exactTab.classList.add('active');
-    } else {
-        // Si no encuentra por ID, buscar por texto
-        const activeTab = Array.from(document.querySelectorAll('.tab')).find(t => 
-            t.textContent.toLowerCase().includes(tabName.toLowerCase())
-        );
-        if (activeTab) activeTab.classList.add('active');
+    // 3. Buscar y activar la pestaña clickeada
+    const tabs = document.querySelectorAll('#dashboardTabs .tab');
+    let tabActivated = false;
+    
+    for (let tab of tabs) {
+        // Buscar por onclick
+        const onclick = tab.getAttribute('onclick');
+        if (onclick && onclick.includes(`'${tabName}'`)) {
+            tab.classList.add('active');
+            tabActivated = true;
+            console.log(`✅ Pestaña activada por onclick: ${tab.textContent}`);
+            break;
+        }
+        
+        // Buscar por texto
+        if (tab.textContent.toLowerCase().includes(tabName.toLowerCase())) {
+            tab.classList.add('active');
+            tabActivated = true;
+            console.log(`✅ Pestaña activada por texto: ${tab.textContent}`);
+            break;
+        }
+        
+        // Buscar por ID (para pestañas especiales)
+        if (tab.id && tab.id.toLowerCase().includes(tabName.toLowerCase())) {
+            tab.classList.add('active');
+            tabActivated = true;
+            console.log(`✅ Pestaña activada por ID: ${tab.id}`);
+            break;
+        }
     }
     
+    // Si no se encontró, activar la primera (citas por defecto)
+    if (!tabActivated && tabs.length > 0) {
+        tabs[0].classList.add('active');
+        console.log(`✅ Activando primera pestaña por defecto: ${tabs[0].textContent}`);
+    }
+    
+    // 4. Activar el contenido correspondiente
     const tabMap = {
         'citas': 'tabCitas',
         'solicitudes': 'tabSolicitudes',
@@ -685,65 +716,66 @@ export function switchTab(tabName) {
         'estadisticas': 'tabEstadisticas'
     };
     
-    const tabContentId = tabMap[tabName];
-    if (tabContentId) {
-        const tabElement = document.getElementById(tabContentId);
-        if (tabElement) {
-            tabElement.classList.add('active');
-            
-            setTimeout(() => {
-                try {
-                    if (tabName === 'pacientes' && typeof renderPatients === 'function') {
-                        renderPatients();
-                    }
-                    else if (tabName === 'citas' && typeof renderAppointments === 'function') {
-                        renderAppointments();
-                    }
-                    else if (tabName === 'solicitudes' && typeof renderPendingRequests === 'function') {
-                        renderPendingRequests();
-                    }
-                    else if (tabName === 'profesionales' && isAdmin() && typeof renderStaffTable === 'function') {
-                        renderStaffTable();
-                    }
-                    else if (tabName === 'mensajes' && isAdmin() && typeof renderMessagesTable === 'function') {
-                        renderMessagesTable();
-                    }
-                    else if (tabName === 'disponibilidad' && isPsych()) {
-                        if (typeof window.loadTimeSlots === 'function') {
-                            window.loadTimeSlots();
-                        }
-                        if (typeof window.showAvailabilityModal === 'function') {
-                            setTimeout(() => window.showAvailabilityModal(), 300);
-                        }
-                    }
-                    else if (tabName === 'configuracion' && isPsych()) {
-                        if (typeof loadMyConfig === 'function') loadMyConfig();
-                    }
-                    else if (tabName === 'pagos' && isAdmin()) {
-                        if (typeof updatePaymentMethodsInfo === 'function') updatePaymentMethodsInfo();
-                    }
-                    else if (tabName === 'reinicio' && isAdmin()) {
-                        if (typeof actualizarContadoresReinicio === 'function') actualizarContadoresReinicio();
-                    }
-                    else if (tabName === 'estadisticas' && isAdmin()) {
-                        if (window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') {
-                            console.log('📊 Llamando a renderPanelEstadisticas para:', tabName);
-                            window.estadisticas.renderPanelEstadisticas();
-                        } else {
-                            console.error('❌ window.estadisticas no disponible');
-                        }
-                    }
-                } catch (error) {
-                    console.error('❌ Error cargando datos:', error);
+    const contentId = tabMap[tabName] || `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
+    const content = document.getElementById(contentId);
+    
+    if (content) {
+        content.classList.add('active');
+        console.log(`✅ Contenido activado: ${contentId}`);
+        
+        // 5. Cargar datos según la pestaña (con timeout para evitar conflictos)
+        setTimeout(() => {
+            try {
+                if (tabName === 'pacientes' && typeof renderPatients === 'function') {
+                    renderPatients();
                 }
-            }, 100);
-        } else {
-            console.warn(`⚠️ No se encontró el elemento con ID: ${tabContentId}`);
-        }
+                else if (tabName === 'citas' && typeof renderAppointments === 'function') {
+                    renderAppointments();
+                }
+                else if (tabName === 'solicitudes' && typeof renderPendingRequests === 'function') {
+                    renderPendingRequests();
+                }
+                else if (tabName === 'profesionales' && isAdmin() && typeof renderStaffTable === 'function') {
+                    renderStaffTable();
+                }
+                else if (tabName === 'mensajes' && isAdmin() && typeof renderMessagesTable === 'function') {
+                    renderMessagesTable();
+                }
+                else if (tabName === 'disponibilidad' && isPsych()) {
+                    if (typeof window.loadTimeSlots === 'function') {
+                        window.loadTimeSlots();
+                    }
+                }
+                else if (tabName === 'configuracion' && isPsych()) {
+                    if (typeof loadMyConfig === 'function') {
+                        loadMyConfig();
+                    }
+                }
+                else if (tabName === 'pagos' && isAdmin()) {
+                    if (typeof updatePaymentMethodsInfo === 'function') {
+                        updatePaymentMethodsInfo();
+                    }
+                }
+                else if (tabName === 'reinicio' && isAdmin()) {
+                    if (typeof actualizarContadoresReinicio === 'function') {
+                        actualizarContadoresReinicio();
+                    }
+                }
+                else if (tabName === 'estadisticas' && isAdmin()) {
+                    if (window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') {
+                        window.estadisticas.renderPanelEstadisticas();
+                    }
+                }
+            } catch (error) {
+                console.error(`❌ Error cargando datos para ${tabName}:`, error);
+            }
+        }, 100);
+    } else {
+        console.warn(`⚠️ No se encontró contenido para: ${contentId}`);
     }
 }
 
-// Función auxiliar para obtener ID de pestaña desde nombre
+// Función auxiliar para obtener ID de pestaña desde nombre (para compatibilidad)
 function getTabIdFromName(tabName) {
     const tabIdMap = {
         'citas': 'tabCitas',

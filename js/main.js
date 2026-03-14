@@ -539,15 +539,11 @@ if (state.currentUser && typeof fichasClinicas.cargarTodasLasFichas === 'functio
 }
 
 // ============================================
-// OCULTAR LOADER (VERSIÓN MEJORADA)
+// OCULTAR LOADER
 // ============================================
 window.addEventListener('load', function() {
     setTimeout(() => {
-        // Intentar con el ID del loader en tu nuevo HTML
-        const loader = document.getElementById('initialLoader') || 
-                      document.querySelector('.initial-loader') ||
-                      document.querySelector('.loader');
-        
+        const loader = document.getElementById('initialLoader');
         if (loader) {
             loader.style.opacity = '0';
             setTimeout(() => {
@@ -556,3 +552,11 @@ window.addEventListener('load', function() {
         }
     }, 1000);
 });
+
+// ============================================
+// IMPORTAR ADMIN
+// ============================================
+import './modules/admin.js';
+
+console.log('✅ main.js cargado completamente con todas las funciones de secciones editables e INSTAGRAM v3.0');
+console.log('⚠️ Módulo BOXES DESACTIVADO - Las citas presenciales se coordinan directamente');

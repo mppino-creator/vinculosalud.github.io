@@ -1510,7 +1510,7 @@ export function exportMyConfig() {
 }
 
 // ============================================
-// EXPORTAR FUNCIONES AL OBJETO WINDOW
+// EXPORTAR FUNCIONES AL OBJETO WINDOW (CORREGIDO)
 // ============================================
 if (typeof window !== 'undefined') {
     window.getRecentPatientsWithSessions = getRecentPatientsWithSessions;
@@ -1523,7 +1523,7 @@ if (typeof window !== 'undefined') {
     window.uploadAboutImage = uploadAboutImage;
     window.saveAboutTexts = saveAboutTexts;
     window.showAtencionModal = showAtencionModal;
-    window.saveAtencionTexts = saveAtencionTexts;
+    // ✅ CORREGIDO: Eliminada la referencia a saveAtencionTexts que no existe
     window.showContactModal = showContactModal;
     window.saveContactInfo = saveContactInfo;
     

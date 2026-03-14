@@ -4,37 +4,52 @@ import * as state from './state.js';
 import { showToast } from './utils.js';
 
 // ============================================
-// VARIABLES PARA TEXTOS EDITABLES (NUEVAS v3.0)
+// VARIABLES PARA TEXTOS EDITABLES
 // ============================================
 export let missionText = 'Acompañar a las personas en su proceso de sanación emocional, proporcionando herramientas para el crecimiento personal y la mejora de la calidad de vida.';
 export let visionText = 'Ser un referente en salud mental en la región, reconocido por nuestra calidad profesional, calidez humana y compromiso con la comunidad.';
 export let aboutTeamText = 'Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.';
 export let aboutImage = '';
+
+// 🆕 SISTEMA COMPLETO PARA TIPOS DE ATENCIÓN (AHORA CON CRUD)
 export let atencionTexts = {
     online: {
         title: 'Online',
-        description: 'Sesiones por videollamada desde la comodidad de tu hogar'
+        description: 'Sesiones por videollamada desde la comodidad de tu hogar',
+        icon: 'video',
+        price: 'Desde $25.000',
+        active: true
     },
     presencial: {
         title: 'Presencial',
-        description: 'Atención en nuestro consultorio con todos los protocolos'
+        description: 'Atención en nuestro consultorio con todos los protocolos',
+        icon: 'users',
+        price: 'Desde $30.000',
+        active: true
     },
     pareja: {
         title: 'Pareja',
-        description: 'Terapia para fortalecer vínculos y mejorar la comunicación'
+        description: 'Terapia para fortalecer vínculos y mejorar la comunicación',
+        icon: 'heart',
+        price: 'Desde $40.000',
+        active: true
     },
     familiar: {
         title: 'Familiar',
-        description: 'Espacio de diálogo y crecimiento para toda la familia'
+        description: 'Espacio de diálogo y crecimiento para toda la familia',
+        icon: 'home',
+        price: 'Desde $45.000',
+        active: true
     }
 };
+
 export let contactInfo = {
     email: 'vinculosalud@gmail.com',
     phone: '+56 9 1234 5678',
     address: 'Ohiggins 263, Concepción'
 };
 
-// 🆕 NUEVA VARIABLE PARA SECCIÓN INSTAGRAM
+// 🆕 VARIABLE PARA SECCIÓN INSTAGRAM
 export let instagramData = {
     title: 'Sigue Nuestro Instagram',
     subtitle: 'VÍNCULO',
@@ -46,7 +61,7 @@ export let instagramData = {
 };
 
 // ============================================
-// FUNCIONES DE LOGO (AMBOS SIEMPRE VISIBLES)
+// FUNCIONES DE LOGO
 // ============================================
 
 export function cargarLogo() {
@@ -55,7 +70,6 @@ export function cargarLogo() {
         if (data) {
             state.setLogoImage(data);
             
-            // 🔥 CORREGIDO: Verificar que los elementos existen antes de usarlos
             const headerLogo = document.getElementById('headerLogo');
             const headerLogoText = document.getElementById('headerLogoText');
             
@@ -132,7 +146,6 @@ export function saveLogo() {
     state.setLogoImage(newLogo);
     db.ref('LogoImage').set(state.logoImage);
 
-    // 🔥 CORREGIDO: Verificar elementos
     const headerLogo = document.getElementById('headerLogo');
     const headerLogoText = document.getElementById('headerLogoText');
     
@@ -160,7 +173,6 @@ export function removeLogo() {
         state.setLogoImage({ url: '', text: logoText?.value || 'Vínculo Salud' });
         db.ref('LogoImage').set(state.logoImage);
         
-        // 🔥 CORREGIDO: Verificar elementos
         const headerLogo = document.getElementById('headerLogo');
         const headerLogoText = document.getElementById('headerLogoText');
         
@@ -579,7 +591,6 @@ export function updateInstagramSection() {
             imageEl.src = instagramData.image;
             imageEl.style.display = 'block';
         } else {
-            // Imagen por defecto si no hay personalizada
             imageEl.src = 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500';
             imageEl.style.display = 'block';
         }
@@ -589,7 +600,6 @@ export function updateInstagramSection() {
 }
 
 export function showInstagramModal() {
-    // Crear modal si no existe
     if (!document.getElementById('instagramModal')) {
         const modalHTML = `
         <div id="instagramModal" class="modal">
@@ -647,7 +657,6 @@ export function showInstagramModal() {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
     
-    // Cargar datos actuales
     const titleInput = document.getElementById('instagramTitleInput');
     const subtitleInput = document.getElementById('instagramSubtitleInput');
     const quoteInput = document.getElementById('instagramQuoteInput');
@@ -682,7 +691,6 @@ export function uploadInstagramImage() {
     reader.onload = function(e) {
         instagramData.image = e.target.result;
         
-        // Actualizar vista previa
         const preview = document.getElementById('instagramImagePreview');
         if (preview) {
             preview.src = e.target.result;
@@ -709,7 +717,7 @@ export function saveInstagramData() {
         text: textInput?.value || instagramData.text,
         message: messageInput?.value || instagramData.message,
         link: linkInput?.value || instagramData.link,
-        image: instagramData.image // Mantener la imagen actual
+        image: instagramData.image
     };
     
     db.ref('InstagramData').set(instagramData);
@@ -734,7 +742,6 @@ export function cargarAboutTexts() {
             aboutTeamText = data.teamText || aboutTeamText;
             aboutImage = data.image || aboutImage;
             
-            // Actualizar vista
             updateAboutSection();
         }
     });
@@ -762,7 +769,6 @@ export function updateAboutSection() {
 }
 
 export function showAboutModal() {
-    // Crear modal si no existe
     if (!document.getElementById('aboutModal')) {
         const modalHTML = `
         <div id="aboutModal" class="modal">
@@ -804,7 +810,6 @@ export function showAboutModal() {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
     
-    // Cargar datos actuales
     const teamText = document.getElementById('teamText');
     const mission = document.getElementById('missionText');
     const vision = document.getElementById('visionText');
@@ -831,7 +836,6 @@ export function uploadAboutImage() {
     reader.onload = function(e) {
         aboutImage = e.target.result;
         
-        // Actualizar vista
         const img = document.getElementById('aboutTeamImage');
         const preview = document.getElementById('aboutImagePreview');
         const placeholder = document.getElementById('aboutImagePlaceholder');
@@ -857,7 +861,6 @@ export function saveAboutTexts() {
     const vision = document.getElementById('visionText');
     const imagePreview = document.getElementById('aboutImagePreview');
     
-    // Actualizar variables
     if (teamText) aboutTeamText = teamText.value;
     if (mission) missionText = mission.value;
     if (vision) visionText = vision.value;
@@ -865,7 +868,6 @@ export function saveAboutTexts() {
         aboutImage = imagePreview.src;
     }
     
-    // Guardar en Firebase
     const aboutData = {
         teamText: aboutTeamText,
         mission: missionText,
@@ -874,8 +876,6 @@ export function saveAboutTexts() {
     };
     
     db.ref('AboutTexts').set(aboutData);
-    
-    // Actualizar vista
     updateAboutSection();
     
     const modal = document.getElementById('aboutModal');
@@ -885,7 +885,7 @@ export function saveAboutTexts() {
 }
 
 // ============================================
-// 🆕 FUNCIONES PARA SECCIÓN TIPO DE ATENCIÓN
+// 🆕 SISTEMA COMPLETO PARA GESTIONAR TIPOS DE ATENCIÓN (CRUD)
 // ============================================
 
 export function cargarAtencionTexts() {
@@ -899,6 +899,31 @@ export function cargarAtencionTexts() {
 }
 
 export function updateAtencionSection() {
+    console.log('🔄 Actualizando sección de atención...');
+    
+    const container = document.querySelector('.atencion-grid');
+    if (!container) return;
+    
+    let html = '';
+    
+    for (const [key, tipo] of Object.entries(atencionTexts)) {
+        if (tipo.active === false) continue;
+        
+        html += `
+        <div class="atencion-card" style="background: white; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--gris-claro);">
+            <div style="width: 80px; height: 80px; background: var(--verde-grisaceo-claro); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="fa fa-${tipo.icon || 'circle'}" style="font-size: 2rem; color: var(--verde-azulado-profundo);"></i>
+            </div>
+            <h3 style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">${tipo.title}</h3>
+            <p style="color: var(--texto-secundario); margin-bottom: 15px;">${tipo.description}</p>
+            <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600; display: inline-block;">${tipo.price}</span>
+        </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+    
+    // Mantener compatibilidad con IDs específicos si existen
     const onlineTitle = document.getElementById('atencionOnlineTitle');
     const onlineDesc = document.getElementById('atencionOnlineDesc');
     const presencialTitle = document.getElementById('atencionPresencialTitle');
@@ -908,77 +933,36 @@ export function updateAtencionSection() {
     const familiarTitle = document.getElementById('atencionFamiliarTitle');
     const familiarDesc = document.getElementById('atencionFamiliarDesc');
     
-    if (onlineTitle) onlineTitle.innerText = atencionTexts.online?.title || 'Online';
-    if (onlineDesc) onlineDesc.innerText = atencionTexts.online?.description || 'Sesiones por videollamada desde la comodidad de tu hogar';
-    if (presencialTitle) presencialTitle.innerText = atencionTexts.presencial?.title || 'Presencial';
-    if (presencialDesc) presencialDesc.innerText = atencionTexts.presencial?.description || 'Atención en nuestro consultorio con todos los protocolos';
-    if (parejaTitle) parejaTitle.innerText = atencionTexts.pareja?.title || 'Pareja';
-    if (parejaDesc) parejaDesc.innerText = atencionTexts.pareja?.description || 'Terapia para fortalecer vínculos y mejorar la comunicación';
-    if (familiarTitle) familiarTitle.innerText = atencionTexts.familiar?.title || 'Familiar';
-    if (familiarDesc) familiarDesc.innerText = atencionTexts.familiar?.description || 'Espacio de diálogo y crecimiento para toda la familia';
+    if (onlineTitle && atencionTexts.online) onlineTitle.innerText = atencionTexts.online.title;
+    if (onlineDesc && atencionTexts.online) onlineDesc.innerText = atencionTexts.online.description;
+    if (presencialTitle && atencionTexts.presencial) presencialTitle.innerText = atencionTexts.presencial.title;
+    if (presencialDesc && atencionTexts.presencial) presencialDesc.innerText = atencionTexts.presencial.description;
+    if (parejaTitle && atencionTexts.pareja) parejaTitle.innerText = atencionTexts.pareja.title;
+    if (parejaDesc && atencionTexts.pareja) parejaDesc.innerText = atencionTexts.pareja.description;
+    if (familiarTitle && atencionTexts.familiar) familiarTitle.innerText = atencionTexts.familiar.title;
+    if (familiarDesc && atencionTexts.familiar) familiarDesc.innerText = atencionTexts.familiar.description;
 }
 
 export function showAtencionModal() {
-    // Crear modal si no existe
     if (!document.getElementById('atencionModal')) {
         const modalHTML = `
         <div id="atencionModal" class="modal">
-            <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-content" style="max-width: 800px;">
                 <span class="modal-close" onclick="document.getElementById('atencionModal').style.display='none'">&times;</span>
-                <h2 style="margin-bottom: 25px;">📝 Editar Tipos de Atención</h2>
+                <h2 style="margin-bottom: 25px;">📝 Gestionar Tipos de Atención</h2>
                 
-                <div style="display: grid; gap: 20px;">
-                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
-                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Online</h3>
-                        <div class="form-group">
-                            <label>Título</label>
-                            <input type="text" id="atencionOnlineTitleInput" class="filter-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Descripción</label>
-                            <textarea id="atencionOnlineDescInput" rows="2" class="filter-input"></textarea>
-                        </div>
-                    </div>
-                    
-                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
-                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Presencial</h3>
-                        <div class="form-group">
-                            <label>Título</label>
-                            <input type="text" id="atencionPresencialTitleInput" class="filter-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Descripción</label>
-                            <textarea id="atencionPresencialDescInput" rows="2" class="filter-input"></textarea>
-                        </div>
-                    </div>
-                    
-                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
-                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Pareja</h3>
-                        <div class="form-group">
-                            <label>Título</label>
-                            <input type="text" id="atencionParejaTitleInput" class="filter-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Descripción</label>
-                            <textarea id="atencionParejaDescInput" rows="2" class="filter-input"></textarea>
-                        </div>
-                    </div>
-                    
-                    <div style="border: 1px solid var(--gris-claro); padding: 20px; border-radius: 16px;">
-                        <h3 style="color: var(--verde-azulado-profundo); margin-bottom: 15px;">Familiar</h3>
-                        <div class="form-group">
-                            <label>Título</label>
-                            <input type="text" id="atencionFamiliarTitleInput" class="filter-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Descripción</label>
-                            <textarea id="atencionFamiliarDescInput" rows="2" class="filter-input"></textarea>
-                        </div>
-                    </div>
+                <div style="margin-bottom: 30px; display: flex; justify-content: flex-end;">
+                    <button class="btn-staff" onclick="agregarNuevoTipoAtencion()" style="background: var(--exito);">
+                        <i class="fa fa-plus"></i> Agregar Nuevo Tipo
+                    </button>
+                </div>
+                
+                <div id="tiposAtencionList" style="display: grid; gap: 20px; max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                    <!-- Se llenará dinámicamente -->
                 </div>
                 
                 <div style="display:flex; gap:15px; margin-top: 30px;">
-                    <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="saveAtencionTexts()">Guardar</button>
+                    <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="guardarTodosLosTiposAtencion()">Guardar Todos</button>
                     <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('atencionModal').style.display='none'">Cancelar</button>
                 </div>
             </div>
@@ -987,57 +971,117 @@ export function showAtencionModal() {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
     
-    // Cargar datos actuales
-    const onlineTitle = document.getElementById('atencionOnlineTitleInput');
-    const onlineDesc = document.getElementById('atencionOnlineDescInput');
-    const presencialTitle = document.getElementById('atencionPresencialTitleInput');
-    const presencialDesc = document.getElementById('atencionPresencialDescInput');
-    const parejaTitle = document.getElementById('atencionParejaTitleInput');
-    const parejaDesc = document.getElementById('atencionParejaDescInput');
-    const familiarTitle = document.getElementById('atencionFamiliarTitleInput');
-    const familiarDesc = document.getElementById('atencionFamiliarDescInput');
-    
-    if (onlineTitle) onlineTitle.value = atencionTexts.online?.title || 'Online';
-    if (onlineDesc) onlineDesc.value = atencionTexts.online?.description || '';
-    if (presencialTitle) presencialTitle.value = atencionTexts.presencial?.title || 'Presencial';
-    if (presencialDesc) presencialDesc.value = atencionTexts.presencial?.description || '';
-    if (parejaTitle) parejaTitle.value = atencionTexts.pareja?.title || 'Pareja';
-    if (parejaDesc) parejaDesc.value = atencionTexts.pareja?.description || '';
-    if (familiarTitle) familiarTitle.value = atencionTexts.familiar?.title || 'Familiar';
-    if (familiarDesc) familiarDesc.value = atencionTexts.familiar?.description || '';
+    renderizarTiposAtencion();
     
     const modal = document.getElementById('atencionModal');
     if (modal) modal.style.display = 'flex';
 }
 
-export function saveAtencionTexts() {
-    const onlineTitle = document.getElementById('atencionOnlineTitleInput');
-    const onlineDesc = document.getElementById('atencionOnlineDescInput');
-    const presencialTitle = document.getElementById('atencionPresencialTitleInput');
-    const presencialDesc = document.getElementById('atencionPresencialDescInput');
-    const parejaTitle = document.getElementById('atencionParejaTitleInput');
-    const parejaDesc = document.getElementById('atencionParejaDescInput');
-    const familiarTitle = document.getElementById('atencionFamiliarTitleInput');
-    const familiarDesc = document.getElementById('atencionFamiliarDescInput');
+function renderizarTiposAtencion() {
+    const container = document.getElementById('tiposAtencionList');
+    if (!container) return;
     
-    atencionTexts = {
-        online: {
-            title: onlineTitle?.value || 'Online',
-            description: onlineDesc?.value || 'Sesiones por videollamada desde la comodidad de tu hogar'
-        },
-        presencial: {
-            title: presencialTitle?.value || 'Presencial',
-            description: presencialDesc?.value || 'Atención en nuestro consultorio con todos los protocolos'
-        },
-        pareja: {
-            title: parejaTitle?.value || 'Pareja',
-            description: parejaDesc?.value || 'Terapia para fortalecer vínculos y mejorar la comunicación'
-        },
-        familiar: {
-            title: familiarTitle?.value || 'Familiar',
-            description: familiarDesc?.value || 'Espacio de diálogo y crecimiento para toda la familia'
-        }
+    let html = '';
+    
+    for (const [key, tipo] of Object.entries(atencionTexts)) {
+        html += `
+        <div class="tipo-atencion-card" data-key="${key}" style="background: white; border: 1px solid var(--gris-claro); border-radius: 16px; padding: 20px; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin:0; color: var(--verde-azulado-profundo);">${tipo.title || 'Nuevo Tipo'}</h3>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-icon" onclick="eliminarTipoAtencion('${key}')" style="background: var(--peligro); color: white; width: 36px; height: 36px;">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" class="filter-input tipo-titulo" value="${tipo.title || ''}" placeholder="Ej: Online">
+                </div>
+                
+                <div class="form-group">
+                    <label>Icono (Font Awesome)</label>
+                    <input type="text" class="filter-input tipo-icono" value="${tipo.icon || 'video'}" placeholder="Ej: video, users, heart, home">
+                    <small style="color: var(--texto-secundario);">Usa nombres de <a href="https://fontawesome.com/icons" target="_blank">Font Awesome</a></small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" class="filter-input tipo-descripcion" value="${tipo.description || ''}" placeholder="Descripción breve">
+                </div>
+                
+                <div class="form-group">
+                    <label>Precio (texto)</label>
+                    <input type="text" class="filter-input tipo-precio" value="${tipo.price || 'Desde $25.000'}" placeholder="Ej: Desde $25.000">
+                </div>
+                
+                <div class="form-group" style="grid-column: 1/-1;">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" class="tipo-activo" ${tipo.active !== false ? 'checked' : ''}>
+                        Activo (mostrar en la página)
+                    </label>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+// Funciones globales para el modal
+window.agregarNuevoTipoAtencion = function() {
+    const nuevoKey = 'tipo_' + Date.now();
+    atencionTexts[nuevoKey] = {
+        title: 'Nuevo Tipo',
+        description: 'Descripción del servicio',
+        icon: 'circle',
+        price: 'Desde $30.000',
+        active: true
     };
+    
+    renderizarTiposAtencion();
+    showToast('Nuevo tipo agregado. Completa los datos y guarda.', 'success');
+};
+
+window.eliminarTipoAtencion = function(key) {
+    if (confirm('¿Estás seguro de eliminar este tipo de atención?')) {
+        delete atencionTexts[key];
+        renderizarTiposAtencion();
+        showToast('Tipo de atención eliminado', 'success');
+    }
+};
+
+window.guardarTodosLosTiposAtencion = function() {
+    const cards = document.querySelectorAll('.tipo-atencion-card');
+    const nuevosTipos = {};
+    
+    cards.forEach(card => {
+        const key = card.dataset.key;
+        const titulo = card.querySelector('.tipo-titulo')?.value || 'Sin título';
+        const icono = card.querySelector('.tipo-icono')?.value || 'circle';
+        const descripcion = card.querySelector('.tipo-descripcion')?.value || '';
+        const precio = card.querySelector('.tipo-precio')?.value || 'Desde $25.000';
+        const activo = card.querySelector('.tipo-activo')?.checked || false;
+        
+        if (activo && titulo.trim() !== '') {
+            nuevosTipos[key] = {
+                title: titulo,
+                description: descripcion,
+                icon: icono,
+                price: precio,
+                active: activo
+            };
+        }
+    });
+    
+    atencionTexts = nuevosTipos;
+    
+    import('../main.js').then(main => {
+        if (main.save) main.save();
+    });
     
     db.ref('AtencionTexts').set(atencionTexts);
     updateAtencionSection();
@@ -1045,16 +1089,13 @@ export function saveAtencionTexts() {
     const modal = document.getElementById('atencionModal');
     if (modal) modal.style.display = 'none';
     
-    showToast('Tipos de atención actualizados', 'success');
-}
+    showToast('✅ Tipos de atención guardados correctamente', 'success');
+};
 
 // ============================================
-// 🆕 FUNCIONES PARA SECCIÓN CONTACTO (con actualización del footer)
+// FUNCIONES PARA SECCIÓN CONTACTO
 // ============================================
 
-/**
- * Actualiza los elementos del footer con la información de contacto actual.
- */
 function updateFooterFromContactInfo() {
     const footerPhone = document.getElementById('footerPhone');
     const footerEmail = document.getElementById('footerEmail');
@@ -1078,7 +1119,7 @@ export function cargarContactInfo() {
             contactInfo = data;
         }
         updateContactSection();
-        updateFooterFromContactInfo(); // 🔥 Sincroniza el footer
+        updateFooterFromContactInfo();
     });
 }
 
@@ -1091,12 +1132,10 @@ export function updateContactSection() {
     if (contactPhone) contactPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
     if (contactAddress) contactAddress.innerText = contactInfo.address || 'Ohiggins 263, Concepción';
     
-    // También actualizamos el footer aquí por si se llama directamente
     updateFooterFromContactInfo();
 }
 
 export function showContactModal() {
-    // Crear modal si no existe
     if (!document.getElementById('contactModal')) {
         const modalHTML = `
         <div id="contactModal" class="modal">
@@ -1129,7 +1168,6 @@ export function showContactModal() {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
     
-    // Cargar datos actuales
     const emailInput = document.getElementById('contactEmailInput');
     const phoneInput = document.getElementById('contactPhoneInput');
     const addressInput = document.getElementById('contactAddressInput');
@@ -1154,8 +1192,8 @@ export function saveContactInfo() {
     };
     
     db.ref('ContactInfo').set(contactInfo);
-    updateContactSection();        // Actualiza sección contacto y footer
-    updateFooterFromContactInfo(); // Doble actualización por seguridad
+    updateContactSection();
+    updateFooterFromContactInfo();
     
     const modal = document.getElementById('contactModal');
     if (modal) modal.style.display = 'none';
@@ -1178,7 +1216,6 @@ export function loadMyConfig() {
     const psych = state.currentUser.data;
     console.log('👤 Psicólogo:', psych.name);
 
-    // Elementos básicos que siempre deben existir
     const myName = document.getElementById('myName');
     const myEmail = document.getElementById('myEmail');
     const mySpecialtiesSelect = document.getElementById('mySpecialtiesSelect');
@@ -1192,16 +1229,12 @@ export function loadMyConfig() {
     const myBankRut = document.getElementById('myBankRut');
     const myBankEmail = document.getElementById('myBankEmail');
 
-    // Asignar valores solo si los elementos existen
     if (myName) myName.value = psych.name || '';
     if (myEmail) myEmail.value = psych.email || '';
 
-    // Cargar especialidades en el selector múltiple
     if (mySpecialtiesSelect) {
-        // Limpiar opciones actuales
         mySpecialtiesSelect.innerHTML = '';
         
-        // Cargar todas las especialidades desde state.specialties
         if (state.specialties && state.specialties.length > 0) {
             state.specialties.forEach(spec => {
                 const option = document.createElement('option');
@@ -1210,7 +1243,6 @@ export function loadMyConfig() {
                 mySpecialtiesSelect.appendChild(option);
             });
             
-            // Preseleccionar las que ya tiene el psicólogo
             const psicologoSpecs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
             Array.from(mySpecialtiesSelect.options).forEach(option => {
                 if (psicologoSpecs.includes(option.value)) {
@@ -1232,34 +1264,29 @@ export function loadMyConfig() {
     if (myBankRut) myBankRut.value = bank.rut || '';
     if (myBankEmail) myBankEmail.value = bank.email || '';
 
-    // Mostrar estadísticas del psicólogo
     mostrarEstadisticasPsicologo(psych.id);
 
     console.log('✅ Configuración cargada');
 }
 
 // ============================================
-// FUNCIONES PARA ESTADÍSTICAS PERSONALES
+// ESTADÍSTICAS PERSONALES
 // ============================================
 
 function mostrarEstadisticasPsicologo(psychId) {
     const statsContainer = document.getElementById('psychStatsContainer');
     if (!statsContainer) return;
 
-    // Obtener pacientes del psicólogo
     const misPacientes = state.patients.filter(p => p.psychId == psychId);
     const misPatientIds = misPacientes.map(p => p.id);
 
-    // Obtener citas
     const misCitas = state.appointments.filter(a => a.psychId == psychId);
     const citasPagadas = misCitas.filter(a => a.paymentStatus === 'pagado');
     
-    // Estadísticas de fichas clínicas
     const fichasIngreso = state.fichasIngreso.filter(f => misPatientIds.includes(f.patientId));
     const sesiones = state.sesiones.filter(s => misPatientIds.includes(s.patientId));
     const informes = state.informes.filter(i => misPatientIds.includes(i.patientId));
 
-    // Calcular ingresos
     const ingresosTotales = citasPagadas.reduce((sum, a) => sum + (a.price || 0), 0);
     const ingresosMes = citasPagadas
         .filter(a => {
@@ -1269,7 +1296,6 @@ function mostrarEstadisticasPsicologo(psychId) {
         })
         .reduce((sum, a) => sum + (a.price || 0), 0);
 
-    // Renderizar estadísticas
     statsContainer.innerHTML = `
         <div class="stats-container" style="margin: 20px 0;">
             <h4 style="margin-bottom: 15px; color: var(--texto-principal); font-size: 1.2rem;">📊 Mis Estadísticas</h4>
@@ -1324,10 +1350,9 @@ export function cargarTodaPersonalizacion() {
     cargarEspecialidades();
     cargarAboutTexts();
     cargarAtencionTexts();
-    cargarContactInfo(); // Ya incluye updateFooterFromContactInfo internamente
+    cargarContactInfo();
     cargarInstagramData();
     
-    // 🔥 NUEVO: Forzar actualización del footer después de cargar todo
     setTimeout(() => {
         updateFooterFromContactInfo();
         console.log('✅ Footer sincronizado con datos de contacto');
@@ -1335,10 +1360,6 @@ export function cargarTodaPersonalizacion() {
     
     console.log('✅ Personalización cargada');
 }
-
-// ============================================
-// FUNCIÓN PARA FORZAR ACTUALIZACIÓN DEL FOOTER (DEBUG)
-// ============================================
 
 export function forceUpdateFooter() {
     console.log('🔧 Forzando actualización del footer...');
@@ -1361,7 +1382,6 @@ export function saveMyConfig() {
     
     const psych = state.currentUser.data;
 
-    // Obtener referencias a los campos del formulario
     const myName = document.getElementById('myName');
     const myEmail = document.getElementById('myEmail');
     const mySpecialtiesSelect = document.getElementById('mySpecialtiesSelect');
@@ -1375,11 +1395,9 @@ export function saveMyConfig() {
     const myBankRut = document.getElementById('myBankRut');
     const myBankEmail = document.getElementById('myBankEmail');
 
-    // Asignar valores (si los campos existen)
     if (myName) psych.name = myName.value;
     if (myEmail) psych.email = myEmail.value;
     
-    // Guardar especialidades seleccionadas
     if (mySpecialtiesSelect) {
         const selectedSpecs = Array.from(mySpecialtiesSelect.selectedOptions).map(opt => opt.value);
         psych.spec = selectedSpecs;
@@ -1398,7 +1416,6 @@ export function saveMyConfig() {
         email: myBankEmail?.value || ''
     };
 
-    // Métodos de pago (solo si existen)
     const myTransfer = document.getElementById('myTransfer');
     const myCardPresencial = document.getElementById('myCardPresencial');
     const myCardOnline = document.getElementById('myCardOnline');
@@ -1415,7 +1432,6 @@ export function saveMyConfig() {
         webpay: myWebpay ? myWebpay.checked : false
     };
 
-    // Actualizar en el array de staff
     const staffIndex = state.staff.findIndex(s => s.id == psych.id);
     if (staffIndex !== -1) {
         state.staff[staffIndex] = psych;
@@ -1424,13 +1440,11 @@ export function saveMyConfig() {
         console.warn('⚠️ Psicólogo no encontrado en staff');
     }
 
-    // Guardar en Firebase
     import('../main.js').then(main => {
         main.save();
         console.log('✅ Configuración guardada en Firebase');
         showToast('Configuración guardada', 'success');
         
-        // Actualizar estadísticas
         mostrarEstadisticasPsicologo(psych.id);
     }).catch(err => {
         console.error('❌ Error al guardar:', err);
@@ -1502,7 +1516,7 @@ if (typeof window !== 'undefined') {
     window.getRecentPatientsWithSessions = getRecentPatientsWithSessions;
     window.exportMyConfig = exportMyConfig;
     window.cargarTodaPersonalizacion = cargarTodaPersonalizacion;
-    window.forceUpdateFooter = forceUpdateFooter; // 🆕 NUEVO
+    window.forceUpdateFooter = forceUpdateFooter;
     
     // Funciones para secciones editables
     window.showAboutModal = showAboutModal;
@@ -1513,7 +1527,7 @@ if (typeof window !== 'undefined') {
     window.showContactModal = showContactModal;
     window.saveContactInfo = saveContactInfo;
     
-    // 🆕 Funciones para Instagram
+    // Funciones para Instagram
     window.showInstagramModal = showInstagramModal;
     window.uploadInstagramImage = uploadInstagramImage;
     window.saveInstagramData = saveInstagramData;
@@ -1522,6 +1536,11 @@ if (typeof window !== 'undefined') {
     // Funciones de configuración personal
     window.loadMyConfig = loadMyConfig;
     window.saveMyConfig = saveMyConfig;
+    
+    // Funciones específicas para tipos de atención
+    window.agregarNuevoTipoAtencion = agregarNuevoTipoAtencion;
+    window.eliminarTipoAtencion = eliminarTipoAtencion;
+    window.guardarTodosLosTiposAtencion = guardarTodosLosTiposAtencion;
 }
 
-console.log('✅ personalizacion.js cargado con estadísticas de fichas clínicas, secciones editables, SECCIÓN INSTAGRAM y FOOTER SINCRONIZADO v3.0');
+console.log('✅ personalizacion.js cargado con CRUD completo para Tipos de Atención, Instagram y footer sincronizado v4.0');

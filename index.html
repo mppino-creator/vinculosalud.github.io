@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="-es">
 <head>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -902,17 +902,18 @@
             <span id="currentPage">Equipo</span>
         </div>
 
-        <!-- SECCIÓN INICIO (HERO) -->
+        <!-- SECCIÓN INICIO (HERO) - MEJORADA CON EL DISEÑO QUE QUIERES -->
         <section id="inicio" class="hero-section">
-            <h1 id="heroTitleDisplay">Un espacio seguro para <span>sanar</span>, comprender y crecer</h1>
-            <p id="heroSubtitleDisplay">En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.</p>
+            <span class="badge">Centro de Bienestar Integral</span>
+            <h1 id="heroTitleDisplay">Tu bienestar comienza con un <span class="highlight">buen vínculo</span></h1>
+            <p id="heroSubtitleDisplay">Un espacio seguro para sanar, comprender y crecer. Ofrecemos atención psicológica profesional, ética y cercana para acompañarte en cada etapa.</p>
             
-            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap;">
                 <a href="#equipo" onclick="showSection('equipo'); return false;" class="btn-cta">
-                    Conoce nuestro equipo
+                    Agendar Cita <i class="fa fa-arrow-right"></i>
                 </a>
-                <a href="#contacto" onclick="showSection('contacto'); return false;" class="btn-cta-outline">
-                    Contáctanos
+                <a href="#servicios" onclick="showSection('servicios'); return false;" class="btn-cta-outline">
+                    Conocer Modalidades
                 </a>
             </div>
             

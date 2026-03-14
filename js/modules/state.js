@@ -75,9 +75,9 @@ export let atencionTexts = {
 };
 
 export let contactInfo = {
-    email: 'contacto@vinculosalud.cl',
+    email: 'vinculosalud@gmail.com',
     phone: '+56 9 1234 5678',
-    address: 'Av. Principal 123, Santiago'
+    address: 'Ohiggins 263, Concepción'
 };
 
 // 🆕 NUEVA VARIABLE PARA SECCIÓN INSTAGRAM
@@ -87,7 +87,7 @@ export let instagramData = {
     quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
     text: 'Detente aquí un segundo',
     message: 'Esto también se aprende.',
-    link: 'https://instagram.com/vinculosalud',
+    link: 'https://instagram.com/vinculo.salud',
     image: ''
 };
 
@@ -406,9 +406,9 @@ export function resetAllState() {
     };
     
     contactInfo = {
-        email: 'contacto@vinculosalud.cl',
+        email: 'vinculosalud@gmail.com',
         phone: '+56 9 1234 5678',
-        address: 'Av. Principal 123, Santiago'
+        address: 'Ohiggins 263, Concepción'
     };
     
     // 🆕 Reiniciar Instagram data
@@ -418,7 +418,7 @@ export function resetAllState() {
         quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
         text: 'Detente aquí un segundo',
         message: 'Esto también se aprende.',
-        link: 'https://instagram.com/vinculosalud',
+        link: 'https://instagram.com/vinculo.salud',
         image: ''
     };
     

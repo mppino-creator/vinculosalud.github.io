@@ -741,9 +741,9 @@ window.reinicioCompleto = function() {
                 familiar: { title: 'Familiar', description: 'Terapia familiar' }
             };
             state.contactInfo = {
-                email: 'contacto@vinculosalud.cl',
+                email: 'vinculosalid@gmail.com',
                 phone: '+56 9 1234 5678',
-                address: 'Av. Principal 123, Santiago'
+                address: 'Ohiggins 263, Concepción'
             };
             
             import('../main.js').then(main => main.save());

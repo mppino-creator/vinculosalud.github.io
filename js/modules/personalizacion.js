@@ -29,9 +29,9 @@ export let atencionTexts = {
     }
 };
 export let contactInfo = {
-    email: 'contacto@vinculosalud.cl',
+    email: 'vinculosalud@gmail.com',
     phone: '+56 9 1234 5678',
-    address: 'Av. Principal 123, Santiago'
+    address: 'Ohiggins 263, Concepción'
 };
 
 // 🆕 NUEVA VARIABLE PARA SECCIÓN INSTAGRAM
@@ -41,7 +41,7 @@ export let instagramData = {
     quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
     text: 'Detente aquí un segundo',
     message: 'Esto también se aprende.',
-    link: 'https://instagram.com/vinculosalud',
+    link: 'https://instagram.com/vinculo.salud',
     image: ''
 };
 
@@ -557,6 +557,8 @@ export function cargarInstagramData() {
 }
 
 export function updateInstagramSection() {
+    console.log('📸 Actualizando sección Instagram...');
+    
     const titleEl = document.getElementById('instagramTitle');
     const subtitleEl = document.getElementById('instagramSubtitle');
     const quoteEl = document.getElementById('instagramQuote');
@@ -572,12 +574,18 @@ export function updateInstagramSection() {
     if (messageEl) messageEl.innerText = instagramData.message;
     if (linkEl) linkEl.href = instagramData.link;
     
-    if (imageEl && instagramData.image) {
-        imageEl.src = instagramData.image;
-        imageEl.style.display = 'block';
-    } else if (imageEl) {
-        imageEl.style.display = 'none';
+    if (imageEl) {
+        if (instagramData.image) {
+            imageEl.src = instagramData.image;
+            imageEl.style.display = 'block';
+        } else {
+            // Imagen por defecto si no hay personalizada
+            imageEl.src = 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500';
+            imageEl.style.display = 'block';
+        }
     }
+    
+    console.log('✅ Sección Instagram actualizada');
 }
 
 export function showInstagramModal() {
@@ -617,7 +625,7 @@ export function showInstagramModal() {
                 
                 <div class="form-group">
                     <label>Enlace a Instagram</label>
-                    <input type="url" id="instagramLinkInput" class="filter-input" placeholder="https://instagram.com/vinculosalud">
+                    <input type="url" id="instagramLinkInput" class="filter-input" placeholder="https://instagram.com/vinculo.salud">
                 </div>
                 
                 <div class="form-group">
@@ -1053,8 +1061,14 @@ function updateFooterFromContactInfo() {
     const footerAddress = document.getElementById('footerAddress');
 
     if (footerPhone) footerPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
-    if (footerEmail) footerEmail.innerText = contactInfo.email || 'contacto@vinculosalud.cl';
-    if (footerAddress) footerAddress.innerText = contactInfo.address || 'Av. Principal 123, Santiago';
+    if (footerEmail) footerEmail.innerText = contactInfo.email || 'vinculosalud@gmail.com';
+    if (footerAddress) footerAddress.innerText = contactInfo.address || 'Ohiggins 263, Concepción';
+    
+    console.log('📞 Footer actualizado con:', {
+        phone: contactInfo.phone,
+        email: contactInfo.email,
+        address: contactInfo.address
+    });
 }
 
 export function cargarContactInfo() {
@@ -1073,9 +1087,9 @@ export function updateContactSection() {
     const contactPhone = document.getElementById('contactPhoneDisplay');
     const contactAddress = document.getElementById('contactAddressDisplay');
     
-    if (contactEmail) contactEmail.innerText = contactInfo.email || 'contacto@vinculosalud.cl';
+    if (contactEmail) contactEmail.innerText = contactInfo.email || 'vinculosalud@gmail.com';
     if (contactPhone) contactPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
-    if (contactAddress) contactAddress.innerText = contactInfo.address || 'Av. Principal 123, Santiago';
+    if (contactAddress) contactAddress.innerText = contactInfo.address || 'Ohiggins 263, Concepción';
     
     // También actualizamos el footer aquí por si se llama directamente
     updateFooterFromContactInfo();
@@ -1092,7 +1106,7 @@ export function showContactModal() {
                 
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="contactEmailInput" class="filter-input" placeholder="contacto@vinculosalud.cl">
+                    <input type="email" id="contactEmailInput" class="filter-input" placeholder="vinculosalud@gmail.com">
                 </div>
                 
                 <div class="form-group">
@@ -1312,7 +1326,24 @@ export function cargarTodaPersonalizacion() {
     cargarAtencionTexts();
     cargarContactInfo(); // Ya incluye updateFooterFromContactInfo internamente
     cargarInstagramData();
+    
+    // 🔥 NUEVO: Forzar actualización del footer después de cargar todo
+    setTimeout(() => {
+        updateFooterFromContactInfo();
+        console.log('✅ Footer sincronizado con datos de contacto');
+    }, 500);
+    
     console.log('✅ Personalización cargada');
+}
+
+// ============================================
+// FUNCIÓN PARA FORZAR ACTUALIZACIÓN DEL FOOTER (DEBUG)
+// ============================================
+
+export function forceUpdateFooter() {
+    console.log('🔧 Forzando actualización del footer...');
+    updateFooterFromContactInfo();
+    showToast('Footer actualizado', 'success');
 }
 
 // ============================================
@@ -1471,6 +1502,7 @@ if (typeof window !== 'undefined') {
     window.getRecentPatientsWithSessions = getRecentPatientsWithSessions;
     window.exportMyConfig = exportMyConfig;
     window.cargarTodaPersonalizacion = cargarTodaPersonalizacion;
+    window.forceUpdateFooter = forceUpdateFooter; // 🆕 NUEVO
     
     // Funciones para secciones editables
     window.showAboutModal = showAboutModal;

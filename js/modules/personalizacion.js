@@ -562,22 +562,37 @@ export function cargarInstagramData() {
     db.ref('InstagramData').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            instagramData = { ...instagramData, ...data };
+            // Modificamos las propiedades en lugar de reasignar
+            instagramData.title = data.title || instagramData.title;
+            instagramData.subtitle = data.subtitle || instagramData.subtitle;
+            instagramData.quote = data.quote || instagramData.quote;
+            instagramData.text = data.text || instagramData.text;
+            instagramData.message = data.message || instagramData.message;
+            instagramData.link = data.link || instagramData.link;
+            instagramData.image = data.image || instagramData.image;
         }
         updateInstagramSection();
     });
 }
 
-// ✅ NUEVA FUNCIÓN PARA ACTUALIZAR LOS DATOS LOCALES
+// ✅ NUEVA FUNCIÓN PARA ACTUALIZAR LOS DATOS LOCALES (modifica propiedades)
 export function actualizarInstagramData(nuevosDatos) {
     console.log('📝 Actualizando datos locales de Instagram:', nuevosDatos);
-    instagramData = nuevosDatos;
+    if (nuevosDatos) {
+        instagramData.title = nuevosDatos.title || instagramData.title;
+        instagramData.subtitle = nuevosDatos.subtitle || instagramData.subtitle;
+        instagramData.quote = nuevosDatos.quote || instagramData.quote;
+        instagramData.text = nuevosDatos.text || instagramData.text;
+        instagramData.message = nuevosDatos.message || instagramData.message;
+        instagramData.link = nuevosDatos.link || instagramData.link;
+        instagramData.image = nuevosDatos.image || instagramData.image;
+    }
 }
 
 export function updateInstagramSection() {
     console.log('📸 Actualizando sección Instagram...');
     
-    // 🔥 USAR DIRECTAMENTE LA VARIABLE LOCAL (YA ESTÁ ACTUALIZADA POR actualizarInstagramData)
+    // Obtener elementos
     const titleEl = document.getElementById('instagramTitle');
     const subtitleEl = document.getElementById('instagramSubtitle');
     const quoteEl = document.getElementById('instagramQuote');
@@ -586,10 +601,25 @@ export function updateInstagramSection() {
     const linkEl = document.getElementById('instagramLink');
     const imageEl = document.getElementById('instagramImage');
     
-    if (titleEl) titleEl.innerText = instagramData.title;
-    if (subtitleEl) subtitleEl.innerText = instagramData.subtitle;
+    console.log('🎯 Elementos encontrados:', {
+        titleEl: !!titleEl,
+        subtitleEl: !!subtitleEl,
+        quoteEl: !!quoteEl,
+        textEl: !!textEl,
+        messageEl: !!messageEl,
+        linkEl: !!linkEl,
+        imageEl: !!imageEl
+    });
     
-    // 🔥 SOLUCIÓN DEFINITIVA: Siempre mantener la estructura HTML
+    if (titleEl) {
+        titleEl.innerText = instagramData.title;
+        console.log('🎯 title asignado:', titleEl.innerText);
+    }
+    if (subtitleEl) {
+        subtitleEl.innerText = instagramData.subtitle;
+        console.log('🎯 subtitle asignado:', subtitleEl.innerText);
+    }
+    
     if (quoteEl) {
         // Si el quote guardado tiene HTML, usarlo directamente
         if (instagramData.quote && instagramData.quote.includes('<strong>')) {
@@ -600,26 +630,29 @@ export function updateInstagramSection() {
             const lines = instagramData.quote ? instagramData.quote.split('\n') : [];
             
             if (lines.length === 0 || (lines.length === 1 && lines[0] === '')) {
-                // Caso por defecto
                 quoteEl.innerHTML = '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
             } 
             else if (lines.length === 1) {
-                // Solo una línea: usarla como texto destacado
                 quoteEl.innerHTML = `<strong>"${lines[0]}"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.`;
             } 
             else if (lines.length === 2) {
-                // Dos líneas: primera destacada, segunda normal
                 quoteEl.innerHTML = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>pero no tiene con quién celebrarlo.`;
             } 
             else {
-                // Tres o más líneas
                 quoteEl.innerHTML = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>${lines.slice(2).join(' ')}`;
             }
         }
+        console.log('🎯 quote asignado:', quoteEl.innerHTML);
     }
     
-    if (textEl) textEl.innerText = instagramData.text;
-    if (messageEl) messageEl.innerText = instagramData.message;
+    if (textEl) {
+        textEl.innerText = instagramData.text;
+        console.log('🎯 text asignado:', textEl.innerText);
+    }
+    if (messageEl) {
+        messageEl.innerText = instagramData.message;
+        console.log('🎯 message asignado:', messageEl.innerText);
+    }
     
     if (linkEl) {
         linkEl.href = instagramData.link || 'https://instagram.com/vinculo.salud';
@@ -713,7 +746,6 @@ export function showInstagramModal() {
     // Para el quote, mostrar solo el texto sin HTML
     if (quoteInput) {
         if (instagramData.quote.includes('<strong>')) {
-            // Extraer el texto de las etiquetas HTML
             const textOnly = instagramData.quote
                 .replace(/<strong>/g, '')
                 .replace(/<\/strong>/g, '')
@@ -759,7 +791,7 @@ export function uploadInstagramImage() {
 }
 
 // ============================================
-// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN FINAL CORREGIDA
+// FUNCIÓN SAVE INSTAGRAM DATA - AHORA MODIFICA PROPIEDADES Y LLAMA A REFRESCAR
 // ============================================
 export function saveInstagramData() {
     const titleInput = document.getElementById('instagramTitleInput');
@@ -772,7 +804,6 @@ export function saveInstagramData() {
     // 🔥 PROCESAR EL QUOTE PARA MANTENER EL FORMATO
     let quoteValue = quoteInput?.value || '';
     if (quoteValue) {
-        // Dividir en líneas
         const lines = quoteValue.split('\n').filter(l => l.trim());
         
         if (lines.length === 1) {
@@ -788,25 +819,23 @@ export function saveInstagramData() {
         quoteValue = '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
     }
     
-    // Actualizar los datos locales (variable exportada)
-    instagramData = {
-        title: titleInput?.value || instagramData.title,
-        subtitle: subtitleInput?.value || instagramData.subtitle,
-        quote: quoteValue,
-        text: textInput?.value || instagramData.text,
-        message: messageInput?.value || instagramData.message,
-        link: linkInput?.value || instagramData.link,
-        image: instagramData.image
-    };
+    // ✅ MODIFICAR PROPIEDADES EN LUGAR DE REASIGNAR
+    instagramData.title = titleInput?.value || instagramData.title;
+    instagramData.subtitle = subtitleInput?.value || instagramData.subtitle;
+    instagramData.quote = quoteValue;
+    instagramData.text = textInput?.value || instagramData.text;
+    instagramData.message = messageInput?.value || instagramData.message;
+    instagramData.link = linkInput?.value || instagramData.link;
+    // La imagen ya se actualizó en uploadInstagramImage, así que no se toca aquí
     
-    console.log('💾 Guardando InstagramData:', instagramData);
+    console.log('💾 Guardando InstagramData (modificando objeto existente):', instagramData);
     
     // Guardar en Firebase
     db.ref('InstagramData').set(instagramData)
         .then(() => {
             console.log('✅ InstagramData guardado en Firebase');
             
-            // ✅ ACTUALIZAR EL ESTADO GLOBAL (ESTO ES LO QUE FALTABA)
+            // ✅ ACTUALIZAR EL ESTADO GLOBAL (si la función existe)
             if (window.state && typeof window.state.setInstagramData === 'function') {
                 window.state.setInstagramData(instagramData);
                 console.log('✅ Estado global actualizado');
@@ -814,6 +843,11 @@ export function saveInstagramData() {
             
             // ✅ ACTUALIZAR LA VISTA
             updateInstagramSection();
+            
+            // ✅ FORZAR REFRESCO COMPLETO DE LA VISTA PÚBLICA
+            if (typeof window.refrescarVistaPublica === 'function') {
+                window.refrescarVistaPublica();
+            }
             
             showToast('Sección Instagram actualizada', 'success');
         })

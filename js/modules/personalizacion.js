@@ -752,7 +752,7 @@ export function uploadInstagramImage() {
 }
 
 // ============================================
-// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN DEFINITIVA
+// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN CORREGIDA
 // ============================================
 export function saveInstagramData() {
     const titleInput = document.getElementById('instagramTitleInput');
@@ -798,6 +798,11 @@ export function saveInstagramData() {
     db.ref('InstagramData').set(instagramData)
         .then(() => {
             console.log('✅ InstagramData guardado en Firebase');
+            
+            // ✅ ACTUALIZAR TAMBIÉN window.personalizacion
+            if (window.personalizacion) {
+                window.personalizacion.instagramData = instagramData;
+            }
             
             // FORZAR ACTUALIZACIÓN INMEDIATA DE LA VISTA
             updateInstagramSection();

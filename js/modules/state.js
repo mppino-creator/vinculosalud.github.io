@@ -570,16 +570,36 @@ const state = {
     
     // Utilidades
     resetAllState,
-    getStateSummary
+    getStateSummary,
+    
+    // ✅ NUEVA FUNCIÓN DE DEPURACIÓN
+    verInstagram
 };
 
 export default state;
+
+// ============================================
+// ✅ NUEVA FUNCIÓN PARA VERIFICAR INSTAGRAM
+// ============================================
+export function verInstagram() {
+    console.log('📸 Datos de Instagram:');
+    console.log('- En estado global:', instagramData);
+    console.log('- En personalizacion:', window.personalizacion?.instagramData);
+    console.log('- En el DOM:', document.getElementById('instagramQuote')?.innerHTML);
+    return {
+        state: instagramData,
+        personalizacion: window.personalizacion?.instagramData,
+        dom: document.getElementById('instagramQuote')?.innerHTML
+    };
+}
 
 // ============================================
 // EXPONER ESTADO GLOBALMENTE PARA DEPURACIÓN
 // ============================================
 if (typeof window !== 'undefined') {
     window.state = state;
+    window.verInstagram = verInstagram; // ✅ EXPORTAR LA FUNCIÓN
+    
     console.log('📦 state.js cargado con fichas clínicas, datos de profesionales, secciones editables y SECCIÓN INSTAGRAM v3.0 (boxes desactivado - mantenido por compatibilidad)');
     
     // Función de ayuda en consola
@@ -628,18 +648,5 @@ if (typeof window !== 'undefined') {
         keysToRemove.forEach(key => localStorage.removeItem(key));
         console.log(`✅ Eliminados ${keysToRemove.length} items de Vínculo Salud`);
         return keysToRemove.length;
-    };
-    
-    // ✅ NUEVO: Función para verificar el estado de Instagram
-    window.verInstagram = function() {
-        console.log('📸 Datos de Instagram:');
-        console.log('- En estado global:', state.instagramData);
-        console.log('- En personalizacion:', window.personalizacion?.instagramData);
-        console.log('- En el DOM:', document.getElementById('instagramQuote')?.innerHTML);
-        return {
-            state: state.instagramData,
-            personalizacion: window.personalizacion?.instagramData,
-            dom: document.getElementById('instagramQuote')?.innerHTML
-        };
     };
 }

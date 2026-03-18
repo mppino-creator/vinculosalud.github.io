@@ -1600,47 +1600,97 @@ export function exportMyConfig() {
 }
 
 // ============================================
-// EXPORTAR FUNCIONES AL OBJETO WINDOW (CORREGIDO)
+// ✅ EXPORTAR TODO COMO OBJETO WINDOW.PERSONALIZACION (CORREGIDO)
 // ============================================
 if (typeof window !== 'undefined') {
-    // Exportar variables también
-    window.missionText = missionText;
-    window.visionText = visionText;
-    window.aboutTeamText = aboutTeamText;
-    window.aboutImage = aboutImage;
-    window.atencionTexts = atencionTexts;
-    window.contactInfo = contactInfo;
-    window.instagramData = instagramData; // ✅ NUEVO: exportar la variable
+    // Exportar TODO el objeto personalizacion
+    window.personalizacion = {
+        // Variables
+        missionText,
+        visionText,
+        aboutTeamText,
+        aboutImage,
+        atencionTexts,
+        contactInfo,
+        instagramData,
+        
+        // Funciones de logo
+        cargarLogo,
+        showLogoModal,
+        closeLogoModal,
+        previewLogo,
+        saveLogo,
+        removeLogo,
+        
+        // Funciones de textos
+        cargarTextos,
+        showTextsModal,
+        closeTextsModal,
+        saveHeroTexts,
+        
+        // Funciones de fondo
+        cargarFondo,
+        showBackgroundImageModal,
+        closeBackgroundImageModal,
+        previewBackgroundImage,
+        updateBackgroundOpacity,
+        saveBackgroundImage,
+        removeBackgroundImage,
+        
+        // Funciones de métodos de pago
+        cargarMetodosPago,
+        showPaymentMethodsModal,
+        closePaymentMethodsModal,
+        saveGlobalPaymentMethods,
+        updatePaymentMethodsInfo,
+        
+        // Funciones de especialidades
+        cargarEspecialidades,
+        showSpecialtiesModal,
+        closeSpecialtiesModal,
+        addSpecialty,
+        deleteSpecialty,
+        
+        // Funciones de Instagram
+        cargarInstagramData,
+        updateInstagramSection,
+        showInstagramModal,
+        uploadInstagramImage,
+        saveInstagramData,
+        
+        // Funciones de About
+        cargarAboutTexts,
+        updateAboutSection,
+        showAboutModal,
+        uploadAboutImage,
+        saveAboutTexts,
+        
+        // Funciones de Atención
+        cargarAtencionTexts,
+        updateAtencionSection,
+        showAtencionModal,
+        
+        // Funciones de Contacto
+        cargarContactInfo,
+        updateContactSection,
+        showContactModal,
+        saveContactInfo,
+        
+        // Funciones de configuración personal
+        loadMyConfig,
+        saveMyConfig,
+        
+        // Funciones auxiliares
+        getRecentPatientsWithSessions,
+        exportMyConfig,
+        cargarTodaPersonalizacion,
+        forceUpdateFooter,
+        
+        // Funciones para tipos de atención
+        agregarNuevoTipoAtencion,
+        eliminarTipoAtencion,
+        guardarTodosLosTiposAtencion
+    };
     
-    // Funciones para secciones editables
-    window.getRecentPatientsWithSessions = getRecentPatientsWithSessions;
-    window.exportMyConfig = exportMyConfig;
-    window.cargarTodaPersonalizacion = cargarTodaPersonalizacion;
-    window.forceUpdateFooter = forceUpdateFooter;
-    
-    // Funciones para secciones editables
-    window.showAboutModal = showAboutModal;
-    window.uploadAboutImage = uploadAboutImage;
-    window.saveAboutTexts = saveAboutTexts;
-    window.showAtencionModal = showAtencionModal;
-    window.showContactModal = showContactModal;
-    window.saveContactInfo = saveContactInfo;
-    
-    // Funciones para Instagram
-    window.showInstagramModal = showInstagramModal;
-    window.uploadInstagramImage = uploadInstagramImage;
-    window.saveInstagramData = saveInstagramData;
-    window.cargarInstagramData = cargarInstagramData;
-    window.updateInstagramSection = updateInstagramSection; // ✅ NUEVO
-    
-    // Funciones de configuración personal
-    window.loadMyConfig = loadMyConfig;
-    window.saveMyConfig = saveMyConfig;
-    
-    // Funciones específicas para tipos de atención
-    window.agregarNuevoTipoAtencion = agregarNuevoTipoAtencion;
-    window.eliminarTipoAtencion = eliminarTipoAtencion;
-    window.guardarTodosLosTiposAtencion = guardarTodosLosTiposAtencion;
+    console.log('✅ personalizacion.js exportado a window.personalizacion');
 }
-
-console.log('✅ personalizacion.js cargado con CRUD completo para Tipos de Atención, Instagram y footer sincronizado v4.0');

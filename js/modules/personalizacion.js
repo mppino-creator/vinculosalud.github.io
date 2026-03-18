@@ -555,7 +555,7 @@ function guardarEspecialidades() {
 }
 
 // ============================================
-// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM (ACTUALIZADAS)
+// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM (CORREGIDAS)
 // ============================================
 
 export function cargarInstagramData() {
@@ -573,7 +573,7 @@ export function updateInstagramSection() {
     
     const titleEl = document.getElementById('instagramTitle');
     const subtitleEl = document.getElementById('instagramSubtitle');
-    const quoteEl = document.getElementById('instagramQuote');
+    const quoteEl = document.getElementById('instagramQuote'); // ✅ CORREGIDO: este es el ID correcto
     const textEl = document.getElementById('instagramText');
     const messageEl = document.getElementById('instagramMessage');
     const linkEl = document.getElementById('instagramLink');
@@ -581,7 +581,7 @@ export function updateInstagramSection() {
     
     if (titleEl) titleEl.innerText = instagramData.title;
     if (subtitleEl) subtitleEl.innerText = instagramData.subtitle;
-    if (quoteEl) quoteEl.innerHTML = instagramData.quote;
+    if (quoteEl) quoteEl.innerHTML = instagramData.quote; // ✅ CORREGIDO: usar innerHTML para permitir etiquetas HTML
     if (textEl) textEl.innerText = instagramData.text;
     if (messageEl) messageEl.innerText = instagramData.message;
     

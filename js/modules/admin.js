@@ -80,6 +80,38 @@ window.refrescarVistaPublica = function() {
 };
 
 // ============================================
+// 🆕 FUNCIÓN PARA MOSTRAR PESTAÑAS DE ADMIN INMEDIATAMENTE
+// ============================================
+export function mostrarTabsAdmin() {
+    console.log('👑 Mostrando pestañas de admin...');
+    
+    // Lista de IDs de pestañas de admin
+    const tabsAdmin = [
+        'adminTabProfesionales',
+        'adminTabEspecialidades',
+        'adminTabPagos',
+        'adminTabFondo',
+        'adminTabTextos',
+        'adminTabLogo',
+        'adminTabEstadisticas',
+        'adminTabReinicio',
+        'messagesTab'
+    ];
+    
+    // Mostrar cada pestaña
+    tabsAdmin.forEach(id => {
+        const tab = document.getElementById(id);
+        if (tab) {
+            tab.style.display = 'inline-block';
+            console.log(`✅ Mostrando tab: ${id}`);
+        }
+    });
+    
+    // También agregar los botones de edición
+    addEditButtonsToAdmin();
+}
+
+// ============================================
 // 🆕 FUNCIÓN PARA AGREGAR BOTONES DE EDICIÓN EN EL DASHBOARD (ACTUALIZADA - SIN BOXES)
 // ============================================
 
@@ -204,7 +236,7 @@ export function addEditButtonsToAdmin() {
         tabPersonalizacion.appendChild(statsContainer);
         
         console.log('✅ Botones de edición agregados al panel de admin');
-    }, 2000);
+    }, 500); // Reducido de 2000ms a 500ms para que aparezca más rápido
 }
 
 // ============================================
@@ -945,15 +977,16 @@ if (typeof window !== 'undefined') {
     window.limpiarFichasHuerfanas = limpiarFichasHuerfanas;
     window.renderAdminPanel = renderAdminPanel;
     window.addEditButtonsToAdmin = addEditButtonsToAdmin;
+    window.mostrarTabsAdmin = mostrarTabsAdmin; // ✅ NUEVA LÍNEA
     window.refrescarVistaPublica = refrescarVistaPublica;
     window.verificarPermisosFirebase = verificarPermisosFirebase;
     
     // Llamar a la función para agregar botones después de un tiempo
     setTimeout(() => {
         if (state.currentUser?.role === 'admin') {
-            addEditButtonsToAdmin();
+            mostrarTabsAdmin(); // ✅ Cambiado de addEditButtonsToAdmin a mostrarTabsAdmin
         }
-    }, 3000);
+    }, 2000); // Reducido de 3000ms a 2000ms
 }
 
-console.log('✅ admin.js cargado con estadísticas integradas, botones de edición, sección Instagram y REFRESCO DE VISTA v3.0 (sin boxes)');
+console.log('✅ admin.js cargado con estadísticas integradas, botones de edición, sección Instagram, REFRESCO DE VISTA v3.0 y MOSTRAR TABS INMEDIATO (sin boxes)');

@@ -96,6 +96,12 @@ function actualizarUIAdmin(userData, role) {
                 btn.style.display = 'flex';
             }
         });
+        
+        // 🔥 NUEVO: Mostrar pestañas de admin INMEDIATAMENTE
+        if (window.mostrarTabsAdmin) {
+            console.log('👑 Llamando a mostrarTabsAdmin desde actualizarUIAdmin');
+            window.mostrarTabsAdmin();
+        }
     }
     
     // 🔥 Si es psicólogo, cargar datos completos desde staff
@@ -663,6 +669,26 @@ export async function logout() {
     editButtons.forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.style.display = 'none';
+    });
+    
+    // Ocultar pestañas de admin
+    const adminTabs = [
+        'adminTabProfesionales',
+        'adminTabEspecialidades',
+        'adminTabPagos',
+        'adminTabFondo',
+        'adminTabTextos',
+        'adminTabLogo',
+        'adminTabReinicio',
+        'messagesTab',
+        'adminTabEstadisticas'
+    ];
+    
+    adminTabs.forEach(id => {
+        const tab = document.getElementById(id);
+        if (tab) {
+            tab.style.display = 'none';
+        }
     });
     
     // Volver a vista pública

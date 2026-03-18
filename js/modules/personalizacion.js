@@ -1573,3 +1573,5 @@ if (typeof window !== 'undefined') {
 }
 
 console.log('✅ personalizacion.js cargado con CRUD completo para Tipos de Atención, Instagram y footer sincronizado v4.0');
+
+.

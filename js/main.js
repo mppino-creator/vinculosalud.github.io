@@ -321,7 +321,7 @@ window.updateProfileButton = function() {
 window.actualizarInstagramGlobal = function(nuevosDatos) {
     console.log('🔄 Actualizando Instagram globalmente:', nuevosDatos);
     
-    // 1. ACTUALIZAR USANDO LA FUNCIÓN DEL MÓDULO (ESTO ES LO ÚNICO QUE NECESITAMOS)
+    // 1. ACTUALIZAR USANDO LA FUNCIÓN DEL MÓDULO (ESTO ES LO QUE FUNCIONA)
     if (personalizacion && typeof personalizacion.actualizarInstagramData === 'function') {
         personalizacion.actualizarInstagramData(nuevosDatos);
     }
@@ -331,9 +331,12 @@ window.actualizarInstagramGlobal = function(nuevosDatos) {
         window.state.setInstagramData(nuevosDatos);
     }
     
-    // 3. Actualizar window.personalizacion (el objeto exportado)
+    // 3. Actualizar window.personalizacion (el objeto exportado) - CREANDO UN NUEVO OBJETO
     if (window.personalizacion) {
-        window.personalizacion.instagramData = nuevosDatos;
+        window.personalizacion = {
+            ...window.personalizacion,
+            instagramData: nuevosDatos
+        };
     }
     
     // 4. Forzar actualización de la vista

@@ -331,15 +331,7 @@ window.actualizarInstagramGlobal = function(nuevosDatos) {
         window.state.setInstagramData(nuevosDatos);
     }
     
-    // 3. Actualizar window.personalizacion (el objeto exportado) - CREANDO UN NUEVO OBJETO
-    if (window.personalizacion) {
-        window.personalizacion = {
-            ...window.personalizacion,
-            instagramData: nuevosDatos
-        };
-    }
-    
-    // 4. Forzar actualización de la vista
+    // 3. Forzar actualización de la vista
     if (personalizacion && typeof personalizacion.updateInstagramSection === 'function') {
         personalizacion.updateInstagramSection();
     }

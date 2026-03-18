@@ -1603,6 +1603,16 @@ export function exportMyConfig() {
 // EXPORTAR FUNCIONES AL OBJETO WINDOW (CORREGIDO)
 // ============================================
 if (typeof window !== 'undefined') {
+    // Exportar variables también
+    window.missionText = missionText;
+    window.visionText = visionText;
+    window.aboutTeamText = aboutTeamText;
+    window.aboutImage = aboutImage;
+    window.atencionTexts = atencionTexts;
+    window.contactInfo = contactInfo;
+    window.instagramData = instagramData; // ✅ NUEVO: exportar la variable
+    
+    // Funciones para secciones editables
     window.getRecentPatientsWithSessions = getRecentPatientsWithSessions;
     window.exportMyConfig = exportMyConfig;
     window.cargarTodaPersonalizacion = cargarTodaPersonalizacion;
@@ -1613,7 +1623,6 @@ if (typeof window !== 'undefined') {
     window.uploadAboutImage = uploadAboutImage;
     window.saveAboutTexts = saveAboutTexts;
     window.showAtencionModal = showAtencionModal;
-    // ✅ CORREGIDO: Eliminada la referencia a saveAtencionTexts que no existe
     window.showContactModal = showContactModal;
     window.saveContactInfo = saveContactInfo;
     
@@ -1622,6 +1631,7 @@ if (typeof window !== 'undefined') {
     window.uploadInstagramImage = uploadInstagramImage;
     window.saveInstagramData = saveInstagramData;
     window.cargarInstagramData = cargarInstagramData;
+    window.updateInstagramSection = updateInstagramSection; // ✅ NUEVO
     
     // Funciones de configuración personal
     window.loadMyConfig = loadMyConfig;

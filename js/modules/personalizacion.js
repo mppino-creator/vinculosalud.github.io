@@ -559,10 +559,27 @@ function guardarEspecialidades() {
 // ============================================
 
 export function cargarInstagramData() {
+    // Primero obtener los datos actuales una vez
+    db.ref('InstagramData').once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            console.log('🔥 InstagramData (once):', data);
+            instagramData.title = data.title || instagramData.title;
+            instagramData.subtitle = data.subtitle || instagramData.subtitle;
+            instagramData.quote = data.quote || instagramData.quote;
+            instagramData.text = data.text || instagramData.text;
+            instagramData.message = data.message || instagramData.message;
+            instagramData.link = data.link || instagramData.link;
+            instagramData.image = data.image || instagramData.image;
+        }
+        updateInstagramSection();
+    });
+
+    // Luego establecer el listener para cambios futuros
     db.ref('InstagramData').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            // Modificamos las propiedades en lugar de reasignar
+            console.log('🔥 InstagramData (on):', data);
             instagramData.title = data.title || instagramData.title;
             instagramData.subtitle = data.subtitle || instagramData.subtitle;
             instagramData.quote = data.quote || instagramData.quote;

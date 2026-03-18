@@ -96,7 +96,7 @@ window.toggleInfo = function(button) {
 };
 
 // ============================================
-// 🆕 FUNCIÓN DE NAVEGACIÓN MEJORADA - VERSIÓN CORREGIDA CON ACTUALIZACIÓN DE INSTAGRAM
+// 🆕 FUNCIÓN DE NAVEGACIÓN MEJORADA - VERSIÓN CORREGIDA
 // ============================================
 export function showSection(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
@@ -151,7 +151,7 @@ export function showSection(sectionId) {
         }
     }
     
-    // 6. 🔥 NUEVO: Cuando se muestra la sección equipo, actualizar Instagram
+    // 6. 🔥 FORZAR ACTUALIZACIÓN DE INSTAGRAM CUANDO SE MUESTRA LA SECCIÓN EQUIPO
     if (sectionId === 'equipo') {
         // Pequeño retraso para asegurar que la sección es visible
         setTimeout(() => {

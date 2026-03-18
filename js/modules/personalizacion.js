@@ -555,7 +555,7 @@ function guardarEspecialidades() {
 }
 
 // ============================================
-// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM (CORREGIDAS)
+// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM (CORREGIDAS Y MEJORADAS)
 // ============================================
 
 export function cargarInstagramData() {
@@ -573,7 +573,7 @@ export function updateInstagramSection() {
     
     const titleEl = document.getElementById('instagramTitle');
     const subtitleEl = document.getElementById('instagramSubtitle');
-    const quoteEl = document.getElementById('instagramQuote'); // ✅ CORREGIDO: ID correcto
+    const quoteEl = document.getElementById('instagramQuote');
     const textEl = document.getElementById('instagramText');
     const messageEl = document.getElementById('instagramMessage');
     const linkEl = document.getElementById('instagramLink');
@@ -581,7 +581,28 @@ export function updateInstagramSection() {
     
     if (titleEl) titleEl.innerText = instagramData.title;
     if (subtitleEl) subtitleEl.innerText = instagramData.subtitle;
-    if (quoteEl) quoteEl.innerHTML = instagramData.quote; // ✅ CORREGIDO: usar innerHTML
+    
+    // 🔥 CORRECCIÓN CRÍTICA: Verificar que el quote tenga el HTML completo
+    if (quoteEl) {
+        // Si el quote guardado no tiene etiquetas HTML, reconstruir el formato
+        if (instagramData.quote && !instagramData.quote.includes('<strong>') && !instagramData.quote.includes('<br>')) {
+            // Dividir el texto en líneas si es necesario
+            const lines = instagramData.quote.split('\n');
+            let formattedQuote = '';
+            
+            if (lines.length >= 1) {
+                formattedQuote = `<strong>"${lines[0]}"</strong><br>`;
+                if (lines.length >= 2) formattedQuote += `${lines[1]}<br>`;
+                if (lines.length >= 3) formattedQuote += lines[2];
+            } else {
+                formattedQuote = `<strong>"${instagramData.quote}"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.`;
+            }
+            quoteEl.innerHTML = formattedQuote;
+        } else {
+            quoteEl.innerHTML = instagramData.quote || '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
+        }
+    }
+    
     if (textEl) textEl.innerText = instagramData.text;
     if (messageEl) messageEl.innerText = instagramData.message;
     
@@ -627,7 +648,7 @@ export function showInstagramModal() {
                 <div class="form-group">
                     <label>Cita (con HTML permitido)</label>
                     <textarea id="instagramQuoteInput" rows="4" class="filter-input" placeholder='<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.'></textarea>
-                    <small>Puedes usar &lt;strong&gt;texto&lt;/strong&gt; y &lt;br&gt; para saltos de línea</small>
+                    <small>Puedes usar &lt;strong&gt;texto&lt;/strong&gt; y &lt;br&gt; para saltos de línea. También puedes escribir solo el texto y se formateará automáticamente.</small>
                 </div>
                 
                 <div class="form-group">
@@ -720,11 +741,25 @@ export function saveInstagramData() {
     const messageInput = document.getElementById('instagramMessageInput');
     const linkInput = document.getElementById('instagramLinkInput');
     
+    // Procesar el quote: si no tiene HTML, agregarlo
+    let quoteValue = quoteInput?.value || instagramData.quote;
+    if (quoteValue && !quoteValue.includes('<strong>') && !quoteValue.includes('<br>')) {
+        // Dividir en líneas (máximo 3 líneas)
+        const lines = quoteValue.split('\n').filter(l => l.trim());
+        if (lines.length === 1) {
+            quoteValue = `<strong>"${lines[0]}"</strong>`;
+        } else if (lines.length === 2) {
+            quoteValue = `<strong>"${lines[0]}"</strong><br>${lines[1]}`;
+        } else if (lines.length >= 3) {
+            quoteValue = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>${lines.slice(2).join(' ')}`;
+        }
+    }
+    
     // Actualizar los datos locales
     instagramData = {
         title: titleInput?.value || instagramData.title,
         subtitle: subtitleInput?.value || instagramData.subtitle,
-        quote: quoteInput?.value || instagramData.quote,
+        quote: quoteValue,
         text: textInput?.value || instagramData.text,
         message: messageInput?.value || instagramData.message,
         link: linkInput?.value || instagramData.link,

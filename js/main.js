@@ -3,6 +3,7 @@
 // 🚀 CORREGIDO: Nombres de nodos en minúsculas para coincidir con reglas de Firebase
 // 🚀 MEJORADO: Exportación global de personalizacion para depuración
 // 🚀 NUEVO: Función global para actualizar Instagram correctamente
+// 🚀 CORREGIDO: Error de asignación a módulo en actualizarInstagramGlobal
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -315,14 +316,23 @@ window.updateProfileButton = function() {
 };
 
 // ============================================
-// ✅ FUNCIÓN PARA ACTUALIZAR INSTAGRAM GLOBALMENTE (NUEVA)
+// ✅ FUNCIÓN PARA ACTUALIZAR INSTAGRAM GLOBALMENTE (CORREGIDA)
 // ============================================
 window.actualizarInstagramGlobal = function(nuevosDatos) {
     console.log('🔄 Actualizando Instagram globalmente:', nuevosDatos);
     
-    // 1. Actualizar el módulo personalizacion (esto SÍ funciona porque estamos en main.js)
+    // 1. Actualizar el módulo personalizacion - USANDO SU FUNCIÓN SI EXISTE
     if (personalizacion) {
-        personalizacion.instagramData = nuevosDatos;
+        if (typeof personalizacion.actualizarInstagramData === 'function') {
+            personalizacion.actualizarInstagramData(nuevosDatos);
+        } else {
+            // Fallback: asignar directamente (puede dar error, pero lo intentamos)
+            try {
+                personalizacion.instagramData = nuevosDatos;
+            } catch (e) {
+                console.warn('⚠️ No se pudo asignar directamente a personalizacion');
+            }
+        }
     }
     
     // 2. Actualizar el estado global
@@ -335,7 +345,7 @@ window.actualizarInstagramGlobal = function(nuevosDatos) {
         window.personalizacion.instagramData = nuevosDatos;
     }
     
-    // 4. Forzar actualización de la vista
+    // 4. Forzar actualización de la vista (usando la función del módulo)
     if (personalizacion && typeof personalizacion.updateInstagramSection === 'function') {
         personalizacion.updateInstagramSection();
     }
@@ -419,8 +429,8 @@ setTimeout(() => {
     if (typeof window.actualizarInstagramGlobal === 'undefined') {
         console.log('🚨 Creando respaldo de actualizarInstagramGlobal...');
         window.actualizarInstagramGlobal = function(nuevosDatos) {
-            if (personalizacion) personalizacion.instagramData = nuevosDatos;
             if (window.state?.setInstagramData) window.state.setInstagramData(nuevosDatos);
+            if (window.personalizacion) window.personalizacion.instagramData = nuevosDatos;
             if (personalizacion?.updateInstagramSection) personalizacion.updateInstagramSection();
         };
     }

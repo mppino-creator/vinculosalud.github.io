@@ -568,6 +568,12 @@ export function cargarInstagramData() {
     });
 }
 
+// ✅ NUEVA FUNCIÓN PARA ACTUALIZAR LOS DATOS LOCALES
+export function actualizarInstagramData(nuevosDatos) {
+    console.log('📝 Actualizando datos locales de Instagram:', nuevosDatos);
+    instagramData = nuevosDatos;
+}
+
 export function updateInstagramSection() {
     console.log('📸 Actualizando sección Instagram...');
     
@@ -1667,6 +1673,7 @@ if (typeof window !== 'undefined') {
         
         // Funciones de Instagram
         cargarInstagramData,
+        actualizarInstagramData, // ✅ NUEVA FUNCIÓN AGREGADA
         updateInstagramSection,
         showInstagramModal,
         uploadInstagramImage,

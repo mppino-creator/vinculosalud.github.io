@@ -316,12 +316,12 @@ window.updateProfileButton = function() {
 };
 
 // ============================================
-// ✅ FUNCIÓN PARA ACTUALIZAR INSTAGRAM GLOBALMENTE (VERSIÓN FINAL CORREGIDA - SIN ERRORES)
+// ✅ FUNCIÓN PARA ACTUALIZAR INSTAGRAM GLOBALMENTE (VERSIÓN FINAL - SIN ERRORES)
 // ============================================
 window.actualizarInstagramGlobal = function(nuevosDatos) {
     console.log('🔄 Actualizando Instagram globalmente:', nuevosDatos);
     
-    // 1. ACTUALIZAR USANDO LA FUNCIÓN DEL MÓDULO (ESTO ES LO QUE FUNCIONA)
+    // 1. ACTUALIZAR USANDO LA FUNCIÓN DEL MÓDULO (ESTO ES LO ÚNICO QUE NECESITAMOS)
     if (personalizacion && typeof personalizacion.actualizarInstagramData === 'function') {
         personalizacion.actualizarInstagramData(nuevosDatos);
     }
@@ -420,6 +420,9 @@ setTimeout(() => {
     if (typeof window.actualizarInstagramGlobal === 'undefined') {
         console.log('🚨 Creando respaldo de actualizarInstagramGlobal...');
         window.actualizarInstagramGlobal = function(nuevosDatos) {
+            if (personalizacion && typeof personalizacion.actualizarInstagramData === 'function') {
+                personalizacion.actualizarInstagramData(nuevosDatos);
+            }
             if (window.state?.setInstagramData) window.state.setInstagramData(nuevosDatos);
             if (window.personalizacion) window.personalizacion.instagramData = nuevosDatos;
             if (personalizacion?.updateInstagramSection) personalizacion.updateInstagramSection();

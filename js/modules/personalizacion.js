@@ -799,26 +799,24 @@ export function saveInstagramData() {
         .then(() => {
             console.log('✅ InstagramData guardado en Firebase');
             
-            // ✅ ACTUALIZAR EL ESTADO GLOBAL (ESTO SÍ FUNCIONA)
-            if (window.state && typeof window.state.setInstagramData === 'function') {
-                window.state.setInstagramData(instagramData);
-            }
-            
-            // ✅ ACTUALIZAR EL OBJETO WINDOW.PERSONALIZACION COMPLETAMENTE
-            // En lugar de modificar el módulo, reemplazamos todo el objeto
-            if (window.personalizacion) {
-                // Guardar referencia al objeto actual
-                const oldPersonalizacion = window.personalizacion;
+            // ✅ USAR LA FUNCIÓN GLOBAL PARA ACTUALIZAR TODO (EVITA ERRORES DE MÓDULO)
+            if (window.actualizarInstagramGlobal) {
+                window.actualizarInstagramGlobal(instagramData);
+            } else {
+                // Fallback si la función no existe
+                // Actualizar el estado global
+                if (window.state && typeof window.state.setInstagramData === 'function') {
+                    window.state.setInstagramData(instagramData);
+                }
                 
-                // Crear un nuevo objeto con todas las propiedades antiguas más los nuevos datos
-                window.personalizacion = {
-                    ...oldPersonalizacion,
-                    instagramData: instagramData
-                };
+                // Actualizar el objeto window.personalizacion
+                if (window.personalizacion) {
+                    window.personalizacion.instagramData = instagramData;
+                }
+                
+                // Forzar actualización de la vista
+                updateInstagramSection();
             }
-            
-            // FORZAR ACTUALIZACIÓN INMEDIATA DE LA VISTA
-            updateInstagramSection();
             
             showToast('Sección Instagram actualizada', 'success');
         })

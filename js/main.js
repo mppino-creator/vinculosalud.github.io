@@ -1,6 +1,7 @@
 // js/main.js - VERSIÓN COMPLETA CON SECCIONES EDITABLES E INSTAGRAM v3.0
 // 🚀 ACTUALIZADO: Módulo boxes desactivado - Las citas presenciales se coordinan directamente
 // 🚀 CORREGIDO: Nombres de nodos en minúsculas para coincidir con reglas de Firebase
+// 🚀 MEJORADO: Exportación global de personalizacion para depuración
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -313,6 +314,14 @@ window.updateProfileButton = function() {
 };
 
 // ============================================
+// ✅ EXPONER PERSONALIZACION GLOBALMENTE (NUEVO)
+// ============================================
+if (typeof window !== 'undefined') {
+    window.personalizacion = personalizacion;
+    console.log('✅ personalizacion expuesto globalmente en window.personalizacion');
+}
+
+// ============================================
 // VERIFICACIÓN FINAL
 // ============================================
 console.log('✅ showLoginModal asignada:', typeof window.showLoginModal);
@@ -330,6 +339,7 @@ console.log('✅ showAboutModal asignada:', typeof window.showAboutModal);
 console.log('✅ showAtencionModal asignada:', typeof window.showAtencionModal);
 console.log('✅ showContactModal asignada:', typeof window.showContactModal);
 console.log('✅ showInstagramModal asignada:', typeof window.showInstagramModal);
+console.log('✅ personalizacion disponible:', typeof window.personalizacion);
 // ⚠️ Funciones de boxes (desactivadas)
 console.log('⚠️ showBoxModal (desactivado):', typeof window.showBoxModal);
 console.log('✅ verTextos asignada:', typeof window.verTextos);
@@ -366,6 +376,12 @@ setTimeout(() => {
         window.showInstagramModal = personalizacion.showInstagramModal;
         window.uploadInstagramImage = personalizacion.uploadInstagramImage;
         window.saveInstagramData = personalizacion.saveInstagramData;
+    }
+    
+    // ✅ Respaldo para personalizacion global
+    if (typeof window.personalizacion === 'undefined' && typeof personalizacion !== 'undefined') {
+        console.log('🚨 Restaurando window.personalizacion...');
+        window.personalizacion = personalizacion;
     }
 }, 500);
 

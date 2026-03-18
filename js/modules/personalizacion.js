@@ -555,7 +555,7 @@ function guardarEspecialidades() {
 }
 
 // ============================================
-// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM (CORREGIDAS Y MEJORADAS)
+// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM - VERSIÓN DEFINITIVA
 // ============================================
 
 export function cargarInstagramData() {
@@ -582,31 +582,38 @@ export function updateInstagramSection() {
     if (titleEl) titleEl.innerText = instagramData.title;
     if (subtitleEl) subtitleEl.innerText = instagramData.subtitle;
     
-    // 🔥 CORRECCIÓN CRÍTICA: Verificar que el quote tenga el HTML completo
+    // 🔥 SOLUCIÓN DEFINITIVA: Siempre mantener la estructura HTML
     if (quoteEl) {
-        // Si el quote guardado no tiene etiquetas HTML, reconstruir el formato
-        if (instagramData.quote && !instagramData.quote.includes('<strong>') && !instagramData.quote.includes('<br>')) {
-            // Dividir el texto en líneas si es necesario
-            const lines = instagramData.quote.split('\n');
-            let formattedQuote = '';
+        // Si el quote guardado tiene HTML, usarlo directamente
+        if (instagramData.quote && instagramData.quote.includes('<strong>')) {
+            quoteEl.innerHTML = instagramData.quote;
+        } 
+        // Si es texto plano, dividirlo en líneas y aplicar formato
+        else {
+            const lines = instagramData.quote ? instagramData.quote.split('\n') : [];
             
-            if (lines.length >= 1) {
-                formattedQuote = `<strong>"${lines[0]}"</strong><br>`;
-                if (lines.length >= 2) formattedQuote += `${lines[1]}<br>`;
-                if (lines.length >= 3) formattedQuote += lines[2];
-            } else {
-                formattedQuote = `<strong>"${instagramData.quote}"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.`;
+            if (lines.length === 0 || (lines.length === 1 && lines[0] === '')) {
+                // Caso por defecto
+                quoteEl.innerHTML = '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
+            } 
+            else if (lines.length === 1) {
+                // Solo una línea: usarla como texto destacado
+                quoteEl.innerHTML = `<strong>"${lines[0]}"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.`;
+            } 
+            else if (lines.length === 2) {
+                // Dos líneas: primera destacada, segunda normal
+                quoteEl.innerHTML = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>pero no tiene con quién celebrarlo.`;
+            } 
+            else {
+                // Tres o más líneas
+                quoteEl.innerHTML = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>${lines.slice(2).join(' ')}`;
             }
-            quoteEl.innerHTML = formattedQuote;
-        } else {
-            quoteEl.innerHTML = instagramData.quote || '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
         }
     }
     
     if (textEl) textEl.innerText = instagramData.text;
     if (messageEl) messageEl.innerText = instagramData.message;
     
-    // ACTUALIZAR EL ENLACE DE INSTAGRAM
     if (linkEl) {
         linkEl.href = instagramData.link || 'https://instagram.com/vinculo.salud';
         linkEl.target = '_blank';
@@ -646,9 +653,9 @@ export function showInstagramModal() {
                 </div>
                 
                 <div class="form-group">
-                    <label>Cita (con HTML permitido)</label>
-                    <textarea id="instagramQuoteInput" rows="4" class="filter-input" placeholder='<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.'></textarea>
-                    <small>Puedes usar &lt;strong&gt;texto&lt;/strong&gt; y &lt;br&gt; para saltos de línea. También puedes escribir solo el texto y se formateará automáticamente.</small>
+                    <label>Cita (escribe una línea por cada texto, sin HTML)</label>
+                    <textarea id="instagramQuoteInput" rows="4" class="filter-input" placeholder="SOLO HABLAMOS&#10;JAVIERA TIENE EL ÉXITO,&#10;pero no tiene con quién celebrarlo."></textarea>
+                    <small>Escribe una línea por cada parte. La primera línea aparecerá en negritas.</small>
                 </div>
                 
                 <div class="form-group">
@@ -695,7 +702,21 @@ export function showInstagramModal() {
     
     if (titleInput) titleInput.value = instagramData.title;
     if (subtitleInput) subtitleInput.value = instagramData.subtitle;
-    if (quoteInput) quoteInput.value = instagramData.quote;
+    
+    // Para el quote, mostrar solo el texto sin HTML
+    if (quoteInput) {
+        if (instagramData.quote.includes('<strong>')) {
+            // Extraer el texto de las etiquetas HTML
+            const textOnly = instagramData.quote
+                .replace(/<strong>/g, '')
+                .replace(/<\/strong>/g, '')
+                .replace(/<br>/g, '\n');
+            quoteInput.value = textOnly;
+        } else {
+            quoteInput.value = instagramData.quote;
+        }
+    }
+    
     if (textInput) textInput.value = instagramData.text;
     if (messageInput) messageInput.value = instagramData.message;
     if (linkInput) linkInput.value = instagramData.link;
@@ -731,7 +752,7 @@ export function uploadInstagramImage() {
 }
 
 // ============================================
-// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN MEJORADA
+// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN DEFINITIVA
 // ============================================
 export function saveInstagramData() {
     const titleInput = document.getElementById('instagramTitleInput');
@@ -741,18 +762,23 @@ export function saveInstagramData() {
     const messageInput = document.getElementById('instagramMessageInput');
     const linkInput = document.getElementById('instagramLinkInput');
     
-    // Procesar el quote: si no tiene HTML, agregarlo
-    let quoteValue = quoteInput?.value || instagramData.quote;
-    if (quoteValue && !quoteValue.includes('<strong>') && !quoteValue.includes('<br>')) {
-        // Dividir en líneas (máximo 3 líneas)
+    // 🔥 PROCESAR EL QUOTE PARA MANTENER EL FORMATO
+    let quoteValue = quoteInput?.value || '';
+    if (quoteValue) {
+        // Dividir en líneas
         const lines = quoteValue.split('\n').filter(l => l.trim());
+        
         if (lines.length === 1) {
-            quoteValue = `<strong>"${lines[0]}"</strong>`;
+            quoteValue = `<strong>"${lines[0]}"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.`;
         } else if (lines.length === 2) {
-            quoteValue = `<strong>"${lines[0]}"</strong><br>${lines[1]}`;
+            quoteValue = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>pero no tiene con quién celebrarlo.`;
         } else if (lines.length >= 3) {
             quoteValue = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>${lines.slice(2).join(' ')}`;
+        } else {
+            quoteValue = '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
         }
+    } else {
+        quoteValue = '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
     }
     
     // Actualizar los datos locales

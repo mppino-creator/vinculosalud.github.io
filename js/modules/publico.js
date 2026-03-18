@@ -96,7 +96,7 @@ window.toggleInfo = function(button) {
 };
 
 // ============================================
-// 🆕 FUNCIÓN DE NAVEGACIÓN MEJORADA - VERSIÓN CORREGIDA
+// 🆕 FUNCIÓN DE NAVEGACIÓN MEJORADA - VERSIÓN CORREGIDA CON ACTUALIZACIÓN DE INSTAGRAM
 // ============================================
 export function showSection(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
@@ -151,7 +151,18 @@ export function showSection(sectionId) {
         }
     }
     
-    // 6. LÓGICA ESPECÍFICA POR SECCIÓN
+    // 6. 🔥 NUEVO: Cuando se muestra la sección equipo, actualizar Instagram
+    if (sectionId === 'equipo') {
+        // Pequeño retraso para asegurar que la sección es visible
+        setTimeout(() => {
+            if (window.personalizacion && typeof window.personalizacion.updateInstagramSection === 'function') {
+                console.log('📸 Forzando actualización de Instagram al mostrar sección equipo');
+                window.personalizacion.updateInstagramSection();
+            }
+        }, 300);
+    }
+    
+    // 7. LÓGICA ESPECÍFICA POR SECCIÓN
     if (sectionId === 'equipo') {
         // Solo en EQUIPO se muestran los profesionales
         const grid = document.getElementById('equipo');

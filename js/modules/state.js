@@ -455,6 +455,7 @@ export function getStateSummary() {
         sesiones: sesiones.length,
         informes: informes.length,
         instagramConfigurado: instagramData.image ? '✅' : '❌',
+        instagramData: instagramData, // Añadir para depuración
         currentUser: currentUser ? `${currentUser.data?.name} (${currentUser.role})` : 'No logueado',
         dataLoaded
     };
@@ -627,5 +628,18 @@ if (typeof window !== 'undefined') {
         keysToRemove.forEach(key => localStorage.removeItem(key));
         console.log(`✅ Eliminados ${keysToRemove.length} items de Vínculo Salud`);
         return keysToRemove.length;
+    };
+    
+    // ✅ NUEVO: Función para verificar el estado de Instagram
+    window.verInstagram = function() {
+        console.log('📸 Datos de Instagram:');
+        console.log('- En estado global:', state.instagramData);
+        console.log('- En personalizacion:', window.personalizacion?.instagramData);
+        console.log('- En el DOM:', document.getElementById('instagramQuote')?.innerHTML);
+        return {
+            state: state.instagramData,
+            personalizacion: window.personalizacion?.instagramData,
+            dom: document.getElementById('instagramQuote')?.innerHTML
+        };
     };
 }

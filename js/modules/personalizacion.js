@@ -555,7 +555,7 @@ function guardarEspecialidades() {
 }
 
 // ============================================
-// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM - VERSIÓN CORREGIDA (USA DATOS GLOBALES)
+// 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM - VERSIÓN FINAL CORREGIDA
 // ============================================
 
 export function cargarInstagramData() {
@@ -577,9 +577,7 @@ export function actualizarInstagramData(nuevosDatos) {
 export function updateInstagramSection() {
     console.log('📸 Actualizando sección Instagram...');
     
-    // 🔥 USAR LOS DATOS DEL OBJETO GLOBAL EN LUGAR DE LA VARIABLE LOCAL
-    const data = window.personalizacion?.instagramData || instagramData;
-    
+    // 🔥 USAR DIRECTAMENTE LA VARIABLE LOCAL (YA ESTÁ ACTUALIZADA POR actualizarInstagramData)
     const titleEl = document.getElementById('instagramTitle');
     const subtitleEl = document.getElementById('instagramSubtitle');
     const quoteEl = document.getElementById('instagramQuote');
@@ -588,18 +586,18 @@ export function updateInstagramSection() {
     const linkEl = document.getElementById('instagramLink');
     const imageEl = document.getElementById('instagramImage');
     
-    if (titleEl) titleEl.innerText = data.title;
-    if (subtitleEl) subtitleEl.innerText = data.subtitle;
+    if (titleEl) titleEl.innerText = instagramData.title;
+    if (subtitleEl) subtitleEl.innerText = instagramData.subtitle;
     
     // 🔥 SOLUCIÓN DEFINITIVA: Siempre mantener la estructura HTML
     if (quoteEl) {
         // Si el quote guardado tiene HTML, usarlo directamente
-        if (data.quote && data.quote.includes('<strong>')) {
-            quoteEl.innerHTML = data.quote;
+        if (instagramData.quote && instagramData.quote.includes('<strong>')) {
+            quoteEl.innerHTML = instagramData.quote;
         } 
         // Si es texto plano, dividirlo en líneas y aplicar formato
         else {
-            const lines = data.quote ? data.quote.split('\n') : [];
+            const lines = instagramData.quote ? instagramData.quote.split('\n') : [];
             
             if (lines.length === 0 || (lines.length === 1 && lines[0] === '')) {
                 // Caso por defecto
@@ -620,19 +618,19 @@ export function updateInstagramSection() {
         }
     }
     
-    if (textEl) textEl.innerText = data.text;
-    if (messageEl) messageEl.innerText = data.message;
+    if (textEl) textEl.innerText = instagramData.text;
+    if (messageEl) messageEl.innerText = instagramData.message;
     
     if (linkEl) {
-        linkEl.href = data.link || 'https://instagram.com/vinculo.salud';
+        linkEl.href = instagramData.link || 'https://instagram.com/vinculo.salud';
         linkEl.target = '_blank';
         linkEl.rel = 'noopener noreferrer';
         console.log('🔗 Enlace de Instagram actualizado a:', linkEl.href);
     }
     
     if (imageEl) {
-        if (data.image) {
-            imageEl.src = data.image;
+        if (instagramData.image) {
+            imageEl.src = instagramData.image;
             imageEl.style.display = 'block';
         } else {
             imageEl.src = 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500';
@@ -1673,7 +1671,7 @@ if (typeof window !== 'undefined') {
         
         // Funciones de Instagram
         cargarInstagramData,
-        actualizarInstagramData, // ✅ NUEVA FUNCIÓN AGREGADA
+        actualizarInstagramData,
         updateInstagramSection,
         showInstagramModal,
         uploadInstagramImage,

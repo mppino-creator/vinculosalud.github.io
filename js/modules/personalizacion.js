@@ -752,7 +752,7 @@ export function uploadInstagramImage() {
 }
 
 // ============================================
-// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN CORREGIDA
+// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN CORREGIDA (SIN ERROR DE MÓDULO)
 // ============================================
 export function saveInstagramData() {
     const titleInput = document.getElementById('instagramTitleInput');
@@ -781,7 +781,7 @@ export function saveInstagramData() {
         quoteValue = '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
     }
     
-    // Actualizar los datos locales
+    // Actualizar los datos locales (variable exportada)
     instagramData = {
         title: titleInput?.value || instagramData.title,
         subtitle: subtitleInput?.value || instagramData.subtitle,
@@ -799,18 +799,26 @@ export function saveInstagramData() {
         .then(() => {
             console.log('✅ InstagramData guardado en Firebase');
             
-            // ✅ ACTUALIZAR TAMBIÉN window.personalizacion
+            // ✅ ACTUALIZAR EL ESTADO GLOBAL (ESTO SÍ FUNCIONA)
+            if (window.state && typeof window.state.setInstagramData === 'function') {
+                window.state.setInstagramData(instagramData);
+            }
+            
+            // ✅ ACTUALIZAR EL OBJETO WINDOW.PERSONALIZACION COMPLETAMENTE
+            // En lugar de modificar el módulo, reemplazamos todo el objeto
             if (window.personalizacion) {
-                window.personalizacion.instagramData = instagramData;
+                // Guardar referencia al objeto actual
+                const oldPersonalizacion = window.personalizacion;
+                
+                // Crear un nuevo objeto con todas las propiedades antiguas más los nuevos datos
+                window.personalizacion = {
+                    ...oldPersonalizacion,
+                    instagramData: instagramData
+                };
             }
             
             // FORZAR ACTUALIZACIÓN INMEDIATA DE LA VISTA
             updateInstagramSection();
-            
-            // También actualizar el estado global si existe
-            if (window.state && typeof window.state.setInstagramData === 'function') {
-                window.state.setInstagramData(instagramData);
-            }
             
             showToast('Sección Instagram actualizada', 'success');
         })

@@ -12,6 +12,7 @@ import {
     cargarAboutTexts,
     cargarAtencionTexts,
     cargarContactInfo,
+    cargarInstagramData,          // ✅ NUEVA IMPORTACIÓN
     updateAboutSection,
     updateAtencionSection,
     updateContactSection
@@ -558,6 +559,7 @@ export function cargarDatosIniciales() {
     cargarAboutTexts();
     cargarAtencionTexts();
     cargarContactInfo();
+    cargarInstagramData();   // ✅ NUEVA LÍNEA
     
     setTimeout(() => {
         updateAboutSection();

@@ -559,11 +559,11 @@ function guardarEspecialidades() {
 // ============================================
 
 export function cargarInstagramData() {
-    // Primero obtener los datos actuales una vez
+    // Primero, carga inicial con once para asegurar datos
     db.ref('InstagramData').once('value', (snapshot) => {
+        console.log('🔥 InstagramData carga inicial:', snapshot.val());
         const data = snapshot.val();
         if (data) {
-            console.log('🔥 InstagramData (once):', data);
             instagramData.title = data.title || instagramData.title;
             instagramData.subtitle = data.subtitle || instagramData.subtitle;
             instagramData.quote = data.quote || instagramData.quote;
@@ -573,22 +573,22 @@ export function cargarInstagramData() {
             instagramData.image = data.image || instagramData.image;
         }
         updateInstagramSection();
-    });
-
-    // Luego establecer el listener para cambios futuros
-    db.ref('InstagramData').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            console.log('🔥 InstagramData (on):', data);
-            instagramData.title = data.title || instagramData.title;
-            instagramData.subtitle = data.subtitle || instagramData.subtitle;
-            instagramData.quote = data.quote || instagramData.quote;
-            instagramData.text = data.text || instagramData.text;
-            instagramData.message = data.message || instagramData.message;
-            instagramData.link = data.link || instagramData.link;
-            instagramData.image = data.image || instagramData.image;
-        }
-        updateInstagramSection();
+    }).then(() => {
+        // Luego, escuchar cambios en tiempo real
+        db.ref('InstagramData').on('value', (snapshot) => {
+            console.log('🔥 InstagramData cambio:', snapshot.val());
+            const data = snapshot.val();
+            if (data) {
+                instagramData.title = data.title || instagramData.title;
+                instagramData.subtitle = data.subtitle || instagramData.subtitle;
+                instagramData.quote = data.quote || instagramData.quote;
+                instagramData.text = data.text || instagramData.text;
+                instagramData.message = data.message || instagramData.message;
+                instagramData.link = data.link || instagramData.link;
+                instagramData.image = data.image || instagramData.image;
+            }
+            updateInstagramSection();
+        });
     });
 }
 

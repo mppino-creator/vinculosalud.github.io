@@ -759,7 +759,7 @@ export function uploadInstagramImage() {
 }
 
 // ============================================
-// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN CORREGIDA (SIN ERROR DE MÓDULO)
+// FUNCIÓN SAVE INSTAGRAM DATA - VERSIÓN CORREGIDA
 // ============================================
 export function saveInstagramData() {
     const titleInput = document.getElementById('instagramTitleInput');
@@ -806,24 +806,13 @@ export function saveInstagramData() {
         .then(() => {
             console.log('✅ InstagramData guardado en Firebase');
             
-            // ✅ USAR LA FUNCIÓN GLOBAL PARA ACTUALIZAR TODO (EVITA ERRORES DE MÓDULO)
-            if (window.actualizarInstagramGlobal) {
-                window.actualizarInstagramGlobal(instagramData);
-            } else {
-                // Fallback si la función no existe
-                // Actualizar el estado global
-                if (window.state && typeof window.state.setInstagramData === 'function') {
-                    window.state.setInstagramData(instagramData);
-                }
-                
-                // Actualizar el objeto window.personalizacion
-                if (window.personalizacion) {
-                    window.personalizacion.instagramData = instagramData;
-                }
-                
-                // Forzar actualización de la vista
-                updateInstagramSection();
+            // ✅ ACTUALIZAR EL ESTADO GLOBAL DIRECTAMENTE
+            if (window.state && typeof window.state.setInstagramData === 'function') {
+                window.state.setInstagramData(instagramData);
             }
+            
+            // ✅ ACTUALIZAR LA VISTA
+            updateInstagramSection();
             
             showToast('Sección Instagram actualizada', 'success');
         })

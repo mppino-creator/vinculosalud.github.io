@@ -2,6 +2,7 @@
 // 🚀 ACTUALIZADO: Módulo boxes desactivado - Las citas presenciales se coordinan directamente
 // 🚀 CORREGIDO: Nombres de nodos en minúsculas para coincidir con reglas de Firebase
 // 🚀 MEJORADO: Exportación global de personalizacion para depuración
+// 🚀 NUEVO: Función global para actualizar Instagram correctamente
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -314,6 +315,35 @@ window.updateProfileButton = function() {
 };
 
 // ============================================
+// ✅ FUNCIÓN PARA ACTUALIZAR INSTAGRAM GLOBALMENTE (NUEVA)
+// ============================================
+window.actualizarInstagramGlobal = function(nuevosDatos) {
+    console.log('🔄 Actualizando Instagram globalmente:', nuevosDatos);
+    
+    // 1. Actualizar el módulo personalizacion (esto SÍ funciona porque estamos en main.js)
+    if (personalizacion) {
+        personalizacion.instagramData = nuevosDatos;
+    }
+    
+    // 2. Actualizar el estado global
+    if (window.state && typeof window.state.setInstagramData === 'function') {
+        window.state.setInstagramData(nuevosDatos);
+    }
+    
+    // 3. Actualizar window.personalizacion (el objeto exportado)
+    if (window.personalizacion) {
+        window.personalizacion.instagramData = nuevosDatos;
+    }
+    
+    // 4. Forzar actualización de la vista
+    if (personalizacion && typeof personalizacion.updateInstagramSection === 'function') {
+        personalizacion.updateInstagramSection();
+    }
+    
+    console.log('✅ Instagram actualizado globalmente');
+};
+
+// ============================================
 // ✅ EXPONER PERSONALIZACION GLOBALMENTE (NUEVO)
 // ============================================
 if (typeof window !== 'undefined') {
@@ -340,6 +370,7 @@ console.log('✅ showAtencionModal asignada:', typeof window.showAtencionModal);
 console.log('✅ showContactModal asignada:', typeof window.showContactModal);
 console.log('✅ showInstagramModal asignada:', typeof window.showInstagramModal);
 console.log('✅ personalizacion disponible:', typeof window.personalizacion);
+console.log('✅ actualizarInstagramGlobal disponible:', typeof window.actualizarInstagramGlobal);
 // ⚠️ Funciones de boxes (desactivadas)
 console.log('⚠️ showBoxModal (desactivado):', typeof window.showBoxModal);
 console.log('✅ verTextos asignada:', typeof window.verTextos);
@@ -382,6 +413,16 @@ setTimeout(() => {
     if (typeof window.personalizacion === 'undefined' && typeof personalizacion !== 'undefined') {
         console.log('🚨 Restaurando window.personalizacion...');
         window.personalizacion = personalizacion;
+    }
+    
+    // ✅ Respaldo para actualizarInstagramGlobal
+    if (typeof window.actualizarInstagramGlobal === 'undefined') {
+        console.log('🚨 Creando respaldo de actualizarInstagramGlobal...');
+        window.actualizarInstagramGlobal = function(nuevosDatos) {
+            if (personalizacion) personalizacion.instagramData = nuevosDatos;
+            if (window.state?.setInstagramData) window.state.setInstagramData(nuevosDatos);
+            if (personalizacion?.updateInstagramSection) personalizacion.updateInstagramSection();
+        };
     }
 }, 500);
 

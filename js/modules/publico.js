@@ -559,7 +559,7 @@ export function cargarDatosIniciales() {
     cargarAboutTexts();
     cargarAtencionTexts();
     cargarContactInfo();
-    cargarInstagramData();   // ✅ NUEVA LÍNEA
+    cargarInstagramData();   // ✅ LÍNEA CLAVE
     
     setTimeout(() => {
         updateAboutSection();

@@ -72,7 +72,9 @@ function calcularEdadDesdeFecha(birthdate) {
     return edad;
 }
 
+// Definir la función global calcularEdad
 window.calcularEdad = function() {
+    console.log('📅 calcularEdad ejecutada');
     const birthdate = document.getElementById('custBirthdate')?.value;
     const edadDisplay = document.getElementById('edadDisplay');
     const tutorSection = document.getElementById('tutorSection');
@@ -176,6 +178,7 @@ export function openBooking(id) {
         tutorRelationship.required = false;
     }
     
+    // Cargar métodos de pago según tipo (por defecto online al abrir)
     loadPaymentMethods();
     
     document.getElementById('paymentDetails').style.display = 'none';
@@ -186,23 +189,55 @@ export function openBooking(id) {
     updateAvailableTimes();
 }
 
+// ============================================
+// FUNCIÓN PARA CARGAR MÉTODOS DE PAGO SEGÚN TIPO DE ATENCIÓN
+// ============================================
 function loadPaymentMethods() {
     const select = document.getElementById('paymentMethod');
     if (!select) return;
     
-    select.innerHTML = '<option value="">Selecciona método de pago</option>';
+    const type = document.getElementById('appointmentType').value;
     const methods = state.selectedPsych.paymentMethods || state.globalPaymentMethods;
 
-    if (methods.transfer) select.innerHTML += '<option value="transfer">Transferencia Bancaria</option>';
-    if (methods.cardPresencial) select.innerHTML += '<option value="card-presencial">Tarjeta (en consulta)</option>';
-    if (methods.cash) select.innerHTML += '<option value="cash">Efectivo (en consulta)</option>';
-    if (methods.cardOnline) select.innerHTML += '<option value="card-online">Tarjeta Online</option>';
-    if (methods.mercadopago) select.innerHTML += '<option value="mercadopago">Mercado Pago</option>';
-    if (methods.webpay) select.innerHTML += '<option value="webpay">Webpay</option>';
+    select.innerHTML = '<option value="">Selecciona método de pago</option>';
+    
+    // Transferencia siempre disponible (si está activa)
+    if (methods.transfer) {
+        select.innerHTML += '<option value="transfer">Transferencia Bancaria</option>';
+    }
+    
+    if (type === 'online') {
+        // Métodos para atención online
+        if (methods.cardOnline) {
+            select.innerHTML += '<option value="card-online">Tarjeta Online</option>';
+        }
+        if (methods.mercadopago) {
+            select.innerHTML += '<option value="mercadopago">Mercado Pago</option>';
+        }
+        if (methods.webpay) {
+            select.innerHTML += '<option value="webpay">Webpay</option>';
+        }
+    } else {
+        // Métodos para atención presencial
+        if (methods.cardPresencial) {
+            select.innerHTML += '<option value="card-presencial">Tarjeta (en consulta)</option>';
+        }
+        if (methods.cash) {
+            select.innerHTML += '<option value="cash">Efectivo (en consulta)</option>';
+        }
+        // También permitir pago online con link presencial
+        if (methods.cardOnline) {
+            select.innerHTML += '<option value="card-online-presencial">Tarjeta Online (pago anticipado)</option>';
+        }
+    }
 }
 
+// ============================================
+// FUNCIÓN PARA MOSTRAR DETALLES DE PAGO SEGÚN MÉTODO Y TIPO
+// ============================================
 export function showPaymentDetails() {
     const method = document.getElementById('paymentMethod')?.value;
+    const type = document.getElementById('appointmentType').value;
     const detailsDiv = document.getElementById('paymentDetails');
     const linkContainer = document.getElementById('paymentLinkContainer');
     
@@ -211,8 +246,11 @@ export function showPaymentDetails() {
     
     if (!method) return;
     
-    if (method === 'transfer' && state.selectedPsych.bankDetails) {
-        const bank = state.selectedPsych.bankDetails;
+    const paymentLinks = state.selectedPsych.paymentLinks || {};
+    const bank = state.selectedPsych.bankDetails;
+    
+    // Transferencia (igual para ambos tipos)
+    if (method === 'transfer' && bank) {
         detailsDiv.style.display = 'block';
         detailsDiv.innerHTML = `
             <h4 style="margin-bottom:10px;">Datos para Transferencia</h4>
@@ -226,24 +264,27 @@ export function showPaymentDetails() {
         `;
     }
     
+    // Métodos presenciales en consulta
     if (method === 'card-presencial' || method === 'cash') {
         detailsDiv.style.display = 'block';
-        const qr = state.selectedPsych.paymentLinks?.qrPresencial;
+        const qr = paymentLinks.qrPresencial;
+        console.log('💳 QR presencial:', qr);
         detailsDiv.innerHTML = `
             <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
                 <p>El pago se realizará en el consultorio.</p>
-                ${qr ? `<div style="text-align:center; margin:15px 0;"><img src="${qr}" style="max-width:150px;"></div>` : ''}
+                ${qr ? `<div style="text-align:center; margin:15px 0;"><img src="${qr}" style="max-width:150px;"></div>` : '<p style="color:var(--texto-secundario);">No hay código QR configurado para pagos presenciales.</p>'}
                 <p style="font-size:0.9rem; margin-top:10px;"><strong>Importante:</strong> La dirección exacta se coordinará directamente con el psicólogo.</p>
             </div>
         `;
     }
     
+    // Métodos online para atención online (card-online, mercadopago, webpay)
     if (method === 'card-online' || method === 'mercadopago' || method === 'webpay') {
-        const paymentLinks = state.selectedPsych.paymentLinks || {};
         const link = method === 'card-online' ? paymentLinks.online : 
                     method === 'mercadopago' ? paymentLinks.mercadopago || paymentLinks.online :
                     paymentLinks.webpay || paymentLinks.online;
         const qr = paymentLinks.qrOnline;
+        console.log('💳 QR online:', qr);
         
         if (link) {
             linkContainer.style.display = 'block';
@@ -257,6 +298,33 @@ export function showPaymentDetails() {
                     <p style="font-size:0.8rem;">Vuelve a esta página después del pago</p>
                 </div>
             `;
+        } else {
+            linkContainer.style.display = 'block';
+            linkContainer.innerHTML = '<p style="color:var(--texto-secundario);">No hay link de pago configurado para este método.</p>';
+        }
+    }
+    
+    // Método especial: card-online-presencial (para pagos anticipados en atención presencial)
+    if (method === 'card-online-presencial') {
+        const link = paymentLinks.presencial || paymentLinks.online; // prioriza link presencial
+        const qr = paymentLinks.qrPresencial;
+        console.log('💳 Link presencial:', link, 'QR presencial:', qr);
+        
+        if (link) {
+            linkContainer.style.display = 'block';
+            linkContainer.innerHTML = `
+                <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
+                    <h4 style="margin-bottom:15px;">💳 Pago anticipado (presencial)</h4>
+                    <a href="${link}" target="_blank" class="btn-staff" style="background:var(--exito); color:white; padding:12px 30px; border-radius:30px; text-decoration:none;">
+                        <i class="fa fa-credit-card"></i> Pagar ahora
+                    </a>
+                    ${qr ? `<div style="margin-top:20px;"><img src="${qr}" style="max-width:150px;"></div>` : ''}
+                    <p style="font-size:0.8rem;">Realiza el pago antes de tu cita presencial.</p>
+                </div>
+            `;
+        } else {
+            linkContainer.style.display = 'block';
+            linkContainer.innerHTML = '<p style="color:var(--texto-secundario);">No hay link de pago configurado para esta modalidad.</p>';
         }
     }
 }
@@ -404,6 +472,8 @@ export function updateBookingDetails() {
     document.getElementById('paymentDetails').style.display = 'none';
     document.getElementById('paymentLinkContainer').style.display = 'none';
     
+    // Recargar métodos de pago según el nuevo tipo
+    loadPaymentMethods();
     updateAvailableTimes();
 }
 
@@ -1595,6 +1665,6 @@ window.getUpcomingAppointments = getUpcomingAppointments;
 window.isTimeSlotAvailable = isTimeSlotAvailable;
 window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
-window.calcularEdad = calcularEdad;
+window.calcularEdad = window.calcularEdad; // Asegurar que se exponga
 
-console.log('✅ citas.js cargado con validación ABSOLUTA de email y función cancelAppointment corregida');
+console.log('✅ citas.js cargado con validación ABSOLUTA de email, filtrado de métodos de pago por tipo de atención y función cancelAppointment corregida');

@@ -35,6 +35,10 @@ export let selectedTherapistBoxId = null;  // Se mantiene por compatibilidad
 export let tempImageData = null;
 export let tempBackgroundImageData = null;
 export let tempLogoData = null;
+// QR separados
+export let tempQrOnlineData = null;
+export let tempQrPresencialData = null;
+// Mantener temporalmente por compatibilidad (se puede eliminar después)
 export let tempQrData = null;
 export let selectedPatientForTherapist = null;
 export let dataLoaded = false;
@@ -203,7 +207,15 @@ export function setSelectedTherapistBoxId(id) { selectedTherapistBoxId = id; }  
 export function setTempImageData(data) { tempImageData = data; }
 export function setTempBackgroundImageData(data) { tempBackgroundImageData = data; }
 export function setTempLogoData(data) { tempLogoData = data; }
-export function setTempQrData(data) { tempQrData = data; }
+// QR separados
+export function setTempQrOnlineData(data) { tempQrOnlineData = data; }
+export function setTempQrPresencialData(data) { tempQrPresencialData = data; }
+// Mantener compatibilidad
+export function setTempQrData(data) { 
+    tempQrData = data; 
+    // Por defecto, si se usa el antiguo, lo asignamos a online (o ambos)
+    tempQrOnlineData = data;
+}
 export function setSelectedPatientForTherapist(patient) { selectedPatientForTherapist = patient; }
 export function setDataLoaded(loaded) { dataLoaded = loaded; }
 
@@ -371,7 +383,9 @@ export function resetAllState() {
     tempImageData = null;
     tempBackgroundImageData = null;
     tempLogoData = null;
-    tempQrData = null;
+    tempQrOnlineData = null;
+    tempQrPresencialData = null;
+    tempQrData = null; // compatibilidad
     selectedPatientForTherapist = null;
     dataLoaded = false;
     
@@ -487,7 +501,9 @@ const state = {
     tempImageData,
     tempBackgroundImageData,
     tempLogoData,
-    tempQrData,
+    tempQrOnlineData,
+    tempQrPresencialData,
+    tempQrData,                // compatibilidad
     selectedPatientForTherapist,
     dataLoaded,
     EDIT_HOURS,
@@ -532,7 +548,9 @@ const state = {
     setTempImageData,
     setTempBackgroundImageData,
     setTempLogoData,
-    setTempQrData,
+    setTempQrOnlineData,
+    setTempQrPresencialData,
+    setTempQrData,             // compatibilidad
     setSelectedPatientForTherapist,
     setDataLoaded,
     

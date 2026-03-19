@@ -228,9 +228,11 @@ export function showPaymentDetails() {
     
     if (method === 'card-presencial' || method === 'cash') {
         detailsDiv.style.display = 'block';
+        const qr = state.selectedPsych.paymentLinks?.qrPresencial;
         detailsDiv.innerHTML = `
             <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
                 <p>El pago se realizará en el consultorio.</p>
+                ${qr ? `<div style="text-align:center; margin:15px 0;"><img src="${qr}" style="max-width:150px;"></div>` : ''}
                 <p style="font-size:0.9rem; margin-top:10px;"><strong>Importante:</strong> La dirección exacta se coordinará directamente con el psicólogo.</p>
             </div>
         `;
@@ -241,6 +243,7 @@ export function showPaymentDetails() {
         const link = method === 'card-online' ? paymentLinks.online : 
                     method === 'mercadopago' ? paymentLinks.mercadopago || paymentLinks.online :
                     paymentLinks.webpay || paymentLinks.online;
+        const qr = paymentLinks.qrOnline;
         
         if (link) {
             linkContainer.style.display = 'block';
@@ -250,6 +253,7 @@ export function showPaymentDetails() {
                     <a href="${link}" target="_blank" class="btn-staff" style="background:var(--exito); color:white; padding:12px 30px; border-radius:30px; text-decoration:none;">
                         <i class="fa fa-credit-card"></i> Ir a pagar
                     </a>
+                    ${qr ? `<div style="margin-top:20px;"><img src="${qr}" style="max-width:150px;"></div>` : ''}
                     <p style="font-size:0.8rem;">Vuelve a esta página después del pago</p>
                 </div>
             `;

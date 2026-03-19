@@ -453,7 +453,12 @@ export function cargarDatosIniciales() {
                     sessionDuration: item.sessionDuration || 45,
                     breakBetween: item.breakBetween || 10,
                     availability: item.availability || {},
-                    paymentLinks: item.paymentLinks || { online: '', presencial: '', qrCode: '' }
+                    paymentLinks: {
+                        online: item.paymentLinks?.online || '',
+                        presencial: item.paymentLinks?.presencial || '',
+                        qrOnline: item.paymentLinks?.qrOnline || item.paymentLinks?.qrCode || '',
+                        qrPresencial: item.paymentLinks?.qrPresencial || ''
+                    }
                 };
             });
             
@@ -494,7 +499,7 @@ export function cargarDatosIniciales() {
                 sessionDuration: 45,
                 breakBetween: 10,
                 availability: {},
-                paymentLinks: { online: '', presencial: '', qrCode: '' }
+                paymentLinks: { online: '', presencial: '', qrOnline: '', qrPresencial: '' }
             });
             console.log('👤 Administrador oculto agregado');
         }

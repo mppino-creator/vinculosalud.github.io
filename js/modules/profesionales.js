@@ -33,7 +33,8 @@ export function showAddStaffModal() {
     const addPaymentLinkOnline = document.getElementById('addPaymentLinkOnline');
     const addPaymentLinkPresencial = document.getElementById('addPaymentLinkPresencial');
     const addPhotoPreview = document.getElementById('addPhotoPreview');
-    const addQrPreview = document.getElementById('addQrPreview');
+    const addQrOnlinePreview = document.getElementById('addQrOnlinePreview');
+    const addQrPresencialPreview = document.getElementById('addQrPresencialPreview');
     
     if (addName) addName.value = '';
     if (addEmail) addEmail.value = '';
@@ -54,14 +55,16 @@ export function showAddStaffModal() {
     if (addPaymentLinkOnline) addPaymentLinkOnline.value = '';
     if (addPaymentLinkPresencial) addPaymentLinkPresencial.value = '';
     if (addPhotoPreview) addPhotoPreview.style.display = 'none';
-    if (addQrPreview) addQrPreview.style.display = 'none';
+    if (addQrOnlinePreview) addQrOnlinePreview.style.display = 'none';
+    if (addQrPresencialPreview) addQrPresencialPreview.style.display = 'none';
     
     // Limpiar campo de género
     const addGenero = document.getElementById('addGenero');
     if (addGenero) addGenero.value = '';
     
     state.setTempImageData(null);
-    state.setTempQrData(null);
+    state.setTempQrOnlineData(null);
+    state.setTempQrPresencialData(null);
 }
 
 export function closeAddStaffModal() {
@@ -116,7 +119,8 @@ export function openMyProfileModal() {
     const editMyPaymentLinkOnline = document.getElementById('editMyPaymentLinkOnline');
     const editMyPaymentLinkPresencial = document.getElementById('editMyPaymentLinkPresencial');
     const photoPreview = document.getElementById('editMyPhotoPreview');
-    const qrPreview = document.getElementById('editMyQrPreview');
+    const qrOnlinePreview = document.getElementById('editMyQrOnlinePreview');
+    const qrPresencialPreview = document.getElementById('editMyQrPresencialPreview');
     
     if (editMyName) editMyName.value = psych.name || '';
     if (editMyEmail) editMyEmail.value = psych.email || '';
@@ -191,13 +195,23 @@ export function openMyProfileModal() {
         }
     }
     
-    // QR
-    if (qrPreview) {
-        if (psych.paymentLinks?.qrCode) {
-            qrPreview.src = psych.paymentLinks.qrCode;
-            qrPreview.style.display = 'block';
+    // QR Online
+    if (qrOnlinePreview) {
+        if (psych.paymentLinks?.qrOnline) {
+            qrOnlinePreview.src = psych.paymentLinks.qrOnline;
+            qrOnlinePreview.style.display = 'block';
         } else {
-            qrPreview.style.display = 'none';
+            qrOnlinePreview.style.display = 'none';
+        }
+    }
+    
+    // QR Presencial
+    if (qrPresencialPreview) {
+        if (psych.paymentLinks?.qrPresencial) {
+            qrPresencialPreview.src = psych.paymentLinks.qrPresencial;
+            qrPresencialPreview.style.display = 'block';
+        } else {
+            qrPresencialPreview.style.display = 'none';
         }
     }
     
@@ -420,17 +434,36 @@ function crearModalEdicionProfesional() {
                     <input type="url" id="editMyPaymentLinkPresencial" class="filter-input" placeholder="https://...">
                 </div>
                 
-                <div class="form-group">
-                    <label>Código QR de pago</label>
-                    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-                        <div style="width: 100px; height: 100px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                            <img id="editMyQrPreview" src="" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+                <h4 style="margin: 30px 0 15px;">📱 Códigos QR de pago</h4>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                    <!-- QR para online -->
+                    <div style="flex:1; min-width:200px;">
+                        <label>QR para pagos online</label>
+                        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                            <div style="width: 100px; height: 100px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                                <img id="editMyQrOnlinePreview" src="" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+                            </div>
+                            <div>
+                                <input type="file" id="editMyQrOnlineUpload" accept="image/*" style="display: none;" onchange="previewMyQROnline(this)">
+                                <button onclick="document.getElementById('editMyQrOnlineUpload').click()" class="btn-secondary">
+                                    <i class="fa fa-qrcode"></i> Subir QR Online
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <input type="file" id="editMyQrUpload" accept="image/*" style="display: none;" onchange="previewMyQR(this)">
-                            <button onclick="document.getElementById('editMyQrUpload').click()" class="btn-secondary">
-                                <i class="fa fa-qrcode"></i> Subir QR
-                            </button>
+                    </div>
+                    <!-- QR para presencial -->
+                    <div style="flex:1; min-width:200px;">
+                        <label>QR para pagos presenciales</label>
+                        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                            <div style="width: 100px; height: 100px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                                <img id="editMyQrPresencialPreview" src="" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+                            </div>
+                            <div>
+                                <input type="file" id="editMyQrPresencialUpload" accept="image/*" style="display: none;" onchange="previewMyQRPresencial(this)">
+                                <button onclick="document.getElementById('editMyQrPresencialUpload').click()" class="btn-secondary">
+                                    <i class="fa fa-qrcode"></i> Subir QR Presencial
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -552,19 +585,38 @@ window.previewMyPhoto = function(input) {
 };
 
 // ============================================
-// 🆕 FUNCIÓN PARA PREVISUALIZAR QR
+// 🆕 FUNCIÓN PARA PREVISUALIZAR QR ONLINE
 // ============================================
 
-window.previewMyQR = function(input) {
+window.previewMyQROnline = function(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            const preview = document.getElementById('editMyQrPreview');
+            const preview = document.getElementById('editMyQrOnlinePreview');
             if (preview) {
                 preview.src = e.target.result;
                 preview.style.display = 'block';
             }
-            state.setTempQrData(e.target.result);
+            state.setTempQrOnlineData(e.target.result);
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+};
+
+// ============================================
+// 🆕 FUNCIÓN PARA PREVISUALIZAR QR PRESENCIAL
+// ============================================
+
+window.previewMyQRPresencial = function(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('editMyQrPresencialPreview');
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            state.setTempQrPresencialData(e.target.result);
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -678,9 +730,14 @@ export async function saveMyProfile() {
         if (editMyPaymentLinkOnline) psych.paymentLinks.online = editMyPaymentLinkOnline.value;
         if (editMyPaymentLinkPresencial) psych.paymentLinks.presencial = editMyPaymentLinkPresencial.value;
         
-        // QR
-        if (state.tempQrData) {
-            psych.paymentLinks.qrCode = state.tempQrData;
+        // QR Online
+        if (state.tempQrOnlineData) {
+            psych.paymentLinks.qrOnline = state.tempQrOnlineData;
+        }
+        
+        // QR Presencial
+        if (state.tempQrPresencialData) {
+            psych.paymentLinks.qrPresencial = state.tempQrPresencialData;
         }
         
         // 📸 FOTO
@@ -741,7 +798,8 @@ export async function saveMyProfile() {
         }));
         
         state.setTempImageData(null);
-        state.setTempQrData(null);
+        state.setTempQrOnlineData(null);
+        state.setTempQrPresencialData(null);
         
         const modal = document.getElementById('editMyProfileModal');
         if (modal) modal.style.display = 'none';
@@ -947,7 +1005,8 @@ export function addStaff() {
         paymentLinks: {
             online: paymentLinkOnline,
             presencial: paymentLinkPresencial,
-            qrCode: state.tempQrData || ''
+            qrOnline: state.tempQrOnlineData || '',
+            qrPresencial: state.tempQrPresencialData || ''
         },
         isAdmin: false,
         isHiddenAdmin: false,
@@ -985,7 +1044,8 @@ export function editTherapist(id) {
     const editBankEmail = document.getElementById('editBankEmail');
     const editPaymentLinkOnline = document.getElementById('editPaymentLinkOnline');
     const editPaymentLinkPresencial = document.getElementById('editPaymentLinkPresencial');
-    const editQrPreview = document.getElementById('editQrPreview');
+    const editQrOnlinePreview = document.getElementById('editQrOnlinePreview');
+    const editQrPresencialPreview = document.getElementById('editQrPresencialPreview');
     const editPhotoPreview = document.getElementById('editPhotoPreview');
     
     if (editTherapistId) editTherapistId.value = therapist.id;
@@ -1022,12 +1082,23 @@ export function editTherapist(id) {
     if (editPaymentLinkOnline) editPaymentLinkOnline.value = therapist.paymentLinks?.online || '';
     if (editPaymentLinkPresencial) editPaymentLinkPresencial.value = therapist.paymentLinks?.presencial || '';
     
-    if (editQrPreview) {
-        if (therapist.paymentLinks?.qrCode) {
-            editQrPreview.src = therapist.paymentLinks.qrCode;
-            editQrPreview.style.display = 'block';
+    // QR Online
+    if (editQrOnlinePreview) {
+        if (therapist.paymentLinks?.qrOnline) {
+            editQrOnlinePreview.src = therapist.paymentLinks.qrOnline;
+            editQrOnlinePreview.style.display = 'block';
         } else {
-            editQrPreview.style.display = 'none';
+            editQrOnlinePreview.style.display = 'none';
+        }
+    }
+    
+    // QR Presencial
+    if (editQrPresencialPreview) {
+        if (therapist.paymentLinks?.qrPresencial) {
+            editQrPresencialPreview.src = therapist.paymentLinks.qrPresencial;
+            editQrPresencialPreview.style.display = 'block';
+        } else {
+            editQrPresencialPreview.style.display = 'none';
         }
     }
     
@@ -1041,7 +1112,8 @@ export function editTherapist(id) {
     }
     
     state.setTempImageData(null);
-    state.setTempQrData(null);
+    state.setTempQrOnlineData(null);
+    state.setTempQrPresencialData(null);
     
     const modal = document.getElementById('editTherapistModal');
     if (modal) modal.style.display = 'flex';
@@ -1107,7 +1179,8 @@ export function updateTherapist() {
     therapist.paymentLinks = {
         online: editPaymentLinkOnline?.value || '',
         presencial: editPaymentLinkPresencial?.value || '',
-        qrCode: state.tempQrData || therapist.paymentLinks?.qrCode || ''
+        qrOnline: state.tempQrOnlineData || therapist.paymentLinks?.qrOnline || '',
+        qrPresencial: state.tempQrPresencialData || therapist.paymentLinks?.qrPresencial || ''
     };
 
     if (state.tempImageData) {

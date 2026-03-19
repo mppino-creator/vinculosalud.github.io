@@ -564,12 +564,8 @@ export function confirmPresencialTime(requestId, date, time) {
     state.appointments.push(appointment);
     state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
     
-    import('../main.js').then(main => {
-        main.save();
-        showToast('✅ Cita confirmada', 'success');
-        renderPendingRequests();
-        renderAppointments();
-    });
+    import('../main.js').then(main => main.save());
+    showToast('✅ Cita confirmada', 'success');
     
     // Enviar email al PACIENTE (nunca al psicólogo)
     if (request.patientEmail && !appointment.emailConfirmacionEnviado) {
@@ -590,32 +586,34 @@ export function confirmPresencialTime(requestId, date, time) {
 // ============================================
 
 async function enviarEmailConValidacion(email, nombre, asunto, mensaje, tipo, objeto, flagEnviado) {
+    // Verificación inicial
     if (!email) {
         console.warn('⚠️ No hay email para enviar');
         return false;
     }
     
-    // Verificar si el email es de profesional
+    // Si el email es de profesional, intentamos obtener el email del paciente desde la base de datos
     if (esEmailProfesional(email)) {
-        console.warn('⚠️ El email es de un profesional:', email);
+        console.warn('⚠️ El email proporcionado es de un profesional:', email);
         
-        // Buscar email del paciente en la base de datos
         if (objeto.patientId) {
             const patient = state.patients.find(p => p.id == objeto.patientId);
             if (patient && patient.email) {
-                // Si el paciente tiene el mismo email, permitimos el envío (es la misma persona)
+                // Si el email del paciente es el mismo que el del profesional, asumimos que es la misma persona y permitimos el envío
                 if (patient.email === email) {
                     console.log('ℹ️ El paciente y el profesional comparten el mismo email. Se enviará igualmente.');
-                    // No cambiamos el email
+                    // No cambiamos el email, seguimos con el original
                 } else if (!esEmailProfesional(patient.email)) {
                     console.log('✅ Usando email correcto del paciente:', patient.email);
                     email = patient.email;
                 } else {
+                    console.error('❌ El email del paciente también es de profesional:', patient.email);
                     showToast('⚠️ No se pudo enviar email: dirección inválida', 'warning');
                     return false;
                 }
             } else {
-                showToast('⚠️ No se pudo enviar email: paciente no encontrado', 'warning');
+                console.error('❌ No se pudo encontrar email válido para el paciente');
+                showToast('⚠️ No se pudo enviar notificación: email no válido', 'warning');
                 return false;
             }
         } else {
@@ -991,7 +989,7 @@ export function executeBooking() {
 }
 
 // ============================================
-// FUNCIÓN CANCELAPPOINTMENT CORREGIDA - VALIDACIÓN ABSOLUTA
+// FUNCIÓN CANCELAPPOINTMENT - ACTUALIZADA CON VALIDACIÓN MEJORADA
 // ============================================
 
 export function cancelAppointment(id) {
@@ -1024,12 +1022,12 @@ export function cancelAppointment(id) {
         main.save();
         showToast('Cita cancelada', 'success');
         
-        // Actualizar vistas después de guardar
-        renderAppointments();
+        // Actualizar vistas DESPUÉS de guardar
+        if (typeof renderAppointments === 'function') renderAppointments();
         if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
     });
     
-    // Enviar email al PACIENTE (con validación mejorada)
+    // Enviar email al PACIENTE (con validación)
     if (!appointment.emailCancelacionEnviado) {
         enviarEmailCancelacion(patientEmail, patientName, patientId, appointment);
     }
@@ -1044,7 +1042,7 @@ async function enviarEmailCancelacion(email, patientName, patientId, appointment
         // Buscar email correcto del paciente
         const patient = state.patients.find(p => p.id == patientId);
         if (patient && patient.email) {
-            // Si el paciente tiene el mismo email, permitimos el envío (es la misma persona)
+            // Si el email del paciente es el mismo que el del profesional, asumimos que es la misma persona y permitimos el envío
             if (patient.email === email) {
                 console.log('ℹ️ El paciente y el profesional comparten el mismo email. Se enviará igualmente.');
                 // No cambiamos el email
@@ -1052,12 +1050,12 @@ async function enviarEmailCancelacion(email, patientName, patientId, appointment
                 console.log('✅ Usando email correcto del paciente:', patient.email);
                 email = patient.email;
             } else {
-                console.error('❌ No se pudo encontrar email válido para el paciente');
+                console.error('❌ El email del paciente también es de profesional:', patient.email);
                 showToast('⚠️ No se pudo enviar notificación: email no válido', 'warning');
                 return;
             }
         } else {
-            console.error('❌ Paciente no encontrado');
+            console.error('❌ Paciente no encontrado o sin email');
             showToast('⚠️ No se pudo enviar notificación: paciente no encontrado', 'warning');
             return;
         }
@@ -1080,7 +1078,7 @@ async function enviarEmailCancelacion(email, patientName, patientId, appointment
 }
 
 // ============================================
-// FUNCIÓN REJECTREQUEST CORREGIDA
+// FUNCIÓN REJECTREQUEST - ACTUALIZADA CON VALIDACIÓN MEJORADA
 // ============================================
 
 export function rejectRequest(requestId) {
@@ -1106,10 +1104,11 @@ export function rejectRequest(requestId) {
     import('../main.js').then(main => {
         main.save();
         showToast('Solicitud rechazada', 'success');
-        renderPendingRequests(); // Actualizar vista después de guardar
+        // Actualizar la vista DESPUÉS de guardar
+        renderPendingRequests();
     });
     
-    // Enviar email al PACIENTE (con validación mejorada)
+    // Enviar email al PACIENTE
     if (!request.emailRechazoEnviado) {
         enviarEmailRechazo(patientEmail, patientName, patientId, request);
     }
@@ -1129,6 +1128,7 @@ async function enviarEmailRechazo(email, patientName, patientId, request) {
             } else if (!esEmailProfesional(patient.email)) {
                 email = patient.email;
             } else {
+                console.error('❌ El email del paciente también es de profesional:', patient.email);
                 return;
             }
         } else {
@@ -1442,13 +1442,8 @@ export function executeTherapistBooking() {
         window.currentRequestId = null;
     }
 
-    import('../main.js').then(main => {
-        main.save();
-        showToast('✅ Cita creada', 'success');
-        // Actualizar vistas
-        renderAppointments();
-        renderPendingRequests();
-    });
+    import('../main.js').then(main => main.save());
+    showToast('✅ Cita creada', 'success');
     
     // Enviar email al PACIENTE
     if (state.selectedPatientForTherapist.email && !appointment.emailEnviado) {

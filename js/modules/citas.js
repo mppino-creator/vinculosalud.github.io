@@ -1555,6 +1555,5 @@ window.getUpcomingAppointments = getUpcomingAppointments;
 window.isTimeSlotAvailable = isTimeSlotAvailable;
 window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
-window.calcularEdad = window.calcularEdad;
-
+window.calcularEdad = window.calcularEdad; // Asegurar que se exponga
 console.log('✅ citas.js cargado con validación ABSOLUTA de email, filtrado de métodos de pago por tipo de atención, función cancelAppointment corregida y SECCIÓN TUTOR SIEMPRE VISIBLE (obligatorio/opcional según edad)');

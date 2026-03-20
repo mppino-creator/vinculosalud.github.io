@@ -96,10 +96,13 @@ function calcularEdadDesdeFecha(birthdate) {
 // Definir la función global calcularEdad (se ejecuta desde el evento agregado dinámicamente)
 window.calcularEdad = function() {
     console.log('📅 calcularEdad ejecutada');
-    let birthdateRaw = document.getElementById('custBirthdate')?.value;
+    const birthdateRaw = document.getElementById('custBirthdate')?.value;
+    console.log('Fecha raw:', birthdateRaw);
+    
     if (!birthdateRaw) {
         document.getElementById('edadDisplay').innerHTML = '';
         document.getElementById('tutorSection').style.display = 'none';
+        console.log('Fecha vacía, tutor oculto');
         return;
     }
     
@@ -115,6 +118,7 @@ window.calcularEdad = function() {
     // Si la fecha normalizada es diferente a la original, actualizar el campo
     if (birthdate !== birthdateRaw) {
         document.getElementById('custBirthdate').value = birthdate;
+        console.log('Fecha normalizada a:', birthdate);
     }
     
     const edad = calcularEdadDesdeFecha(birthdate);
@@ -123,11 +127,13 @@ window.calcularEdad = function() {
     
     if (edadDisplay) {
         edadDisplay.innerHTML = `<strong>Edad:</strong> ${edad} años`;
+        console.log('Edad mostrada:', edad);
     }
     
     if (tutorSection) {
         if (edad < 18) {
             tutorSection.style.display = 'block';
+            console.log('Tutor mostrado (edad < 18)');
             const tutorName = document.getElementById('tutorName');
             const tutorRut = document.getElementById('tutorRut');
             const tutorRelationship = document.getElementById('tutorRelationship');
@@ -137,6 +143,7 @@ window.calcularEdad = function() {
             if (tutorRelationship) tutorRelationship.required = true;
         } else {
             tutorSection.style.display = 'none';
+            console.log('Tutor oculto (edad >= 18)');
             const tutorName = document.getElementById('tutorName');
             const tutorRut = document.getElementById('tutorRut');
             const tutorRelationship = document.getElementById('tutorRelationship');
@@ -145,6 +152,8 @@ window.calcularEdad = function() {
             if (tutorRut) tutorRut.required = false;
             if (tutorRelationship) tutorRelationship.required = false;
         }
+    } else {
+        console.error('No se encontró el elemento tutorSection');
     }
     
     return edad;
@@ -210,7 +219,13 @@ export function openBooking(id) {
     if (birthdateInput) {
         // Eliminar listeners anteriores para evitar duplicados
         birthdateInput.removeEventListener('change', window.calcularEdad);
+        birthdateInput.removeEventListener('input', window.calcularEdad);
+        // Agregar ambos eventos: change (cuando se selecciona del calendario) e input (cuando se escribe)
         birthdateInput.addEventListener('change', window.calcularEdad);
+        birthdateInput.addEventListener('input', window.calcularEdad);
+        console.log('Eventos de fecha añadidos');
+    } else {
+        console.error('No se encontró el input de fecha');
     }
     
     // Cargar métodos de pago según tipo (por defecto online al abrir)
@@ -1297,14 +1312,14 @@ export function renderAppointments() {
         
         return `
             <tr>
-                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
-                <td>${a.psych || '—'}</td>
-                <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
-                <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>—</td>
-                <td><span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span></td>
-                <td><span style="color:${statusColor};">${statusText}</span></td>
-                <td>
+                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small>\\
+                 Was${a.psych || '—'} \\
+                 Was${a.date || '—'} <br><small>${a.time || '—'}</small>\\
+                 Was<span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span>\\
+                 Was—\\
+                 Was<span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span>\\
+                 Was<span style="color:${statusColor};">${statusText}</span>\\
+                 Was
                     <div style="display:flex; gap:5px;">
                         ${a.paymentStatus !== 'pagado' ? `
                             <button onclick="confirmPayment('${a.id}')" class="btn-icon" style="background:var(--exito); color:white; border:none; padding:5px 8px; border-radius:4px;" title="Confirmar pago">
@@ -1318,8 +1333,8 @@ export function renderAppointments() {
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado a paciente</small>` : ''}
                     ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
-                </td>
-            </tr>
+                 \\
+            \\
         `;
     }).join('');
 }
@@ -1345,21 +1360,21 @@ export function renderPendingRequests() {
         
         return `
             <tr>
-                <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
-                <td>
+                <td>${r.createdAt ? formatDate(r.createdAt) : '—'}\\
+                 Was
                     <strong>${r.patient}</strong><br>
                     <small>${r.patientRut}</small>
                     ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
                     ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
                     ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
-                </td>
-                <td>${r.psych}</td>
-                <td>${r.date}</td>
-                <td>${r.time || 'A coordinar'}</td>
-                <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>—</td>
-                <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
-                <td>
+                 \\
+                 Was${r.psych} \\
+                 Was${r.date} \\
+                 Was${r.time || 'A coordinar'} \\
+                 Was<span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span>\\
+                 Was—\\
+                 Was${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'} \\
+                 Was
                     <div style="display:flex; flex-direction:column; gap:5px;">
                         <span style="font-size:0.8rem;">Pago: ${r.paymentStatus === 'pagado' ? '✅' : '⏳'}</span>
                         
@@ -1382,8 +1397,8 @@ export function renderPendingRequests() {
                         </div>
                         ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                     </div>
-                </td>
-            </tr>
+                 \\
+             \\
         `;
     }).join('');
 }

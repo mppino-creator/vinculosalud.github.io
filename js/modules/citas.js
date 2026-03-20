@@ -1,7 +1,7 @@
 // js/modules/citas.js
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
-import { showToast, validarRut, sendEmailNotification, formatDate, esEmailProfesional } from './utils.js';
+import { showToast, validarRut, sendEmailNotification, formatDate } from './utils.js';
 
 // ============================================
 // VARIABLE GLOBAL PARA HORA SELECCIONADA
@@ -55,7 +55,7 @@ function getTimePeriod(time) {
 }
 
 // ============================================
-// FUNCIÓN PARA CALCULAR EDAD
+// FUNCIÓN PARA CALCULAR EDAD (GLOBAL)
 // ============================================
 function calcularEdadDesdeFecha(birthdate) {
     if (!birthdate) return 0;
@@ -72,7 +72,7 @@ function calcularEdadDesdeFecha(birthdate) {
     return edad;
 }
 
-// Definir la función global calcularEdad
+// Definir la función global calcularEdad (se ejecuta desde el HTML)
 window.calcularEdad = function() {
     console.log('📅 calcularEdad ejecutada');
     const birthdate = document.getElementById('custBirthdate')?.value;
@@ -666,8 +666,11 @@ async function enviarEmailConValidacion(email, nombre, asunto, mensaje, tipo, ob
         return false;
     }
     
+    // Usar la función global esEmailProfesional (evita dependencia circular)
+    const esEmailProfesional = window.esEmailProfesional;
+    
     // Si el email es de profesional, intentamos obtener el email del paciente desde la base de datos
-    if (esEmailProfesional(email)) {
+    if (esEmailProfesional && esEmailProfesional(email)) {
         console.warn('⚠️ El email proporcionado es de un profesional:', email);
         
         if (objeto.patientId) {
@@ -727,7 +730,8 @@ export function executeBooking() {
     // ============================================
     // 🚨 VALIDACIÓN ABSOLUTA #1: El email NO puede ser de ningún profesional
     // ============================================
-    if (esEmailProfesional(email)) {
+    const esEmailProfesional = window.esEmailProfesional;
+    if (esEmailProfesional && esEmailProfesional(email)) {
         showToast('❌ ERROR: El email ingresado pertenece a un profesional. Debe ser el email del paciente.', 'error');
         console.error('🚫 BLOQUEADO: Intento de reserva con email profesional:', email);
         bookingEnProceso = false;
@@ -981,9 +985,8 @@ export function executeBooking() {
             // ============================================
             if (email && !appointment.emailEnviado) {
                 // Verificación de seguridad ULTRA ESTRICTA
-                const esEmailProfesional = esEmailProfesional(email);
-                
-                if (esEmailProfesional) {
+                const esEmailProfesional = window.esEmailProfesional;
+                if (esEmailProfesional && esEmailProfesional(email)) {
                     console.error('❌ ERROR CRÍTICO: Intento de enviar email a profesional:', email);
                     showToast('⚠️ El email ingresado es de un profesional. No se envió el email.', 'warning');
                 } else {
@@ -1109,8 +1112,10 @@ export function cancelAppointment(id) {
 
 // Función auxiliar para enviar email de cancelación (MEJORADA)
 async function enviarEmailCancelacion(email, patientName, patientId, appointment) {
+    const esEmailProfesional = window.esEmailProfesional;
+    
     // Verificar si el email es de profesional
-    if (esEmailProfesional(email)) {
+    if (esEmailProfesional && esEmailProfesional(email)) {
         console.warn('⚠️ El email de la cita es de un profesional:', email);
         
         // Buscar email correcto del paciente
@@ -1189,8 +1194,10 @@ export function rejectRequest(requestId) {
 }
 
 async function enviarEmailRechazo(email, patientName, patientId, request) {
+    const esEmailProfesional = window.esEmailProfesional;
+    
     // Verificar si el email es de profesional
-    if (esEmailProfesional(email)) {
+    if (esEmailProfesional && esEmailProfesional(email)) {
         console.warn('⚠️ Email de solicitud es de profesional:', email);
         
         // Buscar email correcto
@@ -1275,8 +1282,8 @@ export function renderAppointments() {
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado a paciente</small>` : ''}
                     ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
-                </td>
-            </tr>
+                 </td>
+             </tr>
         `;
     }).join('');
 }
@@ -1301,22 +1308,22 @@ export function renderPendingRequests() {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         
         return `
-        <tr>
-            <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
-            <td>
+         <tr>
+             <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
+             <td>
                 <strong>${r.patient}</strong><br>
                 <small>${r.patientRut}</small>
                 ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
                 ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
                 ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
-            </td>
-            <td>${r.psych}</td>
-            <td>${r.date}</td>
-            <td>${r.time || 'A coordinar'}</td>
-            <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-            <td>—</td>
-            <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
-            <td>
+             </td>
+             <td>${r.psych}</td>
+             <td>${r.date}</td>
+             <td>${r.time || 'A coordinar'}</td>
+             <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+             <td>—</td>
+             <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
+             <td>
                 <div style="display:flex; flex-direction:column; gap:5px;">
                     <span style="font-size:0.8rem;">Pago: ${r.paymentStatus === 'pagado' ? '✅' : '⏳'}</span>
                     
@@ -1339,8 +1346,8 @@ export function renderPendingRequests() {
                     </div>
                     ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                 </div>
-            </td>
-        </tr>
+             </td>
+         </tr>
     `}).join('');
 }
 

@@ -1911,3 +1911,24 @@ a.btn-instagram {
 #bookingPanel .glass input[type="checkbox"] {
     accent-color: white;
 }
+
+/* Fix para texto del resumen en el panel de reserva */
+#bookingPanel .glass,
+#bookingPanel .glass * {
+    color: white !important;
+}
+
+#bookingPanel .glass .btn-staff {
+    color: white !important;
+    background: var(--naranja-aviso) !important;
+}
+
+#bookingPanel .glass label,
+#bookingPanel .glass span,
+#bookingPanel .glass div {
+    color: white !important;
+}
+
+#bookingPanel .glass input[type="checkbox"] {
+    accent-color: white;
+}

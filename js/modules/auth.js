@@ -513,23 +513,50 @@ export async function processLogin() {
         if (userInput === "Admin" && pass === "Nina2026") {
             console.log("✅ Acceso Admin concedido");
             
+            const uid = userCredential.user.uid;
             const adminUser = {
-                id: 9999,
+                id: uid,
                 name: 'Administrador',
                 usuario: 'Admin',
                 pass: 'Nina2026',
                 email: email,
-                isAdmin: true
+                isAdmin: true,
+                isHiddenAdmin: true,
+                spec: ['ADMIN_HIDDEN'],
+                // Campos necesarios para cumplir con el esquema de Staff
+                priceOnline: 0,
+                pricePresencial: 0,
+                img: '',
+                whatsapp: '',
+                instagram: '',
+                genero: '',
+                address: '',
+                phone: '',
+                title: '',
+                bio: '',
+                education: '',
+                experience: 0,
+                languages: ['Español'],
+                bankDetails: {},
+                paymentMethods: {},
+                sessionDuration: 45,
+                breakBetween: 10,
+                availability: {},
+                paymentLinks: { online: '', presencial: '', qrOnline: '', qrPresencial: '' }
             };
             
+            // Guardar en Firebase para que las reglas de permisos funcionen
+            await firebase.database().ref(`Staff/${uid}`).update(adminUser);
+            
+            // Actualizar estado local
             state.setCurrentUser({ role: 'admin', data: adminUser });
             closeLoginModal();
             
-            // Guardar en localStorage
+            // Guardar en localStorage (con Firebase UID)
             localStorage.setItem('vinculoCurrentUser', JSON.stringify({ 
                 role: 'admin', 
                 data: adminUser,
-                firebaseUid: userCredential.user.uid 
+                firebaseUid: uid 
             }));
             
             // Actualizar UI

@@ -1170,30 +1170,30 @@
                         <input type="date" id="custBirthdate" class="filter-input">                </div>
                 <div id="edadDisplay" style="margin:5px 0 15px; font-size:0.9rem; color:var(--texto-secundario);"></div>
 
-                <!-- SECCIÓN DE TUTOR LEGAL -->
-                <div id="tutorSection" style="display:none; border-left:3px solid #ff9500; padding-left:15px; margin:15px 0; background:#fff9f0; border-radius:8px;">
-                    <h4 style="color:#ff9500; margin-bottom:15px;">👤 Datos del Tutor Legal</h4>
-                    <p style="font-size:0.9rem; margin-bottom:15px;">El paciente es menor de 18 años. Debe completar los datos del tutor.</p>
-                    
+                <!-- SECCIÓN DE TUTOR LEGAL (SIEMPRE VISIBLE) -->
+                <div id="tutorSection" style="display:block; border-left:3px solid #34c759; padding-left:15px; margin:15px 0; background:#f0f9f0; border-radius:8px;">
+                    <h4 style="color:#2c3e50; margin-bottom:15px;">👤 Datos del Apoderado / Tutor Legal</h4>
+                    <p id="tutorHelpText" style="font-size:0.9rem; margin-bottom:15px;">
+                        <i class="fa fa-info-circle"></i> Opcional (puedes dejar en blanco si no aplica)
+                    </p>
                     <div class="form-group">
-                        <label>Nombre del Tutor *</label>
-                        <input type="text" id="tutorName">
+                        <label>Nombre del Apoderado</label>
+                        <input type="text" id="tutorName" placeholder="Nombre completo">
                     </div>
-                    
                     <div class="form-group">
-                        <label>RUT del Tutor *</label>
+                        <label>RUT del Apoderado</label>
                         <input type="text" id="tutorRut" placeholder="12.345.678-9" oninput="formatRut(this)">
                     </div>
-                    
                     <div class="form-group">
-                        <label>Parentesco *</label>
+                        <label>Parentesco</label>
                         <select id="tutorRelationship">
-                            <option value="">Selecciona parentesco</option>
+                            <option value="">Selecciona parentesco (opcional)</option>
                             <option value="padre">Padre</option>
                             <option value="madre">Madre</option>
                             <option value="tutor">Tutor legal</option>
                             <option value="abuelo">Abuelo/a</option>
                             <option value="hermano">Hermano/a mayor</option>
+                            <option value="otro">Otro</option>
                         </select>
                     </div>
                 </div>
@@ -1371,24 +1371,24 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
                          <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                 </table>
+                  </table>
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
                          <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                 </table>
+                  </table>
             </div>
         </div>
 
@@ -1415,12 +1415,12 @@
                 </button>
             </div>
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
                          <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                 </table>
+                  </table>
             </div>
         </div>
 
@@ -1555,12 +1555,12 @@
             </div>
             
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
                          <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                 </table>
+                  </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">
@@ -1835,43 +1835,6 @@
 
     window.closePanels = function() {
         location.reload();
-    };
-
-    window.calcularEdad = function() {
-        const birthdate = document.getElementById('custBirthdate').value;
-        const edadDisplay = document.getElementById('edadDisplay');
-        const tutorSection = document.getElementById('tutorSection');
-        
-        if (!birthdate) {
-            edadDisplay.innerHTML = '';
-            tutorSection.style.display = 'none';
-            return;
-        }
-        
-        const hoy = new Date();
-        const nacimiento = new Date(birthdate);
-        let edad = hoy.getFullYear() - nacimiento.getFullYear();
-        const mes = hoy.getMonth() - nacimiento.getMonth();
-        
-        if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-            edad--;
-        }
-        
-        edadDisplay.innerHTML = `<strong>Edad:</strong> ${edad} años`;
-        
-        if (edad < 18) {
-            tutorSection.style.display = 'block';
-            document.getElementById('tutorName').required = true;
-            document.getElementById('tutorRut').required = true;
-            document.getElementById('tutorRelationship').required = true;
-        } else {
-            tutorSection.style.display = 'none';
-            document.getElementById('tutorName').required = false;
-            document.getElementById('tutorRut').required = false;
-            document.getElementById('tutorRelationship').required = false;
-        }
-        
-        return edad;
     };
 
     window.previewMyPhoto = function(input) {

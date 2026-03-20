@@ -59,22 +59,18 @@ function getTimePeriod(time) {
 // ============================================
 function normalizarFecha(fechaStr) {
     if (!fechaStr) return '';
-    // Si ya está en formato yyyy-mm-dd, devolver tal cual
     if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
         return fechaStr;
     }
-    // Intentar parsear dd/mm/yyyy o dd-mm-yyyy
     let partes = fechaStr.split(/[\/\-]/);
     if (partes.length === 3) {
         let dia = partes[0].padStart(2, '0');
         let mes = partes[1].padStart(2, '0');
         let año = partes[2];
-        // Validar que sea una fecha real (ej. día 01-12, mes 01-12)
         if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12 && año.length === 4) {
             return `${año}-${mes}-${dia}`;
         }
     }
-    // Si no se pudo convertir, devolver vacío
     return '';
 }
 
@@ -93,69 +89,70 @@ function calcularEdadDesdeFecha(birthdate) {
     return edad;
 }
 
-// Definir la función global calcularEdad (se ejecuta desde el evento agregado dinámicamente)
+// ============================================
+// FUNCIÓN PARA CONFIGURAR LA SECCIÓN TUTOR SEGÚN EDAD (SIEMPRE VISIBLE)
+// ============================================
+function configurarTutorSegunEdad(edad) {
+    const tutorSection = document.getElementById('tutorSection');
+    const tutorName = document.getElementById('tutorName');
+    const tutorRut = document.getElementById('tutorRut');
+    const tutorRelationship = document.getElementById('tutorRelationship');
+    const tutorHelpText = document.getElementById('tutorHelpText');
+    
+    if (!tutorSection) return;
+    
+    if (edad !== null && edad < 18) {
+        tutorSection.style.borderLeft = '3px solid #ff9500';
+        tutorSection.style.backgroundColor = '#fff9f0';
+        if (tutorHelpText) {
+            tutorHelpText.innerHTML = '<span style="color:#ff9500;"><i class="fa fa-exclamation-circle"></i> Obligatorio para menores de 18 años</span>';
+        }
+        if (tutorName) tutorName.required = true;
+        if (tutorRut) tutorRut.required = true;
+        if (tutorRelationship) tutorRelationship.required = true;
+    } else {
+        tutorSection.style.borderLeft = '3px solid #34c759';
+        tutorSection.style.backgroundColor = '#f0f9f0';
+        if (tutorHelpText) {
+            tutorHelpText.innerHTML = '<span style="color:#34c759;"><i class="fa fa-info-circle"></i> Opcional (puedes dejar en blanco si no aplica)</span>';
+        }
+        if (tutorName) tutorName.required = false;
+        if (tutorRut) tutorRut.required = false;
+        if (tutorRelationship) tutorRelationship.required = false;
+    }
+}
+
+// ============================================
+// FUNCIÓN GLOBAL calcularEdad (mejorada)
+// ============================================
 window.calcularEdad = function() {
     console.log('📅 calcularEdad ejecutada');
     const birthdateRaw = document.getElementById('custBirthdate')?.value;
-    console.log('Fecha raw:', birthdateRaw);
     
     if (!birthdateRaw) {
         document.getElementById('edadDisplay').innerHTML = '';
-        document.getElementById('tutorSection').style.display = 'none';
-        console.log('Fecha vacía, tutor oculto');
+        configurarTutorSegunEdad(null);
         return;
     }
     
-    // Normalizar la fecha ingresada
     let birthdate = normalizarFecha(birthdateRaw);
     if (!birthdate) {
-        console.warn('⚠️ Fecha no reconocida:', birthdateRaw);
-        document.getElementById('edadDisplay').innerHTML = '<span style="color:red;">Formato de fecha inválido (usa dd/mm/aaaa)</span>';
-        document.getElementById('tutorSection').style.display = 'none';
+        document.getElementById('edadDisplay').innerHTML = '<span style="color:red;">Formato inválido (usa dd/mm/aaaa)</span>';
+        configurarTutorSegunEdad(null);
         return;
     }
     
-    // Si la fecha normalizada es diferente a la original, actualizar el campo
     if (birthdate !== birthdateRaw) {
         document.getElementById('custBirthdate').value = birthdate;
-        console.log('Fecha normalizada a:', birthdate);
     }
     
     const edad = calcularEdadDesdeFecha(birthdate);
     const edadDisplay = document.getElementById('edadDisplay');
-    const tutorSection = document.getElementById('tutorSection');
-    
     if (edadDisplay) {
         edadDisplay.innerHTML = `<strong>Edad:</strong> ${edad} años`;
-        console.log('Edad mostrada:', edad);
     }
     
-    if (tutorSection) {
-        if (edad < 18) {
-            tutorSection.style.display = 'block';
-            console.log('Tutor mostrado (edad < 18)');
-            const tutorName = document.getElementById('tutorName');
-            const tutorRut = document.getElementById('tutorRut');
-            const tutorRelationship = document.getElementById('tutorRelationship');
-            
-            if (tutorName) tutorName.required = true;
-            if (tutorRut) tutorRut.required = true;
-            if (tutorRelationship) tutorRelationship.required = true;
-        } else {
-            tutorSection.style.display = 'none';
-            console.log('Tutor oculto (edad >= 18)');
-            const tutorName = document.getElementById('tutorName');
-            const tutorRut = document.getElementById('tutorRut');
-            const tutorRelationship = document.getElementById('tutorRelationship');
-            
-            if (tutorName) tutorName.required = false;
-            if (tutorRut) tutorRut.required = false;
-            if (tutorRelationship) tutorRelationship.required = false;
-        }
-    } else {
-        console.error('No se encontró el elemento tutorSection');
-    }
-    
+    configurarTutorSegunEdad(edad);
     return edad;
 };
 
@@ -187,15 +184,11 @@ export function openBooking(id) {
     document.getElementById('custDate').value = today;
     document.getElementById('bookingDuration').innerText = (psych.sessionDuration || 45) + ' minutos';
     
-    // Limpiar campos de edad y tutor
+    // Limpiar campos
     const birthdate = document.getElementById('custBirthdate');
     if (birthdate) birthdate.value = '';
-    
     const edadDisplay = document.getElementById('edadDisplay');
     if (edadDisplay) edadDisplay.innerHTML = '';
-    
-    const tutorSection = document.getElementById('tutorSection');
-    if (tutorSection) tutorSection.style.display = 'none';
     
     const tutorName = document.getElementById('tutorName');
     const tutorRut = document.getElementById('tutorRut');
@@ -214,13 +207,13 @@ export function openBooking(id) {
         tutorRelationship.required = false;
     }
     
-    // ✅ AGREGAR EVENTO AL CAMPO DE FECHA PARA QUE SE EJECUTE LA FUNCIÓN GLOBAL
+    // Configurar sección tutor como opcional por defecto
+    configurarTutorSegunEdad(null);
+    
     const birthdateInput = document.getElementById('custBirthdate');
     if (birthdateInput) {
-        // Eliminar listeners anteriores para evitar duplicados
         birthdateInput.removeEventListener('change', window.calcularEdad);
         birthdateInput.removeEventListener('input', window.calcularEdad);
-        // Agregar ambos eventos: change (cuando se selecciona del calendario) e input (cuando se escribe)
         birthdateInput.addEventListener('change', window.calcularEdad);
         birthdateInput.addEventListener('input', window.calcularEdad);
         console.log('Eventos de fecha añadidos');
@@ -228,12 +221,9 @@ export function openBooking(id) {
         console.error('No se encontró el input de fecha');
     }
     
-    // Cargar métodos de pago según tipo (por defecto online al abrir)
     loadPaymentMethods();
-    
     document.getElementById('paymentDetails').style.display = 'none';
     document.getElementById('paymentLinkContainer').style.display = 'none';
-    
     updateBookingDetails();
     document.getElementById('emailSimulation').style.display = 'none';
     updateAvailableTimes();
@@ -251,13 +241,11 @@ function loadPaymentMethods() {
 
     select.innerHTML = '<option value="">Selecciona método de pago</option>';
     
-    // Transferencia siempre disponible (si está activa)
     if (methods.transfer) {
         select.innerHTML += '<option value="transfer">Transferencia Bancaria</option>';
     }
     
     if (type === 'online') {
-        // Métodos para atención online
         if (methods.cardOnline) {
             select.innerHTML += '<option value="card-online">Tarjeta Online</option>';
         }
@@ -268,14 +256,12 @@ function loadPaymentMethods() {
             select.innerHTML += '<option value="webpay">Webpay</option>';
         }
     } else {
-        // Métodos para atención presencial
         if (methods.cardPresencial) {
             select.innerHTML += '<option value="card-presencial">Tarjeta (en consulta)</option>';
         }
         if (methods.cash) {
             select.innerHTML += '<option value="cash">Efectivo (en consulta)</option>';
         }
-        // También permitir pago online con link presencial
         if (methods.cardOnline) {
             select.innerHTML += '<option value="card-online-presencial">Tarjeta Online (pago anticipado)</option>';
         }
@@ -299,7 +285,6 @@ export function showPaymentDetails() {
     const paymentLinks = state.selectedPsych.paymentLinks || {};
     const bank = state.selectedPsych.bankDetails;
     
-    // Transferencia (igual para ambos tipos)
     if (method === 'transfer' && bank) {
         detailsDiv.style.display = 'block';
         detailsDiv.innerHTML = `
@@ -314,11 +299,9 @@ export function showPaymentDetails() {
         `;
     }
     
-    // Métodos presenciales en consulta
     if (method === 'card-presencial' || method === 'cash') {
         detailsDiv.style.display = 'block';
         const qr = paymentLinks.qrPresencial;
-        console.log('💳 QR presencial:', qr);
         detailsDiv.innerHTML = `
             <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
                 <p>El pago se realizará en el consultorio.</p>
@@ -328,13 +311,11 @@ export function showPaymentDetails() {
         `;
     }
     
-    // Métodos online para atención online (card-online, mercadopago, webpay)
     if (method === 'card-online' || method === 'mercadopago' || method === 'webpay') {
         const link = method === 'card-online' ? paymentLinks.online : 
                     method === 'mercadopago' ? paymentLinks.mercadopago || paymentLinks.online :
                     paymentLinks.webpay || paymentLinks.online;
         const qr = paymentLinks.qrOnline;
-        console.log('💳 QR online:', qr);
         
         if (link) {
             linkContainer.style.display = 'block';
@@ -354,11 +335,9 @@ export function showPaymentDetails() {
         }
     }
     
-    // Método especial: card-online-presencial (para pagos anticipados en atención presencial)
     if (method === 'card-online-presencial') {
-        const link = paymentLinks.presencial || paymentLinks.online; // prioriza link presencial
+        const link = paymentLinks.presencial || paymentLinks.online;
         const qr = paymentLinks.qrPresencial;
-        console.log('💳 Link presencial:', link, 'QR presencial:', qr);
         
         if (link) {
             linkContainer.style.display = 'block';
@@ -438,7 +417,6 @@ export function updateAvailableTimes() {
         return;
     }
 
-    // Obtener TODAS las ocupaciones
     const bookedAppointments = state.appointments
         .filter(a => a.psychId == state.selectedPsych.id && a.date === date && 
                 (a.status === 'confirmada' || a.status === 'pendiente'))
@@ -522,7 +500,6 @@ export function updateBookingDetails() {
     document.getElementById('paymentDetails').style.display = 'none';
     document.getElementById('paymentLinkContainer').style.display = 'none';
     
-    // Recargar métodos de pago según el nuevo tipo
     loadPaymentMethods();
     updateAvailableTimes();
 }
@@ -540,14 +517,22 @@ export function searchPatientByRutBooking() {
         document.getElementById('custName').value = patient.name || '';
         document.getElementById('custEmail').value = patient.email || '';
         
-        // Cargar fecha de nacimiento si existe
         const birthdate = document.getElementById('custBirthdate');
         if (birthdate && patient.birthdate) {
             birthdate.value = patient.birthdate;
-            // Forzar ejecución manual de la función de edad
             if (typeof window.calcularEdad === 'function') {
                 window.calcularEdad();
             }
+        }
+        
+        // Cargar datos del tutor si existen
+        if (patient.tutor) {
+            const tutorName = document.getElementById('tutorName');
+            const tutorRut = document.getElementById('tutorRut');
+            const tutorRelationship = document.getElementById('tutorRelationship');
+            if (tutorName) tutorName.value = patient.tutor.nombre || '';
+            if (tutorRut) tutorRut.value = patient.tutor.rut || '';
+            if (tutorRelationship) tutorRelationship.value = patient.tutor.parentesco || '';
         }
         
         const phoneParts = patient.phone ? patient.phone.split(' ') : ['+56', '9', ''];
@@ -564,9 +549,6 @@ export function searchPatientByRutBooking() {
     }
 }
 
-// ============================================
-// FUNCIÓN checkOnlineAvailability
-// ============================================
 export function checkOnlineAvailability() {
     const date = document.getElementById('custDate').value;
     const time = document.getElementById('custTime').value;
@@ -577,10 +559,6 @@ export function checkOnlineAvailability() {
     }
     return true;
 }
-
-// ============================================
-// FUNCIONES DE PAGOS (CORREGIDAS CON VALIDACIÓN)
-// ============================================
 
 export function confirmPayment(appointmentId) {
     console.log('💰 Confirmando pago para:', appointmentId);
@@ -614,7 +592,6 @@ export function confirmPayment(appointmentId) {
         renderAppointments();
     });
     
-    // Enviar email al PACIENTE (nunca al psicólogo)
     if (appointment.patientEmail && !appointment.emailPagoEnviado) {
         enviarEmailConValidacion(
             appointment.patientEmail,
@@ -644,7 +621,6 @@ export function rejectPayment(appointmentId) {
     import('../main.js').then(main => main.save());
     showToast('✅ Pago rechazado', 'success');
     
-    // Enviar email al PACIENTE (nunca al psicólogo)
     if (appointment.patientEmail && !appointment.emailRechazoEnviado) {
         enviarEmailConValidacion(
             appointment.patientEmail,
@@ -692,7 +668,6 @@ export function confirmPresencialTime(requestId, date, time) {
     import('../main.js').then(main => main.save());
     showToast('✅ Cita confirmada', 'success');
     
-    // Enviar email al PACIENTE (nunca al psicólogo)
     if (request.patientEmail && !appointment.emailConfirmacionEnviado) {
         enviarEmailConValidacion(
             request.patientEmail,
@@ -706,31 +681,22 @@ export function confirmPresencialTime(requestId, date, time) {
     }
 }
 
-// ============================================
-// FUNCIÓN AUXILIAR PARA ENVÍO DE EMAILS CON VALIDACIÓN MEJORADA
-// ============================================
-
 async function enviarEmailConValidacion(email, nombre, asunto, mensaje, tipo, objeto, flagEnviado) {
-    // Verificación inicial
     if (!email) {
         console.warn('⚠️ No hay email para enviar');
         return false;
     }
     
-    // Usar la función global esEmailProfesional (evita dependencia circular)
     const esEmailProfesional = window.esEmailProfesional;
     
-    // Si el email es de profesional, intentamos obtener el email del paciente desde la base de datos
     if (esEmailProfesional && esEmailProfesional(email)) {
         console.warn('⚠️ El email proporcionado es de un profesional:', email);
         
         if (objeto.patientId) {
             const patient = state.patients.find(p => p.id == objeto.patientId);
             if (patient && patient.email) {
-                // Si el email del paciente es el mismo que el del profesional, asumimos que es la misma persona y permitimos el envío
                 if (patient.email === email) {
                     console.log('ℹ️ El paciente y el profesional comparten el mismo email. Se enviará igualmente.');
-                    // No cambiamos el email, seguimos con el original
                 } else if (!esEmailProfesional(patient.email)) {
                     console.log('✅ Usando email correcto del paciente:', patient.email);
                     email = patient.email;
@@ -758,12 +724,8 @@ async function enviarEmailConValidacion(email, nombre, asunto, mensaje, tipo, ob
         });
 }
 
-// ============================================
-// FUNCIÓN EXECUTEBOOKING - VERSIÓN CORREGIDA CON VALIDACIÓN ABSOLUTA DE EMAIL
-// ============================================
-
 let bookingEnProceso = false;
-let emailsEnviados = new Set(); // Para evitar duplicados
+let emailsEnviados = new Set();
 
 export function executeBooking() {
     if (bookingEnProceso) {
@@ -778,9 +740,6 @@ export function executeBooking() {
     const email = document.getElementById('custEmail').value;
     const birthdate = document.getElementById('custBirthdate')?.value || '';
     
-    // ============================================
-    // 🚨 VALIDACIÓN ABSOLUTA #1: El email NO puede ser de ningún profesional
-    // ============================================
     const esEmailProfesional = window.esEmailProfesional;
     if (esEmailProfesional && esEmailProfesional(email)) {
         showToast('❌ ERROR: El email ingresado pertenece a un profesional. Debe ser el email del paciente.', 'error');
@@ -789,7 +748,6 @@ export function executeBooking() {
         return;
     }
     
-    // Validación específica con el psicólogo seleccionado (por si acaso)
     if (state.selectedPsych && email === state.selectedPsych.email) {
         showToast('❌ ERROR: No puedes usar el email del profesional. Usa el email del paciente.', 'error');
         console.error('🚫 BLOQUEADO: Email igual al psicólogo seleccionado:', email);
@@ -797,22 +755,17 @@ export function executeBooking() {
         return;
     }
     
-    // Obtener datos del tutor si existen
-    const tutorSection = document.getElementById('tutorSection');
     let tutorData = null;
+    const tutorName = document.getElementById('tutorName')?.value;
+    const tutorRut = document.getElementById('tutorRut')?.value;
+    const tutorRelationship = document.getElementById('tutorRelationship')?.value;
     
-    if (tutorSection && tutorSection.style.display === 'block') {
-        const tutorName = document.getElementById('tutorName')?.value;
-        const tutorRut = document.getElementById('tutorRut')?.value;
-        const tutorRelationship = document.getElementById('tutorRelationship')?.value;
-        
-        if (tutorName && tutorRut && tutorRelationship) {
-            tutorData = {
-                nombre: tutorName,
-                rut: tutorRut,
-                parentesco: tutorRelationship
-            };
-        }
+    if (tutorName && tutorRut && tutorRelationship) {
+        tutorData = {
+            nombre: tutorName,
+            rut: tutorRut,
+            parentesco: tutorRelationship
+        };
     }
     
     const countryCode = document.getElementById('countryCode')?.value || '+56';
@@ -850,7 +803,6 @@ export function executeBooking() {
         return;
     }
 
-    // Validar tutor si es menor de edad
     if (birthdate) {
         const edad = calcularEdadDesdeFecha(birthdate);
         if (edad < 18 && !tutorData) {
@@ -861,16 +813,13 @@ export function executeBooking() {
     }
 
     let time = '';
-    
     if (window.horaSeleccionada) {
         time = window.horaSeleccionada;
     }
-    
     if (!time) {
         const timeSelect = document.getElementById('custTime');
         time = timeSelect ? timeSelect.value : '';
     }
-    
     if (!time) {
         const selectedBtn = document.querySelector('.time-slot-btn.selected');
         if (selectedBtn && selectedBtn.dataset.time) {
@@ -888,7 +837,6 @@ export function executeBooking() {
     }
 
     let horaFinal = time || 'Pendiente';
-    
     let preferenciaAMPM = null;
     if (type === 'presencial') {
         const prefRadios = document.getElementsByName('presencialTimePref');
@@ -907,69 +855,56 @@ export function executeBooking() {
 
     setTimeout(async () => {
         try {
-            // BUSCAR O CREAR PACIENTE - VERSIÓN CORREGIDA
             let patient = state.patients.find(p => p.rut === rut);
             
             if (!patient) {
-                // Calcular edad si hay fecha de nacimiento
                 const edad = birthdate ? calcularEdadDesdeFecha(birthdate) : 0;
-                
-                // Crear nuevo paciente CON TODOS LOS DATOS
                 patient = {
                     id: Date.now(),
                     rut,
                     name,
-                    email, // ✅ Este es el email del paciente (ya validado)
+                    email,
                     phone,
                     birthdate: birthdate,
                     edad: edad,
                     tutor: (edad < 18 && tutorData) ? tutorData : null,
                     notes: msg || '',
-                    // 🔥 ASIGNAR AUTOMÁTICAMENTE AL PSICÓLOGO DE LA RESERVA
                     psychId: state.selectedPsych.id,
                     createdAt: new Date().toISOString(),
                     appointments: []
                 };
                 
-                // Agregar a state.patients
                 state.patients.push(patient);
-                console.log('🆕 NUEVO PACIENTE CREADO:', patient);
-                
-                // 💾 ¡GUARDAR INMEDIATAMENTE EN FIREBASE!
                 try {
                     await import('../main.js').then(main => main.save());
-                    console.log('💾✅ Paciente guardado en Firebase');
                 } catch (saveError) {
                     console.error('❌ Error guardando paciente:', saveError);
                 }
             } else {
-                console.log('✅ Paciente existente encontrado:', patient.id);
-                
-                // Actualizar datos del paciente existente si es necesario
                 let datosActualizados = false;
-                
                 if (!patient.birthdate && birthdate) {
                     patient.birthdate = birthdate;
                     patient.edad = calcularEdadDesdeFecha(birthdate);
                     datosActualizados = true;
                 }
-                
-                if (!patient.tutor && tutorData && patient.edad < 18) {
+                if (tutorData && patient.edad < 18) {
+                    if (!patient.tutor || 
+                        patient.tutor.nombre !== tutorData.nombre ||
+                        patient.tutor.rut !== tutorData.rut) {
+                        patient.tutor = tutorData;
+                        datosActualizados = true;
+                    }
+                } else if (tutorData && patient.edad >= 18) {
                     patient.tutor = tutorData;
                     datosActualizados = true;
                 }
-                
-                // Si no tiene psychId asignado, asignarlo ahora
                 if (!patient.psychId && state.selectedPsych) {
                     patient.psychId = state.selectedPsych.id;
                     datosActualizados = true;
-                    console.log('📌 PsychId asignado a paciente existente:', state.selectedPsych.id);
                 }
-                
                 if (datosActualizados) {
                     try {
                         await import('../main.js').then(main => main.save());
-                        console.log('💾✅ Paciente actualizado en Firebase');
                     } catch (saveError) {
                         console.error('❌ Error actualizando paciente:', saveError);
                     }
@@ -983,7 +918,7 @@ export function executeBooking() {
                 patientId: patient.id,
                 patient: name,
                 patientRut: rut,
-                patientEmail: email, // ✅ SIEMPRE el email del paciente (ya validado)
+                patientEmail: email,
                 patientPhone: phone,
                 psych: state.selectedPsych.name,
                 psychId: state.selectedPsych.id,
@@ -1011,85 +946,57 @@ export function executeBooking() {
                 patientTutor: patient.tutor
             };
 
-            // ============================================
-            // 🔥 AGREGAR AL ARRAY LOCAL
-            // ============================================
             if (type === 'online') {
                 state.appointments.push(appointment);
                 showToast('✅ Solicitud creada', 'success');
-                if (typeof updateAvailableTimes === 'function') {
-                    updateAvailableTimes();
-                }
+                if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
             } else {
                 state.pendingRequests.push(appointment);
                 let mensaje = '✅ Solicitud enviada';
                 if (time) mensaje += ` (Preferencia: ${time})`;
                 if (preferenciaAMPM) mensaje += ` ${preferenciaAMPM}`;
                 showToast(mensaje, 'success');
-                if (typeof updateAvailableTimes === 'function') {
-                    updateAvailableTimes();
-                }
+                if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
             }
 
-            // ============================================
-            // 📧 ENVIAR EMAIL AL PACIENTE (NUNCA AL PROFESIONAL)
-            // ============================================
             if (email && !appointment.emailEnviado) {
-                // Verificación de seguridad ULTRA ESTRICTA
                 const esEmailProfesional = window.esEmailProfesional;
                 if (esEmailProfesional && esEmailProfesional(email)) {
                     console.error('❌ ERROR CRÍTICO: Intento de enviar email a profesional:', email);
                     showToast('⚠️ El email ingresado es de un profesional. No se envió el email.', 'warning');
                 } else {
-                    // Verificar que no se haya enviado ya este email
                     const emailKey = `${email}_${date}_${time}`;
                     if (emailsEnviados.has(emailKey)) {
                         console.log('⏭️ Email ya enviado previamente, omitiendo');
                     } else {
-                        // Construir mensaje según tipo de cita
                         let mensaje = `Hola ${name},\n\nHemos recibido tu solicitud de cita.\n\n` +
                             `📅 Fecha: ${date}\n` +
                             (time ? `⏰ Hora: ${time}\n` : '') +
                             `👨‍⚕️ Profesional: ${state.selectedPsych.name}\n\n`;
-                        
                         if (type === 'presencial') {
                             mensaje += `📍 La dirección exacta será coordinada directamente con el profesional.\n\n`;
                         }
-                        
                         mensaje += `Vínculo Salud`;
 
-                        console.log('📧 Enviando email a PACIENTE:', email);
-                        
                         const success = await sendEmailNotification(
-                            email, // ✅ SIEMPRE al paciente
+                            email,
                             'Solicitud de cita - Vínculo Salud',
                             mensaje,
                             'solicitud_recibida',
                             name,
                             appointment
                         );
-                        
                         if (success) {
                             appointment.emailEnviado = true;
                             emailsEnviados.add(emailKey);
-                            console.log('✅ Email enviado correctamente a PACIENTE:', email);
-                        } else {
-                            console.warn('⚠️ No se pudo enviar email a:', email);
                         }
                     }
                 }
             }
 
-            // Guardar TODO en Firebase (cita + paciente actualizado)
             await import('../main.js').then(main => main.save());
-
-            // Limpiar selección
             window.horaSeleccionada = null;
-            
-            // Actualizar disponibilidad nuevamente
-            if (typeof updateAvailableTimes === 'function') {
-                updateAvailableTimes();
-            }
+            if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
 
             bookBtn.innerHTML = originalText;
             bookBtn.disabled = false;
@@ -1116,82 +1023,49 @@ export function executeBooking() {
     }, 1500);
 }
 
-// ============================================
-// FUNCIÓN CANCELAPPOINTMENT - ACTUALIZADA CON VALIDACIÓN MEJORADA
-// ============================================
-
 export function cancelAppointment(id) {
     if (!confirm('¿Cancelar cita?')) return;
     
     const appointment = state.appointments.find(a => a.id == id);
-    
     if (!appointment) {
         showToast('Cita no encontrada', 'error');
         return;
     }
     
-    console.log('🚫 Cancelando cita:', {
-        id: appointment.id,
-        paciente: appointment.patient,
-        emailPaciente: appointment.patientEmail,
-        profesional: appointment.psych,
-        profesionalId: appointment.psychId
-    });
-    
-    // Guardar datos antes de eliminar
     const patientEmail = appointment.patientEmail;
     const patientName = appointment.patient;
     const patientId = appointment.patientId;
     
-    // Eliminar la cita
     state.setAppointments(state.appointments.filter(a => a.id != id));
     
     import('../main.js').then(main => {
         main.save();
         showToast('Cita cancelada', 'success');
-        
-        // Actualizar vistas DESPUÉS de guardar
         if (typeof renderAppointments === 'function') renderAppointments();
         if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
     });
     
-    // Enviar email al PACIENTE (con validación)
     if (!appointment.emailCancelacionEnviado) {
         enviarEmailCancelacion(patientEmail, patientName, patientId, appointment);
     }
 }
 
-// Función auxiliar para enviar email de cancelación (MEJORADA)
 async function enviarEmailCancelacion(email, patientName, patientId, appointment) {
     const esEmailProfesional = window.esEmailProfesional;
-    
-    // Verificar si el email es de profesional
     if (esEmailProfesional && esEmailProfesional(email)) {
-        console.warn('⚠️ El email de la cita es de un profesional:', email);
-        
-        // Buscar email correcto del paciente
         const patient = state.patients.find(p => p.id == patientId);
         if (patient && patient.email) {
-            // Si el email del paciente es el mismo que el del profesional, asumimos que es la misma persona y permitimos el envío
             if (patient.email === email) {
-                console.log('ℹ️ El paciente y el profesional comparten el mismo email. Se enviará igualmente.');
-                // No cambiamos el email
+                // mismo email, permitir
             } else if (!esEmailProfesional(patient.email)) {
-                console.log('✅ Usando email correcto del paciente:', patient.email);
                 email = patient.email;
             } else {
-                console.error('❌ El email del paciente también es de profesional:', patient.email);
-                showToast('⚠️ No se pudo enviar notificación: email no válido', 'warning');
                 return;
             }
         } else {
-            console.error('❌ Paciente no encontrado o sin email');
-            showToast('⚠️ No se pudo enviar notificación: paciente no encontrado', 'warning');
             return;
         }
     }
-    
-    // Enviar email
     const success = await sendEmailNotification(
         email,
         'Cita cancelada - Vínculo Salud',
@@ -1200,31 +1074,15 @@ async function enviarEmailCancelacion(email, patientName, patientId, appointment
         patientName,
         appointment
     );
-    
-    if (success) {
-        appointment.emailCancelacionEnviado = true;
-        console.log('✅ Email de cancelación enviado a:', email);
-    }
+    if (success) appointment.emailCancelacionEnviado = true;
 }
-
-// ============================================
-// FUNCIÓN REJECTREQUEST - ACTUALIZADA CON VALIDACIÓN MEJORADA
-// ============================================
 
 export function rejectRequest(requestId) {
     if (!confirm('¿Rechazar solicitud?')) return;
     
     const request = state.pendingRequests.find(r => r.id == requestId);
-    
     if (!request) return;
     
-    console.log('❌ Rechazando solicitud:', {
-        paciente: request.patient,
-        emailPaciente: request.patientEmail,
-        profesional: request.psych
-    });
-    
-    // Guardar datos antes de eliminar
     const patientEmail = request.patientEmail;
     const patientName = request.patient;
     const patientId = request.patientId;
@@ -1234,11 +1092,9 @@ export function rejectRequest(requestId) {
     import('../main.js').then(main => {
         main.save();
         showToast('Solicitud rechazada', 'success');
-        // Actualizar la vista DESPUÉS de guardar
         renderPendingRequests();
     });
     
-    // Enviar email al PACIENTE
     if (!request.emailRechazoEnviado) {
         enviarEmailRechazo(patientEmail, patientName, patientId, request);
     }
@@ -1246,28 +1102,20 @@ export function rejectRequest(requestId) {
 
 async function enviarEmailRechazo(email, patientName, patientId, request) {
     const esEmailProfesional = window.esEmailProfesional;
-    
-    // Verificar si el email es de profesional
     if (esEmailProfesional && esEmailProfesional(email)) {
-        console.warn('⚠️ Email de solicitud es de profesional:', email);
-        
-        // Buscar email correcto
         const patient = state.patients.find(p => p.id == patientId);
         if (patient && patient.email) {
             if (patient.email === email) {
-                console.log('ℹ️ El paciente y el profesional comparten el mismo email. Se enviará igualmente.');
-                // No cambiamos el email
+                // permitir
             } else if (!esEmailProfesional(patient.email)) {
                 email = patient.email;
             } else {
-                console.error('❌ El email del paciente también es de profesional:', patient.email);
                 return;
             }
         } else {
             return;
         }
     }
-    
     const success = await sendEmailNotification(
         email,
         'Solicitud no confirmada - Vínculo Salud',
@@ -1276,13 +1124,8 @@ async function enviarEmailRechazo(email, patientName, patientId, request) {
         patientName,
         request
     );
-    
     if (success) request.emailRechazoEnviado = true;
 }
-
-// ============================================
-// RESTO DE FUNCIONES (RENDERIZADO, ETC)
-// ============================================
 
 export function renderAppointments() {
     const tb = document.getElementById('tableBody');
@@ -1312,14 +1155,14 @@ export function renderAppointments() {
         
         return `
             <tr>
-                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small>\\
-                 Was${a.psych || '—'} \\
-                 Was${a.date || '—'} <br><small>${a.time || '—'}</small>\\
-                 Was<span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span>\\
-                 Was—\\
-                 Was<span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span>\\
-                 Was<span style="color:${statusColor};">${statusText}</span>\\
-                 Was
+                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
+                <td>${a.psych || '—'}</td>
+                <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
+                <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+                <td>—</td>
+                <td><span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span></td>
+                <td><span style="color:${statusColor};">${statusText}</span></td>
+                <td>
                     <div style="display:flex; gap:5px;">
                         ${a.paymentStatus !== 'pagado' ? `
                             <button onclick="confirmPayment('${a.id}')" class="btn-icon" style="background:var(--exito); color:white; border:none; padding:5px 8px; border-radius:4px;" title="Confirmar pago">
@@ -1333,8 +1176,8 @@ export function renderAppointments() {
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado a paciente</small>` : ''}
                     ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
-                 \\
-            \\
+                </td>
+            </tr>
         `;
     }).join('');
 }
@@ -1360,52 +1203,45 @@ export function renderPendingRequests() {
         
         return `
             <tr>
-                <td>${r.createdAt ? formatDate(r.createdAt) : '—'}\\
-                 Was
+                <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
+                <td>
                     <strong>${r.patient}</strong><br>
                     <small>${r.patientRut}</small>
                     ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
                     ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
                     ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
-                 \\
-                 Was${r.psych} \\
-                 Was${r.date} \\
-                 Was${r.time || 'A coordinar'} \\
-                 Was<span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span>\\
-                 Was—\\
-                 Was${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'} \\
-                 Was
+                </td>
+                <td>${r.psych}</td>
+                <td>${r.date}</td>
+                <td>${r.time || 'A coordinar'}</td>
+                <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+                <td>—</td>
+                <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
+                <td>
                     <div style="display:flex; flex-direction:column; gap:5px;">
                         <span style="font-size:0.8rem;">Pago: ${r.paymentStatus === 'pagado' ? '✅' : '⏳'}</span>
-                        
                         <div style="display:flex; gap:5px;">
                             ${r.paymentStatus !== 'pagado' ? `
                                 <button onclick="confirmPayment('${r.id}')" class="btn-icon" style="background:var(--exito); color:white; padding:5px 10px;">
                                     <i class="fa fa-dollar-sign"></i> Pagado
                                 </button>
                             ` : ''}
-                            
                             ${r.type === 'presencial' && r.paymentStatus === 'pagado' ? `
                                 <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--primario); color:white; padding:5px 10px;">
                                     <i class="fa fa-check"></i> Confirmar
                                 </button>
                             ` : ''}
-                            
                             <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--peligro); color:white; padding:5px 10px;">
                                 <i class="fa fa-times"></i> Rechazar
                             </button>
                         </div>
                         ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                     </div>
-                 \\
-             \\
+                </td>
+            </tr>
         `;
     }).join('');
 }
-
-// ============================================
-// RESTO DE FUNCIONES (showConfirmRequestModal, showTherapistBookingModal, etc)
-// ============================================
 
 export function showConfirmRequestModal(requestId) {
     const request = state.pendingRequests.find(r => r.id == requestId);
@@ -1578,7 +1414,6 @@ export function executeTherapistBooking() {
     import('../main.js').then(main => main.save());
     showToast('✅ Cita creada', 'success');
     
-    // Enviar email al PACIENTE
     if (state.selectedPatientForTherapist.email && !appointment.emailEnviado) {
         enviarEmailConValidacion(
             state.selectedPatientForTherapist.email,
@@ -1601,10 +1436,6 @@ export function markAsPaid(id) {
 export function editAppointment(id) {
     showToast('Función de edición en desarrollo', 'info');
 }
-
-// ============================================
-// ESTADÍSTICAS
-// ============================================
 
 export function getAppointmentStats(psychId = null) {
     let citas = state.appointments;
@@ -1724,6 +1555,6 @@ window.getUpcomingAppointments = getUpcomingAppointments;
 window.isTimeSlotAvailable = isTimeSlotAvailable;
 window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
-window.calcularEdad = window.calcularEdad; // Asegurar que se exponga
+window.calcularEdad = window.calcularEdad;
 
-console.log('✅ citas.js cargado con validación ABSOLUTA de email, filtrado de métodos de pago por tipo de atención y función cancelAppointment corregida');
+console.log('✅ citas.js cargado con validación ABSOLUTA de email, filtrado de métodos de pago por tipo de atención, función cancelAppointment corregida y SECCIÓN TUTOR SIEMPRE VISIBLE (obligatorio/opcional según edad)');

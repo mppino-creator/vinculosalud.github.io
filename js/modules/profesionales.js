@@ -901,7 +901,7 @@ export function renderStaffTable() {
         const generoTexto = p.genero === 'M' ? '♂️' : p.genero === 'F' ? '♀️' : '';
         
         return `
-        <tr>
+         <tr>
             <td><strong>${p.name}</strong> ${generoTexto}</td>
             <td>${p.email || '—'}</td>
             <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
@@ -936,11 +936,15 @@ export function renderStaffTable() {
                     </button>
                 </div>
             </td>
-        </tr>
-    `}).join('');
+         </tr>
+        `;
+    }).join('');
 }
 
-export function addStaff() {
+// ============================================
+// FUNCIÓN PARA AGREGAR PROFESIONAL (CON CREACIÓN EN AUTH)
+// ============================================
+export async function addStaff() {
     const name = document.getElementById('addName')?.value;
     const email = document.getElementById('addEmail')?.value;
     const specSelect = document.getElementById('addSpec');
@@ -970,56 +974,79 @@ export function addStaff() {
         return;
     }
 
-    if (state.staff.some(s => s.usuario === usuario)) {
-        showToast('El usuario ya existe', 'error');
-        return;
+    // Verificar si el usuario ya existe en Firebase Auth
+    try {
+        // 1. Crear usuario en Firebase Authentication
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+        const uid = userCredential.user.uid;
+        console.log('✅ Usuario creado en Auth con UID:', uid);
+        
+        // 2. Construir objeto del profesional (sin pass)
+        const nuevoProfesional = {
+            id: String(Date.now()),           // ID numérico para compatibilidad
+            uid: uid,                         // Guardamos el UID de Auth
+            name: name,
+            email: email,
+            spec: selectedSpecs,
+            priceOnline: parseInt(priceOnline),
+            pricePresencial: parseInt(pricePresencial),
+            usuario: usuario,
+            genero: genero,
+            whatsapp: whatsapp,
+            instagram: instagram,
+            img: state.tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
+            address: address,
+            phone: phone,
+            bankDetails: {
+                bank: bank,
+                accountType: accountType,
+                accountNumber: accountNumber,
+                rut: bankRut,
+                email: bankEmail
+            },
+            paymentMethods: { ...state.globalPaymentMethods },
+            stars: 5,
+            sessionDuration: 45,
+            breakBetween: 10,
+            availability: {},
+            paymentLinks: {
+                online: paymentLinkOnline,
+                presencial: paymentLinkPresencial,
+                qrOnline: state.tempQrOnlineData || '',
+                qrPresencial: state.tempQrPresencialData || ''
+            },
+            isAdmin: false,
+            isHiddenAdmin: false,
+            createdAt: new Date().toISOString()
+        };
+        
+        // 3. Guardar en Realtime Database (sin campo pass)
+        await firebase.database().ref(`Staff/${nuevoProfesional.id}`).set(nuevoProfesional);
+        
+        // 4. Actualizar estado local
+        state.staff.push(nuevoProfesional);
+        
+        closeAddStaffModal();
+        renderStaffTable();
+        showToast('Profesional añadido correctamente', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error al crear profesional:', error);
+        let mensaje = 'Error al crear profesional';
+        if (error.code === 'auth/email-already-in-use') {
+            mensaje = 'El email ya está registrado en el sistema';
+        } else if (error.code === 'auth/weak-password') {
+            mensaje = 'La contraseña es muy débil (mínimo 6 caracteres)';
+        } else {
+            mensaje = error.message;
+        }
+        showToast(mensaje, 'error');
     }
-
-    const nuevoProfesional = {
-        id: String(Date.now()),
-        name: name,
-        email: email,
-        spec: selectedSpecs,
-        priceOnline: parseInt(priceOnline),
-        pricePresencial: parseInt(pricePresencial),
-        usuario: usuario,
-        pass: pass,
-        genero: genero,
-        whatsapp: whatsapp,
-        instagram: instagram,
-        img: state.tempImageData || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500',
-        address: address,
-        phone: phone,
-        bankDetails: {
-            bank: bank,
-            accountType: accountType,
-            accountNumber: accountNumber,
-            rut: bankRut,
-            email: bankEmail
-        },
-        paymentMethods: { ...state.globalPaymentMethods },
-        stars: 5,
-        sessionDuration: 45,
-        breakBetween: 10,
-        availability: {},
-        paymentLinks: {
-            online: paymentLinkOnline,
-            presencial: paymentLinkPresencial,
-            qrOnline: state.tempQrOnlineData || '',
-            qrPresencial: state.tempQrPresencialData || ''
-        },
-        isAdmin: false,
-        isHiddenAdmin: false,
-        createdAt: new Date().toISOString()
-    };
-
-    state.staff.push(nuevoProfesional);
-    import('../main.js').then(main => main.save());
-    closeAddStaffModal();
-    renderStaffTable();
-    showToast('Profesional añadido', 'success');
 }
 
+// ============================================
+// FUNCIONES DE EDICIÓN Y ACTUALIZACIÓN (SIN CAMBIO DE CONTRASEÑA)
+// ============================================
 export function editTherapist(id) {
     const therapist = state.staff.find(s => s.id == id);
     if (!therapist) return;
@@ -1029,7 +1056,7 @@ export function editTherapist(id) {
     const editEmail = document.getElementById('editEmail');
     const editSpecSelect = document.getElementById('editSpec');
     const editUser = document.getElementById('editUser');
-    const editPass = document.getElementById('editPass');
+    // El campo de contraseña se puede dejar, pero no se usará para actualizar
     const editWhatsapp = document.getElementById('editWhatsapp');
     const editInstagram = document.getElementById('editInstagram');
     const editAddress = document.getElementById('editAddress');
@@ -1060,7 +1087,7 @@ export function editTherapist(id) {
     }
     
     if (editUser) editUser.value = therapist.usuario || '';
-    if (editPass) editPass.value = '';
+    // No cargamos la contraseña
     if (editWhatsapp) editWhatsapp.value = therapist.whatsapp || '';
     if (editInstagram) editInstagram.value = therapist.instagram || '';
     if (editAddress) editAddress.value = therapist.address || '';
@@ -1082,7 +1109,6 @@ export function editTherapist(id) {
     if (editPaymentLinkOnline) editPaymentLinkOnline.value = therapist.paymentLinks?.online || '';
     if (editPaymentLinkPresencial) editPaymentLinkPresencial.value = therapist.paymentLinks?.presencial || '';
     
-    // QR Online
     if (editQrOnlinePreview) {
         if (therapist.paymentLinks?.qrOnline) {
             editQrOnlinePreview.src = therapist.paymentLinks.qrOnline;
@@ -1092,7 +1118,6 @@ export function editTherapist(id) {
         }
     }
     
-    // QR Presencial
     if (editQrPresencialPreview) {
         if (therapist.paymentLinks?.qrPresencial) {
             editQrPresencialPreview.src = therapist.paymentLinks.qrPresencial;
@@ -1124,7 +1149,7 @@ export function closeEditTherapistModal() {
     if (modal) modal.style.display = 'none';
 }
 
-export function updateTherapist() {
+export async function updateTherapist() {
     const id = document.getElementById('editTherapistId')?.value;
     const therapist = state.staff.find(s => s.id == id);
     if (!therapist) return;
@@ -1147,7 +1172,7 @@ export function updateTherapist() {
     const editBankEmail = document.getElementById('editBankEmail');
     const editPaymentLinkOnline = document.getElementById('editPaymentLinkOnline');
     const editPaymentLinkPresencial = document.getElementById('editPaymentLinkPresencial');
-    const editPass = document.getElementById('editPass');
+    // No tomamos la contraseña, porque se maneja en Auth
 
     if (editName) therapist.name = editName.value;
     if (editEmail) therapist.email = editEmail.value;
@@ -1187,17 +1212,31 @@ export function updateTherapist() {
         therapist.img = state.tempImageData;
     }
 
-    const newPass = editPass?.value;
-    if (newPass) therapist.pass = newPass;
-
-    import('../main.js').then(main => main.save());
-    closeEditTherapistModal();
-    renderStaffTable();
-    showToast('Profesional actualizado', 'success');
+    // Actualizar en Firebase (sin contraseña)
+    try {
+        await firebase.database().ref(`Staff/${id}`).update(therapist);
+        
+        // También actualizar el email en Firebase Auth si cambió
+        if (therapist.email !== editEmail.value) {
+            // Nota: cambiar el email de un usuario requiere que el admin tenga permiso.
+            // En el cliente no es posible cambiar el email de otro usuario.
+            // Se podría dejar un mensaje indicando que el cambio de email debe hacerse en Auth manualmente.
+            showToast('⚠️ El email no se actualizó en Authentication. Si es necesario, cámbialo manualmente en Firebase Console.', 'warning');
+        }
+        
+        // Actualizar estado local
+        import('../main.js').then(main => main.save());
+        closeEditTherapistModal();
+        renderStaffTable();
+        showToast('Profesional actualizado', 'success');
+    } catch (error) {
+        console.error('Error actualizando profesional:', error);
+        showToast('Error al actualizar: ' + error.message, 'error');
+    }
 }
 
 // ============================================
-// 🔥 FUNCIÓN PARA ELIMINAR PROFESIONAL (CORREGIDA - SIN ERROR DE PERMISOS)
+// ELIMINAR PROFESIONAL (CON ELIMINACIÓN DE DATOS ASOCIADOS)
 // ============================================
 export async function deleteStaff(id) {
     const therapist = state.staff.find(s => s.id == id);
@@ -1302,9 +1341,8 @@ export async function deleteStaff(id) {
 }
 
 // ============================================
-// FUNCIONES PARA GESTIÓN DE PROFESIONALES
+// FUNCIONES DE ESTADÍSTICAS Y UTILIDAD
 // ============================================
-
 export function getPsychologistSummary(psychId) {
     const psych = state.staff.find(s => s.id == psychId);
     if (!psych) return null;
@@ -1426,9 +1464,8 @@ export function loadSpecialtiesInSelects() {
 }
 
 // ============================================
-// 🆕 AGREGAR BOTÓN DE EDICIÓN EN EL DASHBOARD
+// AGREGAR BOTÓN DE EDICIÓN EN EL DASHBOARD
 // ============================================
-
 export function addProfileButtonToDashboard() {
     const dashboardHeader = document.querySelector('.dashboard-header');
     if (!dashboardHeader) return;
@@ -1474,4 +1511,4 @@ if (typeof window !== 'undefined') {
     setTimeout(addProfileButtonToDashboard, 2000);
 }
 
-console.log('✅ profesionales.js cargado con funciones de fichas clínicas y edición de perfil profesional (sin boxes)');
+console.log('✅ profesionales.js cargado con funciones de fichas clínicas y edición de perfil profesional (sin contraseñas en DB)');

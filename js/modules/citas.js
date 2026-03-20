@@ -1254,7 +1254,7 @@ export function renderAppointments() {
     }
 
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = '生命<td colspan="8" style="text-align:center; padding:40px;">No hay citas</td>   ';
+        tb.innerHTML = '<td colspan="8" style="text-align:center; padding:40px;">No hay citas</td>';
         return;
     }
 
@@ -1270,14 +1270,14 @@ export function renderAppointments() {
         
         return `
             <tr>
-                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
-                <td>${a.psych || '—'}</td>
-                <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
-                <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>—</td>
-                <td><span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span></td>
-                <td><span style="color:${statusColor};">${statusText}</span></td>
-                <td>
+                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small>\\
+                 Was${a.psych || '—'} \\
+                 Was${a.date || '—'} <br><small>${a.time || '—'}</small>\\
+                 Was<span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span>\\
+                 Was—\\
+                 Was<span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span>\\
+                 Was<span style="color:${statusColor};">${statusText}</span>\\
+                 Was
                     <div style="display:flex; gap:5px;">
                         ${a.paymentStatus !== 'pagado' ? `
                             <button onclick="confirmPayment('${a.id}')" class="btn-icon" style="background:var(--exito); color:white; border:none; padding:5px 8px; border-radius:4px;" title="Confirmar pago">
@@ -1291,8 +1291,8 @@ export function renderAppointments() {
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado a paciente</small>` : ''}
                     ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
-                </td>
-            </tr>
+                 \\
+            \\
         `;
     }).join('');
 }
@@ -1309,7 +1309,7 @@ export function renderPendingRequests() {
     }
 
     if (requestsToShow.length === 0) {
-        tb.innerHTML = '生命<td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes</td>   ';
+        tb.innerHTML = '<td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes</td>';
         return;
     }
 
@@ -1317,22 +1317,22 @@ export function renderPendingRequests() {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         
         return `
-          <tr>
-              <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
-              <td>
+           <tr>
+               <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
+               <td>
                 <strong>${r.patient}</strong><br>
                 <small>${r.patientRut}</small>
                 ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
                 ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
                 ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
-              </td>
-              <td>${r.psych}</td>
-              <td>${r.date}</td>
-              <td>${r.time || 'A coordinar'}</td>
-              <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-              <td>—</td>
-              <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
-              <td>
+               </td>
+               <td>${r.psych}</td>
+               <td>${r.date}</td>
+               <td>${r.time || 'A coordinar'}</td>
+               <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+               <td>—</td>
+               <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
+               <td>
                 <div style="display:flex; flex-direction:column; gap:5px;">
                     <span style="font-size:0.8rem;">Pago: ${r.paymentStatus === 'pagado' ? '✅' : '⏳'}</span>
                     
@@ -1355,9 +1355,10 @@ export function renderPendingRequests() {
                     </div>
                     ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                 </div>
-              </td>
-          </tr>
-    `}).join('');
+               </td>
+           </tr>
+        `;
+    }).join('');
 }
 
 // ============================================

@@ -72,7 +72,7 @@ function calcularEdadDesdeFecha(birthdate) {
     return edad;
 }
 
-// Definir la función global calcularEdad (se ejecuta desde el HTML)
+// Definir la función global calcularEdad (se ejecuta desde el evento agregado dinámicamente)
 window.calcularEdad = function() {
     console.log('📅 calcularEdad ejecutada');
     const birthdate = document.getElementById('custBirthdate')?.value;
@@ -176,6 +176,14 @@ export function openBooking(id) {
     if (tutorRelationship) {
         tutorRelationship.value = '';
         tutorRelationship.required = false;
+    }
+    
+    // ✅ AGREGAR EVENTO AL CAMPO DE FECHA PARA QUE SE EJECUTE LA FUNCIÓN GLOBAL
+    const birthdateInput = document.getElementById('custBirthdate');
+    if (birthdateInput) {
+        // Eliminar listeners anteriores para evitar duplicados
+        birthdateInput.removeEventListener('change', window.calcularEdad);
+        birthdateInput.addEventListener('change', window.calcularEdad);
     }
     
     // Cargar métodos de pago según tipo (por defecto online al abrir)
@@ -494,6 +502,7 @@ export function searchPatientByRutBooking() {
         const birthdate = document.getElementById('custBirthdate');
         if (birthdate && patient.birthdate) {
             birthdate.value = patient.birthdate;
+            // Forzar ejecución manual de la función de edad
             if (typeof window.calcularEdad === 'function') {
                 window.calcularEdad();
             }
@@ -1245,7 +1254,7 @@ export function renderAppointments() {
     }
 
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">No hay citas</td></tr>';
+        tb.innerHTML = '生命<td colspan="8" style="text-align:center; padding:40px;">No hay citas</td>   ';
         return;
     }
 
@@ -1282,8 +1291,8 @@ export function renderAppointments() {
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado a paciente</small>` : ''}
                     ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
-                 </td>
-             </tr>
+                </td>
+            </tr>
         `;
     }).join('');
 }
@@ -1300,7 +1309,7 @@ export function renderPendingRequests() {
     }
 
     if (requestsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
+        tb.innerHTML = '生命<td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes</td>   ';
         return;
     }
 
@@ -1308,22 +1317,22 @@ export function renderPendingRequests() {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         
         return `
-         <tr>
-             <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
-             <td>
+          <tr>
+              <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
+              <td>
                 <strong>${r.patient}</strong><br>
                 <small>${r.patientRut}</small>
                 ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
                 ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
                 ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
-             </td>
-             <td>${r.psych}</td>
-             <td>${r.date}</td>
-             <td>${r.time || 'A coordinar'}</td>
-             <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-             <td>—</td>
-             <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
-             <td>
+              </td>
+              <td>${r.psych}</td>
+              <td>${r.date}</td>
+              <td>${r.time || 'A coordinar'}</td>
+              <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+              <td>—</td>
+              <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
+              <td>
                 <div style="display:flex; flex-direction:column; gap:5px;">
                     <span style="font-size:0.8rem;">Pago: ${r.paymentStatus === 'pagado' ? '✅' : '⏳'}</span>
                     
@@ -1346,8 +1355,8 @@ export function renderPendingRequests() {
                     </div>
                     ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                 </div>
-             </td>
-         </tr>
+              </td>
+          </tr>
     `}).join('');
 }
 

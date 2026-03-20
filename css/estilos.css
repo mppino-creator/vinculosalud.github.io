@@ -1932,3 +1932,92 @@ a.btn-instagram {
 #bookingPanel .glass input[type="checkbox"] {
     accent-color: white;
 }
+
+
+/* ============================================
+   CALENDARIO
+   ============================================ */
+.calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.calendar-table th {
+    background: var(--verde-grisaceo-claro);
+    padding: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.calendar-cell {
+    height: 100px;
+    vertical-align: top;
+    border: 1px solid var(--gris-claro);
+    padding: 8px;
+    transition: background 0.2s;
+}
+
+.calendar-cell:hover {
+    background: #f5f5f5;
+}
+
+.calendar-cell.empty {
+    background: #fafafa;
+}
+
+.calendar-cell .cita-item {
+    background: #e8f4fd;
+    margin: 4px 0;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* ============================================
+   FICHAS CLÍNICAS - TARJETAS
+   ============================================ */
+.fichas-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.ficha-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    border-left: 4px solid var(--primario);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+}
+
+.ficha-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.ficha-card .badge {
+    background: var(--primario);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.ficha-card .btn-icon {
+    background: var(--primario);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+}
+
+.ficha-card .btn-icon:hover {
+    background: var(--primario-hover);
+}

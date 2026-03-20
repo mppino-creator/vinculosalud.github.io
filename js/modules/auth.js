@@ -435,6 +435,9 @@ window.irADashboard = function() {
         // Llamar directamente a mostrarDashboardInmediato
         mostrarDashboardInmediato(role, userData);
         
+        // Al final de mostrarDashboardInmediato, después de las pestañas comunes:
+const calendarTab = document.getElementById('adminTabCalendario');
+if (calendarTab) calendarTab.style.display = 'inline-block';
         // 🔥 Cargar datos del profesional si es necesario
         if (role === 'psych') {
             setTimeout(() => {
@@ -838,7 +841,9 @@ function mostrarDashboardInmediato(role, userData) {
     
     // Cambiar a pestaña de citas
     switchTab('citas');
-    
+    else if (tabName === 'calendario' && typeof window.renderCalendar === 'function') {
+    window.renderCalendar();
+}
     console.log('✅ Dashboard forzado a visible con todas las pestañas configuradas');
 }
 

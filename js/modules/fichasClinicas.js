@@ -11,7 +11,6 @@ import { showToast } from './utils.js';
 export async function guardarFichaIngreso(patientId, data) {
   console.log('💾 Guardando ficha de ingreso para paciente:', patientId);
   
-  // Verificar permisos
   const tienePermiso = await puedeEditarFichas(patientId);
   if (!tienePermiso) {
     showToast('No tienes permisos para editar esta ficha', 'error');
@@ -24,7 +23,6 @@ export async function guardarFichaIngreso(patientId, data) {
     throw new Error('Paciente no encontrado');
   }
   
-  // Obtener información del usuario actual
   const userId = state.currentUser?.data?.id || state.currentUser?.id;
   const userName = state.currentUser?.data?.name || state.currentUser?.name || 'Desconocido';
   
@@ -43,31 +41,20 @@ export async function guardarFichaIngreso(patientId, data) {
     let fichaId;
     
     if (data.id) {
-      // Actualizar existente
       fichaId = data.id;
       await db.ref(`fichasIngreso/${fichaId}`).update(ficha);
-      
-      // ✅ CORREGIDO: Usar setter en lugar de asignación directa
       const fichasActualizadas = state.fichasIngreso.map(f => 
         f.id === fichaId ? { ...ficha, id: fichaId } : f
       );
       state.setFichasIngreso(fichasActualizadas);
-      
       showToast('Ficha de ingreso actualizada', 'success');
-      console.log('✅ Ficha actualizada:', fichaId);
     } else {
-      // Crear nueva
       const newRef = db.ref('fichasIngreso').push();
       fichaId = newRef.key;
       await newRef.set(ficha);
-      
-      // ✅ CORREGIDO: Usar setter
       state.setFichasIngreso([...state.fichasIngreso, { ...ficha, id: fichaId }]);
-      
       showToast('Ficha de ingreso guardada', 'success');
-      console.log('✅ Ficha creada con ID:', fichaId);
     }
-    
     return { success: true, id: fichaId };
   } catch (error) {
     console.error('❌ Error guardando ficha ingreso:', error);
@@ -105,7 +92,6 @@ export async function guardarNotaSesion(patientId, data) {
   try {
     if (data.id) {
       await db.ref(`sesiones/${data.id}`).update(sesion);
-      // ✅ CORREGIDO: Usar setter
       const sesionesActualizadas = state.sesiones.map(s => 
         s.id === data.id ? { ...sesion, id: data.id } : s
       );
@@ -114,7 +100,6 @@ export async function guardarNotaSesion(patientId, data) {
     } else {
       const newRef = db.ref('sesiones').push();
       await newRef.set(sesion);
-      // ✅ CORREGIDO: Usar setter
       state.setSesiones([...state.sesiones, { ...sesion, id: newRef.key }]);
       showToast('Nota de sesión guardada', 'success');
     }
@@ -131,13 +116,9 @@ export async function guardarNotaSesion(patientId, data) {
 // ============================================
 
 export async function obtenerFichasIngresoDePaciente(patientId) {
-    console.log(`📋 Obteniendo fichas de ingreso para paciente: ${patientId}`);
-    
     try {
         if (state.fichasIngreso && state.fichasIngreso.length > 0) {
-            const fichas = state.fichasIngreso.filter(f => f.patientId == patientId);
-            console.log(`✅ Encontradas ${fichas.length} fichas en memoria`);
-            return fichas;
+            return state.fichasIngreso.filter(f => f.patientId == patientId);
         }
         return [];
     } catch (error) {
@@ -161,48 +142,24 @@ export async function obtenerSesionesDePaciente(patientId) {
 }
 
 // ============================================
-// CARGAR DATOS INICIALES - CORREGIDO
+// CARGAR DATOS INICIALES
 // ============================================
 
 export async function cargarTodasLasFichas() {
   try {
     console.log('📂 Cargando todas las fichas clínicas...');
     
-    // Cargar fichas de ingreso
     const fichasSnapshot = await db.ref('fichasIngreso').once('value');
     const fichasData = fichasSnapshot.val();
-    if (fichasData) {
-      // ✅ CORREGIDO: Usar setter en lugar de asignación directa
-      const fichasArray = Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] }));
-      state.setFichasIngreso(fichasArray);
-      console.log(`✅ Cargadas ${state.fichasIngreso.length} fichas de ingreso`);
-    } else {
-      state.setFichasIngreso([]);
-    }
+    state.setFichasIngreso(fichasData ? Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] })) : []);
     
-    // Cargar sesiones
     const sesionesSnapshot = await db.ref('sesiones').once('value');
     const sesionesData = sesionesSnapshot.val();
-    if (sesionesData) {
-      // ✅ CORREGIDO: Usar setter
-      const sesionesArray = Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] }));
-      state.setSesiones(sesionesArray);
-      console.log(`✅ Cargadas ${state.sesiones.length} sesiones`);
-    } else {
-      state.setSesiones([]);
-    }
+    state.setSesiones(sesionesData ? Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] })) : []);
     
-    // Cargar informes (si existen)
     const informesSnapshot = await db.ref('informes').once('value');
     const informesData = informesSnapshot.val();
-    if (informesData) {
-      // ✅ CORREGIDO: Usar setter
-      const informesArray = Object.keys(informesData).map(key => ({ id: key, ...informesData[key] }));
-      state.setInformes(informesArray);
-      console.log(`✅ Cargados ${state.informes.length} informes`);
-    } else {
-      state.setInformes([]);
-    }
+    state.setInformes(informesData ? Object.keys(informesData).map(key => ({ id: key, ...informesData[key] })) : []);
     
     console.log('✅ Fichas clínicas cargadas completamente');
   } catch (error) {
@@ -212,17 +169,10 @@ export async function cargarTodasLasFichas() {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR FORMULARIO DE FICHA DE INGRESO
+// FORMULARIOS DE FICHA DE INGRESO
 // ============================================
 
-/**
- * Muestra un modal con el formulario para crear una ficha de ingreso.
- * @param {string} patientId - ID del paciente.
- */
 export async function mostrarFormularioFichaIngreso(patientId) {
-    console.log('📝 Mostrando formulario de ficha de ingreso para paciente:', patientId);
-    
-    // Verificar permisos (ahora con await)
     const tienePermiso = await puedeEditarFichas(patientId);
     if (!tienePermiso) {
         showToast('No tienes permisos para crear una ficha', 'error');
@@ -235,19 +185,16 @@ export async function mostrarFormularioFichaIngreso(patientId) {
         return;
     }
 
-    // Verificar si ya existe una ficha para este paciente
     const fichasExistentes = await obtenerFichasIngresoDePaciente(patientId);
     if (fichasExistentes.length > 0) {
         if (!confirm('Este paciente ya tiene una ficha de ingreso. ¿Quieres editarla?')) {
             return;
         } else {
-            // Cargar datos de la ficha existente para editar
             mostrarFormularioEdicionFichaIngreso(fichasExistentes[0]);
             return;
         }
     }
 
-    // Crear o mostrar el modal
     let modal = document.getElementById('modalFichaIngreso');
     if (!modal) {
         modal = document.createElement('div');
@@ -310,14 +257,10 @@ export async function mostrarFormularioFichaIngreso(patientId) {
         `;
         document.body.appendChild(modal);
     } else {
-        // Si ya existe, actualizar el título y limpiar campos
         const title = modal.querySelector('h2');
         if (title) title.textContent = 'Crear Ficha de Ingreso';
-        
         const patientInfo = modal.querySelector('p');
-        if (patientInfo) {
-            patientInfo.innerHTML = `Paciente: <strong>${patient.name}</strong> (${patient.rut})`;
-        }
+        if (patientInfo) patientInfo.innerHTML = `Paciente: <strong>${patient.name}</strong> (${patient.rut})`;
         
         document.getElementById('fichaPatientId').value = patientId;
         document.getElementById('fichaId').value = '';
@@ -329,20 +272,13 @@ export async function mostrarFormularioFichaIngreso(patientId) {
         document.getElementById('composicionFamiliar').value = '';
         document.getElementById('otrosAntecedentes').value = '';
     }
-
     modal.style.display = 'flex';
 }
 
-/**
- * Muestra el formulario para editar una ficha existente
- */
 function mostrarFormularioEdicionFichaIngreso(ficha) {
-    console.log('📝 Editando ficha:', ficha.id);
-    
     let modal = document.getElementById('modalFichaIngreso');
     if (!modal) {
         mostrarFormularioFichaIngreso(ficha.patientId);
-        // Esperar a que se cree el modal y luego llenar los datos
         setTimeout(() => llenarDatosFichaParaEdicion(ficha), 100);
     } else {
         llenarDatosFichaParaEdicion(ficha);
@@ -356,50 +292,28 @@ function llenarDatosFichaParaEdicion(ficha) {
     const patientInfo = document.querySelector('#modalFichaIngreso p');
     if (patientInfo) {
         const patient = state.patients.find(p => p.id == ficha.patientId);
-        if (patient) {
-            patientInfo.innerHTML = `Paciente: <strong>${patient.name}</strong> (${patient.rut})`;
-        }
+        if (patient) patientInfo.innerHTML = `Paciente: <strong>${patient.name}</strong> (${patient.rut})`;
     }
     
-    const fichaIdInput = document.getElementById('fichaId');
-    if (fichaIdInput) fichaIdInput.value = ficha.id;
-    
-    const patientIdInput = document.getElementById('fichaPatientId');
-    if (patientIdInput) patientIdInput.value = ficha.patientId;
-    
-    const motivoConsulta = document.getElementById('motivoConsulta');
-    if (motivoConsulta) motivoConsulta.value = ficha.motivoConsulta || '';
+    document.getElementById('fichaId').value = ficha.id;
+    document.getElementById('fichaPatientId').value = ficha.patientId;
+    document.getElementById('motivoConsulta').value = ficha.motivoConsulta || '';
     
     if (ficha.sintomatologia) {
-        const fechaInicio = document.getElementById('fechaInicio');
-        if (fechaInicio) fechaInicio.value = ficha.sintomatologia.fechaInicio || '';
-        
-        const progresion = document.getElementById('progresion');
-        if (progresion) progresion.value = ficha.sintomatologia.progresion || '';
-        
-        const tratamientosPrevios = document.getElementById('tratamientosPrevios');
-        if (tratamientosPrevios) tratamientosPrevios.value = ficha.sintomatologia.tratamientosPrevios || '';
-        
-        const medicamentos = document.getElementById('medicamentos');
-        if (medicamentos) medicamentos.value = ficha.sintomatologia.medicamentos || '';
+        document.getElementById('fechaInicio').value = ficha.sintomatologia.fechaInicio || '';
+        document.getElementById('progresion').value = ficha.sintomatologia.progresion || '';
+        document.getElementById('tratamientosPrevios').value = ficha.sintomatologia.tratamientosPrevios || '';
+        document.getElementById('medicamentos').value = ficha.sintomatologia.medicamentos || '';
     }
     
-    const composicionFamiliar = document.getElementById('composicionFamiliar');
-    if (composicionFamiliar) composicionFamiliar.value = ficha.composicionFamiliar || '';
-    
-    const otrosAntecedentes = document.getElementById('otrosAntecedentes');
-    if (otrosAntecedentes) otrosAntecedentes.value = ficha.otrosAntecedentes || '';
+    document.getElementById('composicionFamiliar').value = ficha.composicionFamiliar || '';
+    document.getElementById('otrosAntecedentes').value = ficha.otrosAntecedentes || '';
     
     const modal = document.getElementById('modalFichaIngreso');
     if (modal) modal.style.display = 'flex';
 }
 
-/**
- * Guarda la ficha de ingreso desde el formulario modal.
- */
 export async function guardarFichaIngresoDesdeFormulario() {
-    console.log('💾 Guardando ficha desde formulario...');
-    
     const patientId = document.getElementById('fichaPatientId')?.value;
     const fichaId = document.getElementById('fichaId')?.value;
     
@@ -428,35 +342,164 @@ export async function guardarFichaIngresoDesdeFormulario() {
     };
 
     try {
-        const resultado = await guardarFichaIngreso(patientId, data);
-        
-        // Cerrar el modal
+        await guardarFichaIngreso(patientId, data);
         const modal = document.getElementById('modalFichaIngreso');
         if (modal) modal.style.display = 'none';
-        
-        // Recargar la vista del paciente para mostrar la nueva ficha
         if (typeof window.mostrarDetallePaciente === 'function') {
             window.mostrarDetallePaciente(patientId);
         }
-        
-        return resultado;
     } catch (error) {
         console.error('❌ Error al guardar desde formulario:', error);
-        // El toast ya se muestra en guardarFichaIngreso
     }
 }
 
 // ============================================
-// FUNCIONES AUXILIARES
+// FUNCIONES PARA VISOR DE FICHAS CLÍNICAS (NUEVO)
 // ============================================
+
+export function renderFichasConFiltros() {
+    const container = document.getElementById('fichasList');
+    if (!container) return;
+
+    // Obtener datos según rol
+    let fichasIngreso = state.fichasIngreso;
+    let sesiones = state.sesiones;
+    let informes = state.informes;
+
+    const user = state.currentUser;
+    if (user && user.role === 'psych') {
+        const misPacientesIds = state.patients.filter(p => p.psychId == user.data.id).map(p => p.id);
+        fichasIngreso = fichasIngreso.filter(f => misPacientesIds.includes(f.patientId));
+        sesiones = sesiones.filter(s => misPacientesIds.includes(s.patientId));
+        informes = informes.filter(i => misPacientesIds.includes(i.patientId));
+    }
+
+    // Obtener filtros
+    const searchTerm = document.getElementById('fichaSearch')?.value.toLowerCase() || '';
+    const tipoFiltro = document.getElementById('fichaTipo')?.value;
+    const profesionalFiltro = document.getElementById('fichaProfesional')?.value;
+
+    // Preparar datos unificados
+    let items = [];
+
+    if (!tipoFiltro || tipoFiltro === 'ingreso') {
+        fichasIngreso.forEach(f => {
+            const patient = state.patients.find(p => p.id == f.patientId);
+            items.push({
+                id: f.id,
+                tipo: 'ingreso',
+                fecha: f.fechaCreacion || f.fechaIngreso,
+                paciente: patient?.name || 'Desconocido',
+                pacienteRut: patient?.rut || '',
+                profesional: patient ? state.staff.find(s => s.id == patient.psychId)?.name : 'No asignado',
+                motivo: f.motivoConsulta,
+                url: `/fichasIngreso/${f.id}`
+            });
+        });
+    }
+    if (!tipoFiltro || tipoFiltro === 'sesion') {
+        sesiones.forEach(s => {
+            const patient = state.patients.find(p => p.id == s.patientId);
+            items.push({
+                id: s.id,
+                tipo: 'sesion',
+                fecha: s.fechaAtencion,
+                paciente: patient?.name || 'Desconocido',
+                pacienteRut: patient?.rut || '',
+                profesional: patient ? state.staff.find(s => s.id == patient.psychId)?.name : 'No asignado',
+                notas: s.notas,
+                url: `/sesiones/${s.id}`
+            });
+        });
+    }
+    if (!tipoFiltro || tipoFiltro === 'informe') {
+        informes.forEach(i => {
+            const patient = state.patients.find(p => p.id == i.patientId);
+            items.push({
+                id: i.id,
+                tipo: i.tipo === 'psicodiagnostico' ? 'psicodiagnostico' : 'cierre',
+                fecha: i.fechaCreacion,
+                paciente: patient?.name || 'Desconocido',
+                pacienteRut: patient?.rut || '',
+                profesional: patient ? state.staff.find(s => s.id == patient.psychId)?.name : 'No asignado',
+                contenido: i.conclusiones || i.cierre,
+                url: `/informes/${i.id}`
+            });
+        });
+    }
+
+    // Aplicar filtros adicionales
+    items = items.filter(item => {
+        if (searchTerm && !item.paciente.toLowerCase().includes(searchTerm) && !item.pacienteRut.includes(searchTerm)) return false;
+        if (profesionalFiltro && item.profesional !== profesionalFiltro) return false;
+        return true;
+    });
+
+    // Ordenar por fecha descendente
+    items.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+
+    if (items.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">No hay fichas que coincidan con los filtros</div>';
+        return;
+    }
+
+    container.innerHTML = items.map(item => `
+        <div class="ficha-card" style="border-left-color: ${item.tipo === 'ingreso' ? '#1E7A8A' : item.tipo === 'sesion' ? '#63B0C7' : '#C8A161'}">
+            <div style="display:flex; justify-content:space-between;">
+                <div>
+                    <strong>${item.paciente}</strong> (${item.pacienteRut})<br>
+                    <small>${new Date(item.fecha).toLocaleDateString()}</small>
+                </div>
+                <span class="badge" style="background:${item.tipo === 'ingreso' ? '#1E7A8A' : item.tipo === 'sesion' ? '#63B0C7' : '#C8A161'}">${item.tipo === 'ingreso' ? 'Ficha Ingreso' : item.tipo === 'sesion' ? 'Nota Evolución' : (item.tipo === 'psicodiagnostico' ? 'Psicodiagnóstico' : 'Cierre')}</span>
+            </div>
+            <div style="margin:10px 0; color:#666;">
+                ${item.motivo ? `<p><strong>Motivo:</strong> ${item.motivo.substring(0,100)}${item.motivo.length>100?'...':''}</p>` : ''}
+                ${item.notas ? `<p><strong>Notas:</strong> ${item.notas.substring(0,100)}${item.notas.length>100?'...':''}</p>` : ''}
+                ${item.contenido ? `<p><strong>Contenido:</strong> ${item.contenido.substring(0,100)}${item.contenido.length>100?'...':''}</p>` : ''}
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fa fa-user-md"></i> ${item.profesional}</span>
+                <button class="btn-icon" onclick="window.fichasClinicas?.verDetalleFicha('${item.id}', '${item.tipo}')" style="background:var(--primario); color:white;">
+                    Ver detalle
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+export function filtrarFichas() {
+    renderFichasConFiltros();
+}
+
+export function cargarSelectProfesionales() {
+    const select = document.getElementById('fichaProfesional');
+    if (!select) return;
+    const profesionalesSet = new Set();
+    state.patients.forEach(p => {
+        const prof = state.staff.find(s => s.id == p.psychId);
+        if (prof && prof.name) profesionalesSet.add(prof.name);
+    });
+    select.innerHTML = '<option value="">Todos los profesionales</option>' +
+        Array.from(profesionalesSet).map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+export function verDetalleFicha(id, tipo) {
+    if (tipo === 'ingreso') {
+        const ficha = state.fichasIngreso.find(f => f.id == id);
+        if (ficha) mostrarFormularioEdicionFichaIngreso(ficha);
+    } else if (tipo === 'sesion') {
+        const sesion = state.sesiones.find(s => s.id == id);
+        if (sesion) verNotaSesion(id);
+    } else {
+        const informe = state.informes.find(i => i.id == id);
+        if (informe && window.informes?.verInforme) window.informes.verInforme(id);
+    }
+}
 
 export function editarFichaIngreso(fichaIngresoId) {
     const ficha = state.fichasIngreso?.find(f => f.id == fichaIngresoId);
-    if (ficha) {
-        mostrarFormularioEdicionFichaIngreso(ficha);
-    } else {
-        showToast('Ficha no encontrada', 'error');
-    }
+    if (ficha) mostrarFormularioEdicionFichaIngreso(ficha);
+    else showToast('Ficha no encontrada', 'error');
 }
 
 export function verNotaSesion(sesionId) {
@@ -465,8 +508,6 @@ export function verNotaSesion(sesionId) {
         showToast('Sesión no encontrada', 'error');
         return;
     }
-    
-    // Crear modal para ver la sesión completa
     let modal = document.getElementById('modalVerSesion');
     if (!modal) {
         modal = document.createElement('div');
@@ -481,7 +522,6 @@ export function verNotaSesion(sesionId) {
         `;
         document.body.appendChild(modal);
     }
-    
     const content = document.getElementById('detalleSesionContent');
     if (content) {
         content.innerHTML = `
@@ -493,15 +533,11 @@ export function verNotaSesion(sesionId) {
             <p><strong>Fecha registro:</strong> ${new Date(sesion.fechaGuardado || sesion.fechaCreacion).toLocaleString()}</p>
         `;
     }
-    
     modal.style.display = 'flex';
 }
 
 export function mostrarFormularioNotaSesion(patientId) {
-    // Por implementar - crear modal para nueva sesión
     showToast('Función de nueva sesión en desarrollo', 'info');
-    
-    // Aquí puedes implementar el modal para crear una nueva sesión
     console.log('📝 Mostrar formulario de nueva sesión para paciente:', patientId);
 }
 
@@ -519,9 +555,13 @@ if (typeof window !== 'undefined') {
     guardarFichaIngresoDesdeFormulario,
     editarFichaIngreso,
     verNotaSesion,
-    mostrarFormularioNotaSesion
+    mostrarFormularioNotaSesion,
+    renderFichasConFiltros,
+    filtrarFichas,
+    cargarSelectProfesionales,
+    verDetalleFicha
   };
   console.log('✅ window.fichasClinicas expuesto correctamente');
 }
 
-console.log('✅ fichasClinicas.js cargado correctamente con formulario de creación y setters (sin boxes)');
+console.log('✅ fichasClinicas.js cargado correctamente con formulario de creación, setters y visor de fichas');

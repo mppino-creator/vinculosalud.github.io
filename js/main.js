@@ -13,6 +13,10 @@ import * as state from './modules/state.js';
 window.state = state;
 console.log('✅ state expuesto globalmente inmediatamente');
 
+import * as calendario from './modules/calendario.js';
+window.calendario = calendario;
+window.renderCalendar = calendario.renderCalendar;
+
 // AHORA importamos el resto (SIN DUPLICAR db)
 import * as utils from './modules/utils.js';
 import * as auth from './modules/auth.js';
@@ -496,10 +500,10 @@ export function save() {
         return null;
     }));
     
-    promises.push(db.ref('Boxes').set(boxesObj).catch(err => {
-        console.error('❌ Error en Boxes:', err);
-        return null;
-    }));
+    // promises.push(db.ref('Boxes').set(boxesObj).catch(err => {
+//     console.error('❌ Error en Boxes:', err);
+//     return null;
+// }));
     
     promises.push(db.ref('Patients').set(patientsObj).catch(err => {
         console.error('❌ Error en Patients:', err);

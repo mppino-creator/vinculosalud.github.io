@@ -1167,8 +1167,7 @@
                 <!-- FECHA DE NACIMIENTO Y EDAD -->
                 <div class="form-group">
                     <label>Fecha de Nacimiento *</label>
-                    <input type="date" id="custBirthdate" class="filter-input" onchange="calcularEdad()">
-                </div>
+                        <input type="date" id="custBirthdate" class="filter-input">                </div>
                 <div id="edadDisplay" style="margin:5px 0 15px; font-size:0.9rem; color:var(--texto-secundario);"></div>
 
                 <!-- SECCIÓN DE TUTOR LEGAL -->
@@ -1354,6 +1353,8 @@
             <div class="tab" onclick="switchTab('solicitudes')">Solicitudes</div>
             <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
             <div class="tab" id="adminTabProfesionales" style="display:none;" onclick="switchTab('profesionales')">Profesionales</div>
+            <div class="tab" id="adminTabCalendario" style="display:none;" onclick="switchTab('calendario')">📅 Calendario</div>
+            <div class="tab" id="adminTabFichas" style="display:none;" onclick="switchTab('fichas')">📋 Fichas Clínicas</div>
             <div class="tab" id="adminTabEspecialidades" style="display:none;" onclick="switchTab('especialidades')">Especialidades</div>
             <div class="tab" id="adminTabPagos" style="display:none;" onclick="switchTab('pagos')">Métodos de Pago</div>
             <div class="tab" id="adminTabFondo" style="display:none;" onclick="switchTab('fondo')">Fondo</div>
@@ -1370,24 +1371,24 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
+                         <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                </table>
+                 </table>
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
+                         <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                </table>
+                 </table>
             </div>
         </div>
 
@@ -1414,13 +1415,37 @@
                 </button>
             </div>
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                         <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                </table>
+                 </table>
             </div>
+        </div>
+
+        <!-- Pestaña Calendario -->
+        <div id="tabCalendario" class="tab-content">
+            <h3>📅 Calendario de Atenciones</h3>
+            <div id="calendarContainer" style="background: white; border-radius: 16px; padding: 20px;"></div>
+        </div>
+
+        <!-- Pestaña Fichas Clínicas con filtros -->
+        <div id="tabFichas" class="tab-content">
+            <h3>📋 Fichas Clínicas</h3>
+            <div style="margin-bottom:20px; display:flex; gap:15px; flex-wrap:wrap;">
+                <input type="text" id="fichaSearch" placeholder="Buscar por paciente..." oninput="window.fichasClinicas?.filtrarFichas()" style="flex:2; min-width:200px; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                <select id="fichaTipo" onchange="window.fichasClinicas?.filtrarFichas()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <option value="">Todos los tipos</option>
+                    <option value="ingreso">Ficha de Ingreso</option>
+                    <option value="sesion">Notas de Evolución</option>
+                    <option value="informe">Informes</option>
+                </select>
+                <select id="fichaProfesional" onchange="window.fichasClinicas?.filtrarFichas()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                    <option value="">Todos los profesionales</option>
+                </select>
+            </div>
+            <div id="fichasList" class="fichas-grid" style="display:grid; gap:15px;"></div>
         </div>
 
         <div id="tabEspecialidades" class="tab-content">
@@ -1530,20 +1555,12 @@
             </div>
             
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Nombre</th>
-                            <th>Profesional</th>
-                            <th>Calificación</th>
-                            <th>Mensaje</th>
-                            <th>Contacto</th>
-                            <th>Acciones</th>
-                        </tr>
+                         <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                </table>
+                 </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">
@@ -2011,10 +2028,17 @@
                 if (tabName === 'disponibilidad' && typeof window.loadTimeSlots === 'function') {
                     window.loadTimeSlots();
                 }
+                if (tabName === 'calendario' && window.renderCalendar) {
+                    window.renderCalendar();
+                }
+                if (tabName === 'fichas' && window.fichasClinicas?.renderFichasConFiltros) {
+                    window.fichasClinicas.cargarSelectProfesionales();
+                    window.fichasClinicas.renderFichasConFiltros();
+                }
             }, 300);
         };
         
-        console.log('✅ Fix de pestañas instalado con estadísticas y disponibilidad');
+        console.log('✅ Fix de pestañas instalado con estadísticas, disponibilidad, calendario y fichas clínicas');
     }
     
     instalarFix();

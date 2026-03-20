@@ -435,9 +435,6 @@ window.irADashboard = function() {
         // Llamar directamente a mostrarDashboardInmediato
         mostrarDashboardInmediato(role, userData);
         
-        // Al final de mostrarDashboardInmediato, después de las pestañas comunes:
-const calendarTab = document.getElementById('adminTabCalendario');
-if (calendarTab) calendarTab.style.display = 'inline-block';
         // 🔥 Cargar datos del profesional si es necesario
         if (role === 'psych') {
             setTimeout(() => {
@@ -822,6 +819,19 @@ function mostrarDashboardInmediato(role, userData) {
         }
     });
     
+    // Asegurar visibilidad de pestañas nuevas (calendario, fichas) para todos los roles que tengan acceso
+    const calendarTab = document.getElementById('adminTabCalendario');
+    if (calendarTab) {
+        // Mostrar siempre (admin y psicólogo pueden ver calendario)
+        calendarTab.style.setProperty('display', 'inline-block', 'important');
+    }
+    
+    const fichasTab = document.getElementById('adminTabFichas');
+    if (fichasTab) {
+        // Mostrar siempre (admin y psicólogo pueden ver fichas)
+        fichasTab.style.setProperty('display', 'inline-block', 'important');
+    }
+    
     // Mostrar/ocultar botón de edición de perfil
     const profileBtn = document.getElementById('editProfileButton');
     if (profileBtn) {
@@ -841,9 +851,7 @@ function mostrarDashboardInmediato(role, userData) {
     
     // Cambiar a pestaña de citas
     switchTab('citas');
-    else if (tabName === 'calendario' && typeof window.renderCalendar === 'function') {
-    window.renderCalendar();
-}
+    
     console.log('✅ Dashboard forzado a visible con todas las pestañas configuradas');
 }
 
@@ -917,7 +925,9 @@ export function switchTab(tabName) {
         'configuracion': 'tabConfiguracion',
         'mensajes': 'tabMensajes',
         'agendar': 'tabAgendar',
-        'estadisticas': 'tabEstadisticas'
+        'estadisticas': 'tabEstadisticas',
+        'calendario': 'tabCalendario',
+        'fichas': 'tabFichas'
     };
     
     const contentId = tabMap[tabName] || `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
@@ -969,6 +979,13 @@ export function switchTab(tabName) {
                     if (window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') {
                         window.estadisticas.renderPanelEstadisticas();
                     }
+                }
+                else if (tabName === 'calendario' && typeof window.renderCalendar === 'function') {
+                    window.renderCalendar();
+                }
+                else if (tabName === 'fichas' && window.fichasClinicas && typeof window.fichasClinicas.renderFichasConFiltros === 'function') {
+                    if (window.fichasClinicas.cargarSelectProfesionales) window.fichasClinicas.cargarSelectProfesionales();
+                    window.fichasClinicas.renderFichasConFiltros();
                 }
             } catch (error) {
                 console.error(`❌ Error cargando datos para ${tabName}:`, error);

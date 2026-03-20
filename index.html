@@ -271,7 +271,11 @@
             </div>
         </div>
         
+        <!-- Botones: ahora incluye el de restablecimiento -->
         <div style="display:flex; gap:15px; margin-top:20px;">
+            <button type="button" class="btn-staff" style="background: var(--atencion);" onclick="enviarResetPasswordProfesional()">
+                <i class="fa fa-envelope"></i> Enviar correo de restablecimiento
+            </button>
             <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="updateTherapist()">Guardar</button>
             <button class="btn-staff" style="background:var(--text-light); flex:0.5;" onclick="closeEditTherapistModal()">Cancelar</button>
         </div>
@@ -1371,24 +1375,24 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
+                         <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                </table>
+                 </table>
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
+                         <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                </table>
+                 </table>
             </div>
         </div>
 
@@ -1415,12 +1419,12 @@
                 </button>
             </div>
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                         <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                </table>
+                 </table>
             </div>
         </div>
 
@@ -1555,12 +1559,12 @@
             </div>
             
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
+                         <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                </table>
+                 </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">
@@ -1871,6 +1875,16 @@
             btn.classList.remove('active');
         });
         document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Btn`).classList.add('active');
+    };
+
+    // Función global para enviar correo de restablecimiento desde el modal de edición de profesional
+    window.enviarResetPasswordProfesional = function() {
+        const email = document.getElementById('editEmail').value;
+        if (email && confirm(`Enviar correo de restablecimiento a ${email}?`)) {
+            import('./js/modules/profesionales.js').then(mod => {
+                mod.sendPasswordResetEmailForProfessional(email);
+            });
+        }
     };
 </script>
 

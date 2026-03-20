@@ -246,6 +246,7 @@ function crearModalEdicionProfesional() {
                 <button class="tab-btn" onclick="showMyProfileTab('prices')" id="tabPricesBtn">💰 Precios</button>
                 <button class="tab-btn" onclick="showMyProfileTab('payment')" id="tabPaymentBtn">💳 Pagos</button>
                 <button class="tab-btn" onclick="showMyProfileTab('social')" id="tabSocialBtn">🌐 Redes</button>
+                <button class="tab-btn" onclick="showMyProfileTab('password')" id="tabPasswordBtn">🔑 Contraseña</button>
             </div>
             
             <!-- TAB 1: DATOS BÁSICOS -->
@@ -502,6 +503,26 @@ function crearModalEdicionProfesional() {
                     <label><i class="fa fa-map-marker-alt"></i> Dirección consulta</label>
                     <input type="text" id="editMyAddress" class="filter-input" placeholder="Dirección de tu consulta presencial">
                 </div>
+            </div>
+            
+            <!-- TAB 5: CAMBIAR CONTRASEÑA -->
+            <div id="tabPassword" class="profile-tab" style="display: none;">
+                <h4 style="margin-bottom: 15px;">🔑 Cambiar Contraseña</h4>
+                <div class="form-group">
+                    <label>Contraseña actual *</label>
+                    <input type="password" id="editMyCurrentPassword" class="filter-input" placeholder="Ingresa tu contraseña actual">
+                </div>
+                <div class="form-group">
+                    <label>Nueva contraseña *</label>
+                    <input type="password" id="editMyNewPassword" class="filter-input" placeholder="Mínimo 6 caracteres">
+                </div>
+                <div class="form-group">
+                    <label>Confirmar nueva contraseña *</label>
+                    <input type="password" id="editMyConfirmPassword" class="filter-input" placeholder="Repite la nueva contraseña">
+                </div>
+                <button class="btn-staff" onclick="cambiarMiPassword()" style="background: var(--exito);">
+                    <i class="fa fa-key"></i> Actualizar contraseña
+                </button>
             </div>
             
             <!-- BOTONES -->
@@ -889,6 +910,89 @@ export function loadSpecialtiesInProfileSelects() {
 }
 
 // ============================================
+// 🆕 FUNCIÓN PARA ENVIAR CORREO DE RESTABLECIMIENTO (ADMIN)
+// ============================================
+export async function sendPasswordResetEmailForProfessional(email) {
+    if (!state.currentUser || state.currentUser.role !== 'admin') {
+        showToast('Solo administradores pueden hacer esto', 'error');
+        return;
+    }
+    if (!email) {
+        showToast('Email no válido', 'error');
+        return;
+    }
+    try {
+        await firebase.auth().sendPasswordResetEmail(email);
+        showToast(`✅ Correo de restablecimiento enviado a ${email}`, 'success');
+    } catch (error) {
+        console.error('Error enviando correo:', error);
+        let mensaje = 'Error al enviar correo';
+        if (error.code === 'auth/user-not-found') {
+            mensaje = 'El usuario no existe en Authentication. Crea primero su cuenta.';
+        }
+        showToast(mensaje, 'error');
+    }
+}
+
+// ============================================
+// 🆕 FUNCIÓN PARA CAMBIAR CONTRASEÑA PROPIA
+// ============================================
+export async function cambiarMiPassword() {
+    if (!state.currentUser || state.currentUser.role !== 'psych') {
+        showToast('No autorizado', 'error');
+        return;
+    }
+
+    const currentPassword = document.getElementById('editMyCurrentPassword')?.value;
+    const newPassword = document.getElementById('editMyNewPassword')?.value;
+    const confirmPassword = document.getElementById('editMyConfirmPassword')?.value;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showToast('Completa todos los campos', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('Las contraseñas nuevas no coinciden', 'error');
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        showToast('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        showToast('No hay sesión activa', 'error');
+        return;
+    }
+
+    // Reautenticar antes de cambiar contraseña (por seguridad)
+    const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+    try {
+        await user.reauthenticateWithCredential(credential);
+        await user.updatePassword(newPassword);
+        showToast('✅ Contraseña actualizada correctamente', 'success');
+        // Limpiar campos
+        document.getElementById('editMyCurrentPassword').value = '';
+        document.getElementById('editMyNewPassword').value = '';
+        document.getElementById('editMyConfirmPassword').value = '';
+    } catch (error) {
+        console.error('Error al cambiar contraseña:', error);
+        let mensaje = 'Error al cambiar contraseña';
+        if (error.code === 'auth/wrong-password') {
+            mensaje = 'La contraseña actual es incorrecta';
+        } else if (error.code === 'auth/weak-password') {
+            mensaje = 'La nueva contraseña es muy débil';
+        } else {
+            mensaje = error.message;
+        }
+        showToast(mensaje, 'error');
+    }
+}
+
+// ============================================
 // RENDERIZAR TABLA DE PROFESIONALES
 // ============================================
 export function renderStaffTable() {
@@ -901,7 +1005,7 @@ export function renderStaffTable() {
         const generoTexto = p.genero === 'M' ? '♂️' : p.genero === 'F' ? '♀️' : '';
         
         return `
-         <tr>
+          <tr>
             <td><strong>${p.name}</strong> ${generoTexto}</td>
             <td>${p.email || '—'}</td>
             <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
@@ -936,7 +1040,7 @@ export function renderStaffTable() {
                     </button>
                 </div>
             </td>
-         </tr>
+          </tr>
         `;
     }).join('');
 }
@@ -1507,6 +1611,8 @@ if (typeof window !== 'undefined') {
     window.viewMyPublicProfile = viewMyPublicProfile;
     window.loadSpecialtiesInProfileSelects = loadSpecialtiesInProfileSelects;
     window.addProfileButtonToDashboard = addProfileButtonToDashboard;
+    window.sendPasswordResetEmailForProfessional = sendPasswordResetEmailForProfessional;
+    window.cambiarMiPassword = cambiarMiPassword;
     
     setTimeout(addProfileButtonToDashboard, 2000);
 }

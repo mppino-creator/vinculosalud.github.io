@@ -55,44 +55,71 @@ function getTimePeriod(time) {
 }
 
 // ============================================
-// FUNCIÓN PARA CALCULAR EDAD (GLOBAL)
+// FUNCIÓN PARA NORMALIZAR FECHA (dd/mm/yyyy -> yyyy-mm-dd)
+// ============================================
+function normalizarFecha(fechaStr) {
+    if (!fechaStr) return '';
+    // Si ya está en formato yyyy-mm-dd, devolver tal cual
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
+        return fechaStr;
+    }
+    // Intentar parsear dd/mm/yyyy o dd-mm-yyyy
+    let partes = fechaStr.split(/[\/\-]/);
+    if (partes.length === 3) {
+        let dia = partes[0].padStart(2, '0');
+        let mes = partes[1].padStart(2, '0');
+        let año = partes[2];
+        // Validar que sea una fecha real (ej. día 01-12, mes 01-12)
+        if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12 && año.length === 4) {
+            return `${año}-${mes}-${dia}`;
+        }
+    }
+    // Si no se pudo convertir, devolver vacío
+    return '';
+}
+
+// ============================================
+// FUNCIÓN PARA CALCULAR EDAD
 // ============================================
 function calcularEdadDesdeFecha(birthdate) {
     if (!birthdate) return 0;
-    
     const hoy = new Date();
     const nacimiento = new Date(birthdate);
     let edad = hoy.getFullYear() - nacimiento.getFullYear();
     const mes = hoy.getMonth() - nacimiento.getMonth();
-    
     if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
         edad--;
     }
-    
     return edad;
 }
 
 // Definir la función global calcularEdad (se ejecuta desde el evento agregado dinámicamente)
 window.calcularEdad = function() {
     console.log('📅 calcularEdad ejecutada');
-    const birthdate = document.getElementById('custBirthdate')?.value;
-    const edadDisplay = document.getElementById('edadDisplay');
-    const tutorSection = document.getElementById('tutorSection');
-    
-    if (!birthdate) {
-        if (edadDisplay) edadDisplay.innerHTML = '';
-        if (tutorSection) tutorSection.style.display = 'none';
+    let birthdateRaw = document.getElementById('custBirthdate')?.value;
+    if (!birthdateRaw) {
+        document.getElementById('edadDisplay').innerHTML = '';
+        document.getElementById('tutorSection').style.display = 'none';
         return;
     }
     
-    const hoy = new Date();
-    const nacimiento = new Date(birthdate);
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();
-    const mes = hoy.getMonth() - nacimiento.getMonth();
-    
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-        edad--;
+    // Normalizar la fecha ingresada
+    let birthdate = normalizarFecha(birthdateRaw);
+    if (!birthdate) {
+        console.warn('⚠️ Fecha no reconocida:', birthdateRaw);
+        document.getElementById('edadDisplay').innerHTML = '<span style="color:red;">Formato de fecha inválido (usa dd/mm/aaaa)</span>';
+        document.getElementById('tutorSection').style.display = 'none';
+        return;
     }
+    
+    // Si la fecha normalizada es diferente a la original, actualizar el campo
+    if (birthdate !== birthdateRaw) {
+        document.getElementById('custBirthdate').value = birthdate;
+    }
+    
+    const edad = calcularEdadDesdeFecha(birthdate);
+    const edadDisplay = document.getElementById('edadDisplay');
+    const tutorSection = document.getElementById('tutorSection');
     
     if (edadDisplay) {
         edadDisplay.innerHTML = `<strong>Edad:</strong> ${edad} años`;
@@ -1270,14 +1297,14 @@ export function renderAppointments() {
         
         return `
             <tr>
-                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small>\\
-                 Was${a.psych || '—'} \\
-                 Was${a.date || '—'} <br><small>${a.time || '—'}</small>\\
-                 Was<span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span>\\
-                 Was—\\
-                 Was<span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span>\\
-                 Was<span style="color:${statusColor};">${statusText}</span>\\
-                 Was
+                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
+                <td>${a.psych || '—'}</td>
+                <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
+                <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+                <td>—</td>
+                <td><span style="color:${paymentStatusColor};">${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span></td>
+                <td><span style="color:${statusColor};">${statusText}</span></td>
+                <td>
                     <div style="display:flex; gap:5px;">
                         ${a.paymentStatus !== 'pagado' ? `
                             <button onclick="confirmPayment('${a.id}')" class="btn-icon" style="background:var(--exito); color:white; border:none; padding:5px 8px; border-radius:4px;" title="Confirmar pago">
@@ -1291,8 +1318,8 @@ export function renderAppointments() {
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.emailEnviado ? `<br><small style="color:var(--exito);">📧 Email enviado a paciente</small>` : ''}
                     ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
-                 \\
-            \\
+                </td>
+            </tr>
         `;
     }).join('');
 }
@@ -1317,46 +1344,46 @@ export function renderPendingRequests() {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         
         return `
-           <tr>
-               <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
-               <td>
-                <strong>${r.patient}</strong><br>
-                <small>${r.patientRut}</small>
-                ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
-                ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
-                ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
-               </td>
-               <td>${r.psych}</td>
-               <td>${r.date}</td>
-               <td>${r.time || 'A coordinar'}</td>
-               <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-               <td>—</td>
-               <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
-               <td>
-                <div style="display:flex; flex-direction:column; gap:5px;">
-                    <span style="font-size:0.8rem;">Pago: ${r.paymentStatus === 'pagado' ? '✅' : '⏳'}</span>
-                    
-                    <div style="display:flex; gap:5px;">
-                        ${r.paymentStatus !== 'pagado' ? `
-                            <button onclick="confirmPayment('${r.id}')" class="btn-icon" style="background:var(--exito); color:white; padding:5px 10px;">
-                                <i class="fa fa-dollar-sign"></i> Pagado
-                            </button>
-                        ` : ''}
+            <tr>
+                <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
+                <td>
+                    <strong>${r.patient}</strong><br>
+                    <small>${r.patientRut}</small>
+                    ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
+                    ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
+                    ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
+                </td>
+                <td>${r.psych}</td>
+                <td>${r.date}</td>
+                <td>${r.time || 'A coordinar'}</td>
+                <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
+                <td>—</td>
+                <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
+                <td>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <span style="font-size:0.8rem;">Pago: ${r.paymentStatus === 'pagado' ? '✅' : '⏳'}</span>
                         
-                        ${r.type === 'presencial' && r.paymentStatus === 'pagado' ? `
-                            <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--primario); color:white; padding:5px 10px;">
-                                <i class="fa fa-check"></i> Confirmar
+                        <div style="display:flex; gap:5px;">
+                            ${r.paymentStatus !== 'pagado' ? `
+                                <button onclick="confirmPayment('${r.id}')" class="btn-icon" style="background:var(--exito); color:white; padding:5px 10px;">
+                                    <i class="fa fa-dollar-sign"></i> Pagado
+                                </button>
+                            ` : ''}
+                            
+                            ${r.type === 'presencial' && r.paymentStatus === 'pagado' ? `
+                                <button onclick="showConfirmRequestModal('${r.id}')" class="btn-icon" style="background:var(--primario); color:white; padding:5px 10px;">
+                                    <i class="fa fa-check"></i> Confirmar
+                                </button>
+                            ` : ''}
+                            
+                            <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--peligro); color:white; padding:5px 10px;">
+                                <i class="fa fa-times"></i> Rechazar
                             </button>
-                        ` : ''}
-                        
-                        <button onclick="rejectRequest('${r.id}')" class="btn-icon" style="background:var(--peligro); color:white; padding:5px 10px;">
-                            <i class="fa fa-times"></i> Rechazar
-                        </button>
+                        </div>
+                        ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                     </div>
-                    ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
-                </div>
-               </td>
-           </tr>
+                </td>
+            </tr>
         `;
     }).join('');
 }

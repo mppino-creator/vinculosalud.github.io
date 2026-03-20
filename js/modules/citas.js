@@ -959,6 +959,9 @@ export function executeBooking() {
                 if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
             }
 
+            // ============================================
+            // 📧 ENVÍO DE EMAILS: AL PACIENTE Y COPIA AL PROFESIONAL
+            // ============================================
             if (email && !appointment.emailEnviado) {
                 const esEmailProfesional = window.esEmailProfesional;
                 if (esEmailProfesional && esEmailProfesional(email)) {
@@ -969,19 +972,20 @@ export function executeBooking() {
                     if (emailsEnviados.has(emailKey)) {
                         console.log('⏭️ Email ya enviado previamente, omitiendo');
                     } else {
-                        let mensaje = `Hola ${name},\n\nHemos recibido tu solicitud de cita.\n\n` +
+                        // Correo para el PACIENTE
+                        let mensajePaciente = `Hola ${name},\n\nHemos recibido tu solicitud de cita con ${state.selectedPsych.name}.\n\n` +
                             `📅 Fecha: ${date}\n` +
                             (time ? `⏰ Hora: ${time}\n` : '') +
                             `👨‍⚕️ Profesional: ${state.selectedPsych.name}\n\n`;
                         if (type === 'presencial') {
-                            mensaje += `📍 La dirección exacta será coordinada directamente con el profesional.\n\n`;
+                            mensajePaciente += `📍 La dirección exacta será coordinada directamente con el profesional.\n\n`;
                         }
-                        mensaje += `Vínculo Salud`;
+                        mensajePaciente += `Recuerda que para confirmar la cita, el profesional se pondrá en contacto contigo.\n\nSaludos,\nVínculo Salud`;
 
                         const success = await sendEmailNotification(
                             email,
                             'Solicitud de cita - Vínculo Salud',
-                            mensaje,
+                            mensajePaciente,
                             'solicitud_recibida',
                             name,
                             appointment
@@ -989,6 +993,32 @@ export function executeBooking() {
                         if (success) {
                             appointment.emailEnviado = true;
                             emailsEnviados.add(emailKey);
+                            console.log('✅ Email enviado a paciente:', email);
+                        }
+
+                        // Copia al PROFESIONAL (si el email del profesional es diferente al del paciente)
+                        const psychEmail = state.selectedPsych.email;
+                        if (psychEmail && psychEmail !== email) {
+                            const mensajeProfesional = `Hola ${state.selectedPsych.name},\n\nSe ha recibido una nueva solicitud de cita.\n\n` +
+                                `📋 Paciente: ${name}\n` +
+                                `📧 Email: ${email}\n` +
+                                `📞 Teléfono: ${phone}\n` +
+                                `📅 Fecha: ${date}\n` +
+                                (time ? `⏰ Hora: ${time}\n` : '') +
+                                `👨‍⚕️ Profesional: ${state.selectedPsych.name}\n` +
+                                `💳 Método de pago: ${paymentMethod || 'No especificado'}\n` +
+                                `📝 Motivo: ${msg || 'No especificado'}\n\n` +
+                                `Por favor, ingresa al sistema para gestionar esta solicitud.\n\nVínculo Salud`;
+
+                            await sendEmailNotification(
+                                psychEmail,
+                                'Nueva solicitud de cita - Vínculo Salud',
+                                mensajeProfesional,
+                                'nueva_solicitud_profesional',
+                                state.selectedPsych.name,
+                                appointment
+                            );
+                            console.log('✅ Email enviado a profesional:', psychEmail);
                         }
                     }
                 }
@@ -1557,4 +1587,4 @@ window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
 window.calcularEdad = window.calcularEdad; // Asegurar que se exponga
 
-console.log('✅ citas.js cargado con validación ABSOLUTA de email, filtrado de métodos de pago por tipo de atención, función cancelAppointment corregida y SECCIÓN TUTOR SIEMPRE VISIBLE (obligatorio/opcional según edad)');
+console.log('✅ citas.js cargado con validación ABSOLUTA de email, envío de copia al profesional y mensajes mejorados');

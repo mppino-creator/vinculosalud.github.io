@@ -960,7 +960,7 @@ export function executeBooking() {
             }
 
             // ============================================
-            // 📧 ENVÍO DE EMAILS: AL PACIENTE Y COPIA AL PROFESIONAL
+            // ENVÍO DE CORREOS MEJORADO
             // ============================================
             if (email && !appointment.emailEnviado) {
                 const esEmailProfesional = window.esEmailProfesional;
@@ -972,7 +972,7 @@ export function executeBooking() {
                     if (emailsEnviados.has(emailKey)) {
                         console.log('⏭️ Email ya enviado previamente, omitiendo');
                     } else {
-                        // Correo para el PACIENTE
+                        // Correo para el paciente
                         let mensajePaciente = `Hola ${name},\n\nHemos recibido tu solicitud de cita con ${state.selectedPsych.name}.\n\n` +
                             `📅 Fecha: ${date}\n` +
                             (time ? `⏰ Hora: ${time}\n` : '') +
@@ -980,7 +980,7 @@ export function executeBooking() {
                         if (type === 'presencial') {
                             mensajePaciente += `📍 La dirección exacta será coordinada directamente con el profesional.\n\n`;
                         }
-                        mensajePaciente += `Recuerda que para confirmar la cita, el profesional se pondrá en contacto contigo.\n\nSaludos,\nVínculo Salud`;
+                        mensajePaciente += `Vínculo Salud`;
 
                         const success = await sendEmailNotification(
                             email,
@@ -996,7 +996,7 @@ export function executeBooking() {
                             console.log('✅ Email enviado a paciente:', email);
                         }
 
-                        // Copia al PROFESIONAL (si el email del profesional es diferente al del paciente)
+                        // Correo para el profesional (si es diferente del paciente)
                         const psychEmail = state.selectedPsych.email;
                         if (psychEmail && psychEmail !== email) {
                             const mensajeProfesional = `Hola ${state.selectedPsych.name},\n\nSe ha recibido una nueva solicitud de cita.\n\n` +
@@ -1587,4 +1587,4 @@ window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
 window.calcularEdad = window.calcularEdad; // Asegurar que se exponga
 
-console.log('✅ citas.js cargado con validación ABSOLUTA de email, envío de copia al profesional y mensajes mejorados');
+console.log('✅ citas.js cargado con validación ABSOLUTA de email, filtrado de métodos de pago por tipo de atención, función cancelAppointment corregida, SECCIÓN TUTOR SIEMPRE VISIBLE (obligatorio/opcional según edad) y ENVÍO DE CORREO AL PROFESIONAL');

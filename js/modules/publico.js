@@ -12,12 +12,14 @@ import {
     cargarAboutTexts,
     cargarAtencionTexts,
     cargarContactInfo,
-    cargarInstagramData,
+    cargarInstagramData,          // ✅ NUEVA IMPORTACIÓN
     updateAboutSection,
     updateAtencionSection,
     updateContactSection
 } from './personalizacion.js';
 import { renderStaffTable } from './profesionales.js';
+// ⚠️ Boxes desactivado - no se importa
+// import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
 import { renderPatients } from './pacientes.js';
 import { renderPendingRequests } from './citas.js';
 
@@ -100,8 +102,10 @@ window.toggleInfo = function(button) {
 export function showSection(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
     
+    // 1. DEFINIR TODAS LAS SECCIONES DISPONIBLES
     const secciones = ['inicio', 'about', 'equipo', 'atencion', 'contacto'];
     
+    // 2. OCULTAR TODAS LAS SECCIONES (esto es clave)
     secciones.forEach(sec => {
         const elemento = document.getElementById(sec);
         if (elemento) {
@@ -109,12 +113,14 @@ export function showSection(sectionId) {
         }
     });
     
+    // 3. MOSTRAR SOLO LA SECCIÓN SELECCIONADA
     const seccionAMostrar = document.getElementById(sectionId);
     if (seccionAMostrar) {
         seccionAMostrar.style.display = 'block';
         seccionAMostrar.scrollIntoView({ behavior: 'smooth' });
     }
     
+    // 4. ACTUALIZAR CLASES ACTIVAS EN EL MENÚ
     document.querySelectorAll('.public-nav a').forEach(link => {
         link.classList.remove('active');
         link.style.borderBottom = 'none';
@@ -127,6 +133,7 @@ export function showSection(sectionId) {
         }
     });
     
+    // 5. ACTUALIZAR BREADCRUMBS
     const breadcrumbs = document.querySelector('.breadcrumbs');
     const currentPageSpan = document.getElementById('currentPage');
     
@@ -145,7 +152,9 @@ export function showSection(sectionId) {
         }
     }
     
+    // 6. 🔥 FORZAR ACTUALIZACIÓN DE INSTAGRAM CUANDO SE MUESTRA LA SECCIÓN EQUIPO
     if (sectionId === 'equipo') {
+        // Pequeño retraso para asegurar que la sección es visible
         setTimeout(() => {
             if (window.personalizacion && typeof window.personalizacion.updateInstagramSection === 'function') {
                 console.log('📸 Forzando actualización de Instagram al mostrar sección equipo');
@@ -154,20 +163,25 @@ export function showSection(sectionId) {
         }, 300);
     }
     
+    // 7. LÓGICA ESPECÍFICA POR SECCIÓN
     if (sectionId === 'equipo') {
+        // Solo en EQUIPO se muestran los profesionales
         const grid = document.getElementById('equipo');
         if (grid) grid.style.display = 'block';
         
         const filtros = document.querySelector('.filters');
         if (filtros) filtros.style.display = 'flex';
         
+        // Cargar profesionales
         if (typeof filterProfessionals === 'function') {
             filterProfessionals();
         }
     } else {
+        // En las demás secciones, ocultar filtros
         const filtros = document.querySelector('.filters');
         if (filtros) filtros.style.display = 'none';
         
+        // Cargar contenido específico de cada sección
         if (sectionId === 'about') {
             updateAboutSection();
         } else if (sectionId === 'atencion') {
@@ -494,25 +508,11 @@ export function cargarDatosIniciales() {
         filterProfessionals();
         if (state.currentUser?.role === 'admin') renderStaffTable();
         state.setDataLoaded(true);
-
-        // 🔥 NUEVO: Forzar la visualización de la sección equipo con filtros después de cargar datos
-        setTimeout(() => {
-            if (document.getElementById('equipo').style.display !== 'block') {
-                showSection('equipo');
-            }
-            // Asegurar que el grid tenga la clase para el diseño de columnas
-            const gridElem = document.getElementById('equipo');
-            if (gridElem && !gridElem.classList.contains('grid')) {
-                gridElem.classList.add('grid');
-                console.log('✅ Clase "grid" añadida al contenedor de profesionales');
-            }
-        }, 500);
     }, (error) => {
         console.error('❌ Error al cargar profesionales:', error);
         showToast('Error al cargar profesionales', 'error');
         state.setStaff([]);
         filterProfessionals();
-        setTimeout(() => showSection('equipo'), 500);
     });
 
     db.ref('Patients').on('value', (snapshot) => {
@@ -564,7 +564,7 @@ export function cargarDatosIniciales() {
     cargarAboutTexts();
     cargarAtencionTexts();
     cargarContactInfo();
-    cargarInstagramData();
+    cargarInstagramData();   // ✅ LÍNEA CLAVE
     
     setTimeout(() => {
         updateAboutSection();

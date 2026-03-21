@@ -413,10 +413,17 @@ nav.glass a:last-child {
 
 .btn-agendar, .btn-reservar { 
     background: var(--verde-azulado-profundo); 
+    padding: 12px 24px; /* Aumentado para mayor prominencia */
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 .btn-agendar:hover, .btn-reservar:hover { 
     background: #166374; 
-    transform: translateY(-2px); 
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
 }
 
 .btn-instagram { 
@@ -641,10 +648,26 @@ button[style*="background:var(--verde-exito)"] {
 
 .card-actions {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     margin-top: auto;
     padding-top: 16px;
     border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.card-actions .btn-mas-info {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    border-width: 1px;
+}
+
+.card-actions .btn-agendar {
+    flex: 2;
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .therapist-card button {

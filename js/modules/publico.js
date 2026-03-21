@@ -333,15 +333,15 @@ export function renderProfessionals(professionals) {
         return;
     }
 
-    if (!professionals || professionals.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; background:white; border-radius:20px;"><i class="fa fa-user-md" style="font-size:48px; color:#ccc;"></i><p style="margin-top:20px; color:#666;">No se encontraron profesionales</p></div>';
-        return;
-    }
-
-    // Asegurar que el grid tenga la clase correcta
+    // 🔥 Asegurar que el contenedor tenga la clase 'grid' para el diseño de 3 columnas
     if (!grid.classList.contains('grid')) {
         grid.classList.add('grid');
         console.log('✅ Clase "grid" añadida al contenedor #equipo');
+    }
+
+    if (!professionals || professionals.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; background:white; border-radius:20px;"><i class="fa fa-user-md" style="font-size:48px; color:#ccc;"></i><p style="margin-top:20px; color:#666;">No se encontraron profesionales</p></div>';
+        return;
     }
 
     grid.innerHTML = professionals.map(p => {
@@ -530,7 +530,7 @@ export function cargarDatosIniciales() {
         console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
         state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPatients();
-        setTimeout(() => filterProfessionals(), 100);
+        // 🔥 ELIMINADO: setTimeout(() => filterProfessionals(), 100); - Evita render innecesario que causaba parpadeo
     });
 
     db.ref('Appointments').on('value', (snapshot) => {

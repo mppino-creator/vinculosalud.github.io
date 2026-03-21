@@ -50,17 +50,13 @@ export function esEmailProfesional(email) {
 }
 
 // ============================================
-// FUNCIÓN PARA ENVIAR EMAILS (MEJORADA)
+// FUNCIÓN PARA ENVIAR EMAILS (ACTUALIZADA)
 // ============================================
 
 export async function sendEmailNotification(to, subject, message, tipo = 'general', patientName = null, appointmentData = {}) {
   
-  // 🚨 VALIDACIÓN CRÍTICA: NO enviar emails a profesionales
-  if (esEmailProfesional(to)) {
-    console.error('❌ BLOQUEADO: Intento de enviar email a profesional:', to);
-    console.warn('📋 Los emails solo deben enviarse a pacientes');
-    return false;
-  }
+  // Ya no bloqueamos automáticamente a profesionales. La lógica de negocio se encarga.
+  // Si se desea bloquear según el tipo, se puede hacer aquí, pero por ahora lo dejamos pasar.
   
   const emailId = `${to}_${tipo}_${appointmentData.id || Date.now()}`;
   
@@ -93,7 +89,7 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
     const nombreReal = patientName || to.split('@')[0] || 'Paciente';
     
     const templateParams = {
-      to_email: to,                    // ← DESTINATARIO (PACIENTE)
+      to_email: to,
       to_name: nombreReal,
       reply_to: to,
       from_name: 'Vínculo Salud',
@@ -103,6 +99,7 @@ export async function sendEmailNotification(to, subject, message, tipo = 'genera
       appointment_time: appointmentData.time || '',
       professional_name: appointmentData.psych || 'Profesional',
       appointment_type: appointmentData.type === 'online' ? 'Online' : 'Presencial',
+      appointment_price: appointmentData.price || '0',      // 🔥 AGREGADO: precio para la plantilla
       message: mensajeLimpio,
       subject: subject
     };
@@ -332,4 +329,4 @@ if (typeof window !== 'undefined') {
   window.esEmailProfesional = esEmailProfesional; // Exportar para uso global
 }
 
-console.log('✅ utils.js cargado con validación de emails mejorada (sin boxes)');
+console.log('✅ utils.js cargado con validación de emails mejorada y soporte para envío a profesionales (sin bloqueo)');

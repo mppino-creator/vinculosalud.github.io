@@ -333,7 +333,7 @@ export function renderProfessionals(professionals) {
         return;
     }
 
-    // 🔥 Asegurar que el contenedor tenga la clase 'grid' para el diseño de 3 columnas
+    // Asegurar que el contenedor tenga la clase 'grid'
     if (!grid.classList.contains('grid')) {
         grid.classList.add('grid');
         console.log('✅ Clase "grid" añadida al contenedor #equipo');
@@ -405,8 +405,11 @@ export function renderProfessionals(professionals) {
 export function cargarDatosIniciales() {
     console.log('🚀 Cargando datos iniciales...');
     
+    // Mostrar un loader dentro del grid mientras se cargan los datos
     const grid = document.getElementById('equipo');
-    if (grid) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px;"><div class="loader-spinner" style="margin:0 auto 20px;"></div><p style="color:#666;">Cargando profesionales...</p></div>';
+    if (grid) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px;"><div class="loader-spinner" style="margin:0 auto 20px;"></div><p style="color:#666;">Cargando profesionales...</p></div>';
+    }
 
     const filtros = document.querySelector('.filters');
     if (filtros) filtros.style.display = 'none';
@@ -497,40 +500,37 @@ export function cargarDatosIniciales() {
         }
 
         console.log('📊 Total staff después de procesar (incluyendo admin):', state.staff.length);
-        filterProfessionals();
-        if (state.currentUser?.role === 'admin') renderStaffTable();
+        
+        // Marcar datos como cargados
         state.setDataLoaded(true);
-
-        // 🔥 NUEVO: Forzar la visualización de la sección equipo con filtros después de cargar datos
+        
+        // 🔥 NUEVO: Solo una llamada a showSection para renderizar todo una sola vez
         setTimeout(() => {
-            if (document.getElementById('equipo').style.display !== 'block') {
-                showSection('equipo');
-            }
-            // Asegurar que el grid tenga la clase para el diseño de columnas
-            const gridElem = document.getElementById('equipo');
-            if (gridElem && !gridElem.classList.contains('grid')) {
-                gridElem.classList.add('grid');
-                console.log('✅ Clase "grid" añadida al contenedor de profesionales');
-            }
-        }, 500);
+            showSection('equipo');
+        }, 100);
+        
+        if (state.currentUser?.role === 'admin') renderStaffTable();
+        
     }, (error) => {
         console.error('❌ Error al cargar profesionales:', error);
         showToast('Error al cargar profesionales', 'error');
         state.setStaff([]);
-        filterProfessionals();
-        setTimeout(() => {
-            if (document.getElementById('equipo').style.display !== 'block') {
-                showSection('equipo');
-            }
-        }, 500);
+        // Mostrar mensaje de error en el grid
+        const grid = document.getElementById('equipo');
+        if (grid) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; background:white; border-radius:20px;"><i class="fa fa-exclamation-circle" style="font-size:48px; color:#dc3545;"></i><p style="margin-top:20px; color:#666;">Error al cargar profesionales. Por favor, recarga la página.</p></div>';
+        }
+        // En caso de error, igual mostrar sección para no dejar vacío
+        setTimeout(() => showSection('equipo'), 500);
     });
 
+    // Cargar pacientes (solo lectura, no renderiza profesionales)
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
         console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
         state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPatients();
-        // 🔥 ELIMINADO: setTimeout(() => filterProfessionals(), 100); - Evita render innecesario que causaba parpadeo
+        // 🔥 No llamar a filterProfessionals aquí para evitar render extra
     });
 
     db.ref('Appointments').on('value', (snapshot) => {

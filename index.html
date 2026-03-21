@@ -3,7 +3,7 @@
 <head>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1E7A8A">
+    <meta name="theme-color" content="#7B8471">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Vínculo Salud - Centro de Bienestar</title>
@@ -30,42 +30,19 @@
           emailjs.init('_LDTyGJlGKoOIWVJa');
        })();
     </script>
-    
-    <!-- Estilos adicionales para el menú (FIX) -->
-    <style>
-        /* FIX PARA EL MENÚ PRINCIPAL */
-        nav.glass a {
-            color: var(--texto-principal) !important;
-            font-size: 1.1rem !important;
-            font-weight: 500 !important;
-            text-decoration: none !important;
-            padding: 0.3rem 0 !important;
-            border-bottom: 2px solid transparent !important;
-            transition: all 0.2s ease !important;
-        }
-        
-        nav.glass a:hover {
-            color: var(--ocre-calido) !important;
-            border-bottom-color: var(--ocre-calido) !important;
-        }
-        
-        nav.glass a.active {
-            border-bottom-color: var(--ocre-calido) !important;
-        }
-        
-        nav.glass a:last-child i {
-            margin-right: 5px;
-            opacity: 0.6;
-        }
-        
-        nav.glass a:last-child {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-    </style>
 </head>
 <body>
+
+<!-- TOP HEADER (estilo Punto Terapia) -->
+<div class="top-header">
+    <div class="container">
+        <div id="et-info">
+            <span id="et-info-phone">📞 +56 9 3870 6152</span>
+            <a href="mailto:contacto@vinculosalud.cl" style="margin-left: 15px;">✉️ contacto@vinculosalud.cl</a>
+        </div>
+        <div id="et-secondary-menu"></div>
+    </div>
+</div>
 
 <!-- Loader inicial -->
 <div id="initialLoader">
@@ -271,7 +248,6 @@
             </div>
         </div>
         
-        <!-- Botones: ahora incluye el de restablecimiento -->
         <div style="display:flex; gap:15px; margin-top:20px;">
             <button type="button" class="btn-staff" style="background: var(--atencion);" onclick="enviarResetPasswordProfesional()">
                 <i class="fa fa-envelope"></i> Enviar correo de restablecimiento
@@ -597,11 +573,11 @@
         <h2 style="margin-bottom: 25px;">Textos de Portada</h2>
         <div class="form-group">
             <label>Título Principal</label>
-            <input type="text" id="heroTitle" value="Tu bienestar comienza con un buen vínculo">
+            <input type="text" id="heroTitle" value="Un espacio seguro para sanar, comprender y crecer">
         </div>
         <div class="form-group">
             <label>Subtítulo</label>
-            <textarea id="heroSubtitle" rows="3">Atención psicológica profesional, ética y cercana</textarea>
+            <textarea id="heroSubtitle" rows="3">En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.</textarea>
         </div>
         <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="saveHeroTexts()">Guardar</button>
     </div>
@@ -898,7 +874,7 @@
 </div>
 
 <!-- ============================================ -->
-<!-- HEADER CORREGIDO - ESTILO LIMPIO -->
+<!-- HEADER PRINCIPAL (con botón CTA) -->
 <!-- ============================================ -->
 <div class="container">
     <header class="nav-container">
@@ -909,18 +885,25 @@
                 <span id="headerLogoText" class="logo-text">Vínculo Salud</span>
             </div>
             
-            <!-- MENÚ - TODOS LOS ITEMS IGUALES -->
-            <div style="display: flex; align-items: center; gap: 3rem;">
-                <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
-                <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
-                <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
-                <a href="#atencion" onclick="showSection('atencion'); return false;">Tipo de Atención</a>
-                <a href="#contacto" onclick="showSection('contacto'); return false;">Contacto</a>
-                
-                <!-- STAFF - MISMO ESTILO, SOLO CON CANDADO -->
-                <a href="#" onclick="mostrarMenuStaff(true); return false;" style="display: flex; align-items: center; gap: 5px;">
-                    <i class="fa fa-user-check" style="font-size: 0.9rem; color: #1E7A8A;"></i>Administrador
-                </a>
+            <!-- MENÚ + BOTÓN CTA -->
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <div style="display: flex; align-items: center; gap: 1.5rem;">
+                    <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
+                    <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
+                    <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
+                    <a href="#atencion" onclick="showSection('atencion'); return false;">Tipo de Atención</a>
+                    <a href="#contacto" onclick="showSection('contacto'); return false;">Contacto</a>
+                    
+                    <!-- BOTÓN CTA (Agenda tu Hora) -->
+                    <a href="#equipo" onclick="showSection('equipo'); return false;" class="btn-cta" style="background: var(--atencion); color: white; padding: 0.5rem 1.2rem; border-radius: 30px; text-decoration: none; font-weight: 600;">
+                        <i class="fa fa-calendar-check"></i> Agenda tu Hora
+                    </a>
+                    
+                    <!-- STAFF LINK (Administrador) -->
+                    <a href="#" onclick="mostrarMenuStaff(true); return false;" style="display: flex; align-items: center; gap: 5px;">
+                        <i class="fa fa-user-check"></i> Administrador
+                    </a>
+                </div>
             </div>
         </nav>
     </header>
@@ -930,7 +913,7 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- VISTA PÚBLICA - ESTILO VINCULO -->
+    <!-- VISTA PÚBLICA -->
     <!-- ============================================ -->
     <main id="clientView">
         <!-- BREADCRUMBS -->
@@ -940,54 +923,64 @@
             <span id="currentPage">Equipo</span>
         </div>
 
-        <!-- SECCIÓN INICIO (HERO) - MEJORADA -->
-        <section id="inicio" class="hero-section">
-            <h1 id="heroTitleDisplay">Un espacio seguro para <span>sanar</span>, comprender y crecer</h1>
-            <p id="heroSubtitleDisplay">En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.</p>
-            
-            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
-                <a href="#equipo" onclick="showSection('equipo'); return false;" class="btn-cta">
-                    Conoce nuestro equipo
-                </a>
-                <a href="#contacto" onclick="showSection('contacto'); return false;" class="btn-cta-outline">
-                    Contáctanos
-                </a>
+        <!-- SECCIÓN INICIO (HERO SLIDER) -->
+        <section id="inicio" class="hero-slider">
+            <div class="slides">
+                <div class="slide active" style="background-image: linear-gradient(180deg, rgba(123,132,113,0.89) 1%, rgba(123,132,113,0.31) 100%), url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600');">
+                    <div class="slide-content">
+                        <h2>Todo cambio comienza en un VÍNCULO</h2>
+                        <a href="#equipo" class="btn-slide" onclick="showSection('equipo'); return false;">Agenda tu hora</a>
+                    </div>
+                </div>
+                <div class="slide" style="background-image: linear-gradient(180deg, rgba(123,132,113,0.89) 1%, rgba(123,132,113,0.31) 100%), url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600');">
+                    <div class="slide-content">
+                        <h2>Punto de referencia en terapia</h2>
+                        <p>profesionalismo, cuidado y confianza</p>
+                        <a href="#atencion" class="btn-slide" onclick="showSection('atencion'); return false;">Conoce nuestros tipos de atención</a>
+                    </div>
+                </div>
+                <div class="slide" style="background-image: linear-gradient(180deg, rgba(123,132,113,0.89) 1%, rgba(123,132,113,0.31) 100%), url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600');">
+                    <div class="slide-content">
+                        <h2>Trabajo colaborativo como base en nuestro quehacer</h2>
+                        <a href="#about" class="btn-slide" onclick="showSection('about'); return false;">Conócenos más</a>
+                    </div>
+                </div>
             </div>
-            
-            <!-- Botón de edición para admin -->
-            <div class="admin-edit-btn" id="adminHeroEditBtn" style="display: none;" onclick="showTextsModal()">
-                <i class="fa fa-edit"></i> Editar Hero
+            <div class="slider-controls">
+                <button class="prev">❮</button>
+                <button class="next">❯</button>
             </div>
+            <div class="dots"></div>
         </section>
 
-        <!-- SECCIÓN QUIENES SOMOS - EDITABLE -->
+        <!-- SECCIÓN QUIENES SOMOS (nuevo layout) -->
         <section id="about" class="about-section" style="display: none;">
             <div class="admin-edit-btn" id="adminAboutEditBtn" style="display: none;" onclick="showAboutModal()">
                 <i class="fa fa-edit"></i> Editar sección
             </div>
-            
             <div class="about-content">
-                <h2>Quiénes Somos</h2>
-                
-                <div class="about-image-container">
-                    <img id="aboutTeamImage" src="" alt="Nuestro equipo" class="about-image" style="display: none;">
-                    <div id="aboutImagePlaceholder" class="about-image-placeholder">
-                        <i class="fa fa-users"></i>
-                        <p>Foto del equipo</p>
+                <div class="about-grid">
+                    <div class="about-image-container">
+                        <img id="aboutTeamImage" src="" alt="Nuestro equipo" class="about-image" style="display: none;">
+                        <div id="aboutImagePlaceholder" class="about-image-placeholder">
+                            <i class="fa fa-users"></i>
+                            <p>Foto del equipo</p>
+                        </div>
+                    </div>
+                    <div class="about-text">
+                        <h2>Estamos para acompañarte</h2>
+                        <p id="teamTextDisplay" class="team-text">
+                            Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.
+                        </p>
+                        <a href="#equipo" class="btn-about" onclick="showSection('equipo'); return false;">NUESTRO EQUIPO</a>
                     </div>
                 </div>
-                
-                <p id="teamTextDisplay" class="team-text">
-                    Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.
-                </p>
-                
                 <div class="mission-vision-grid">
                     <div class="mission-box">
                         <i class="fa fa-bullseye"></i>
                         <h3>Misión</h3>
                         <p id="missionDisplay">Acompañar a las personas en su proceso de sanación emocional, proporcionando herramientas para el crecimiento personal y la mejora de la calidad de vida.</p>
                     </div>
-                    
                     <div class="vision-box">
                         <i class="fa fa-eye"></i>
                         <h3>Visión</h3>
@@ -1021,12 +1014,10 @@
             <div class="admin-edit-btn" id="adminAtencionEditBtn" style="display: none;" onclick="showAtencionModal()">
                 <i class="fa fa-edit"></i> Editar tipos
             </div>
-            
             <div class="container">
-                <h2 style="color: var(--verde-azulado-profundo); font-size: 2.2rem; text-align: center; margin-bottom: 10px;">Tipos de Atención</h2>
-                <p style="color: var(--texto-secundario); text-align: center; margin-bottom: 50px;">Elige la modalidad que mejor se adapte a tus necesidades</p>
-                
-                <div class="atencion-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+                <h2>Tipos de Atención</h2>
+                <p>Elige la modalidad que mejor se adapte a tus necesidades</p>
+                <div class="atencion-grid">
                     <!-- Los tipos de atención se generarán dinámicamente desde personalizacion.js -->
                 </div>
             </div>
@@ -1043,30 +1034,29 @@
             <div class="messages-grid" id="messagesGrid"></div>
         </div>
 
-        <!-- SECCIÓN INSTAGRAM -->
+        <!-- SECCIÓN INSTAGRAM (nuevo estilo) -->
         <section id="instagramSection" class="instagram-section">
             <div class="admin-edit-btn" id="adminInstagramEditBtn" style="display: none;" onclick="showInstagramModal()">
                 <i class="fa fa-edit"></i> Editar Instagram
             </div>
-            
-            <div class="instagram-card glass">
-                <div class="instagram-content">
-                    <h2 id="instagramTitle">Sigue Nuestro Instagram</h2>
-                    <h3 id="instagramSubtitle">VÍNCULO</h3>
-                    <div id="instagramQuote" class="instagram-quote">
-                        <strong>"SOLO HABLAMOS"</strong><br>
-                        JAVIERA TIENE EL ÉXITO,<br>
-                        pero no tiene con quién celebrarlo.
-                    </div>
-                    <p id="instagramText" class="instagram-text">Detente aquí un segundo</p>
-                    <p id="instagramMessage" class="instagram-message">Esto también se aprende.</p>
-                    <a id="instagramLink" href="#" target="_blank" class="btn-instagram">
-                        <i class="fab fa-instagram"></i> Ver en Instagram
-                    </a>
+            <div class="instagram-header">
+                <h2 id="instagramTitle">Sigue Nuestro Instagram</h2>
+                <h3 id="instagramSubtitle">VÍNCULO</h3>
+            </div>
+            <div class="instagram-feed">
+                <img id="instagramImage" src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800" alt="Instagram post">
+            </div>
+            <div class="instagram-content">
+                <div id="instagramQuote" class="instagram-quote">
+                    <strong>"SOLO HABLAMOS"</strong><br>
+                    JAVIERA TIENE EL ÉXITO,<br>
+                    pero no tiene con quién celebrarlo.
                 </div>
-                <div class="instagram-image">
-                    <img id="instagramImage" src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500" alt="Instagram post" style="width:100%; height:100%; object-fit:cover;">
-                </div>
+                <p id="instagramText" class="instagram-text">Detente aquí un segundo</p>
+                <p id="instagramMessage" class="instagram-message">Esto también se aprende.</p>
+                <a id="instagramLink" href="#" target="_blank" class="btn-instagram">
+                    <i class="fab fa-instagram"></i> Ver en Instagram
+                </a>
             </div>
         </section>
 
@@ -1375,24 +1365,24 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
-                         <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
+                          <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                 </table>
+                  </table>
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
-                         <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
+                          <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                 </table>
+                  </table>
             </div>
         </div>
 
@@ -1419,12 +1409,12 @@
                 </button>
             </div>
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
-                         <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                          <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                 </table>
+                  </table>
             </div>
         </div>
 
@@ -1514,11 +1504,11 @@
             <div class="admin-form">
                 <div class="form-group">
                     <label>Título Principal</label>
-                    <input type="text" id="heroTitle" value="Tu bienestar comienza con un buen vínculo">
+                    <input type="text" id="heroTitle" value="Un espacio seguro para sanar, comprender y crecer">
                 </div>
                 <div class="form-group">
                     <label>Subtítulo</label>
-                    <textarea id="heroSubtitle" rows="3">Atención psicológica profesional, ética y cercana</textarea>
+                    <textarea id="heroSubtitle" rows="3">En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.</textarea>
                 </div>
                 <button class="btn-staff" style="background:var(--verde-exito);" onclick="saveHeroTexts()">Guardar</button>
             </div>
@@ -1559,12 +1549,12 @@
             </div>
             
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
-                         <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
+                          <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                 </table>
+                  </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">
@@ -1661,11 +1651,11 @@
 </div>
 
 <!-- ============================================ -->
-<!-- FOOTER ESTILO VINCULO -->
+<!-- FOOTER ESTILO PUNTO TERAPIA -->
 <!-- ============================================ -->
 <footer>
     <div class="container">
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding: 60px 0;">
             <!-- Columna 1: Logo y descripción -->
             <div>
                 <span style="font-size: 2rem; font-weight: 700; color: white; display: block; margin-bottom: 15px;">Vínculo Salud</span>
@@ -1677,7 +1667,7 @@
             <!-- Columna 2: Enlaces rápidos -->
             <div>
                 <h4>VÍNCULO</h4>
-                <ul>
+                <ul style="list-style: none; padding: 0;">
                     <li><a href="#" onclick="showSection('about'); return false;">Quiénes Somos</a></li>
                     <li><a href="#" onclick="showSection('equipo'); return false;">Equipo</a></li>
                     <li><a href="#" onclick="showSection('atencion'); return false;">Tipo de Atención</a></li>
@@ -1688,15 +1678,9 @@
             <!-- Columna 3: Contacto -->
             <div class="footer-contact">
                 <h4>CONTACTO</h4>
-                <p>
-                    <i class="fa fa-phone"></i> <span id="footerPhone">+56 9 1234 5678</span>
-                </p>
-                <p>
-                    <i class="fa fa-envelope"></i> <span id="footerEmail">contacto@vinculosalud.cl</span>
-                </p>
-                <p>
-                    <i class="fa fa-map-marker-alt"></i> <span id="footerAddress">Av. Principal 123, Santiago</span>
-                </p>
+                <p><i class="fa fa-phone"></i> <span id="footerPhone">+56 9 1234 5678</span></p>
+                <p><i class="fa fa-envelope"></i> <span id="footerEmail">contacto@vinculosalud.cl</span></p>
+                <p><i class="fa fa-map-marker-alt"></i> <span id="footerAddress">Av. Principal 123, Santiago</span></p>
             </div>
             
             <!-- Columna 4: Redes Sociales -->
@@ -2052,7 +2036,7 @@
                 const icon = staffLink.querySelector('i');
                 if (icon) {
                     icon.className = 'fa fa-user-check';
-                    icon.style.color = '#1E7A8A';
+                    icon.style.color = '#7B8471';
                 }
                 const textNode = staffLink.childNodes[2];
                 if (textNode) textNode.textContent = user.data.name || 'Admin';
@@ -2076,6 +2060,74 @@
     
     console.log('✅ Script unificado listo - NO fuerza dashboard automáticamente');
 })();
+</script>
+
+<!-- SCRIPT DEL HERO SLIDER -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slides = document.querySelectorAll('.hero-slider .slide');
+    const dotsContainer = document.querySelector('.hero-slider .dots');
+    let currentSlide = 0;
+    let slideInterval;
+
+    // Crear dots
+    if (dotsContainer && slides.length > 0) {
+        slides.forEach((_, i) => {
+            const dot = document.createElement('span');
+            dot.classList.add('dot');
+            if (i === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(i));
+            dotsContainer.appendChild(dot);
+        });
+    }
+
+    function goToSlide(index) {
+        slides.forEach(slide => slide.classList.remove('active'));
+        const dots = document.querySelectorAll('.hero-slider .dot');
+        if (dots.length) {
+            dots.forEach(dot => dot.classList.remove('active'));
+            dots[index].classList.add('active');
+        }
+        slides[index].classList.add('active');
+        currentSlide = index;
+    }
+
+    function nextSlide() {
+        let newIndex = (currentSlide + 1) % slides.length;
+        goToSlide(newIndex);
+    }
+
+    function startAutoSlide() {
+        if (slideInterval) clearInterval(slideInterval);
+        slideInterval = setInterval(nextSlide, 5000);
+    }
+
+    function stopAutoSlide() {
+        clearInterval(slideInterval);
+    }
+
+    const heroSlider = document.querySelector('.hero-slider');
+    if (heroSlider) {
+        heroSlider.addEventListener('mouseenter', stopAutoSlide);
+        heroSlider.addEventListener('mouseleave', startAutoSlide);
+
+        const prevBtn = heroSlider.querySelector('.prev');
+        const nextBtn = heroSlider.querySelector('.next');
+        if (prevBtn) prevBtn.addEventListener('click', () => {
+            stopAutoSlide();
+            let newIndex = (currentSlide - 1 + slides.length) % slides.length;
+            goToSlide(newIndex);
+            startAutoSlide();
+        });
+        if (nextBtn) nextBtn.addEventListener('click', () => {
+            stopAutoSlide();
+            nextSlide();
+            startAutoSlide();
+        });
+
+        startAutoSlide();
+    }
+});
 </script>
 
 <!-- ESTILOS DE EMERGENCIA -->

@@ -500,13 +500,18 @@ export function cargarDatosIniciales() {
             if (document.getElementById('equipo').style.display !== 'block') {
                 showSection('equipo');
             }
+            // Asegurar que el grid tenga la clase para el diseño de columnas
+            const gridElem = document.getElementById('equipo');
+            if (gridElem && !gridElem.classList.contains('grid')) {
+                gridElem.classList.add('grid');
+                console.log('✅ Clase "grid" añadida al contenedor de profesionales');
+            }
         }, 500);
     }, (error) => {
         console.error('❌ Error al cargar profesionales:', error);
         showToast('Error al cargar profesionales', 'error');
         state.setStaff([]);
         filterProfessionals();
-        // Aún en caso de error, mostrar la sección para que no quede vacía
         setTimeout(() => showSection('equipo'), 500);
     });
 

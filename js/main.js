@@ -1,9 +1,8 @@
-// js/main.js - VERSIÓN COMPLETA CON SECCIONES EDITABLES E INSTAGRAM v3.0
-// 🚀 ACTUALIZADO: Módulo boxes desactivado - Las citas presenciales se coordinan directamente
+// js/main.js - VERSIÓN COMPLETA CON SECCIONES EDITABLES E INSTAGRAM v3.1
+// 🚀 ACTUALIZADO: Nodos de Firebase en minúsculas consistentes
+// 🚀 CORREGIDO: Exposición de esEmailProfesional para validaciones en citas
+// 🚀 MEJORADO: Exportación global de personalizacion y utils
 // 🚀 CORREGIDO: Nombres de nodos en minúsculas para coincidir con reglas de Firebase
-// 🚀 MEJORADO: Exportación global de personalizacion para depuración
-// 🚀 NUEVO: Función global para actualizar Instagram correctamente
-// 🚀 CORREGIDO: Error de asignación a módulo en actualizarInstagramGlobal
 
 // ============================================
 // EXPONER STATE INMEDIATAMENTE (ANTES QUE NADA)
@@ -19,6 +18,7 @@ window.renderCalendar = calendario.renderCalendar;
 
 // AHORA importamos el resto (SIN DUPLICAR db)
 import * as utils from './modules/utils.js';
+window.utils = utils;  // Para acceso a utilidades como esEmailProfesional
 import * as auth from './modules/auth.js';
 import * as pacientes from './modules/pacientes.js';
 import * as profesionales from './modules/profesionales.js';
@@ -52,6 +52,16 @@ if (typeof personalizacion.loadMyConfig !== 'function') {
 // EXPONER FUNCIONES GLOBALES
 // ============================================
 console.log('🚀 Exponiendo funciones globales...');
+
+// ============================================
+// FUNCIONES DE UTILIDAD (incluyendo validación de email profesional)
+// ============================================
+window.formatRut = utils.formatRut;
+window.validarRut = utils.validarRut;
+window.showToast = utils.showToast;
+window.calcularEdad = utils.calcularEdad;
+// 🆕 Exponer función para validar si un email pertenece a un profesional
+window.esEmailProfesional = utils.esEmailProfesional;
 
 // ============================================
 // FUNCIONES DE AUTENTICACIÓN
@@ -248,15 +258,6 @@ window.obtenerInformesDePaciente = informes.obtenerInformesDePaciente;
 window.verFichaCompleta = pacientes.mostrarDetallePaciente;
 
 // ============================================
-// FUNCIONES DE UTILIDAD
-// ============================================
-window.filterProfessionals = publico.filterProfessionals;
-window.formatRut = utils.formatRut;
-window.validarRut = utils.validarRut;
-window.showToast = utils.showToast;
-window.calcularEdad = utils.calcularEdad;
-
-// ============================================
 // FUNCIONES DE NAVEGACIÓN PÚBLICA
 // ============================================
 window.showSection = publico.showSection;
@@ -265,6 +266,7 @@ window.enviarContacto = publico.enviarContacto;
 window.compartirPerfil = publico.compartirPerfil;
 window.copiarAlPortapapeles = publico.copiarAlPortapapeles;
 window.showTherapistInfo = publico.showTherapistInfo;
+window.filterProfessionals = publico.filterProfessionals;
 
 // ============================================
 // 🆕 FUNCIONES DE ESTADO (para acceso global)
@@ -371,6 +373,7 @@ console.log('✅ showContactModal asignada:', typeof window.showContactModal);
 console.log('✅ showInstagramModal asignada:', typeof window.showInstagramModal);
 console.log('✅ personalizacion disponible:', typeof window.personalizacion);
 console.log('✅ actualizarInstagramGlobal disponible:', typeof window.actualizarInstagramGlobal);
+console.log('✅ esEmailProfesional disponible:', typeof window.esEmailProfesional);
 // ⚠️ Funciones de boxes (desactivadas)
 console.log('⚠️ showBoxModal (desactivado):', typeof window.showBoxModal);
 console.log('✅ verTextos asignada:', typeof window.verTextos);
@@ -427,10 +430,16 @@ setTimeout(() => {
             if (personalizacion?.updateInstagramSection) personalizacion.updateInstagramSection();
         };
     }
+    
+    // ✅ Respaldo para esEmailProfesional (por si no se cargó utils correctamente)
+    if (typeof window.esEmailProfesional !== 'function' && typeof utils?.esEmailProfesional === 'function') {
+        console.log('🚨 Restaurando esEmailProfesional desde utils...');
+        window.esEmailProfesional = utils.esEmailProfesional;
+    }
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA - CON NOMBRES EN MINÚSCULAS)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA - NOMBRES EN MINÚSCULAS)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -463,7 +472,7 @@ export function save() {
     const messagesObj = {};
     state.messages.forEach(item => { messagesObj[item.id] = item; });
 
-    // Guardar fichas clínicas - NOMBRES EN MINÚSCULAS (para coincidir con reglas)
+    // Guardar fichas clínicas - NOMBRES EN MINÚSCULAS
     const fichasIngresoObj = {};
     state.fichasIngreso.forEach(item => { fichasIngresoObj[item.id] = item; });
 
@@ -495,33 +504,33 @@ export function save() {
     // Crear array de promesas para cada nodo - NOMBRES EN MINÚSCULAS
     const promises = [];
 
-    promises.push(db.ref('Staff').set(staffObj).catch(err => {
-        console.error('❌ Error en Staff:', err);
+    promises.push(db.ref('staff').set(staffObj).catch(err => {
+        console.error('❌ Error en staff:', err);
         return null;
     }));
     
-    // promises.push(db.ref('Boxes').set(boxesObj).catch(err => {
-//     console.error('❌ Error en Boxes:', err);
+    // promises.push(db.ref('boxes').set(boxesObj).catch(err => {
+//     console.error('❌ Error en boxes:', err);
 //     return null;
 // }));
     
-    promises.push(db.ref('Patients').set(patientsObj).catch(err => {
-        console.error('❌ Error en Patients:', err);
+    promises.push(db.ref('patients').set(patientsObj).catch(err => {
+        console.error('❌ Error en patients:', err);
         return null;
     }));
     
-    promises.push(db.ref('Appointments').set(appointmentsObj).catch(err => {
-        console.error('❌ Error en Appointments:', err);
+    promises.push(db.ref('appointments').set(appointmentsObj).catch(err => {
+        console.error('❌ Error en appointments:', err);
         return null;
     }));
     
-    promises.push(db.ref('PendingRequests').set(pendingRequestsObj).catch(err => {
-        console.error('❌ Error en PendingRequests:', err);
+    promises.push(db.ref('pendingRequests').set(pendingRequestsObj).catch(err => {
+        console.error('❌ Error en pendingRequests:', err);
         return null;
     }));
     
-    promises.push(db.ref('Messages').set(messagesObj).catch(err => {
-        console.error('❌ Error en Messages:', err);
+    promises.push(db.ref('messages').set(messagesObj).catch(err => {
+        console.error('❌ Error en messages:', err);
         return null;
     }));
     
@@ -541,13 +550,13 @@ export function save() {
         return null;
     }));
     
-    promises.push(db.ref('TextosEditables').set(textosEditablesObj).catch(err => {
-        console.error('❌ Error en TextosEditables:', err);
+    promises.push(db.ref('textosEditables').set(textosEditablesObj).catch(err => {
+        console.error('❌ Error en textosEditables:', err);
         return null;
     }));
     
-    promises.push(db.ref('Specialties').set(specialtiesObj).catch(err => {
-        console.error('❌ Error en Specialties:', err);
+    promises.push(db.ref('specialties').set(specialtiesObj).catch(err => {
+        console.error('❌ Error en specialties:', err);
         return null;
     }));
 
@@ -674,9 +683,11 @@ window.addEventListener('load', function() {
 });
 
 // ============================================
-// IMPORTAR ADMIN
+// EXPORTAR save (por si se necesita desde consola o módulos)
 // ============================================
-import './modules/admin.js';
+window.save = save;
 
-console.log('✅ main.js cargado completamente con todas las funciones de secciones editables e INSTAGRAM v3.0');
+console.log('✅ main.js cargado completamente con todas las funciones de secciones editables e INSTAGRAM v3.1');
 console.log('⚠️ Módulo BOXES DESACTIVADO - Las citas presenciales se coordinan directamente');
+console.log('✅ Nodos de Firebase en minúsculas consistentes');
+console.log('✅ esEmailProfesional expuesto globalmente');

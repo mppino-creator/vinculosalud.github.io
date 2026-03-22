@@ -579,6 +579,12 @@
             <label>Subtítulo</label>
             <textarea id="heroSubtitle" rows="3">En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.</textarea>
         </div>
+        <!-- Campo para editar slides del slider (JSON) -->
+        <div class="form-group">
+            <label>Slides del Slider (JSON)</label>
+            <textarea id="heroSlidesInput" rows="10" class="filter-input" placeholder='[{"image":"url","title":"...","subtitle":"...","buttonText":"...","buttonLink":"#..."}]'></textarea>
+            <small>Edita el array de slides en formato JSON. Cada slide tiene: image, title, subtitle, buttonText, buttonLink.</small>
+        </div>
         <button class="btn-staff" style="width:100%; background:var(--verde-exito);" onclick="saveHeroTexts()">Guardar</button>
     </div>
 </div>
@@ -879,8 +885,8 @@
 <div class="container">
     <header class="nav-container">
         <nav class="glass" style="display: flex; justify-content: space-between; align-items: center;">
-            <!-- LOGO -->
-            <div class="logo-container" onclick="location.reload()" style="display: flex; align-items: center;">
+            <!-- LOGO (modificado: ahora lleva a inicio sin recargar) -->
+            <div class="logo-container" onclick="showSection('inicio'); return false;" style="display: flex; align-items: center;">
                 <img id="headerLogo" class="logo-img" src="" style="display:none; height: 40px;" alt="Logo">
                 <span id="headerLogoText" class="logo-text">Vínculo Salud</span>
             </div>
@@ -926,25 +932,7 @@
         <!-- SECCIÓN INICIO (HERO SLIDER) -->
         <section id="inicio" class="hero-slider">
             <div class="slides">
-                <div class="slide active" style="background-image: linear-gradient(180deg, rgba(123,132,113,0.89) 1%, rgba(123,132,113,0.31) 100%), url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600');">
-                    <div class="slide-content">
-                        <h2>Todo cambio comienza en un VÍNCULO</h2>
-                        <a href="#equipo" class="btn-slide" onclick="showSection('equipo'); return false;">Agenda tu hora</a>
-                    </div>
-                </div>
-                <div class="slide" style="background-image: linear-gradient(180deg, rgba(123,132,113,0.89) 1%, rgba(123,132,113,0.31) 100%), url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600');">
-                    <div class="slide-content">
-                        <h2>Punto de referencia en terapia</h2>
-                        <p>profesionalismo, cuidado y confianza</p>
-                        <a href="#atencion" class="btn-slide" onclick="showSection('atencion'); return false;">Conoce nuestros tipos de atención</a>
-                    </div>
-                </div>
-                <div class="slide" style="background-image: linear-gradient(180deg, rgba(123,132,113,0.89) 1%, rgba(123,132,113,0.31) 100%), url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600');">
-                    <div class="slide-content">
-                        <h2>Trabajo colaborativo como base en nuestro quehacer</h2>
-                        <a href="#about" class="btn-slide" onclick="showSection('about'); return false;">Conócenos más</a>
-                    </div>
-                </div>
+                <!-- Los slides se llenarán dinámicamente desde personalizacion.js -->
             </div>
             <div class="slider-controls">
                 <button class="prev">❮</button>
@@ -1365,7 +1353,7 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                  <table>
+                  表格
                     <thead>
                           <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
@@ -1549,12 +1537,12 @@
             </div>
             
             <div class="table-container">
-                  <table>
+                <table>
                     <thead>
-                          <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
+                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                  </table>
+                </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">
@@ -2062,24 +2050,28 @@
 })();
 </script>
 
-<!-- SCRIPT DEL HERO SLIDER -->
+<!-- SCRIPT DEL HERO SLIDER (FUNCIÓN GLOBAL) -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// Función global para inicializar el slider (debe llamarse después de cargar los slides)
+window.initHeroSlider = function() {
     const slides = document.querySelectorAll('.hero-slider .slide');
     const dotsContainer = document.querySelector('.hero-slider .dots');
+    if (!slides.length || !dotsContainer) return;
+    
     let currentSlide = 0;
     let slideInterval;
 
-    // Crear dots
-    if (dotsContainer && slides.length > 0) {
-        slides.forEach((_, i) => {
-            const dot = document.createElement('span');
-            dot.classList.add('dot');
-            if (i === 0) dot.classList.add('active');
-            dot.addEventListener('click', () => goToSlide(i));
-            dotsContainer.appendChild(dot);
-        });
-    }
+    // Limpiar dots existentes
+    dotsContainer.innerHTML = '';
+
+    // Crear nuevos dots
+    slides.forEach((_, i) => {
+        const dot = document.createElement('span');
+        dot.classList.add('dot');
+        if (i === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => goToSlide(i));
+        dotsContainer.appendChild(dot);
+    });
 
     function goToSlide(index) {
         slides.forEach(slide => slide.classList.remove('active'));
@@ -2108,25 +2100,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const heroSlider = document.querySelector('.hero-slider');
     if (heroSlider) {
+        heroSlider.removeEventListener('mouseenter', stopAutoSlide);
+        heroSlider.removeEventListener('mouseleave', startAutoSlide);
         heroSlider.addEventListener('mouseenter', stopAutoSlide);
         heroSlider.addEventListener('mouseleave', startAutoSlide);
 
         const prevBtn = heroSlider.querySelector('.prev');
         const nextBtn = heroSlider.querySelector('.next');
-        if (prevBtn) prevBtn.addEventListener('click', () => {
-            stopAutoSlide();
-            let newIndex = (currentSlide - 1 + slides.length) % slides.length;
-            goToSlide(newIndex);
-            startAutoSlide();
-        });
-        if (nextBtn) nextBtn.addEventListener('click', () => {
-            stopAutoSlide();
-            nextSlide();
-            startAutoSlide();
-        });
+        if (prevBtn) {
+            const newPrev = prevBtn.cloneNode(true);
+            prevBtn.parentNode.replaceChild(newPrev, prevBtn);
+            newPrev.addEventListener('click', () => {
+                stopAutoSlide();
+                let newIndex = (currentSlide - 1 + slides.length) % slides.length;
+                goToSlide(newIndex);
+                startAutoSlide();
+            });
+        }
+        if (nextBtn) {
+            const newNext = nextBtn.cloneNode(true);
+            nextBtn.parentNode.replaceChild(newNext, nextBtn);
+            newNext.addEventListener('click', () => {
+                stopAutoSlide();
+                nextSlide();
+                startAutoSlide();
+            });
+        }
 
         startAutoSlide();
     }
+};
+
+// Inicializar slider al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Pequeña espera para que los datos se carguen desde Firebase
+    setTimeout(() => {
+        window.initHeroSlider();
+    }, 100);
 });
 </script>
 

@@ -12,8 +12,31 @@ export let messages = [];
 export let pendingRequests = [];
 export let specialties = [];
 export let heroTexts = {
-    title: 'Bienestar a tu alcance',
-    subtitle: 'Encuentra al profesional ideal y agenda tu sesión'
+    title: 'Un espacio seguro para sanar, comprender y crecer',
+    subtitle: 'En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.',
+    slides: [
+        {
+            image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600',
+            title: 'Todo cambio comienza en un VÍNCULO',
+            subtitle: '',
+            buttonText: 'Agenda tu hora',
+            buttonLink: '#equipo'
+        },
+        {
+            image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600',
+            title: 'Punto de referencia en terapia',
+            subtitle: 'profesionalismo, cuidado y confianza',
+            buttonText: 'Conoce nuestros tipos de atención',
+            buttonLink: '#atencion'
+        },
+        {
+            image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600',
+            title: 'Trabajo colaborativo como base en nuestro quehacer',
+            subtitle: '',
+            buttonText: 'Conócenos más',
+            buttonLink: '#about'
+        }
+    ]
 };
 export let globalPaymentMethods = {
     transfer: true,
@@ -360,8 +383,31 @@ export function resetAllState() {
     pendingRequests = [];
     specialties = [];
     heroTexts = {
-        title: 'Bienestar a tu alcance',
-        subtitle: 'Encuentra al profesional ideal y agenda tu sesión'
+        title: 'Un espacio seguro para sanar, comprender y crecer',
+        subtitle: 'En Vínculo Salud te ofrecemos un lugar de contención emocional donde puedes hablar sin juicios, explorar tus emociones y reencontrarte contigo y con los demás.',
+        slides: [
+            {
+                image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600',
+                title: 'Todo cambio comienza en un VÍNCULO',
+                subtitle: '',
+                buttonText: 'Agenda tu hora',
+                buttonLink: '#equipo'
+            },
+            {
+                image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600',
+                title: 'Punto de referencia en terapia',
+                subtitle: 'profesionalismo, cuidado y confianza',
+                buttonText: 'Conoce nuestros tipos de atención',
+                buttonLink: '#atencion'
+            },
+            {
+                image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600',
+                title: 'Trabajo colaborativo como base en nuestro quehacer',
+                subtitle: '',
+                buttonText: 'Conócenos más',
+                buttonLink: '#about'
+            }
+        ]
     };
     globalPaymentMethods = {
         transfer: true,

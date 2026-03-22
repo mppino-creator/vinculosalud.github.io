@@ -188,20 +188,58 @@ export function removeLogo() {
 }
 
 // ============================================
-// FUNCIONES DE TEXTOS (Hero)
+// FUNCIONES DE TEXTOS (Hero) - ACTUALIZADAS PARA SLIDER
 // ============================================
 
 export function cargarTextos() {
     db.ref('HeroTexts').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            state.setHeroTexts(data);
+            // Actualizar título y subtítulo
+            state.setHeroTexts({
+                ...state.heroTexts,
+                title: data.title || state.heroTexts.title,
+                subtitle: data.subtitle || state.heroTexts.subtitle,
+                slides: data.slides || state.heroTexts.slides
+            });
             
+            // Actualizar la vista
             const titleDisplay = document.getElementById('heroTitleDisplay');
             const subtitleDisplay = document.getElementById('heroSubtitleDisplay');
             
             if (titleDisplay) titleDisplay.innerHTML = state.heroTexts.title.replace(/\n/g, '<br>');
             if (subtitleDisplay) subtitleDisplay.innerText = state.heroTexts.subtitle;
+            
+            // Actualizar el slider
+            updateHeroSlider();
+        } else {
+            // Si no hay datos, asegurar que haya slides por defecto
+            if (!state.heroTexts.slides) {
+                state.heroTexts.slides = [
+                    {
+                        image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600',
+                        title: 'Todo cambio comienza en un VÍNCULO',
+                        subtitle: '',
+                        buttonText: 'Agenda tu hora',
+                        buttonLink: '#equipo'
+                    },
+                    {
+                        image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600',
+                        title: 'Punto de referencia en terapia',
+                        subtitle: 'profesionalismo, cuidado y confianza',
+                        buttonText: 'Conoce nuestros tipos de atención',
+                        buttonLink: '#atencion'
+                    },
+                    {
+                        image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1600',
+                        title: 'Trabajo colaborativo como base en nuestro quehacer',
+                        subtitle: '',
+                        buttonText: 'Conócenos más',
+                        buttonLink: '#about'
+                    }
+                ];
+                updateHeroSlider();
+            }
         }
     });
 }
@@ -214,9 +252,11 @@ export function showTextsModal() {
     
     const heroTitle = document.getElementById('heroTitle');
     const heroSubtitle = document.getElementById('heroSubtitle');
+    const slidesInput = document.getElementById('heroSlidesInput');
     
     if (heroTitle) heroTitle.value = state.heroTexts.title;
     if (heroSubtitle) heroSubtitle.value = state.heroTexts.subtitle;
+    if (slidesInput) slidesInput.value = JSON.stringify(state.heroTexts.slides || [], null, 2);
 }
 
 export function closeTextsModal() {
@@ -227,27 +267,164 @@ export function closeTextsModal() {
 export function saveHeroTexts() {
     const heroTitle = document.getElementById('heroTitle');
     const heroSubtitle = document.getElementById('heroSubtitle');
+    const slidesInput = document.getElementById('heroSlidesInput');
+    
+    let slides = state.heroTexts.slides || [];
+    if (slidesInput) {
+        try {
+            const parsed = JSON.parse(slidesInput.value);
+            if (Array.isArray(parsed)) {
+                slides = parsed;
+            } else {
+                showToast('El formato JSON es inválido. Se mantienen los slides actuales.', 'warning');
+            }
+        } catch (e) {
+            showToast('Error al parsear JSON. Se mantienen los slides actuales.', 'error');
+            console.error(e);
+        }
+    }
     
     state.setHeroTexts({
         title: heroTitle?.value || '',
-        subtitle: heroSubtitle?.value || ''
+        subtitle: heroSubtitle?.value || '',
+        slides: slides
     });
     
     db.ref('HeroTexts').set(state.heroTexts);
     
+    // Actualizar vista
     const titleDisplay = document.getElementById('heroTitleDisplay');
     const subtitleDisplay = document.getElementById('heroSubtitleDisplay');
     
     if (titleDisplay) titleDisplay.innerHTML = state.heroTexts.title.replace(/\n/g, '<br>');
     if (subtitleDisplay) subtitleDisplay.innerText = state.heroTexts.subtitle;
     
+    // Regenerar el slider
+    updateHeroSlider();
+    
     closeTextsModal();
-    showToast('Textos actualizados', 'success');
+    showToast('Textos y slider actualizados', 'success');
+}
+
+// ============================================
+// 🆕 FUNCIÓN PARA ACTUALIZAR EL SLIDER DINÁMICAMENTE
+// ============================================
+export function updateHeroSlider() {
+    const sliderContainer = document.querySelector('.hero-slider .slides');
+    if (!sliderContainer) return;
+    
+    const slides = state.heroTexts.slides || [];
+    if (slides.length === 0) return;
+    
+    // Construir HTML de los slides
+    sliderContainer.innerHTML = slides.map((slide, index) => `
+        <div class="slide ${index === 0 ? 'active' : ''}" style="background-image: linear-gradient(180deg, rgba(123,132,113,0.89) 1%, rgba(123,132,113,0.31) 100%), url('${slide.image}');">
+            <div class="slide-content">
+                <h2>${slide.title}</h2>
+                ${slide.subtitle ? `<p>${slide.subtitle}</p>` : ''}
+                <a href="${slide.buttonLink}" class="btn-slide" onclick="showSection('${slide.buttonLink.replace('#', '')}'); return false;">${slide.buttonText}</a>
+            </div>
+        </div>
+    `).join('');
+    
+    // Reinicializar los controles del slider (dots, eventos)
+    if (typeof window.initHeroSlider === 'function') {
+        window.initHeroSlider();
+    } else {
+        // Si no existe la función, ejecutar el script manualmente
+        // Esto es un fallback para que el slider funcione
+        setTimeout(() => {
+            const slidesEl = document.querySelectorAll('.hero-slider .slide');
+            const dotsContainer = document.querySelector('.hero-slider .dots');
+            if (!dotsContainer) return;
+            
+            // Limpiar dots existentes
+            dotsContainer.innerHTML = '';
+            
+            // Crear nuevos dots
+            slidesEl.forEach((_, i) => {
+                const dot = document.createElement('span');
+                dot.classList.add('dot');
+                if (i === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => {
+                    goToSlide(i);
+                });
+                dotsContainer.appendChild(dot);
+            });
+            
+            let currentSlide = 0;
+            let slideInterval;
+            
+            function goToSlide(index) {
+                slidesEl.forEach(slide => slide.classList.remove('active'));
+                const dots = document.querySelectorAll('.hero-slider .dot');
+                if (dots.length) {
+                    dots.forEach(dot => dot.classList.remove('active'));
+                    dots[index].classList.add('active');
+                }
+                slidesEl[index].classList.add('active');
+                currentSlide = index;
+            }
+            
+            function nextSlide() {
+                let newIndex = (currentSlide + 1) % slidesEl.length;
+                goToSlide(newIndex);
+            }
+            
+            function startAutoSlide() {
+                if (slideInterval) clearInterval(slideInterval);
+                slideInterval = setInterval(nextSlide, 5000);
+            }
+            
+            function stopAutoSlide() {
+                clearInterval(slideInterval);
+            }
+            
+            const heroSlider = document.querySelector('.hero-slider');
+            if (heroSlider) {
+                heroSlider.removeEventListener('mouseenter', stopAutoSlide);
+                heroSlider.removeEventListener('mouseleave', startAutoSlide);
+                heroSlider.addEventListener('mouseenter', stopAutoSlide);
+                heroSlider.addEventListener('mouseleave', startAutoSlide);
+                
+                const prevBtn = heroSlider.querySelector('.prev');
+                const nextBtn = heroSlider.querySelector('.next');
+                if (prevBtn) {
+                    prevBtn.replaceWith(prevBtn.cloneNode(true));
+                    const newPrev = heroSlider.querySelector('.prev');
+                    newPrev.addEventListener('click', () => {
+                        stopAutoSlide();
+                        let newIndex = (currentSlide - 1 + slidesEl.length) % slidesEl.length;
+                        goToSlide(newIndex);
+                        startAutoSlide();
+                    });
+                }
+                if (nextBtn) {
+                    nextBtn.replaceWith(nextBtn.cloneNode(true));
+                    const newNext = heroSlider.querySelector('.next');
+                    newNext.addEventListener('click', () => {
+                        stopAutoSlide();
+                        nextSlide();
+                        startAutoSlide();
+                    });
+                }
+                
+                startAutoSlide();
+            }
+        }, 50);
+    }
+    
+    console.log('✅ Slider actualizado dinámicamente');
 }
 
 // ============================================
 // FUNCIONES DE FONDO
 // ============================================
+// ... (resto del código igual, sin cambios) ...
+// ============================================
+
+// Continuación del código original a partir de aquí (todo lo que sigue sin cambios)
+// Para no repetir todo el código, aquí se incluye el resto exactamente igual que en el archivo original.
 
 export function cargarFondo() {
     db.ref('BackgroundImage').on('value', (snapshot) => {
@@ -362,7 +539,6 @@ export function removeBackgroundImage() {
 // ============================================
 // FUNCIONES DE MÉTODOS DE PAGO
 // ============================================
-
 export function cargarMetodosPago() {
     db.ref('PaymentMethods').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -439,7 +615,6 @@ export function updatePaymentMethodsInfo() {
 // ============================================
 // FUNCIONES DE ESPECIALIDADES
 // ============================================
-
 export function cargarEspecialidades() {
     db.ref('Specialties').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -557,7 +732,6 @@ function guardarEspecialidades() {
 // ============================================
 // 🆕 FUNCIONES PARA SECCIÓN INSTAGRAM - VERSIÓN FINAL CORREGIDA
 // ============================================
-
 export function cargarInstagramData() {
     // Primero, carga inicial con once para asegurar datos
     db.ref('InstagramData').once('value', (snapshot) => {
@@ -881,7 +1055,6 @@ export function saveInstagramData() {
 // ============================================
 // 🆕 FUNCIONES PARA SECCIÓN QUIÉNES SOMOS
 // ============================================
-
 export function cargarAboutTexts() {
     db.ref('AboutTexts').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -1036,7 +1209,6 @@ export function saveAboutTexts() {
 // ============================================
 // 🆕 SISTEMA COMPLETO PARA GESTIONAR TIPOS DE ATENCIÓN (CRUD)
 // ============================================
-
 export function cargarAtencionTexts() {
     db.ref('AtencionTexts').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -1244,7 +1416,6 @@ window.guardarTodosLosTiposAtencion = function() {
 // ============================================
 // FUNCIONES PARA SECCIÓN CONTACTO
 // ============================================
-
 function updateFooterFromContactInfo() {
     const footerPhone = document.getElementById('footerPhone');
     const footerEmail = document.getElementById('footerEmail');
@@ -1353,7 +1524,6 @@ export function saveContactInfo() {
 // ============================================
 // CONFIGURACIÓN PERSONAL DEL PSICÓLOGO
 // ============================================
-
 export function loadMyConfig() {
     console.log('⚙️ Cargando configuración personal...');
     
@@ -1421,7 +1591,6 @@ export function loadMyConfig() {
 // ============================================
 // ESTADÍSTICAS PERSONALES
 // ============================================
-
 function mostrarEstadisticasPsicologo(psychId) {
     const statsContainer = document.getElementById('psychStatsContainer');
     if (!statsContainer) return;
@@ -1489,7 +1658,6 @@ function mostrarEstadisticasPsicologo(psychId) {
 // ============================================
 // FUNCIÓN PARA ACTUALIZAR TODOS LOS DATOS DE PERSONALIZACIÓN
 // ============================================
-
 export function cargarTodaPersonalizacion() {
     console.log('🎨 Cargando toda la personalización...');
     cargarLogo();
@@ -1519,7 +1687,6 @@ export function forceUpdateFooter() {
 // ============================================
 // CONFIGURACIÓN PERSONAL (guardar)
 // ============================================
-
 export function saveMyConfig() {
     console.log('💾 Guardando configuración personal...');
     
@@ -1604,7 +1771,6 @@ export function saveMyConfig() {
 // ============================================
 // FUNCIONES AUXILIARES
 // ============================================
-
 export function getRecentPatientsWithSessions(psychId, limit = 5) {
     const misPacientes = state.patients.filter(p => p.psychId == psychId);
     
@@ -1681,11 +1847,12 @@ if (typeof window !== 'undefined') {
         saveLogo,
         removeLogo,
         
-        // Funciones de textos
+        // Funciones de textos (actualizadas)
         cargarTextos,
         showTextsModal,
         closeTextsModal,
         saveHeroTexts,
+        updateHeroSlider, // ✅ EXPORTADA NUEVA FUNCIÓN
         
         // Funciones de fondo
         cargarFondo,

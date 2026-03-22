@@ -333,7 +333,6 @@ export function renderProfessionals(professionals) {
         return;
     }
 
-    // Asegurar que el contenedor tenga la clase 'grid'
     if (!grid.classList.contains('grid')) {
         grid.classList.add('grid');
         console.log('✅ Clase "grid" añadida al contenedor #equipo');
@@ -405,7 +404,6 @@ export function renderProfessionals(professionals) {
 export function cargarDatosIniciales() {
     console.log('🚀 Cargando datos iniciales...');
     
-    // Mostrar un loader dentro del grid mientras se cargan los datos
     const grid = document.getElementById('equipo');
     if (grid) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px;"><div class="loader-spinner" style="margin:0 auto 20px;"></div><p style="color:#666;">Cargando profesionales...</p></div>';
@@ -501,12 +499,11 @@ export function cargarDatosIniciales() {
 
         console.log('📊 Total staff después de procesar (incluyendo admin):', state.staff.length);
         
-        // Marcar datos como cargados
         state.setDataLoaded(true);
         
-        // 🔥 NUEVO: Solo una llamada a showSection para renderizar todo una sola vez
+        // 🔥 CAMBIO AQUÍ: mostramos la sección inicio (slider) en lugar de equipo
         setTimeout(() => {
-            showSection('equipo');
+            showSection('inicio');
         }, 100);
         
         if (state.currentUser?.role === 'admin') renderStaffTable();
@@ -515,22 +512,18 @@ export function cargarDatosIniciales() {
         console.error('❌ Error al cargar profesionales:', error);
         showToast('Error al cargar profesionales', 'error');
         state.setStaff([]);
-        // Mostrar mensaje de error en el grid
         const grid = document.getElementById('equipo');
         if (grid) {
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; background:white; border-radius:20px;"><i class="fa fa-exclamation-circle" style="font-size:48px; color:#dc3545;"></i><p style="margin-top:20px; color:#666;">Error al cargar profesionales. Por favor, recarga la página.</p></div>';
         }
-        // En caso de error, igual mostrar sección para no dejar vacío
-        setTimeout(() => showSection('equipo'), 500);
+        setTimeout(() => showSection('inicio'), 500);
     });
 
-    // Cargar pacientes (solo lectura, no renderiza profesionales)
     db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
         console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
         state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPatients();
-        // 🔥 No llamar a filterProfessionals aquí para evitar render extra
     });
 
     db.ref('Appointments').on('value', (snapshot) => {

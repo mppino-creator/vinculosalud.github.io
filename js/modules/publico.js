@@ -154,20 +154,18 @@ export function showSection(sectionId) {
         }, 300);
     }
     
+    const grid = document.getElementById('equipo');
+    const filtros = document.querySelector('.filters');
+    
     if (sectionId === 'equipo') {
-        const grid = document.getElementById('equipo');
-        if (grid) grid.style.display = 'block';
-        
-        const filtros = document.querySelector('.filters');
+        if (grid) grid.style.display = '';           // Restaura el estilo por defecto (grid)
         if (filtros) filtros.style.display = 'flex';
-        
         if (typeof filterProfessionals === 'function') {
             filterProfessionals();
         }
     } else {
-        const filtros = document.querySelector('.filters');
         if (filtros) filtros.style.display = 'none';
-        
+        if (grid) grid.style.display = 'none';       // Oculta explícitamente el grid en otras secciones
         if (sectionId === 'about') {
             updateAboutSection();
         } else if (sectionId === 'atencion') {
@@ -191,7 +189,7 @@ export function abrirAgenda() {
     if (filtros) filtros.style.display = 'flex';
     
     const grid = document.getElementById('equipo');
-    if (grid) grid.style.display = 'block';
+    if (grid) grid.style.display = '';   // Restaura el estilo por defecto (grid)
     
     showToast('Selecciona un profesional para ver su disponibilidad y agendar tu hora', 'info', 3000);
 }

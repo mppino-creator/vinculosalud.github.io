@@ -508,6 +508,7 @@ export function cargarDatosIniciales() {
         // 🔥 CAMBIO AQUÍ: mostramos la sección inicio (slider) en lugar de equipo
         setTimeout(() => {
             showSection('inicio');
+            filterProfessionals(); 
         }, 100);
         
         if (state.currentUser?.role === 'admin') renderStaffTable();

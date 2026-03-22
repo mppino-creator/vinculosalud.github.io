@@ -65,7 +65,7 @@ export let instagramData = {
 // ============================================
 
 export function cargarLogo() {
-    db.ref('LogoImage').on('value', (snapshot) => {
+    db.ref('logoImage').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             state.setLogoImage(data);
@@ -144,7 +144,7 @@ export function saveLogo() {
         newLogo.url = state.tempLogoData;
     }
     state.setLogoImage(newLogo);
-    db.ref('LogoImage').set(state.logoImage);
+    db.ref('logoImage').set(state.logoImage);
 
     const headerLogo = document.getElementById('headerLogo');
     const headerLogoText = document.getElementById('headerLogoText');
@@ -171,7 +171,7 @@ export function removeLogo() {
     if (confirm('¿Eliminar el logo?')) {
         const logoText = document.getElementById('logoText');
         state.setLogoImage({ url: '', text: logoText?.value || 'Vínculo Salud' });
-        db.ref('LogoImage').set(state.logoImage);
+        db.ref('logoImage').set(state.logoImage);
         
         const headerLogo = document.getElementById('headerLogo');
         const headerLogoText = document.getElementById('headerLogoText');
@@ -192,7 +192,7 @@ export function removeLogo() {
 // ============================================
 
 export function cargarTextos() {
-    db.ref('HeroTexts').on('value', (snapshot) => {
+    db.ref('heroTexts').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             // Actualizar título y subtítulo
@@ -290,7 +290,7 @@ export function saveHeroTexts() {
         slides: slides
     });
     
-    db.ref('HeroTexts').set(state.heroTexts);
+    db.ref('heroTexts').set(state.heroTexts);
     
     // Actualizar vista
     const titleDisplay = document.getElementById('heroTitleDisplay');
@@ -420,14 +420,9 @@ export function updateHeroSlider() {
 // ============================================
 // FUNCIONES DE FONDO
 // ============================================
-// ... (resto del código igual, sin cambios) ...
-// ============================================
-
-// Continuación del código original a partir de aquí (todo lo que sigue sin cambios)
-// Para no repetir todo el código, aquí se incluye el resto exactamente igual que en el archivo original.
 
 export function cargarFondo() {
-    db.ref('BackgroundImage').on('value', (snapshot) => {
+    db.ref('backgroundImage').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             state.setBackgroundImage(data);
@@ -511,7 +506,7 @@ export function saveBackgroundImage() {
     }
     newBg.opacity = parseInt(opacityInput.value);
     state.setBackgroundImage(newBg);
-    db.ref('BackgroundImage').set(state.backgroundImage);
+    db.ref('backgroundImage').set(state.backgroundImage);
 
     document.body.style.backgroundImage = `url('${state.backgroundImage.url}')`;
     document.body.style.backgroundSize = 'cover';
@@ -527,7 +522,7 @@ export function saveBackgroundImage() {
 export function removeBackgroundImage() {
     if (confirm('¿Eliminar la imagen de fondo?')) {
         state.setBackgroundImage({ url: '', opacity: 10 });
-        db.ref('BackgroundImage').set(state.backgroundImage);
+        db.ref('backgroundImage').set(state.backgroundImage);
         document.body.style.backgroundImage = '';
         document.body.classList.remove('has-background-image');
         document.body.style.opacity = 1;
@@ -540,7 +535,7 @@ export function removeBackgroundImage() {
 // FUNCIONES DE MÉTODOS DE PAGO
 // ============================================
 export function cargarMetodosPago() {
-    db.ref('PaymentMethods').on('value', (snapshot) => {
+    db.ref('paymentMethods').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             state.setGlobalPaymentMethods(data);
@@ -592,7 +587,7 @@ export function saveGlobalPaymentMethods() {
         webpay: webpay ? webpay.checked : false
     });
     
-    db.ref('PaymentMethods').set(state.globalPaymentMethods);
+    db.ref('paymentMethods').set(state.globalPaymentMethods);
     closePaymentMethodsModal();
     showToast('Métodos de pago globales guardados', 'success');
 }
@@ -616,7 +611,7 @@ export function updatePaymentMethodsInfo() {
 // FUNCIONES DE ESPECIALIDADES
 // ============================================
 export function cargarEspecialidades() {
-    db.ref('Specialties').on('value', (snapshot) => {
+    db.ref('specialties').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             state.setSpecialties(Object.keys(data).map(key => ({ id: key, name: data[key].name })));
@@ -724,7 +719,7 @@ function guardarEspecialidades() {
     state.specialties.forEach(item => {
         specialtiesObj[item.id] = { name: item.name };
     });
-    db.ref('Specialties').set(specialtiesObj);
+    db.ref('specialties').set(specialtiesObj);
     actualizarSelectoresEspecialidades();
     renderAllSpecialties();
 }
@@ -734,7 +729,7 @@ function guardarEspecialidades() {
 // ============================================
 export function cargarInstagramData() {
     // Primero, carga inicial con once para asegurar datos
-    db.ref('InstagramData').once('value', (snapshot) => {
+    db.ref('instagramData').once('value', (snapshot) => {
         console.log('🔥 InstagramData carga inicial:', snapshot.val());
         const data = snapshot.val();
         if (data) {
@@ -749,7 +744,7 @@ export function cargarInstagramData() {
         updateInstagramSection();
     }).then(() => {
         // Luego, escuchar cambios en tiempo real
-        db.ref('InstagramData').on('value', (snapshot) => {
+        db.ref('instagramData').on('value', (snapshot) => {
             console.log('🔥 InstagramData cambio:', snapshot.val());
             const data = snapshot.val();
             if (data) {
@@ -1022,7 +1017,7 @@ export function saveInstagramData() {
     console.log('💾 Guardando InstagramData (modificando objeto existente):', instagramData);
     
     // Guardar en Firebase
-    db.ref('InstagramData').set(instagramData)
+    db.ref('instagramData').set(instagramData)
         .then(() => {
             console.log('✅ InstagramData guardado en Firebase');
             
@@ -1056,7 +1051,7 @@ export function saveInstagramData() {
 // 🆕 FUNCIONES PARA SECCIÓN QUIÉNES SOMOS
 // ============================================
 export function cargarAboutTexts() {
-    db.ref('AboutTexts').on('value', (snapshot) => {
+    db.ref('aboutTexts').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             missionText = data.mission || missionText;
@@ -1197,7 +1192,7 @@ export function saveAboutTexts() {
         image: aboutImage
     };
     
-    db.ref('AboutTexts').set(aboutData);
+    db.ref('aboutTexts').set(aboutData);
     updateAboutSection();
     
     const modal = document.getElementById('aboutModal');
@@ -1210,7 +1205,7 @@ export function saveAboutTexts() {
 // 🆕 SISTEMA COMPLETO PARA GESTIONAR TIPOS DE ATENCIÓN (CRUD)
 // ============================================
 export function cargarAtencionTexts() {
-    db.ref('AtencionTexts').on('value', (snapshot) => {
+    db.ref('atencionTexts').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             atencionTexts = data;
@@ -1404,7 +1399,7 @@ window.guardarTodosLosTiposAtencion = function() {
         if (main.save) main.save();
     });
     
-    db.ref('AtencionTexts').set(atencionTexts);
+    db.ref('atencionTexts').set(atencionTexts);
     updateAtencionSection();
     
     const modal = document.getElementById('atencionModal');
@@ -1433,7 +1428,7 @@ function updateFooterFromContactInfo() {
 }
 
 export function cargarContactInfo() {
-    db.ref('ContactInfo').on('value', (snapshot) => {
+    db.ref('contactInfo').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             contactInfo = data;
@@ -1511,7 +1506,7 @@ export function saveContactInfo() {
         address: addressInput?.value || ''
     };
     
-    db.ref('ContactInfo').set(contactInfo);
+    db.ref('contactInfo').set(contactInfo);
     updateContactSection();
     updateFooterFromContactInfo();
     

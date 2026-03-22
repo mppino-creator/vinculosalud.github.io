@@ -891,17 +891,25 @@ footer a:hover {
 }
 
 /* ============================================
-   PROFESSIONAL GRID
+   PROFESSIONAL GRID (FORZADO)
    ============================================ */
 .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-xl);
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: var(--spacing-xl) !important;
     padding: 0 var(--spacing-md);
     margin-bottom: var(--spacing-xxl);
 }
-@media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { 
+    .grid { 
+        grid-template-columns: repeat(2, 1fr) !important; 
+    } 
+}
+@media (max-width: 640px) { 
+    .grid { 
+        grid-template-columns: 1fr !important; 
+    } 
+}
 
 /* ============================================
    TARJETAS DE PROFESIONALES (MEJORADAS)
@@ -1375,7 +1383,7 @@ button[style*="background:var(--verde-exito)"] { background: var(--verde-exito) 
 #staffMenu button span { color: inherit !important; }
 
 /* ============================================
-   TABLAS Y TARJETAS DE PACIENTES
+   TABLAS Y TARJETAS DE PACIENTES (MEJORADO)
    ============================================ */
 .table-container { 
     border-radius: var(--radius-lg); 
@@ -1391,8 +1399,17 @@ th {
     font-size: 0.8rem; 
     text-transform: uppercase; 
     font-weight: 600; 
+    color: var(--texto-principal);
 }
-td { padding: 15px; border-top: 1px solid var(--gris-claro); }
+td { 
+    padding: 15px; 
+    border-top: 1px solid var(--gris-claro); 
+    background: white;
+    color: var(--texto-principal);
+}
+tr:hover td {
+    background: #f8fafc;
+}
 .patient-card {
     background: white;
     border-radius: 20px;

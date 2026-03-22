@@ -360,9 +360,15 @@ export function renderProfessionals(professionals) {
         const img = p.img || p.photoURL || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
         const address = p.address || 'Dirección no especificada';
         const disponibilidad = horasLibres > 0 ? `${horasLibres} disponible(s) hoy` : 'Sin disponibilidad hoy';
+        
+        // Badges de WhatsApp e Instagram (si existen)
+        const whatsappBadge = p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank" class="whatsapp-badge"><i class="fab fa-whatsapp"></i></a>` : '';
+        const instagramBadge = p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank" class="instagram-badge"><i class="fab fa-instagram"></i></a>` : '';
 
         return `
             <div class="professional-card therapist-card" data-id="${p.id}">
+                ${whatsappBadge}
+                ${instagramBadge}
                 <div class="img-container">
                     <img src="${img}" alt="${name}" loading="lazy">
                 </div>
@@ -395,7 +401,7 @@ export function renderProfessionals(professionals) {
         `;
     }).join('');
     
-    console.log(`✅ Renderizados ${professionals.length} profesionales con botones optimizados`);
+    console.log(`✅ Renderizados ${professionals.length} profesionales con botones optimizados y badges de contacto`);
 }
 
 // ============================================
@@ -613,4 +619,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js cargado con botones optimizados y responsive (sin boxes)');
+console.log('✅ publico.js cargado con botones optimizados, responsive y badges de contacto (sin boxes)');

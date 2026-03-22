@@ -417,7 +417,7 @@ export function cargarDatosIniciales() {
     if (filtros) filtros.style.display = 'none';
 
     console.log('🔍 Intentando cargar profesionales desde Firebase (ruta: Staff)...');
-    db.ref('Staff').once('value', (snapshot) => {
+    db.ref('staff').once('value', (snapshot) => {
         const data = snapshot.val();
         console.log('📦 Datos recibidos de Firebase (Staff):', data ? '✅ existen datos' : '❌ vacío o null');
         
@@ -523,14 +523,14 @@ export function cargarDatosIniciales() {
         setTimeout(() => showSection('inicio'), 500);
     });
 
-    db.ref('Patients').on('value', (snapshot) => {
+    db.ref('patients').on('value', (snapshot) => {
         const data = snapshot.val();
         console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
         state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPatients();
     });
 
-    db.ref('Appointments').on('value', (snapshot) => {
+    db.ref('appointments').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] }));
@@ -544,13 +544,13 @@ export function cargarDatosIniciales() {
         } else if (state.appointments.length > 0) state.setAppointments([]);
     });
 
-    db.ref('PendingRequests').on('value', (snapshot) => {
+    db.ref('pendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPendingRequests();
     });
 
-    db.ref('Messages').on('value', (snapshot) => {
+    db.ref('messages').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setMessages(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [
             { id: 1, name: 'Carolina Méndez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad.', date: '2024-02-15' },

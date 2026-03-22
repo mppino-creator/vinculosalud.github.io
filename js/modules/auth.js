@@ -413,7 +413,7 @@ function abrirGestionDisponibilidad() {
 }
 
 // ============================================
-// FUNCIÓN PARA IR AL DASHBOARD
+// FUNCIÓN PARA IR AL DASHBOARD (MEJORADA CON ESPERA DE DATOS)
 // ============================================
 window.irADashboard = function() {
     console.log('📊 Cambiando a dashboard');
@@ -443,6 +443,22 @@ window.irADashboard = function() {
                 }
             }, 500);
         }
+        
+        // 🔥 Esperar a que los datos estén cargados para renderizar tablas
+        const esperarDatos = () => {
+            if (state.dataLoaded) {
+                console.log('✅ Datos cargados, renderizando tablas...');
+                if (typeof renderAppointments === 'function') renderAppointments();
+                if (typeof renderPendingRequests === 'function') renderPendingRequests();
+                if (role === 'admin' && typeof renderStaffTable === 'function') renderStaffTable();
+                if (role === 'admin' && typeof renderMessagesTable === 'function') renderMessagesTable();
+                if (typeof window.updateStats === 'function') window.updateStats();
+            } else {
+                console.log('⏳ Esperando carga de datos...');
+                setTimeout(esperarDatos, 200);
+            }
+        };
+        esperarDatos();
     }
 };
 
@@ -1261,4 +1277,4 @@ if (typeof window !== 'undefined') {
     }, 1000);
 })();
 
-console.log('✅ auth.js cargado correctamente con Firebase Authentication integrado y login híbrido');
+console.log('✅ auth.js cargado correctamente con espera de datos al abrir dashboard');

@@ -19,7 +19,7 @@ import {
 } from './personalizacion.js';
 import { renderStaffTable } from './profesionales.js';
 import { renderPatients } from './pacientes.js';
-import { renderPendingRequests } from './citas.js';
+import { renderPendingRequests, renderAppointments } from './citas.js';
 
 // ============================================
 // FUNCIÓN AUXILIAR PARA CALIFICACIONES
@@ -403,10 +403,10 @@ export function renderProfessionals(professionals) {
 }
 
 // ============================================
-// CARGA INICIAL DE DATOS
+// CARGA INICIAL DE DATOS (MEJORADA CON CARGA ÚNICA Y LISTENERS)
 // ============================================
 export function cargarDatosIniciales() {
-    console.log('🚀 Cargando datos iniciales...');
+    console.log('🚀 Cargando datos iniciales (carga única + escucha en tiempo real)...');
     
     const grid = document.getElementById('equipo');
     if (grid) {
@@ -416,14 +416,29 @@ export function cargarDatosIniciales() {
     const filtros = document.querySelector('.filters');
     if (filtros) filtros.style.display = 'none';
 
-    console.log('🔍 Intentando cargar profesionales desde Firebase (ruta: staff)...');
-    db.ref('staff').once('value', (snapshot) => {
-        const data = snapshot.val();
-        console.log('📦 Datos recibidos de Firebase (staff):', data ? '✅ existen datos' : '❌ vacío o null');
+    // 🔥 1. CARGA ÚNICA (Promise.all) para datos principales
+    const promesas = [
+        db.ref('staff').once('value'),
+        db.ref('patients').once('value'),
+        db.ref('appointments').once('value'),
+        db.ref('pendingRequests').once('value'),
+        db.ref('messages').once('value'),
+        db.ref('fichasIngreso').once('value'),
+        db.ref('sesiones').once('value'),
+        db.ref('informes').once('value'),
+        db.ref('specialties').once('value'),
+        db.ref('textosEditables').once('value')
+    ];
+    
+    Promise.all(promesas).then(resultados => {
+        console.log('📦 Datos cargados una sola vez desde Firebase');
         
-        if (data) {
-            const staffArray = Object.keys(data).map(key => {
-                const item = data[key];
+        // Procesar staff
+        const staffSnapshot = resultados[0];
+        const staffData = staffSnapshot.val();
+        if (staffData) {
+            const staffArray = Object.keys(staffData).map(key => {
+                const item = staffData[key];
                 return { 
                     id: key, 
                     ...item,
@@ -458,14 +473,13 @@ export function cargarDatosIniciales() {
                     }
                 };
             });
-            
-            console.log(`✅ Profesionales procesados: ${staffArray.length}`);
             state.setStaff(staffArray);
+            console.log(`✅ Profesionales cargados: ${staffArray.length}`);
         } else {
-            console.warn('⚠️ No hay datos de profesionales en Firebase. Verifica la ruta "staff".');
             state.setStaff([]);
         }
 
+        // Asegurar admin oculto
         const adminExists = state.staff.some(s => s.id == 9999 || s.name === 'Administrador');
         if (!adminExists) {
             state.staff.push({
@@ -501,11 +515,98 @@ export function cargarDatosIniciales() {
             console.log('👤 Administrador oculto agregado');
         }
 
-        console.log('📊 Total staff después de procesar (incluyendo admin):', state.staff.length);
+        // Procesar pacientes
+        const patientsSnapshot = resultados[1];
+        const patientsData = patientsSnapshot.val();
+        state.setPatients(patientsData ? Object.keys(patientsData).map(key => ({ id: key, ...patientsData[key] })) : []);
         
+        // Procesar citas
+        const appointmentsSnapshot = resultados[2];
+        const appointmentsData = appointmentsSnapshot.val();
+        state.setAppointments(appointmentsData ? Object.keys(appointmentsData).map(key => ({ id: key, ...appointmentsData[key] })) : []);
+        
+        // Procesar solicitudes
+        const pendingSnapshot = resultados[3];
+        const pendingData = pendingSnapshot.val();
+        state.setPendingRequests(pendingData ? Object.keys(pendingData).map(key => ({ id: key, ...pendingData[key] })) : []);
+        
+        // Procesar mensajes
+        const messagesSnapshot = resultados[4];
+        const messagesData = messagesSnapshot.val();
+        if (messagesData) {
+            state.setMessages(Object.keys(messagesData).map(key => ({ id: key, ...messagesData[key] })));
+        } else {
+            state.setMessages([
+                { id: 1, name: 'Carolina Méndez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad.', date: '2024-02-15' },
+                { id: 2, name: 'Roberto Campos', rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: '2024-02-16' },
+                { id: 3, name: 'María José', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: '2024-02-17' }
+            ]);
+        }
+        
+        // Procesar fichas clínicas
+        const fichasSnapshot = resultados[5];
+        const fichasData = fichasSnapshot.val();
+        state.setFichasIngreso(fichasData ? Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] })) : []);
+        
+        const sesionesSnapshot = resultados[6];
+        const sesionesData = sesionesSnapshot.val();
+        state.setSesiones(sesionesData ? Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] })) : []);
+        
+        const informesSnapshot = resultados[7];
+        const informesData = informesSnapshot.val();
+        state.setInformes(informesData ? Object.keys(informesData).map(key => ({ id: key, ...informesData[key] })) : []);
+        
+        // Especialidades
+        const specialtiesSnapshot = resultados[8];
+        const specialtiesData = specialtiesSnapshot.val();
+        if (specialtiesData) {
+            state.setSpecialties(Object.keys(specialtiesData).map(key => ({ id: key, name: specialtiesData[key].name })));
+        } else {
+            state.setSpecialties([
+                { id: 1, name: 'Psicología Clínica' },
+                { id: 2, name: 'Psiquiatría' },
+                { id: 3, name: 'Terapia de Pareja' },
+                { id: 4, name: 'Terapia Familiar' },
+                { id: 5, name: 'Mindfulness' },
+                { id: 6, name: 'Ansiedad' },
+                { id: 7, name: 'Depresión' },
+                { id: 8, name: 'Terapia Infantil' },
+                { id: 9, name: 'Neuropsicología' },
+                { id: 10, name: 'Sexología' }
+            ]);
+        }
+        
+        // Textos editables
+        const textosSnapshot = resultados[9];
+        const textosData = textosSnapshot.val();
+        if (textosData) {
+            if (textosData.missionText) state.missionText = textosData.missionText;
+            if (textosData.visionText) state.visionText = textosData.visionText;
+            if (textosData.aboutTeamText) state.aboutTeamText = textosData.aboutTeamText;
+            if (textosData.aboutImage) state.aboutImage = textosData.aboutImage;
+            if (textosData.atencionTexts) state.atencionTexts = textosData.atencionTexts;
+            if (textosData.contactInfo) state.contactInfo = textosData.contactInfo;
+            if (textosData.heroTexts) state.heroTexts = textosData.heroTexts;
+            if (textosData.logoImage) state.logoImage = textosData.logoImage;
+            if (textosData.backgroundImage) state.backgroundImage = textosData.backgroundImage;
+            if (textosData.instagramData) state.instagramData = textosData.instagramData;
+        }
+        
+        console.log('✅ Todos los datos cargados correctamente');
         state.setDataLoaded(true);
         
-        // 🔥 CAMBIO AQUÍ: mostramos la sección inicio (slider) en lugar de equipo
+        // Si hay usuario logueado, actualizar UI del dashboard (si está visible)
+        if (state.currentUser) {
+            // Si el dashboard ya está visible, renderizar tablas
+            if (document.getElementById('dashboard').style.display === 'block') {
+                if (typeof renderAppointments === 'function') renderAppointments();
+                if (typeof renderPendingRequests === 'function') renderPendingRequests();
+                if (typeof renderStaffTable === 'function' && state.currentUser.role === 'admin') renderStaffTable();
+                if (typeof window.updateStats === 'function') window.updateStats();
+            }
+        }
+        
+        // Mostrar sección inicio después de cargar
         setTimeout(() => {
             showSection('inicio');
             filterProfessionals(); 
@@ -513,57 +614,101 @@ export function cargarDatosIniciales() {
         
         if (state.currentUser?.role === 'admin') renderStaffTable();
         
-    }, (error) => {
-        console.error('❌ Error al cargar profesionales:', error);
-        showToast('Error al cargar profesionales', 'error');
-        state.setStaff([]);
-        const grid = document.getElementById('equipo');
-        if (grid) {
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; background:white; border-radius:20px;"><i class="fa fa-exclamation-circle" style="font-size:48px; color:#dc3545;"></i><p style="margin-top:20px; color:#666;">Error al cargar profesionales. Por favor, recarga la página.</p></div>';
-        }
+    }).catch(error => {
+        console.error('❌ Error cargando datos:', error);
+        showToast('Error al cargar datos', 'error');
+        state.setDataLoaded(true); // marcar como cargado aunque haya error para no bloquear
         setTimeout(() => showSection('inicio'), 500);
     });
-
+    
+    // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES
+    // Staff (actualizaciones en tiempo real)
+    db.ref('staff').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            const staffArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            state.setStaff(staffArray);
+            filterProfessionals();
+            if (state.currentUser?.role === 'admin') renderStaffTable();
+        }
+    });
+    
+    // Pacientes
     db.ref('patients').on('value', (snapshot) => {
         const data = snapshot.val();
-        console.log('📋 Cargando pacientes desde Firebase...', data ? Object.keys(data).length : 0);
         state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPatients();
     });
-
+    
+    // Citas
     db.ref('appointments').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            if (JSON.stringify(newApps) !== JSON.stringify(state.appointments)) {
-                state.setAppointments(newApps);
-                if (state.currentUser) {
-                    if (typeof window.updateStats === 'function') window.updateStats();
-                    renderPendingRequests();
-                }
+            state.setAppointments(newApps);
+            if (state.currentUser) {
+                if (typeof window.updateStats === 'function') window.updateStats();
+                renderPendingRequests();
             }
-        } else if (state.appointments.length > 0) state.setAppointments([]);
+        } else {
+            state.setAppointments([]);
+        }
     });
-
+    
+    // Solicitudes
     db.ref('pendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPendingRequests();
     });
-
+    
+    // Mensajes
     db.ref('messages').on('value', (snapshot) => {
         const data = snapshot.val();
-        state.setMessages(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [
-            { id: 1, name: 'Carolina Méndez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad.', date: '2024-02-15' },
-            { id: 2, name: 'Roberto Campos', rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: '2024-02-16' },
-            { id: 3, name: 'María José', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: '2024-02-17' }
-        ]);
+        state.setMessages(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         renderMessages();
         updateMarquee();
         if (state.currentUser?.role === 'admin') import('./mensajes.js').then(mod => mod.renderMessagesTable());
     });
-
-    console.log('📝 Cargando textos editables...');
+    
+    // Fichas clínicas (cambios en tiempo real)
+    db.ref('fichasIngreso').on('value', (snapshot) => {
+        const data = snapshot.val();
+        state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    });
+    
+    db.ref('sesiones').on('value', (snapshot) => {
+        const data = snapshot.val();
+        state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    });
+    
+    db.ref('informes').on('value', (snapshot) => {
+        const data = snapshot.val();
+        state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    });
+    
+    // Textos editables (tiempo real)
+    db.ref('textosEditables').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            if (data.missionText) state.missionText = data.missionText;
+            if (data.visionText) state.visionText = data.visionText;
+            if (data.aboutTeamText) state.aboutTeamText = data.aboutTeamText;
+            if (data.aboutImage) state.aboutImage = data.aboutImage;
+            if (data.atencionTexts) state.atencionTexts = data.atencionTexts;
+            if (data.contactInfo) state.contactInfo = data.contactInfo;
+            if (data.heroTexts) state.heroTexts = data.heroTexts;
+            if (data.logoImage) state.logoImage = data.logoImage;
+            if (data.backgroundImage) state.backgroundImage = data.backgroundImage;
+            if (data.instagramData) state.instagramData = data.instagramData;
+            
+            updateAboutSection();
+            updateAtencionSection();
+            updateContactSection();
+        }
+    });
+    
+    console.log('📝 Cargando textos editables (carga única)...');
     cargarEspecialidades();
     cargarMetodosPago();
     cargarFondo();
@@ -618,4 +763,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js cargado con botones optimizados, responsive y badges de contacto (sin boxes)');
+console.log('✅ publico.js cargado con carga única mejorada y escucha en tiempo real');

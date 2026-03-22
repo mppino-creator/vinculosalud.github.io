@@ -576,20 +576,20 @@ export function cargarDatosIniciales() {
             ]);
         }
         
-        // Textos editables
+        // Textos editables - USANDO SETTERS CORRECTAMENTE
         const textosSnapshot = resultados[9];
         const textosData = textosSnapshot.val();
         if (textosData) {
-            if (textosData.missionText) state.missionText = textosData.missionText;
-            if (textosData.visionText) state.visionText = textosData.visionText;
-            if (textosData.aboutTeamText) state.aboutTeamText = textosData.aboutTeamText;
-            if (textosData.aboutImage) state.aboutImage = textosData.aboutImage;
-            if (textosData.atencionTexts) state.atencionTexts = textosData.atencionTexts;
-            if (textosData.contactInfo) state.contactInfo = textosData.contactInfo;
-            if (textosData.heroTexts) state.heroTexts = textosData.heroTexts;
-            if (textosData.logoImage) state.logoImage = textosData.logoImage;
-            if (textosData.backgroundImage) state.backgroundImage = textosData.backgroundImage;
-            if (textosData.instagramData) state.instagramData = textosData.instagramData;
+            if (textosData.missionText) state.setMissionText(textosData.missionText);
+            if (textosData.visionText) state.setVisionText(textosData.visionText);
+            if (textosData.aboutTeamText) state.setAboutTeamText(textosData.aboutTeamText);
+            if (textosData.aboutImage) state.setAboutImage(textosData.aboutImage);
+            if (textosData.atencionTexts) state.setAtencionTexts(textosData.atencionTexts);
+            if (textosData.contactInfo) state.setContactInfo(textosData.contactInfo);
+            if (textosData.heroTexts) state.setHeroTexts(textosData.heroTexts);
+            if (textosData.logoImage) state.setLogoImage(textosData.logoImage);
+            if (textosData.backgroundImage) state.setBackgroundImage(textosData.backgroundImage);
+            if (textosData.instagramData) state.setInstagramData(textosData.instagramData);
         }
         
         console.log('✅ Todos los datos cargados correctamente');
@@ -687,20 +687,20 @@ export function cargarDatosIniciales() {
         state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
     });
     
-    // Textos editables (tiempo real)
+    // Textos editables (tiempo real) - USANDO SETTERS CORRECTAMENTE
     db.ref('textosEditables').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            if (data.missionText) state.missionText = data.missionText;
-            if (data.visionText) state.visionText = data.visionText;
-            if (data.aboutTeamText) state.aboutTeamText = data.aboutTeamText;
-            if (data.aboutImage) state.aboutImage = data.aboutImage;
-            if (data.atencionTexts) state.atencionTexts = data.atencionTexts;
-            if (data.contactInfo) state.contactInfo = data.contactInfo;
-            if (data.heroTexts) state.heroTexts = data.heroTexts;
-            if (data.logoImage) state.logoImage = data.logoImage;
-            if (data.backgroundImage) state.backgroundImage = data.backgroundImage;
-            if (data.instagramData) state.instagramData = data.instagramData;
+            if (data.missionText) state.setMissionText(data.missionText);
+            if (data.visionText) state.setVisionText(data.visionText);
+            if (data.aboutTeamText) state.setAboutTeamText(data.aboutTeamText);
+            if (data.aboutImage) state.setAboutImage(data.aboutImage);
+            if (data.atencionTexts) state.setAtencionTexts(data.atencionTexts);
+            if (data.contactInfo) state.setContactInfo(data.contactInfo);
+            if (data.heroTexts) state.setHeroTexts(data.heroTexts);
+            if (data.logoImage) state.setLogoImage(data.logoImage);
+            if (data.backgroundImage) state.setBackgroundImage(data.backgroundImage);
+            if (data.instagramData) state.setInstagramData(data.instagramData);
             
             updateAboutSection();
             updateAtencionSection();

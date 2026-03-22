@@ -681,17 +681,23 @@ export function confirmPresencialTime(requestId, date, time) {
     }
 }
 
+/**
+ * Función mejorada para envío de correos con validación de emails profesionales
+ */
 async function enviarEmailConValidacion(email, nombre, asunto, mensaje, tipo, objeto, flagEnviado) {
     if (!email) {
         console.warn('⚠️ No hay email para enviar');
         return false;
     }
     
+    // Verificar si la función esEmailProfesional existe
     const esEmailProfesional = window.esEmailProfesional;
+    let emailPacienteReal = email;
     
     if (esEmailProfesional && esEmailProfesional(email)) {
         console.warn('⚠️ El email proporcionado es de un profesional:', email);
         
+        // Buscar el email real del paciente en sus datos
         if (objeto.patientId) {
             const patient = state.patients.find(p => p.id == objeto.patientId);
             if (patient && patient.email) {
@@ -699,7 +705,7 @@ async function enviarEmailConValidacion(email, nombre, asunto, mensaje, tipo, ob
                     console.log('ℹ️ El paciente y el profesional comparten el mismo email. Se enviará igualmente.');
                 } else if (!esEmailProfesional(patient.email)) {
                     console.log('✅ Usando email correcto del paciente:', patient.email);
-                    email = patient.email;
+                    emailPacienteReal = patient.email;
                 } else {
                     console.error('❌ El email del paciente también es de profesional:', patient.email);
                     showToast('⚠️ No se pudo enviar email: dirección inválida', 'warning');
@@ -715,13 +721,22 @@ async function enviarEmailConValidacion(email, nombre, asunto, mensaje, tipo, ob
         }
     }
     
-    return sendEmailNotification(email, asunto, mensaje, tipo, nombre, objeto)
-        .then(success => {
-            if (success && flagEnviado) {
-                objeto[flagEnviado] = true;
-            }
-            return success;
-        });
+    // Enviar solo si el email real es válido y no es profesional
+    const success = await sendEmailNotification(
+        emailPacienteReal,
+        asunto,
+        mensaje,
+        tipo,
+        nombre,
+        objeto
+    );
+    
+    if (success && flagEnviado) {
+        objeto[flagEnviado] = true;
+        console.log(`✅ Email enviado a: ${emailPacienteReal}`);
+    }
+    
+    return success;
 }
 
 let bookingEnProceso = false;
@@ -994,6 +1009,8 @@ export function executeBooking() {
                             appointment.emailEnviado = true;
                             emailsEnviados.add(emailKey);
                             console.log('✅ Email enviado a paciente:', email);
+                        } else {
+                            console.error('❌ Falló envío a paciente:', email);
                         }
 
                         // Correo para el profesional (si es diferente del paciente)
@@ -1587,4 +1604,4 @@ window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
 window.calcularEdad = window.calcularEdad; // Asegurar que se exponga
 
-console.log('✅ citas.js cargado con validación ABSOLUTA de email, filtrado de métodos de pago por tipo de atención, función cancelAppointment corregida, SECCIÓN TUTOR SIEMPRE VISIBLE (obligatorio/opcional según edad) y ENVÍO DE CORREO AL PROFESIONAL');
+console.log('✅ citas.js cargado con validación ABSOLUTA de email, filtrado de métodos de pago por tipo de atención, función cancelAppointment corregida, SECCIÓN TUTOR SIEMPRE VISIBLE (obligatorio/opcional según edad) y ENVÍO DE CORREO AL PROFESIONAL (mejorado)');

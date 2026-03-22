@@ -2078,3 +2078,54 @@ a.btn-instagram {
         grid-template-columns: 1fr;
     }
 }
+
+/* Estilos forzados para el dashboard */
+#dashboardTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 20px;
+    padding: 10px;
+    background: white;
+    border-radius: 50px;
+    border: 1px solid #e2e8f0;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+#dashboardTabs .tab, .tab {
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    background: transparent;
+    color: #5A6B7A;
+    border: none;
+    display: inline-block;
+    cursor: pointer;
+}
+#dashboardTabs .tab.active, .tab.active {
+    background: #7B8471;
+    color: white;
+}
+.table-container, .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: white;
+}
+.table-container table, .table-responsive table, table {
+    min-width: 700px;
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+th {
+    background: #E3DFD1;
+    font-weight: 600;
+}

@@ -1943,3 +1943,138 @@ a.btn-instagram {
     font-size: 0.8rem;
 }
 .ficha-card .btn-icon:hover { background: var(--primario-hover); }
+
+/* ============================================
+   DASHBOARD - MEJORAS VISUALES
+   ============================================ */
+
+/* 1. Contenedor principal del dashboard */
+#dashboard {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 15px;
+    box-sizing: border-box;
+}
+
+/* 2. Tabs en fila (no vertical) */
+#dashboardTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 20px 0;
+    padding: 10px;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+#dashboardTabs .tab {
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: var(--texto-secundario);
+    border: none;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+#dashboardTabs .tab:hover {
+    background: var(--primario-soft);
+    color: var(--texto-principal);
+    transform: translateY(-2px);
+}
+
+#dashboardTabs .tab.active {
+    background: var(--primario) !important;
+    color: white !important;
+    box-shadow: 0 4px 10px rgba(123,132,113,0.2);
+}
+
+/* 3. Contenedores de tablas con scroll horizontal */
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 1px solid var(--gris-claro);
+    background: white;
+}
+
+.table-container table {
+    min-width: 700px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-container th,
+.table-container td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.table-container th {
+    background: var(--primario-soft);
+    font-weight: 600;
+    color: var(--texto-principal);
+}
+
+.table-container tr:hover td {
+    background: #f8fafc;
+}
+
+/* 4. Botones dentro de las tablas */
+.btn-icon {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    background: var(--primario);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.95);
+}
+
+/* 5. Panel de personalización - botones en grilla ordenada */
+.admin-edit-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.admin-edit-buttons .btn-staff {
+    padding: 15px;
+    font-size: 1rem;
+    justify-content: center;
+    text-align: center;
+}
+
+/* 6. Ajuste para pantallas pequeñas */
+@media (max-width: 768px) {
+    #dashboardTabs .tab {
+        padding: 8px 15px;
+        font-size: 0.85rem;
+    }
+    .table-container th,
+    .table-container td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+    .admin-edit-buttons {
+        grid-template-columns: 1fr;
+    }
+}

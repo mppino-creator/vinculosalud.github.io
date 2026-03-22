@@ -896,7 +896,7 @@
                 <div style="display: flex; align-items: center; gap: 1.5rem;">
                     <a href="#inicio" onclick="showSection('inicio'); return false;">Inicio</a>
                     <a href="#about" onclick="showSection('about'); return false;">Quienes Somos</a>
-                    <a href="#equipo" onclick="showSection('equipo'); return false;" class="active">Equipo</a>
+                    <a href="#equipo" onclick="showSection('equipo'); return false;">Equipo</a> <!-- Removido class="active" -->
                     <a href="#atencion" onclick="showSection('atencion'); return false;">Tipo de Atención</a>
                     <a href="#contacto" onclick="showSection('contacto'); return false;">Contacto</a>
                     
@@ -1358,19 +1358,19 @@
                           <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                  </table>
+                  表格
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                  <table>
+                  表格
                     <thead>
                           <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                  </table>
+                  表格
             </div>
         </div>
 
@@ -1397,12 +1397,12 @@
                 </button>
             </div>
             <div class="table-container">
-                  <table>
+                 表格
                     <thead>
-                          <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                          <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></td>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                  </table>
+                 表格
             </div>
         </div>
 
@@ -1537,12 +1537,12 @@
             </div>
             
             <div class="table-container">
-                <table>
+                表格
                     <thead>
                         <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                </table>
+                表格
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">

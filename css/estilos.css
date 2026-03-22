@@ -76,7 +76,6 @@ body {
     min-height: 100vh;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    /* Eliminamos el patrón de fondo para mantenerlo limpio */
     background-image: none;
 }
 
@@ -130,7 +129,7 @@ body.has-background-image::before {
 }
 
 /* ============================================
-   HEADER PRINCIPAL
+   HEADER PRINCIPAL (MEJORADO)
    ============================================ */
 header.nav-container {
     padding: 0;
@@ -166,16 +165,17 @@ nav.glass {
     object-fit: contain;
 }
 
+/* LOGO MÁS GRANDE */
 .logo-text { 
     font-weight: 700; 
-    font-size: 1.5rem;
+    font-size: 1.8rem;   /* Aumentado desde 1.5rem */
     background: none;
     -webkit-text-fill-color: var(--texto-principal);
     white-space: nowrap;
     color: var(--texto-principal);
 }
 
-/* Estilos para enlaces del menú principal (iguales que antes pero con colores nuevos) */
+/* Estilos para enlaces del menú principal */
 nav.glass a {
     color: var(--texto-principal) !important;
     font-size: 1rem !important;
@@ -206,24 +206,30 @@ nav.glass a:last-child {
     gap: 5px;
 }
 
-/* Botón CTA en el menú (similar a Punto Terapia) */
+/* BOTÓN CTA MÁS GRANDE */
 nav.glass .btn-cta {
     background: var(--atencion);
     color: white !important;
-    padding: 0.5rem 1.2rem;
-    border-radius: 30px;
-    text-decoration: none;
-    font-weight: 600;
+    padding: 0.7rem 1.5rem !important;   /* mayor padding vertical y horizontal */
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap;                 /* evita que el texto se rompa */
     border-bottom: none !important;
+    transition: all 0.2s ease;
 }
 nav.glass .btn-cta:hover {
     background: var(--primario);
     transform: translateY(-2px);
-    border-bottom: none !important;
+}
+
+/* Ajuste del espaciado entre elementos del menú */
+nav.glass > div > div {
+    gap: 1.2rem;
 }
 
 /* ============================================
-   HERO SLIDER (nuevo)
+   HERO SLIDER
    ============================================ */
 .hero-slider {
     position: relative;
@@ -323,7 +329,7 @@ nav.glass .btn-cta:hover {
 }
 
 /* ============================================
-   SECCIÓN QUIÉNES SOMOS (estilo Punto Terapia)
+   SECCIÓN QUIÉNES SOMOS
    ============================================ */
 .about-section {
     background: white;
@@ -401,7 +407,7 @@ nav.glass .btn-cta:hover {
 }
 
 /* ============================================
-   SECCIÓN BLOG (Punto de Interés)
+   SECCIÓN BLOG
    ============================================ */
 .blog-section {
     margin: 80px 0;
@@ -493,7 +499,7 @@ nav.glass .btn-cta:hover {
 }
 
 /* ============================================
-   SECCIÓN INSTAGRAM (estilo Punto Terapia)
+   SECCIÓN INSTAGRAM
    ============================================ */
 .instagram-section {
     margin: 80px 0;
@@ -554,7 +560,7 @@ nav.glass .btn-cta:hover {
 }
 
 /* ============================================
-   SECCIÓN TIPO DE ATENCIÓN (mantenemos igual pero con nueva paleta)
+   SECCIÓN TIPO DE ATENCIÓN
    ============================================ */
 .atencion-section {
     background: white;
@@ -716,7 +722,7 @@ nav.glass .btn-cta:hover {
 }
 
 /* ============================================
-   FOOTER (estilo Punto Terapia)
+   FOOTER
    ============================================ */
 footer {
     background: #3C3C3B !important;
@@ -779,12 +785,7 @@ footer a:hover {
 }
 
 /* ============================================
-   EL RESTO DE LOS ESTILOS (modales, botones, tablas, etc.) 
-   se mantienen igual pero con las nuevas variables
-   ============================================ */
-
-/* ============================================
-   TOAST SYSTEM (sin cambios)
+   TOAST SYSTEM
    ============================================ */
 .toast-container {
     position: fixed;
@@ -819,7 +820,7 @@ footer a:hover {
 }
 
 /* ============================================
-   MODAL SYSTEM (sin cambios)
+   MODAL SYSTEM
    ============================================ */
 .modal {
     display: none;
@@ -872,7 +873,7 @@ footer a:hover {
 }
 
 /* ============================================
-   GLASS EFFECT (sin cambios)
+   GLASS EFFECT
    ============================================ */
 .glass { 
     background: var(--glass); 
@@ -882,7 +883,7 @@ footer a:hover {
 }
 
 /* ============================================
-   CONTAINER (sin cambios)
+   CONTAINER
    ============================================ */
 .container { 
     width: 90%; 
@@ -892,7 +893,7 @@ footer a:hover {
 }
 
 /* ============================================
-   FILTERS (sin cambios)
+   FILTERS
    ============================================ */
 .filters {
     display: flex;
@@ -919,7 +920,7 @@ footer a:hover {
 }
 
 /* ============================================
-   PROFESSIONAL GRID (sin cambios)
+   PROFESSIONAL GRID
    ============================================ */
 .grid {
     display: grid;
@@ -932,7 +933,7 @@ footer a:hover {
 @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
 
 /* ============================================
-   TARJETAS DE PROFESIONALES (sin cambios, solo colores)
+   TARJETAS DE PROFESIONALES
    ============================================ */
 .therapist-card {
     background: white;
@@ -1128,7 +1129,7 @@ footer a:hover {
 .instagram-badge:hover { transform: scale(1.1); }
 
 /* ============================================
-   TESTIMONIALS MARQUEE (sin cambios)
+   TESTIMONIALS MARQUEE
    ============================================ */
 .testimonials-marquee {
     background: var(--primario);
@@ -1160,7 +1161,7 @@ footer a:hover {
 }
 
 /* ============================================
-   MESSAGES SECTION (sin cambios)
+   MESSAGES SECTION
    ============================================ */
 .messages-section {
     background: white;
@@ -1218,7 +1219,7 @@ footer a:hover {
 }
 
 /* ============================================
-   BOTONES (actualizados con nueva paleta)
+   BOTONES (actualizados)
    ============================================ */
 .btn-staff, .btn-book, .btn-new-message, .btn-icon,
 .btn-cta, .btn-cta-outline, .btn-mas-info, .btn-agendar,
@@ -1310,7 +1311,7 @@ button[style*="background:var(--verde-exito)"] {
 }
 
 /* ============================================
-   PANELES DE ADMINISTRACIÓN (sin cambios)
+   PANELES DE ADMINISTRACIÓN
    ============================================ */
 .dashboard-header {
     background: white;
@@ -1349,7 +1350,7 @@ button[style*="background:var(--verde-exito)"] {
 .stat-item h4 { font-size: 2.4rem; font-weight: 700; color: var(--primario); margin-top: 8px; }
 
 /* ============================================
-   MENÚ DE ADMINISTRADOR (sin cambios)
+   MENÚ DE ADMINISTRADOR
    ============================================ */
 #staffMenu {
     position: fixed !important;
@@ -1452,7 +1453,7 @@ button[style*="background:var(--verde-exito)"] {
 }
 
 /* ============================================
-   TABLAS Y TARJETAS DE PACIENTES (sin cambios)
+   TABLAS Y TARJETAS DE PACIENTES
    ============================================ */
 .table-container { 
     border-radius: var(--radius-lg); 
@@ -1502,7 +1503,7 @@ td { padding: 15px; border-top: 1px solid var(--gris-claro); }
 }
 
 /* ============================================
-   TIME SLOTS (sin cambios)
+   TIME SLOTS
    ============================================ */
 .time-slots-container {
     background: white;
@@ -1565,7 +1566,7 @@ td { padding: 15px; border-top: 1px solid var(--gris-claro); }
 .time-slot.overcupo::after { content: "⚠️"; margin-left: 4px; font-size: 10px; }
 
 /* ============================================
-   WEEKDAY SELECTOR (sin cambios)
+   WEEKDAY SELECTOR
    ============================================ */
 .weekday-selector {
     display: flex;
@@ -1587,7 +1588,7 @@ td { padding: 15px; border-top: 1px solid var(--gris-claro); }
 }
 
 /* ============================================
-   FORMULARIOS (sin cambios)
+   FORMULARIOS
    ============================================ */
 .form-group { margin-bottom: var(--spacing-md); }
 .form-group label {
@@ -1613,7 +1614,7 @@ td { padding: 15px; border-top: 1px solid var(--gris-claro); }
 }
 
 /* ============================================
-   TELÉFONO - 3 CAMPOS (sin cambios)
+   TELÉFONO - 3 CAMPOS
    ============================================ */
 .telefono-container {
     display: flex;
@@ -1637,7 +1638,7 @@ td { padding: 15px; border-top: 1px solid var(--gris-claro); }
 }
 
 /* ============================================
-   FILE UPLOAD (sin cambios)
+   FILE UPLOAD
    ============================================ */
 .file-upload {
     border: 2px dashed var(--primario);
@@ -1666,7 +1667,7 @@ td { padding: 15px; border-top: 1px solid var(--gris-claro); }
 }
 
 /* ============================================
-   BADGES Y TAGS (sin cambios)
+   BADGES Y TAGS
    ============================================ */
 .specialty-tag, .badge {
     display: inline-block;
@@ -1687,7 +1688,7 @@ td { padding: 15px; border-top: 1px solid var(--gris-claro); }
 .badge.presencial { background: #e8f0ed; color: var(--primario); }
 
 /* ============================================
-   SPINNER - Cargando (sin cambios)
+   SPINNER - Cargando
    ============================================ */
 .spinner {
     width: 18px;
@@ -1723,7 +1724,7 @@ td { padding: 15px; border-top: 1px solid var(--gris-claro); }
 }
 
 /* ============================================
-   WHATSAPP FLOAT (sin cambios)
+   WHATSAPP FLOAT
    ============================================ */
 .whatsapp-float {
     position: fixed;
@@ -1745,7 +1746,7 @@ td { padding: 15px; border-top: 1px solid var(--gris-claro); }
 .whatsapp-float:hover { transform: scale(1.1) translateY(-5px); }
 
 /* ============================================
-   HOTFIX ESENCIALES (sin cambios)
+   HOTFIX ESENCIALES
    ============================================ */
 #dashboard { display: none; }
 #dashboard[style*="display: block"] { display: block !important; }
@@ -1764,7 +1765,7 @@ button, .btn-staff, [role="button"], input[type="submit"] {
 }
 
 /* ============================================
-   MODAL DE GESTIÓN DE TIPOS DE ATENCIÓN (sin cambios)
+   MODAL DE GESTIÓN DE TIPOS DE ATENCIÓN
    ============================================ */
 .tipo-atencion-card {
     background: white;
@@ -1823,7 +1824,7 @@ button, .btn-staff, [role="button"], input[type="submit"] {
 #tiposAtencionList::-webkit-scrollbar-thumb:hover { background: var(--primario-hover); }
 
 /* ============================================
-   ESTILOS PARA PESTAÑAS DEL DASHBOARD (sin cambios)
+   ESTILOS PARA PESTAÑAS DEL DASHBOARD
    ============================================ */
 #dashboardTabs {
     display: flex;
@@ -1903,7 +1904,7 @@ button, .btn-staff, [role="button"], input[type="submit"] {
 }
 
 /* ============================================
-   FIX PARA TEXTOS EN BOTONES Y MENÚS (sin cambios)
+   FIX PARA TEXTOS EN BOTONES Y MENÚS
    ============================================ */
 .btn-staff,
 button.btn-staff,
@@ -1939,11 +1940,34 @@ a.btn-instagram {
 }
 
 /* ============================================
-   RESPONSIVE (sin cambios)
+   RESPONSIVE (actualizado)
    ============================================ */
+@media (max-width: 1024px) {
+    nav.glass > div > div {
+        gap: 1rem;
+    }
+    .logo-text {
+        font-size: 1.6rem;
+    }
+}
 @media (max-width: 768px) {
-    nav.glass { flex-direction: column !important; }
-    .logo-text { font-size: 1.8rem !important; }
+    nav.glass {
+        flex-direction: column !important;
+        padding: 0.5rem 1rem !important;
+    }
+    .logo-text {
+        font-size: 1.4rem !important;
+        margin-bottom: 0.5rem;
+    }
+    nav.glass .btn-cta {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem;
+    }
+    nav.glass > div > div {
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
     .public-nav a { font-size: 0.9rem !important; }
     button, .btn-staff, .btn-book, .btn-reservar {
         min-height: 48px !important;
@@ -1976,7 +2000,7 @@ a.btn-instagram {
 }
 
 /* ============================================
-   FIX PARA TEXTO EN RESUMEN DE RESERVA (sin cambios)
+   FIX PARA TEXTO EN RESUMEN DE RESERVA
    ============================================ */
 #bookingPanel .glass,
 #bookingPanel .glass * {
@@ -1996,7 +2020,7 @@ a.btn-instagram {
 }
 
 /* ============================================
-   CALENDARIO (sin cambios)
+   CALENDARIO
    ============================================ */
 .calendar-table {
     width: 100%;
@@ -2036,7 +2060,7 @@ a.btn-instagram {
 }
 
 /* ============================================
-   FICHAS CLÍNICAS - TARJETAS (sin cambios)
+   FICHAS CLÍNICAS - TARJETAS
    ============================================ */
 .fichas-grid {
     display: grid;

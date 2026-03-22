@@ -69,7 +69,7 @@
 }
 
 body {
-    background-color: #ffffff; /* Fondo blanco como Punto Terapia */
+    background-color: #ffffff;
     font-family: 'DM Sans', 'Open Sans', -apple-system, sans-serif;
     color: var(--texto-principal);
     overflow-x: hidden;
@@ -79,7 +79,6 @@ body {
     background-image: none;
 }
 
-/* Scroll personalizado */
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-track { background: #f1f1f1; }
 ::-webkit-scrollbar-thumb { 
@@ -88,7 +87,6 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--primario); }
 
-/* Fondo con imagen (mantener funcionalidad) */
 body.has-background-image::before {
     content: '';
     position: fixed;
@@ -102,7 +100,7 @@ body.has-background-image::before {
 }
 
 /* ============================================
-   TOP HEADER (estilo Punto Terapia)
+   TOP HEADER
    ============================================ */
 .top-header {
     background-color: var(--primario);
@@ -110,17 +108,12 @@ body.has-background-image::before {
     font-size: 0.9rem;
     padding: 8px 0;
 }
-
 .top-header a {
     color: white;
     text-decoration: none;
     transition: opacity 0.2s;
 }
-
-.top-header a:hover {
-    opacity: 0.8;
-}
-
+.top-header a:hover { opacity: 0.8; }
 .top-header .container {
     display: flex;
     justify-content: space-between;
@@ -129,7 +122,7 @@ body.has-background-image::before {
 }
 
 /* ============================================
-   HEADER PRINCIPAL (MEJORADO)
+   HEADER PRINCIPAL (mejorado)
    ============================================ */
 header.nav-container {
     padding: 0;
@@ -139,7 +132,6 @@ header.nav-container {
     background: white;
     border-bottom: 1px solid var(--gris-claro);
 }
-
 nav.glass {
     background: white !important;
     backdrop-filter: none !important;
@@ -150,32 +142,27 @@ nav.glass {
     justify-content: space-between;
     align-items: center;
 }
-
 .logo-container {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     cursor: pointer;
 }
-
 .logo-img {
     height: 40px;
     width: auto;
     max-width: 150px;
     object-fit: contain;
 }
-
 /* LOGO MÁS GRANDE */
 .logo-text { 
     font-weight: 700; 
-    font-size: 1.8rem;   /* Aumentado desde 1.5rem */
+    font-size: 1.8rem;
     background: none;
     -webkit-text-fill-color: var(--texto-principal);
     white-space: nowrap;
     color: var(--texto-principal);
 }
-
-/* Estilos para enlaces del menú principal */
 nav.glass a {
     color: var(--texto-principal) !important;
     font-size: 1rem !important;
@@ -185,36 +172,31 @@ nav.glass a {
     border-bottom: 2px solid transparent !important;
     transition: all 0.2s ease !important;
 }
-
 nav.glass a:hover {
     color: var(--primario) !important;
     border-bottom-color: var(--primario) !important;
 }
-
 nav.glass a.active {
     border-bottom-color: var(--primario) !important;
 }
-
 nav.glass a:last-child i {
     margin-right: 5px;
     opacity: 0.6;
 }
-
 nav.glass a:last-child {
     display: flex;
     align-items: center;
     gap: 5px;
 }
-
 /* BOTÓN CTA MÁS GRANDE */
 nav.glass .btn-cta {
     background: var(--atencion);
     color: white !important;
-    padding: 0.7rem 1.5rem !important;   /* mayor padding vertical y horizontal */
+    padding: 0.7rem 1.5rem !important;
     border-radius: 40px;
     font-weight: 700;
     font-size: 1rem;
-    white-space: nowrap;                 /* evita que el texto se rompa */
+    white-space: nowrap;
     border-bottom: none !important;
     transition: all 0.2s ease;
 }
@@ -222,10 +204,42 @@ nav.glass .btn-cta:hover {
     background: var(--primario);
     transform: translateY(-2px);
 }
-
-/* Ajuste del espaciado entre elementos del menú */
 nav.glass > div > div {
     gap: 1.2rem;
+}
+
+/* ============================================
+   RESPONSIVE AJUSTES (LOGO Y MENÚ)
+   ============================================ */
+@media (max-width: 1024px) {
+    nav.glass > div > div { gap: 1rem; }
+    .logo-text { font-size: 1.6rem; }
+}
+@media (max-width: 768px) {
+    nav.glass { flex-direction: column !important; padding: 0.5rem 1rem !important; }
+    .logo-text { font-size: 1.4rem !important; margin-bottom: 0.5rem; }
+    nav.glass .btn-cta { padding: 0.5rem 1rem !important; font-size: 0.9rem; }
+    nav.glass > div > div { gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+    .public-nav a { font-size: 0.9rem !important; }
+    button, .btn-staff, .btn-book, .btn-reservar { min-height: 48px !important; padding: 0.75rem 1rem !important; }
+    .filter-input, .filter-select { width: 100% !important; min-width: 100% !important; font-size: 16px !important; }
+    input, select, textarea { font-size: 16px !important; }
+    .tipo-atencion-card > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+    #atencionModal .modal-content { padding: 20px 15px; width: 95%; }
+}
+@media (max-width: 480px) {
+    .grid { grid-template-columns: 1fr !important; }
+    .therapist-card .img-container { height: 180px !important; }
+    .messages-section { margin: 2rem 0.5rem !important; }
+    .cta-section { padding: 2rem 1rem !important; }
+    .instagram-content { padding: 1.5rem !important; }
+    .instagram-content h3 { font-size: 2rem !important; }
+}
+@media (max-width: 768px) {
+    input[type="text"], input[type="email"], input[type="tel"],
+    input[type="password"], input[type="number"], select, textarea {
+        font-size: 16px !important;
+    }
 }
 
 /* ============================================
@@ -258,9 +272,7 @@ nav.glass > div > div {
     text-align: center;
     color: white;
 }
-.slide.active {
-    opacity: 1;
-}
+.slide.active { opacity: 1; }
 .slide-content {
     max-width: 800px;
     padding: 2rem;
@@ -287,9 +299,7 @@ nav.glass > div > div {
     font-weight: 600;
     transition: background 0.3s;
 }
-.btn-slide:hover {
-    background: var(--primario);
-}
+.btn-slide:hover { background: var(--primario); }
 .slider-controls button {
     position: absolute;
     top: 50%;
@@ -303,9 +313,7 @@ nav.glass > div > div {
     border-radius: 50%;
     transition: background 0.3s;
 }
-.slider-controls button:hover {
-    background: rgba(0,0,0,0.8);
-}
+.slider-controls button:hover { background: rgba(0,0,0,0.8); }
 .prev { left: 20px; }
 .next { right: 20px; }
 .dots {
@@ -324,9 +332,7 @@ nav.glass > div > div {
     margin: 0 5px;
     cursor: pointer;
 }
-.dot.active {
-    background: white;
-}
+.dot.active { background: white; }
 
 /* ============================================
    SECCIÓN QUIÉNES SOMOS
@@ -344,9 +350,7 @@ nav.glass > div > div {
     gap: 40px;
     align-items: center;
 }
-.about-image-container {
-    width: 100%;
-}
+.about-image-container { width: 100%; }
 .about-image {
     width: 100%;
     border-radius: 16px;
@@ -381,9 +385,7 @@ nav.glass > div > div {
     font-weight: 600;
     transition: background 0.3s;
 }
-.btn-about:hover {
-    background: var(--primario);
-}
+.btn-about:hover { background: var(--primario); }
 .mission-vision-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -401,21 +403,15 @@ nav.glass > div > div {
     color: var(--primario);
     margin-bottom: 15px;
 }
-.mission-box h3, .vision-box h3 {
-    margin-bottom: 15px;
-    color: var(--texto-principal);
-}
+.mission-box h3, .vision-box h3 { margin-bottom: 15px; color: var(--texto-principal); }
 
 /* ============================================
-   SECCIÓN BLOG
+   SECCIÓN BLOG (Punto de Interés)
    ============================================ */
 .blog-section {
     margin: 80px 0;
 }
-.blog-section .container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
+.blog-section .container { max-width: 1200px; margin: 0 auto; }
 .blog-section h2 {
     text-align: center;
     font-size: 2.2rem;
@@ -451,12 +447,8 @@ nav.glass > div > div {
     object-fit: cover;
     transition: transform 0.5s ease;
 }
-.blog-card:hover img {
-    transform: scale(1.05);
-}
-.blog-card > div {
-    padding: 25px;
-}
+.blog-card:hover img { transform: scale(1.05); }
+.blog-card > div { padding: 25px; }
 .blog-card span {
     color: var(--primario);
     font-size: 0.85rem;
@@ -478,13 +470,8 @@ nav.glass > div > div {
     font-weight: 600;
     transition: color 0.2s;
 }
-.btn-more:hover {
-    color: var(--atencion);
-}
-.btn-ver-mas {
-    text-align: center;
-    margin-top: 40px;
-}
+.btn-more:hover { color: var(--atencion); }
+.btn-ver-mas { text-align: center; margin-top: 40px; }
 .btn-ver-mas .btn-cta {
     background: var(--atencion);
     color: white;
@@ -494,9 +481,7 @@ nav.glass > div > div {
     font-weight: 600;
     transition: background 0.3s;
 }
-.btn-ver-mas .btn-cta:hover {
-    background: var(--primario);
-}
+.btn-ver-mas .btn-cta:hover { background: var(--primario); }
 
 /* ============================================
    SECCIÓN INSTAGRAM
@@ -537,9 +522,7 @@ nav.glass > div > div {
     color: var(--texto-principal);
     margin-bottom: 20px;
 }
-.instagram-quote strong {
-    color: var(--primario);
-}
+.instagram-quote strong { color: var(--primario); }
 .instagram-text, .instagram-message {
     color: var(--texto-secundario);
     margin-bottom: 10px;
@@ -555,9 +538,7 @@ nav.glass > div > div {
     font-weight: 600;
     transition: background 0.3s;
 }
-.btn-instagram:hover {
-    background: var(--atencion);
-}
+.btn-instagram:hover { background: var(--atencion); }
 
 /* ============================================
    SECCIÓN TIPO DE ATENCIÓN
@@ -657,9 +638,7 @@ nav.glass > div > div {
     max-width: 600px;
     margin: 0 auto;
 }
-.contact-form .form-group {
-    margin-bottom: 20px;
-}
+.contact-form .form-group { margin-bottom: 20px; }
 .contact-form input, .contact-form textarea {
     width: 100%;
     padding: 12px 16px;
@@ -684,9 +663,7 @@ nav.glass > div > div {
     width: 100%;
     transition: background 0.3s;
 }
-.btn-contact:hover {
-    background: var(--primario);
-}
+.btn-contact:hover { background: var(--primario); }
 
 /* ============================================
    SECCIÓN CTA
@@ -717,9 +694,7 @@ nav.glass > div > div {
     font-weight: 600;
     transition: background 0.3s;
 }
-.cta-section .btn-cta:hover {
-    background: var(--primario);
-}
+.cta-section .btn-cta:hover { background: var(--primario); }
 
 /* ============================================
    FOOTER
@@ -752,10 +727,7 @@ footer a:hover {
     align-items: center;
     gap: 10px;
 }
-.footer-contact i {
-    color: var(--primario-soft);
-    width: 20px;
-}
+.footer-contact i { color: var(--primario-soft); width: 20px; }
 .social-icons {
     display: flex;
     gap: 15px;
@@ -966,9 +938,7 @@ footer a:hover {
     object-fit: cover;
     transition: transform 0.6s ease;
 }
-.therapist-card:hover .img-container img {
-    transform: scale(1.08);
-}
+.therapist-card:hover .img-container img { transform: scale(1.08); }
 .card-body {
     padding: var(--spacing-lg);
     flex: 1;
@@ -1009,24 +979,15 @@ footer a:hover {
     align-items: center;
     gap: 8px;
 }
-.card-meta i {
-    width: 16px;
-    color: var(--primario);
-}
+.card-meta i { width: 16px; color: var(--primario); }
 .rating {
     margin: 8px 0;
     display: flex;
     align-items: center;
     gap: 8px;
 }
-.rating .stars {
-    color: var(--gold);
-    letter-spacing: 2px;
-}
-.rating .reviews {
-    font-size: 0.8rem;
-    color: var(--texto-secundario);
-}
+.rating .stars { color: var(--gold); letter-spacing: 2px; }
+.rating .reviews { font-size: 0.8rem; color: var(--texto-secundario); }
 .card-actions {
     display: flex;
     gap: 12px;
@@ -1049,12 +1010,8 @@ footer a:hover {
     letter-spacing: 0.5px;
     background: var(--atencion);
 }
-.card-actions .btn-agendar:hover {
-    background: var(--primario);
-}
-.therapist-card button {
-    transition: all 0.3s ease;
-}
+.card-actions .btn-agendar:hover { background: var(--primario); }
+.therapist-card button { transition: all 0.3s ease; }
 .therapist-card button:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
@@ -1277,9 +1234,7 @@ footer a:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 16px rgba(0,0,0,0.15);
 }
-.btn-instagram { 
-    background: var(--instagram); 
-}
+.btn-instagram { background: var(--instagram); }
 .btn-instagram:hover { transform: translateY(-3px); }
 .btn-contact { 
     background: var(--atencion); 
@@ -1293,22 +1248,10 @@ footer a:hover {
     box-shadow: none;
 }
 .btn-icon:hover { background: var(--gris-oscuro); }
-button[style*="background:var(--rojo-alerta)"] {
-    background: var(--rojo-alerta) !important;
-    color: white !important;
-}
-button[style*="background:var(--azul-medico)"] {
-    background: var(--azul-medico) !important;
-    color: white !important;
-}
-button[style*="background:var(--naranja-aviso)"] {
-    background: var(--naranja-aviso) !important;
-    color: white !important;
-}
-button[style*="background:var(--verde-exito)"] {
-    background: var(--verde-exito) !important;
-    color: white !important;
-}
+button[style*="background:var(--rojo-alerta)"] { background: var(--rojo-alerta) !important; color: white !important; }
+button[style*="background:var(--azul-medico)"] { background: var(--azul-medico) !important; color: white !important; }
+button[style*="background:var(--naranja-aviso)"] { background: var(--naranja-aviso) !important; color: white !important; }
+button[style*="background:var(--verde-exito)"] { background: var(--verde-exito) !important; color: white !important; }
 
 /* ============================================
    PANELES DE ADMINISTRACIÓN
@@ -1390,14 +1333,8 @@ button[style*="background:var(--verde-exito)"] {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-#staffMenu .role-badge.admin {
-    background: var(--primario);
-    color: white;
-}
-#staffMenu .role-badge.psych {
-    background: var(--exito);
-    color: white;
-}
+#staffMenu .role-badge.admin { background: var(--primario); color: white; }
+#staffMenu .role-badge.psych { background: var(--exito); color: white; }
 #staffMenu button {
     width: 100% !important;
     padding: 12px 16px !important;
@@ -1431,26 +1368,18 @@ button[style*="background:var(--verde-exito)"] {
     margin-top: 8px !important;
     border-top: 1px solid #fecaca !important;
 }
-#staffMenu button:last-child:hover {
-    background: #fecaca !important;
-}
+#staffMenu button:last-child:hover { background: #fecaca !important; }
 #staffMenu button.primary-action {
     background: var(--primario) !important;
     color: white !important;
 }
-#staffMenu button.primary-action:hover {
-    background: var(--primario-hover) !important;
-}
+#staffMenu button.primary-action:hover { background: var(--primario-hover) !important; }
 #staffMenu button.secondary-action {
     background: var(--primario-hover) !important;
     color: white !important;
 }
-#staffMenu button.secondary-action:hover {
-    background: var(--primario) !important;
-}
-#staffMenu button span {
-    color: inherit !important;
-}
+#staffMenu button.secondary-action:hover { background: var(--primario) !important; }
+#staffMenu button span { color: inherit !important; }
 
 /* ============================================
    TABLAS Y TARJETAS DE PACIENTES
@@ -1873,30 +1802,18 @@ button, .btn-staff, [role="button"], input[type="submit"] {
     margin-top: 20px;
     animation: fadeIn 0.3s ease;
 }
-.tab-content.active {
-    display: block !important;
-}
+.tab-content.active { display: block !important; }
 .tab-content h3 {
     margin-bottom: 20px;
     color: var(--texto-principal);
     font-size: 1.3rem;
     font-weight: 600;
 }
-.tab-content .btn-staff {
-    margin: 5px;
-}
+.tab-content .btn-staff { margin: 5px; }
 @media (max-width: 768px) {
-    #dashboardTabs {
-        padding: 8px;
-        gap: 5px;
-    }
-    #dashboardTabs .tab {
-        padding: 8px 15px;
-        font-size: 0.85rem;
-    }
-    .tab-content {
-        padding: 15px;
-    }
+    #dashboardTabs { padding: 8px; gap: 5px; }
+    #dashboardTabs .tab { padding: 8px 15px; font-size: 0.85rem; }
+    .tab-content { padding: 15px; }
 }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -1910,17 +1827,11 @@ button, .btn-staff, [role="button"], input[type="submit"] {
 button.btn-staff,
 [class*="btn-"],
 #staffMenu button span,
-#staffMenu button i + span {
-    color: inherit;
-}
+#staffMenu button i + span { color: inherit; }
 #staffMenu button:last-child,
-#staffMenu button.logout-btn {
-    color: #dc2626 !important;
-}
+#staffMenu button.logout-btn { color: #dc2626 !important; }
 #staffMenu button:last-child span,
-#staffMenu button.logout-btn span {
-    color: #dc2626 !important;
-}
+#staffMenu button.logout-btn span { color: #dc2626 !important; }
 .btn-instagram,
 a.btn-instagram {
     color: white !important;
@@ -1935,89 +1846,21 @@ a.btn-instagram {
 }
 #textsModal .btn-staff,
 #heroModal .btn-staff,
-#atencionModal .btn-staff {
-    color: white !important;
-}
-
-/* ============================================
-   RESPONSIVE (actualizado)
-   ============================================ */
-@media (max-width: 1024px) {
-    nav.glass > div > div {
-        gap: 1rem;
-    }
-    .logo-text {
-        font-size: 1.6rem;
-    }
-}
-@media (max-width: 768px) {
-    nav.glass {
-        flex-direction: column !important;
-        padding: 0.5rem 1rem !important;
-    }
-    .logo-text {
-        font-size: 1.4rem !important;
-        margin-bottom: 0.5rem;
-    }
-    nav.glass .btn-cta {
-        padding: 0.5rem 1rem !important;
-        font-size: 0.9rem;
-    }
-    nav.glass > div > div {
-        gap: 0.8rem;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    .public-nav a { font-size: 0.9rem !important; }
-    button, .btn-staff, .btn-book, .btn-reservar {
-        min-height: 48px !important;
-        padding: 0.75rem 1rem !important;
-    }
-    .filter-input, .filter-select {
-        width: 100% !important;
-        min-width: 100% !important;
-        font-size: 16px !important;
-    }
-    input, select, textarea { font-size: 16px !important; }
-    .tipo-atencion-card > div[style*="grid-template-columns: 1fr 1fr"] {
-        grid-template-columns: 1fr !important;
-    }
-    #atencionModal .modal-content { padding: 20px 15px; width: 95%; }
-}
-@media (max-width: 480px) {
-    .grid { grid-template-columns: 1fr !important; }
-    .therapist-card .img-container { height: 180px !important; }
-    .messages-section { margin: 2rem 0.5rem !important; }
-    .cta-section { padding: 2rem 1rem !important; }
-    .instagram-content { padding: 1.5rem !important; }
-    .instagram-content h3 { font-size: 2rem !important; }
-}
-@media (max-width: 768px) {
-    input[type="text"], input[type="email"], input[type="tel"],
-    input[type="password"], input[type="number"], select, textarea {
-        font-size: 16px !important;
-    }
-}
+#atencionModal .btn-staff { color: white !important; }
 
 /* ============================================
    FIX PARA TEXTO EN RESUMEN DE RESERVA
    ============================================ */
 #bookingPanel .glass,
-#bookingPanel .glass * {
-    color: white !important;
-}
+#bookingPanel .glass * { color: white !important; }
 #bookingPanel .glass .btn-staff {
     color: white !important;
     background: var(--naranja-aviso) !important;
 }
 #bookingPanel .glass label,
 #bookingPanel .glass span,
-#bookingPanel .glass div {
-    color: white !important;
-}
-#bookingPanel .glass input[type="checkbox"] {
-    accent-color: white;
-}
+#bookingPanel .glass div { color: white !important; }
+#bookingPanel .glass input[type="checkbox"] { accent-color: white; }
 
 /* ============================================
    CALENDARIO
@@ -2043,12 +1886,8 @@ a.btn-instagram {
     padding: 8px;
     transition: background 0.2s;
 }
-.calendar-cell:hover {
-    background: #f5f5f5;
-}
-.calendar-cell.empty {
-    background: #fafafa;
-}
+.calendar-cell:hover { background: #f5f5f5; }
+.calendar-cell.empty { background: #fafafa; }
 .calendar-cell .cita-item {
     background: #e8f4fd;
     margin: 4px 0;
@@ -2093,6 +1932,4 @@ a.btn-instagram {
     border-radius: 30px;
     font-size: 0.8rem;
 }
-.ficha-card .btn-icon:hover {
-    background: var(--primario-hover);
-}
+.ficha-card .btn-icon:hover { background: var(--primario-hover); }

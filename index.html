@@ -30,6 +30,76 @@
           emailjs.init('_LDTyGJlGKoOIWVJa');
        })();
     </script>
+
+    <!-- ESTILOS DE EMERGENCIA PARA DASHBOARD (FORZADO) -->
+    <style>
+        /* ============================================
+           DASHBOARD - MEJORAS VISUALES (FORZADO)
+           ============================================ */
+        #dashboardTabs {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            margin: 0 0 20px 0 !important;
+            padding: 10px !important;
+            background: white !important;
+            border-radius: 50px !important;
+            border: 1px solid #e2e8f0 !important;
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+        }
+
+        #dashboardTabs .tab {
+            padding: 10px 20px !important;
+            border-radius: 30px !important;
+            font-size: 0.95rem !important;
+            font-weight: 500 !important;
+            background: transparent !important;
+            color: #5A6B7A !important;
+            border: none !important;
+            display: inline-block !important;
+            cursor: pointer !important;
+        }
+
+        #dashboardTabs .tab.active {
+            background: #7B8471 !important;
+            color: white !important;
+        }
+
+        .table-container {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            margin: 20px 0 !important;
+            border-radius: 12px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: white !important;
+        }
+
+        .table-container table {
+            min-width: 700px !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+
+        .table-container th,
+        .table-container td {
+            padding: 12px 15px !important;
+            text-align: left !important;
+            border-bottom: 1px solid #eee !important;
+        }
+
+        .table-container th {
+            background: #E3DFD1 !important;
+            font-weight: 600 !important;
+        }
+
+        .admin-edit-buttons {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+            gap: 15px !important;
+            margin: 20px 0 !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -1355,8 +1425,7 @@
             <div class="table-container">
                   表格
                     <thead>
-                          <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
-                    </thead>
+                          <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></thead>
                     <tbody id="tableBody"></tbody>
                   表格
             </div>
@@ -1367,8 +1436,7 @@
             <div class="table-container">
                   表格
                     <thead>
-                          <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
-                    </thead>
+                          <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></thead>
                     <tbody id="pendingRequestsTable"></tbody>
                   表格
             </div>
@@ -1399,8 +1467,7 @@
             <div class="table-container">
                  表格
                     <thead>
-                          <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></td>
-                    </thead>
+                          <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></thead>
                     <tbody id="staffTableBody"></tbody>
                  表格
             </div>
@@ -1539,8 +1606,7 @@
             <div class="table-container">
                 表格
                     <thead>
-                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
-                    </thead>
+                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th> </thead>
                     <tbody id="messagesTableBody"></tbody>
                 表格
             </div>

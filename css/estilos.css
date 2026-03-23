@@ -2314,3 +2314,98 @@ div.admin-edit-btn i,
 .tab-content .table-container {
     margin-top: 15px !important;
 }
+
+/* ============================================
+   FIX URGENTE - TABLAS ORDENADAS Y BOTONES VISIBLES
+   ============================================ */
+
+/* TABLAS: asegurar que se vean ordenadas */
+.table-container table,
+#dashboard table,
+.tab-content table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    min-width: 700px !important;
+}
+
+.table-container th,
+#dashboard th,
+.tab-content th {
+    background-color: #E3DFD1 !important;
+    color: #2D3E4F !important;
+    padding: 12px 15px !important;
+    text-align: left !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    border-bottom: 1px solid #ddd !important;
+}
+
+.table-container td,
+#dashboard td,
+.tab-content td {
+    padding: 10px 15px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #eee !important;
+    background-color: white !important;
+    color: #2D3E4F !important;
+}
+
+.table-container tr:nth-child(even) td,
+#dashboard tr:nth-child(even) td,
+.tab-content tr:nth-child(even) td {
+    background-color: #f8fafc !important;
+}
+
+.table-container tr:hover td,
+#dashboard tr:hover td,
+.tab-content tr:hover td {
+    background-color: #f1f5f9 !important;
+}
+
+.table-container,
+#dashboard .table-container {
+    overflow-x: auto !important;
+    margin: 20px 0 !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: white !important;
+}
+
+/* BOTONES DE PERSONALIZACIÓN: fondo sólido y texto blanco */
+.admin-edit-btn,
+a.admin-edit-btn,
+button.admin-edit-btn,
+div.admin-edit-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background-color: #7B8471 !important;
+    color: white !important;
+    padding: 8px 20px !important;
+    border-radius: 40px !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    border: none !important;
+    text-decoration: none !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    transition: all 0.2s ease !important;
+}
+
+.admin-edit-btn:hover,
+a.admin-edit-btn:hover,
+button.admin-edit-btn:hover,
+div.admin-edit-btn:hover {
+    background-color: #9FADA4 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.admin-edit-btn i,
+.admin-edit-btn i.fa {
+    color: white !important;
+    font-size: 1rem !important;
+}

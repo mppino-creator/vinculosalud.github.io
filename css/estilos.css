@@ -1,7 +1,6 @@
 /* ============================================
-   VÍNCULO SALUD v6.2 - ESTILOS VERSIÓN PUNTO TERAPIA
+   VÍNCULO SALUD v6.1 - ESTILOS VERSIÓN PUNTO TERAPIA
    Paleta actualizada y componentes visuales mejorados
-   Fixes: texto equipo visible, tablas ordenadas, botones personalización
    ============================================ */
 
 /* ============================================
@@ -155,9 +154,10 @@ nav.glass {
     max-width: 150px;
     object-fit: contain;
 }
+/* LOGO MÁS PROPORCIONAL */
 .logo-text { 
     font-weight: 700; 
-    font-size: 1.5rem;
+    font-size: 1.5rem;   /* reducido de 1.8rem para mejor proporción */
     background: none;
     -webkit-text-fill-color: var(--texto-principal);
     white-space: nowrap;
@@ -188,10 +188,11 @@ nav.glass a:last-child {
     align-items: center;
     gap: 5px;
 }
+/* BOTÓN CTA MÁS GRANDE */
 nav.glass .btn-cta {
     background: var(--atencion);
     color: white !important;
-    padding: 0.6rem 1.2rem !important;
+    padding: 0.6rem 1.2rem !important; /* ligeramente reducido */
     border-radius: 40px;
     font-weight: 600;
     font-size: 0.95rem;
@@ -890,7 +891,7 @@ footer a:hover {
 }
 
 /* ============================================
-   PROFESSIONAL GRID
+   PROFESSIONAL GRID (FORZADO)
    ============================================ */
 .grid {
     display: grid;
@@ -911,7 +912,7 @@ footer a:hover {
 }
 
 /* ============================================
-   TARJETAS DE PROFESIONALES (MEJORADAS) - TEXTO VISIBLE
+   TARJETAS DE PROFESIONALES (MEJORADAS)
    ============================================ */
 .therapist-card {
     background: white;
@@ -931,22 +932,23 @@ footer a:hover {
     box-shadow: var(--shadow-xl);
     border-color: var(--primario);
 }
+/* Contenedor de imagen con proporción fija */
 .img-container {
     width: 100%;
     position: relative;
     background: var(--primario-soft);
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 4 / 3;  /* Proporción 4:3, evita deformación */
     overflow: hidden;
 }
 .img-container img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: cover;    /* La imagen cubre el área sin distorsión */
     transition: transform 0.6s ease;
 }
 .therapist-card:hover .img-container img { transform: scale(1.08); }
 .card-body {
-    padding: var(--spacing-md);
+    padding: var(--spacing-md);  /* Reduce padding para más equilibrio */
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -956,12 +958,14 @@ footer a:hover {
     font-weight: 700;
     margin-bottom: var(--spacing-sm);
     color: var(--texto-principal);
+    min-height: auto;  /* Elimina altura fija */
     line-height: 1.3;
 }
 .card-subtitle {
     font-size: 0.85rem;
     color: var(--texto-secundario);
     margin-bottom: 10px;
+    min-height: auto;
 }
 .card-meta {
     margin: 8px 0;
@@ -1379,21 +1383,20 @@ button[style*="background:var(--verde-exito)"] { background: var(--verde-exito) 
 #staffMenu button span { color: inherit !important; }
 
 /* ============================================
-   TABLAS Y TARJETAS DE PACIENTES (MEJORADO) - TABLAS ORDENADAS
+   TABLAS Y TARJETAS DE PACIENTES (MEJORADO)
    ============================================ */
 .table-container { 
     border-radius: var(--radius-lg); 
     overflow-x: auto; 
     border: 1px solid var(--gris-claro);
     background: white;
-    margin: 20px 0;
 }
-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+table { width: 100%; border-collapse: collapse; min-width: 800px; }
 th { 
     background: var(--primario-soft); 
     padding: 15px; 
     text-align: left; 
-    font-size: 0.85rem; 
+    font-size: 0.8rem; 
     text-transform: uppercase; 
     font-weight: 600; 
     color: var(--texto-principal);
@@ -1760,17 +1763,17 @@ button, .btn-staff, [role="button"], input[type="submit"] {
 #tiposAtencionList::-webkit-scrollbar-thumb:hover { background: var(--primario-hover); }
 
 /* ============================================
-   ESTILOS PARA PESTAÑAS DEL DASHBOARD (unificado)
+   ESTILOS PARA PESTAÑAS DEL DASHBOARD
    ============================================ */
 #dashboardTabs {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin: 0 0 20px 0;
-    padding: 12px;
+    padding: 10px;
     background: white;
     border-radius: 50px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
     border: 1px solid var(--gris-claro);
     overflow-x: auto;
     white-space: nowrap;
@@ -1816,6 +1819,7 @@ button, .btn-staff, [role="button"], input[type="submit"] {
     font-size: 1.3rem;
     font-weight: 600;
 }
+.tab-content .btn-staff { margin: 5px; }
 @media (max-width: 768px) {
     #dashboardTabs { padding: 8px; gap: 5px; }
     #dashboardTabs .tab { padding: 8px 15px; font-size: 0.85rem; }
@@ -1941,8 +1945,312 @@ a.btn-instagram {
 .ficha-card .btn-icon:hover { background: var(--primario-hover); }
 
 /* ============================================
-   BOTONES DE PERSONALIZACIÓN (FIX VISUAL)
+   DASHBOARD - MEJORAS VISUALES
    ============================================ */
+
+/* 1. Contenedor principal del dashboard */
+#dashboard {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 15px;
+    box-sizing: border-box;
+}
+
+/* 2. Tabs en fila (no vertical) */
+#dashboardTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 20px 0;
+    padding: 10px;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+#dashboardTabs .tab {
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: var(--texto-secundario);
+    border: none;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+#dashboardTabs .tab:hover {
+    background: var(--primario-soft);
+    color: var(--texto-principal);
+    transform: translateY(-2px);
+}
+
+#dashboardTabs .tab.active {
+    background: var(--primario) !important;
+    color: white !important;
+    box-shadow: 0 4px 10px rgba(123,132,113,0.2);
+}
+
+/* 3. Contenedores de tablas con scroll horizontal */
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 1px solid var(--gris-claro);
+    background: white;
+}
+
+.table-container table {
+    min-width: 700px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-container th,
+.table-container td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.table-container th {
+    background: var(--primario-soft);
+    font-weight: 600;
+    color: var(--texto-principal);
+}
+
+.table-container tr:hover td {
+    background: #f8fafc;
+}
+
+/* 4. Botones dentro de las tablas */
+.btn-icon {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    background: var(--primario);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.95);
+}
+
+/* 5. Panel de personalización - botones en grilla ordenada */
+.admin-edit-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.admin-edit-buttons .btn-staff {
+    padding: 15px;
+    font-size: 1rem;
+    justify-content: center;
+    text-align: center;
+}
+
+/* 6. Ajuste para pantallas pequeñas */
+@media (max-width: 768px) {
+    #dashboardTabs .tab {
+        padding: 8px 15px;
+        font-size: 0.85rem;
+    }
+    .table-container th,
+    .table-container td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+    .admin-edit-buttons {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Estilos forzados para el dashboard */
+#dashboardTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 20px;
+    padding: 10px;
+    background: white;
+    border-radius: 50px;
+    border: 1px solid #e2e8f0;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+#dashboardTabs .tab, .tab {
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    background: transparent;
+    color: #5A6B7A;
+    border: none;
+    display: inline-block;
+    cursor: pointer;
+}
+#dashboardTabs .tab.active, .tab.active {
+    background: #7B8471;
+    color: white;
+}
+.table-container, .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: white;
+}
+.table-container table, .table-responsive table, table {
+    min-width: 700px;
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+th {
+    background: #E3DFD1;
+    font-weight: 600;
+}
+
+/* Al final de estilos.css */
+.table-container {
+    overflow-x: auto !important;
+    margin: 20px 0 !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: white !important;
+}
+.table-container table {
+    min-width: 700px !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+.table-container th,
+.table-container td {
+    padding: 12px 15px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #eee !important;
+}
+.table-container th {
+    background: #E3DFD1 !important;
+    font-weight: 600 !important;
+}
+
+#dashboardTabs {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin: 0 0 20px 0 !important;
+    padding: 10px !important;
+    background: white !important;
+    border-radius: 50px !important;
+    border: 1px solid #e2e8f0 !important;
+    overflow-x: auto !important;
+}
+#dashboardTabs .tab {
+    padding: 10px 20px !important;
+    border-radius: 30px !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    background: transparent !important;
+    color: #5A6B7A !important;
+    border: none !important;
+    display: inline-block !important;
+}
+#dashboardTabs .tab.active {
+    background: #7B8471 !important;
+    color: white !important;
+}
+
+/* ============================================
+   FIXES ADICIONALES v6.2 - Texto equipo, tablas ordenadas, botones personalización
+   ============================================ */
+
+/* 1. TEXTO DEL EQUIPO COMPLETAMENTE VISIBLE (forzado) */
+.therapist-card,
+.professional-card {
+    background: white !important;
+    border: 1px solid var(--gris-claro) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+.therapist-card .card-body h3,
+.professional-card h3 {
+    color: var(--texto-principal) !important;
+}
+.therapist-card .card-subtitle,
+.professional-card .specialty {
+    color: var(--texto-secundario) !important;
+}
+.therapist-card .card-meta,
+.professional-card .description {
+    color: var(--texto-secundario) !important;
+}
+.therapist-card .card-meta span,
+.professional-card .contact-info {
+    color: var(--texto-secundario) !important;
+}
+.therapist-card .price,
+.professional-card .price {
+    color: var(--texto-principal) !important;
+    font-weight: 700 !important;
+}
+
+/* 2. TABLAS ORDENADAS Y LEGIBLES (forzado) */
+.table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin: 20px 0 !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--gris-claro) !important;
+    background: white !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+.table-container table {
+    min-width: 700px !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+.table-container th {
+    background: var(--primario-soft) !important;
+    color: var(--texto-principal) !important;
+    font-weight: 600 !important;
+    padding: 14px 16px !important;
+    text-align: left !important;
+    border-bottom: 2px solid var(--gris-claro) !important;
+}
+.table-container td {
+    padding: 12px 16px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #eef2f6 !important;
+    color: var(--texto-principal) !important;
+    background: white !important;
+}
+.table-container tr:nth-child(even) td {
+    background-color: #f8fafc !important;
+}
+.table-container tr:hover td {
+    background-color: #f1f5f9 !important;
+}
+
+/* 3. BOTONES DE PERSONALIZACIÓN CON FONDO VISIBLE (forzado) */
 .admin-edit-btn {
     display: inline-flex !important;
     align-items: center !important;
@@ -1969,16 +2277,29 @@ a.btn-instagram {
     font-size: 1rem !important;
 }
 
-/* Panel de personalización - botones en grilla */
-.admin-edit-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 15px;
-    margin: 20px 0;
+/* 4. AJUSTES ADICIONALES PARA GESTIÓN DE MENSAJES Y ESPECIALIDADES */
+#specialtiesList .specialty-item {
+    background: var(--primario-soft) !important;
+    padding: 8px 16px !important;
+    border-radius: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 0.85rem !important;
+    color: var(--texto-principal) !important;
 }
-.admin-edit-buttons .btn-staff {
-    padding: 15px;
-    font-size: 1rem;
-    justify-content: center;
-    text-align: center;
+#specialtiesList .specialty-item button {
+    background: var(--peligro) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 22px !important;
+    height: 22px !important;
+    cursor: pointer !important;
+    font-size: 0.7rem !important;
+}
+
+/* 5. GARANTIZAR QUE LAS TABLAS EN EL DASHBOARD SE VEAN BIEN */
+.tab-content .table-container {
+    margin-top: 15px !important;
 }

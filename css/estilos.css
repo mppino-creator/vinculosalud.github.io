@@ -1,12 +1,8 @@
 /* ============================================
-   VÍNCULO SALUD v6.2 - ESTILOS VERSIÓN PUNTO TERAPIA (CORREGIDO)
+   VÍNCULO SALUD v6.2 - ESTILOS DEFINITIVOS (SIN DUPLICADOS)
    Paleta actualizada y componentes visuales mejorados
-   Fixes: texto equipo visible, tablas ordenadas, botones personalización
    ============================================ */
 
-/* ============================================
-   FUENTES Y VARIABLES GLOBALES
-   ============================================ */
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap');
 
 :root {
@@ -48,9 +44,6 @@
     --shadow-xl: 0 25px 50px -12px rgba(0,0,0,0.25);
 }
 
-/* ============================================
-   RESET Y BASE
-   ============================================ */
 * {
     margin: 0;
     padding: 0;
@@ -70,10 +63,7 @@ body {
 
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-track { background: #f1f1f1; }
-::-webkit-scrollbar-thumb { 
-    background: var(--gris-oscuro); 
-    border-radius: var(--radius-full); 
-}
+::-webkit-scrollbar-thumb { background: var(--gris-oscuro); border-radius: var(--radius-full); }
 ::-webkit-scrollbar-thumb:hover { background: var(--primario); }
 
 body.has-background-image::before {
@@ -111,7 +101,7 @@ body.has-background-image::before {
 }
 
 /* ============================================
-   HEADER PRINCIPAL (mejorado)
+   HEADER PRINCIPAL
    ============================================ */
 header.nav-container {
     padding: 0;
@@ -143,8 +133,8 @@ nav.glass {
     max-width: 150px;
     object-fit: contain;
 }
-.logo-text { 
-    font-weight: 700; 
+.logo-text {
+    font-weight: 700;
     font-size: 1.5rem;
     background: none;
     -webkit-text-fill-color: var(--texto-principal);
@@ -196,7 +186,7 @@ nav.glass > div > div {
 }
 
 /* ============================================
-   RESPONSIVE AJUSTES (LOGO Y MENÚ)
+   RESPONSIVE AJUSTES
    ============================================ */
 @media (max-width: 1024px) {
     nav.glass > div > div { gap: 1rem; }
@@ -207,7 +197,6 @@ nav.glass > div > div {
     .logo-text { font-size: 1.3rem !important; margin-bottom: 0.5rem; }
     nav.glass .btn-cta { padding: 0.5rem 1rem !important; font-size: 0.85rem; }
     nav.glass > div > div { gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
-    .public-nav a { font-size: 0.9rem !important; }
     button, .btn-staff, .btn-book, .btn-reservar { min-height: 48px !important; padding: 0.75rem 1rem !important; }
     .filter-input, .filter-select { width: 100% !important; min-width: 100% !important; font-size: 16px !important; }
     input, select, textarea { font-size: 16px !important; }
@@ -392,7 +381,7 @@ nav.glass > div > div {
 .mission-box h3, .vision-box h3 { margin-bottom: 15px; color: var(--texto-principal); }
 
 /* ============================================
-   SECCIÓN BLOG (Punto de Interés)
+   SECCIÓN BLOG
    ============================================ */
 .blog-section {
     margin: 80px 0;
@@ -743,7 +732,7 @@ footer a:hover {
 }
 
 /* ============================================
-   TOAST SYSTEM
+   TOAST, MODAL, GLASS, CONTAINER, FILTERS
    ============================================ */
 .toast-container {
     position: fixed;
@@ -776,10 +765,6 @@ footer a:hover {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
-
-/* ============================================
-   MODAL SYSTEM
-   ============================================ */
 .modal {
     display: none;
     position: fixed;
@@ -829,30 +814,18 @@ footer a:hover {
     background: var(--gris-oscuro);
     color: var(--texto-principal);
 }
-
-/* ============================================
-   GLASS EFFECT
-   ============================================ */
-.glass { 
-    background: var(--glass); 
-    backdrop-filter: blur(12px); 
-    border: 1px solid rgba(255, 255, 255, 0.3); 
+.glass {
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: var(--shadow-sm);
 }
-
-/* ============================================
-   CONTAINER
-   ============================================ */
-.container { 
-    width: 90%; 
-    max-width: 1200px; 
-    margin: 0 auto; 
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 0 var(--spacing-md);
 }
-
-/* ============================================
-   FILTERS
-   ============================================ */
 .filters {
     display: flex;
     gap: var(--spacing-sm);
@@ -878,7 +851,7 @@ footer a:hover {
 }
 
 /* ============================================
-   PROFESSIONAL GRID
+   GRID Y TARJETAS DE PROFESIONALES (texto visible)
    ============================================ */
 .grid {
     display: grid;
@@ -887,20 +860,9 @@ footer a:hover {
     padding: 0 var(--spacing-md);
     margin-bottom: var(--spacing-xxl);
 }
-@media (max-width: 1024px) { 
-    .grid { 
-        grid-template-columns: repeat(2, 1fr); 
-    } 
-}
-@media (max-width: 640px) { 
-    .grid { 
-        grid-template-columns: 1fr; 
-    } 
-}
+@media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
 
-/* ============================================
-   TARJETAS DE PROFESIONALES (MEJORADAS)
-   ============================================ */
 .therapist-card {
     background: white;
     border-radius: 28px;
@@ -996,23 +958,6 @@ footer a:hover {
     background: var(--atencion);
 }
 .card-actions .btn-agendar:hover { background: var(--primario); }
-.therapist-card button { transition: all 0.3s ease; }
-.therapist-card button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-.therapist-card .card-info {
-    margin-top: 12px;
-    padding: 16px;
-    background: #f8fafc;
-    border-radius: 20px;
-    border-left: 4px solid var(--primario);
-    animation: slideDown 0.3s ease;
-}
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
 .availability-badge {
     position: absolute;
     top: 12px;
@@ -1028,7 +973,6 @@ footer a:hover {
     gap: 6px;
     box-shadow: var(--shadow-sm);
     z-index: 5;
-    border: 1px solid rgba(255,255,255,0.5);
 }
 .availability-badge.online { color: var(--exito); }
 .availability-badge.busy { color: var(--atencion); }
@@ -1182,31 +1126,31 @@ footer a:hover {
     color: white !important;
 }
 .btn-staff, .btn-book, .btn-new-message { background: var(--primario); }
-.btn-staff:hover, .btn-book:hover, .btn-new-message:hover { 
-    background: var(--primario-hover); 
-    transform: translateY(-2px); 
-    box-shadow: var(--shadow-md); 
+.btn-staff:hover, .btn-book:hover, .btn-new-message:hover {
+    background: var(--primario-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 .btn-cta { background: var(--atencion); }
 .btn-cta:hover { background: var(--primario); transform: translateY(-2px); }
-.btn-cta-outline { 
-    background: transparent; 
-    color: var(--primario) !important; 
-    border: 2px solid var(--primario); 
+.btn-cta-outline {
+    background: transparent;
+    color: var(--primario) !important;
+    border: 2px solid var(--primario);
 }
 .btn-cta-outline:hover { background: var(--primario); color: white !important; }
-.btn-mas-info { 
-    background: transparent; 
-    border: 2px solid var(--primario); 
-    color: var(--primario) !important; 
+.btn-mas-info {
+    background: transparent;
+    border: 2px solid var(--primario);
+    color: var(--primario) !important;
 }
-.btn-mas-info:hover { 
-    background: var(--primario); 
-    color: white !important; 
-    transform: translateY(-2px); 
+.btn-mas-info:hover {
+    background: var(--primario);
+    color: white !important;
+    transform: translateY(-2px);
 }
-.btn-agendar, .btn-reservar { 
-    background: var(--atencion); 
+.btn-agendar, .btn-reservar {
+    background: var(--atencion);
     padding: 12px 24px;
     font-size: 1.1rem;
     font-weight: 700;
@@ -1214,22 +1158,22 @@ footer a:hover {
     letter-spacing: 0.5px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
-.btn-agendar:hover, .btn-reservar:hover { 
-    background: var(--primario); 
+.btn-agendar:hover, .btn-reservar:hover {
+    background: var(--primario);
     transform: translateY(-3px);
     box-shadow: 0 8px 16px rgba(0,0,0,0.15);
 }
 .btn-instagram { background: var(--instagram); }
 .btn-instagram:hover { transform: translateY(-3px); }
-.btn-contact { 
-    background: var(--atencion); 
-    width: 100%; 
+.btn-contact {
+    background: var(--atencion);
+    width: 100%;
 }
 .btn-contact:hover { background: var(--primario); }
-.btn-icon { 
-    padding: 0.5rem 1rem; 
-    background: var(--gris-claro); 
-    color: var(--texto-principal) !important; 
+.btn-icon {
+    padding: 0.5rem 1rem;
+    background: var(--gris-claro);
+    color: var(--texto-principal) !important;
     box-shadow: none;
 }
 .btn-icon:hover { background: var(--gris-oscuro); }
@@ -1277,9 +1221,6 @@ button[style*="background:var(--verde-exito)"] { background: var(--verde-exito) 
 }
 .stat-item h4 { font-size: 2.4rem; font-weight: 700; color: var(--primario); margin-top: 8px; }
 
-/* ============================================
-   MENÚ DE ADMINISTRADOR
-   ============================================ */
 #staffMenu {
     position: fixed !important;
     top: 80px !important;
@@ -1369,25 +1310,25 @@ button[style*="background:var(--verde-exito)"] { background: var(--verde-exito) 
 /* ============================================
    TABLAS Y TARJETAS DE PACIENTES (MEJORADO)
    ============================================ */
-.table-container { 
-    border-radius: var(--radius-lg); 
-    overflow-x: auto; 
+.table-container {
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
     border: 1px solid var(--gris-claro);
     background: white;
 }
 table { width: 100%; border-collapse: collapse; min-width: 800px; }
-th { 
-    background: var(--primario-soft); 
-    padding: 15px; 
-    text-align: left; 
-    font-size: 0.8rem; 
-    text-transform: uppercase; 
-    font-weight: 600; 
+th {
+    background: var(--primario-soft);
+    padding: 15px;
+    text-align: left;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 600;
     color: var(--texto-principal);
 }
-td { 
-    padding: 15px; 
-    border-top: 1px solid var(--gris-claro); 
+td {
+    padding: 15px;
+    border-top: 1px solid var(--gris-claro);
     background: white;
     color: var(--texto-principal);
 }
@@ -1747,17 +1688,17 @@ button, .btn-staff, [role="button"], input[type="submit"] {
 #tiposAtencionList::-webkit-scrollbar-thumb:hover { background: var(--primario-hover); }
 
 /* ============================================
-   ESTILOS PARA PESTAÑAS DEL DASHBOARD
+   PESTAÑAS DEL DASHBOARD (unificado)
    ============================================ */
 #dashboardTabs {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin: 0 0 20px 0;
-    padding: 10px;
+    padding: 12px;
     background: white;
     border-radius: 50px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     border: 1px solid var(--gris-claro);
     overflow-x: auto;
     white-space: nowrap;
@@ -1803,15 +1744,14 @@ button, .btn-staff, [role="button"], input[type="submit"] {
     font-size: 1.3rem;
     font-weight: 600;
 }
-.tab-content .btn-staff { margin: 5px; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 @media (max-width: 768px) {
     #dashboardTabs { padding: 8px; gap: 5px; }
     #dashboardTabs .tab { padding: 8px 15px; font-size: 0.85rem; }
     .tab-content { padding: 15px; }
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================
@@ -1929,187 +1869,8 @@ a.btn-instagram {
 .ficha-card .btn-icon:hover { background: var(--primario-hover); }
 
 /* ============================================
-   DASHBOARD - MEJORAS VISUALES (unificado)
+   BOTONES DE PERSONALIZACIÓN (FINAL - ALTA ESPECIFICIDAD)
    ============================================ */
-#dashboard {
-    width: 100%;
-    max-width: 100%;
-    padding: 0 15px;
-    box-sizing: border-box;
-}
-
-#dashboardTabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 0 0 20px 0;
-    padding: 10px;
-    background: white;
-    border-radius: 50px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-}
-
-#dashboardTabs .tab {
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: transparent;
-    color: var(--texto-secundario);
-    border: none;
-    white-space: nowrap;
-    display: inline-block;
-}
-
-#dashboardTabs .tab:hover {
-    background: var(--primario-soft);
-    color: var(--texto-principal);
-    transform: translateY(-2px);
-}
-
-#dashboardTabs .tab.active {
-    background: var(--primario) !important;
-    color: white !important;
-    box-shadow: 0 4px 10px rgba(123,132,113,0.2);
-}
-
-.table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin: 20px 0;
-    border-radius: 12px;
-    border: 1px solid var(--gris-claro);
-    background: white;
-}
-
-.table-container table {
-    min-width: 700px;
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table-container th,
-.table-container td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.table-container th {
-    background: var(--primario-soft);
-    font-weight: 600;
-    color: var(--texto-principal);
-}
-
-.table-container tr:hover td {
-    background: #f8fafc;
-}
-
-.btn-icon {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    background: var(--primario);
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-icon:hover {
-    transform: translateY(-2px);
-    filter: brightness(0.95);
-}
-
-.admin-edit-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 15px;
-    margin: 20px 0;
-}
-
-.admin-edit-buttons .btn-staff {
-    padding: 15px;
-    font-size: 1rem;
-    justify-content: center;
-    text-align: center;
-}
-
-@media (max-width: 768px) {
-    #dashboardTabs .tab {
-        padding: 8px 15px;
-        font-size: 0.85rem;
-    }
-    .table-container th,
-    .table-container td {
-        padding: 10px 8px;
-        font-size: 0.8rem;
-    }
-    .admin-edit-buttons {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ============================================
-   FIXES DEFINITIVOS - TABLAS ORDENADAS Y BOTONES PERSONALIZACIÓN
-   ============================================ */
-.table-container table,
-#dashboard table,
-.tab-content table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    min-width: 700px !important;
-}
-
-.table-container th,
-#dashboard th,
-.tab-content th {
-    background-color: #E3DFD1 !important;
-    color: #2D3E4F !important;
-    padding: 12px 15px !important;
-    text-align: left !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-    border-bottom: 1px solid #ddd !important;
-}
-
-.table-container td,
-#dashboard td,
-.tab-content td {
-    padding: 10px 15px !important;
-    text-align: left !important;
-    border-bottom: 1px solid #eee !important;
-    background-color: white !important;
-    color: #2D3E4F !important;
-}
-
-.table-container tr:nth-child(even) td,
-#dashboard tr:nth-child(even) td,
-.tab-content tr:nth-child(even) td {
-    background-color: #f8fafc !important;
-}
-
-.table-container tr:hover td,
-#dashboard tr:hover td,
-.tab-content tr:hover td {
-    background-color: #f1f5f9 !important;
-}
-
-.table-container,
-#dashboard .table-container {
-    overflow-x: auto !important;
-    margin: 20px 0 !important;
-    border-radius: 12px !important;
-    border: 1px solid #e2e8f0 !important;
-    background: white !important;
-}
-
 .admin-edit-btn,
 a.admin-edit-btn,
 button.admin-edit-btn,
@@ -2130,7 +1891,6 @@ div.admin-edit-btn {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     transition: all 0.2s ease !important;
 }
-
 .admin-edit-btn:hover,
 a.admin-edit-btn:hover,
 button.admin-edit-btn:hover,
@@ -2141,9 +1901,59 @@ div.admin-edit-btn:hover {
     color: white !important;
     text-decoration: none !important;
 }
-
 .admin-edit-btn i,
 .admin-edit-btn i.fa {
     color: white !important;
     font-size: 1rem !important;
+}
+
+/* ============================================
+   TABLAS ORDENADAS (FINAL - ALTA ESPECIFICIDAD)
+   ============================================ */
+.table-container,
+#dashboard .table-container,
+.tab-content .table-container {
+    overflow-x: auto !important;
+    margin: 20px 0 !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--gris-claro) !important;
+    background: white !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+}
+.table-container table,
+#dashboard table,
+.tab-content table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    min-width: 700px !important;
+}
+.table-container th,
+#dashboard th,
+.tab-content th {
+    background-color: #E3DFD1 !important;
+    color: #2D3E4F !important;
+    padding: 12px 15px !important;
+    text-align: left !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    border-bottom: 1px solid #ddd !important;
+}
+.table-container td,
+#dashboard td,
+.tab-content td {
+    padding: 10px 15px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #eee !important;
+    background-color: white !important;
+    color: #2D3E4F !important;
+}
+.table-container tr:nth-child(even) td,
+#dashboard tr:nth-child(even) td,
+.tab-content tr:nth-child(even) td {
+    background-color: #f8fafc !important;
+}
+.table-container tr:hover td,
+#dashboard tr:hover td,
+.tab-content tr:hover td {
+    background-color: #f1f5f9 !important;
 }

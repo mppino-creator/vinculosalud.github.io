@@ -8,8 +8,8 @@ import { renderMessagesTable } from './mensajes.js';
 import { updatePaymentMethodsInfo, loadMyConfig } from './personalizacion.js';
 import { renderPatients } from './pacientes.js';
 import { renderPendingRequests, renderAppointments } from './citas.js';
-import { actualizarContadoresReinicio } from './admin.js';
-import { syncProfileFromFirebase } from './profesionales.js'; // ✅ Importar la función de sincronización
+import { actualizarContadoresReinicio, asegurarTablaProfesionales } from './admin.js';
+import { syncProfileFromFirebase } from './profesionales.js';
 
 // ============================================
 // FUNCIONES DE LOGIN
@@ -42,16 +42,12 @@ export function closeLoginModal() {
 // FUNCIÓN PARA OBTENER EMAIL DESDE USUARIO
 // ============================================
 function getEmailFromUsername(username) {
-    // Si ya es un email, devolverlo
     if (username.includes('@')) return username;
-    
-    // Buscar en staff por usuario o nombre (case insensitive)
     const staff = state.staff || [];
     const found = staff.find(p => 
         (p.usuario && p.usuario.toLowerCase() === username.toLowerCase()) ||
         (p.name && p.name.toLowerCase() === username.toLowerCase())
     );
-    
     return found?.email || null;
 }
 
@@ -61,27 +57,22 @@ function getEmailFromUsername(username) {
 function actualizarUIAdmin(userData, role) {
     console.log('👑 Actualizando UI para:', role);
     
-    // Cambiar el ícono y texto del link Staff
     const staffLink = document.querySelector('a[onclick*="showLoginModal"]');
     const staffIcon = staffLink?.querySelector('i');
-    const staffText = staffLink?.childNodes[2]; // El texto después del ícono
+    const staffText = staffLink?.childNodes[2];
     
     if (staffLink) {
-        // Cambiar el onclick para que ahora muestre el menú
         staffLink.setAttribute('onclick', 'mostrarMenuStaff(true); return false;');
-        
         if (staffIcon) {
             staffIcon.className = 'fa fa-user-check';
             staffIcon.style.color = '#1E7A8A';
             staffIcon.style.opacity = '1';
         }
-        
         if (staffText) {
             staffText.textContent = userData.name || 'Admin';
         }
     }
     
-    // Mostrar botones de edición en secciones (solo para admin)
     if (role === 'admin') {
         const editButtons = [
             'adminHeroEditBtn',
@@ -90,54 +81,33 @@ function actualizarUIAdmin(userData, role) {
             'adminContactEditBtn',
             'adminInstagramEditBtn'
         ];
-        
         editButtons.forEach(id => {
             const btn = document.getElementById(id);
-            if (btn) {
-                btn.style.display = 'flex';
-            }
+            if (btn) btn.style.display = 'flex';
         });
-        
-        // 🔥 NUEVO: Mostrar pestañas de admin INMEDIATAMENTE
         if (window.mostrarTabsAdmin) {
             console.log('👑 Llamando a mostrarTabsAdmin desde actualizarUIAdmin');
             window.mostrarTabsAdmin();
         }
     }
     
-    // 🔥 Si es psicólogo, cargar datos completos desde staff
     if (role === 'psych') {
-        // Buscar datos completos del profesional en staff
         const psychFullData = state.staff.find(s => s.id == userData.id);
         if (psychFullData) {
-            // Actualizar currentUser con TODOS los datos
             state.currentUser.data = psychFullData;
             console.log('✅ Datos completos del profesional cargados:', psychFullData.name);
-            
-            // Cargar configuración en el dashboard si estamos allí
             setTimeout(() => {
                 if (document.getElementById('dashboard').style.display === 'block') {
-                    if (typeof loadMyConfig === 'function') {
-                        loadMyConfig();
-                    }
+                    if (typeof loadMyConfig === 'function') loadMyConfig();
                 }
-                
-                // Cargar especialidades en los selects del perfil
-                if (typeof window.loadSpecialtiesInProfileSelects === 'function') {
-                    window.loadSpecialtiesInProfileSelects();
-                }
+                if (typeof window.loadSpecialtiesInProfileSelects === 'function') window.loadSpecialtiesInProfileSelects();
             }, 1000);
         }
     }
     
-    // Mostrar mensaje de bienvenida
     const generoEmoji = userData.genero === 'M' ? '♂️' : userData.genero === 'F' ? '♀️' : '';
     showToast(`✅ Sesión iniciada como ${userData.name} ${generoEmoji}`, 'success');
-    
-    // 🔥 Mostrar el menú automáticamente después del login
-    setTimeout(() => {
-        window.mostrarMenuStaff(true);
-    }, 500);
+    setTimeout(() => window.mostrarMenuStaff(true), 500);
 }
 
 // ============================================
@@ -149,7 +119,6 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
         return;
     }
     
-    // 🔥 Actualizar datos del profesional desde staff antes de mostrar el menú
     if (state.currentUser.role === 'psych') {
         const psychFullData = state.staff.find(s => s.id == state.currentUser.data.id);
         if (psychFullData) {
@@ -158,22 +127,13 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
         }
     }
     
-    // Si viene del login, solo mostrar el menú, NO ir al dashboard
-    if (desdeLogin) {
-        console.log('👑 Mostrando menú después de login');
-    }
-    
+    if (desdeLogin) console.log('👑 Mostrando menú después de login');
     const user = state.currentUser;
-    
-    // Eliminar menú anterior si existe
     const oldMenu = document.getElementById('staffMenu');
     if (oldMenu) oldMenu.remove();
     
-    // Opciones según el rol (SIN DUPLICADOS)
     let opcionesMenu = '';
-    
     if (user.role === 'admin') {
-        // Opciones para ADMIN - Solo las esenciales, el resto en dashboard
         opcionesMenu = `
             <button onclick="irADashboard()" class="menu-btn primary-action">
                 <i class="fa fa-tachometer-alt"></i> Ir al Dashboard
@@ -188,7 +148,6 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
             </button>
         `;
     } else if (user.role === 'psych') {
-        // Opciones para PSICÓLOGO
         opcionesMenu = `
             <button onclick="window.openMyProfileModal?.()" class="menu-btn primary-action">
                 <i class="fa fa-user-edit"></i> Editar Mi Perfil
@@ -203,7 +162,6 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
         `;
     }
     
-    // Crear menú contextual con estilos mejorados
     const menuHTML = `
         <div id="staffMenu">
             <div class="menu-header">
@@ -224,151 +182,33 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
             </div>
         </div>
     `;
-    
     document.body.insertAdjacentHTML('beforeend', menuHTML);
     
-    // Agregar estilos específicos para el menú (si no existen en CSS)
     const style = document.createElement('style');
-    style.textContent = `
-        #staffMenu {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            width: 280px;
-            z-index: 9999;
-            overflow: hidden;
-            border: 1px solid var(--gris-claro);
-            animation: slideDown 0.2s ease;
-        }
-        
-        #staffMenu .menu-header {
-            padding: 16px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
-        }
-        
-        #staffMenu .user-name {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--texto-principal);
-            margin-bottom: 4px;
-        }
-        
-        #staffMenu .user-role {
-            margin-top: 4px;
-        }
-        
-        #staffMenu .role-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        #staffMenu .role-badge.admin {
-            background: var(--primario);
-            color: white;
-        }
-        
-        #staffMenu .role-badge.psych {
-            background: var(--exito);
-            color: white;
-        }
-        
-        #staffMenu .menu-content {
-            padding: 8px;
-        }
-        
-        #staffMenu .menu-footer {
-            padding: 8px;
-            border-top: 1px solid #eee;
-        }
-        
-        #staffMenu .menu-divider {
-            height: 1px;
-            background: #eee;
-            margin: 8px 0;
-        }
-        
-        #staffMenu .menu-section-title {
-            font-size: 0.75rem;
-            color: var(--texto-secundario);
-            padding: 4px 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        #staffMenu .menu-btn {
-            width: 100%;
-            padding: 12px 16px;
-            margin: 2px 0;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
-            cursor: pointer;
-            background: transparent;
-            color: var(--texto-principal);
-        }
-        
-        #staffMenu .menu-btn:hover {
-            background: #f0f0f0;
-            transform: translateX(4px);
-        }
-        
-        #staffMenu .menu-btn.primary-action {
-            background: var(--primario);
-            color: white;
-        }
-        
-        #staffMenu .menu-btn.primary-action:hover {
-            background: var(--primario-hover);
-        }
-        
-        #staffMenu .menu-btn.secondary-action {
-            background: var(--verde-azulado-claro);
-            color: white;
-        }
-        
-        #staffMenu .menu-btn.secondary-action:hover {
-            background: var(--primario);
-        }
-        
-        #staffMenu .logout-btn {
-            color: #dc2626;
-        }
-        
-        #staffMenu .logout-btn:hover {
-            background: #fee2e2;
-        }
-        
-        #staffMenu .menu-btn i {
-            width: 20px;
-            text-align: center;
-        }
-        
-        #staffMenu .menu-btn span {
-            color: inherit;
-        }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    `;
+    style.textContent = `#staffMenu { position: fixed; top: 80px; right: 20px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); width: 280px; z-index: 9999; overflow: hidden; border: 1px solid var(--gris-claro); animation: slideDown 0.2s ease; }
+    #staffMenu .menu-header { padding: 16px; background: #f8f9fa; border-bottom: 1px solid #eee; }
+    #staffMenu .user-name { font-weight: 700; font-size: 1rem; color: var(--texto-principal); margin-bottom: 4px; }
+    #staffMenu .user-role { margin-top: 4px; }
+    #staffMenu .role-badge { display: inline-block; padding: 4px 10px; border-radius: 30px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+    #staffMenu .role-badge.admin { background: var(--primario); color: white; }
+    #staffMenu .role-badge.psych { background: var(--exito); color: white; }
+    #staffMenu .menu-content { padding: 8px; }
+    #staffMenu .menu-footer { padding: 8px; border-top: 1px solid #eee; }
+    #staffMenu .menu-divider { height: 1px; background: #eee; margin: 8px 0; }
+    #staffMenu .menu-section-title { font-size: 0.75rem; color: var(--texto-secundario); padding: 4px 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    #staffMenu .menu-btn { width: 100%; padding: 12px 16px; margin: 2px 0; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 500; text-align: left; display: flex; align-items: center; gap: 12px; transition: all 0.2s; cursor: pointer; background: transparent; color: var(--texto-principal); }
+    #staffMenu .menu-btn:hover { background: #f0f0f0; transform: translateX(4px); }
+    #staffMenu .menu-btn.primary-action { background: var(--primario); color: white; }
+    #staffMenu .menu-btn.primary-action:hover { background: var(--primario-hover); }
+    #staffMenu .menu-btn.secondary-action { background: var(--verde-azulado-claro); color: white; }
+    #staffMenu .menu-btn.secondary-action:hover { background: var(--primario); }
+    #staffMenu .logout-btn { color: #dc2626; }
+    #staffMenu .logout-btn:hover { background: #fee2e2; }
+    #staffMenu .menu-btn i { width: 20px; text-align: center; }
+    #staffMenu .menu-btn span { color: inherit; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }`;
     document.head.appendChild(style);
     
-    // Cerrar al hacer clic fuera
     setTimeout(() => {
         function cerrarMenu(e) {
             if (!e.target.closest('#staffMenu') && !e.target.closest('a[onclick*="mostrarMenuStaff"]')) {
@@ -386,29 +226,18 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
 // ============================================
 function abrirGestionDisponibilidad() {
     console.log('📅 Abriendo gestión de disponibilidad');
-    
-    // Verificar que el usuario sea psicólogo
     if (state.currentUser?.role !== 'psych') {
         showToast('Solo profesionales pueden gestionar disponibilidad', 'error');
         return;
     }
-    
-    // Verificar si estamos en dashboard
     const dashboard = document.getElementById('dashboard');
     const clientView = document.getElementById('clientView');
-    
     if (dashboard && dashboard.style.display === 'block') {
-        // Ya estamos en dashboard, solo cambiar pestaña
         window.switchTab('disponibilidad');
     } else {
-        // No estamos en dashboard, ir primero
         window.irADashboard();
-        setTimeout(() => {
-            window.switchTab('disponibilidad');
-        }, 500);
+        setTimeout(() => window.switchTab('disponibilidad'), 500);
     }
-    
-    // Cerrar menú
     const menu = document.getElementById('staffMenu');
     if (menu) menu.remove();
 }
@@ -418,34 +247,20 @@ function abrirGestionDisponibilidad() {
 // ============================================
 window.irADashboard = function() {
     console.log('📊 Cambiando a dashboard');
-    
-    // Cambiar vistas
     document.getElementById('clientView').style.setProperty('display', 'none', 'important');
     document.getElementById('dashboard').style.setProperty('display', 'block', 'important');
     document.getElementById('bookingPanel').style.setProperty('display', 'none', 'important');
-    
-    // Cerrar menú
     const menu = document.getElementById('staffMenu');
     if (menu) menu.remove();
-    
-    // 🔥 IMPORTANTE: Forzar visibilidad de pestañas según el rol
     if (state.currentUser) {
         const role = state.currentUser.role;
         const userData = state.currentUser.data;
-        
-        // Llamar directamente a mostrarDashboardInmediato
         mostrarDashboardInmediato(role, userData);
-        
-        // 🔥 Cargar datos del profesional si es necesario
         if (role === 'psych') {
             setTimeout(() => {
-                if (typeof loadMyConfig === 'function') {
-                    loadMyConfig();
-                }
+                if (typeof loadMyConfig === 'function') loadMyConfig();
             }, 500);
         }
-        
-        // 🔥 Esperar a que los datos estén cargados para renderizar tablas
         const esperarDatos = () => {
             if (state.dataLoaded) {
                 console.log('✅ Datos cargados, renderizando tablas...');
@@ -471,11 +286,7 @@ window.volverAVistaPublica = function() {
     document.getElementById('clientView').style.setProperty('display', 'block', 'important');
     document.getElementById('dashboard').style.setProperty('display', 'none', 'important');
     document.getElementById('bookingPanel').style.setProperty('display', 'none', 'important');
-    
-    // Mostrar sección equipo por defecto
-    if (window.showSection) {
-        window.showSection('equipo');
-    }
+    if (window.showSection) window.showSection('equipo');
 };
 
 // ============================================
@@ -497,181 +308,79 @@ export async function processLogin() {
     }
 
     try {
-        // 🔥 PASO 1: Obtener email (soporta usuario o email)
         let email = userInput;
-        
-        // Si no es email, buscar en staff
         if (!userInput.includes('@')) {
             const foundEmail = getEmailFromUsername(userInput);
-            
             if (foundEmail) {
                 email = foundEmail;
                 console.log('📧 Usuario mapeado a email:', email);
             } else {
-                // Última oportunidad: verificar si es Admin
                 if (userInput === "Admin") {
                     email = "admin@vinculosalud.cl";
                 } else {
                     showToast('Usuario no encontrado. Verifica el nombre o usa tu email.', 'error');
-                    if (btn) {
-                        btn.innerHTML = 'Ingresar al Panel';
-                        btn.disabled = false;
-                    }
+                    if (btn) { btn.innerHTML = 'Ingresar al Panel'; btn.disabled = false; }
                     return;
                 }
             }
         }
 
-        // 🔥 PASO 2: Iniciar sesión en Firebase Authentication
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, pass);
         const uid = userCredential.user.uid;
         console.log('✅ Firebase Auth login exitoso. UID:', uid);
         
-        // PASO 3: Verificar si es admin por defecto
         if (userInput === "Admin" && pass === "Nina2026") {
             console.log("✅ Acceso Admin concedido");
-            
             const adminUser = {
-                id: uid,
-                name: 'Administrador',
-                usuario: 'Admin',
-                pass: 'Nina2026',
-                email: email,
-                isAdmin: true,
-                isHiddenAdmin: true,
-                spec: ['ADMIN_HIDDEN'],
-                priceOnline: 0,
-                pricePresencial: 0,
-                img: '',
-                whatsapp: '',
-                instagram: '',
-                genero: '',
-                address: '',
-                phone: '',
-                title: '',
-                bio: '',
-                education: '',
-                experience: 0,
-                languages: ['Español'],
-                bankDetails: {},
-                paymentMethods: {},
-                sessionDuration: 45,
-                breakBetween: 10,
-                availability: {},
-                paymentLinks: { online: '', presencial: '', qrOnline: '', qrPresencial: '' }
+                id: uid, name: 'Administrador', usuario: 'Admin', pass: 'Nina2026', email: email,
+                isAdmin: true, isHiddenAdmin: true, spec: ['ADMIN_HIDDEN'],
+                priceOnline: 0, pricePresencial: 0, img: '', whatsapp: '', instagram: '', genero: '',
+                address: '', phone: '', title: '', bio: '', education: '', experience: 0, languages: ['Español'],
+                bankDetails: {}, paymentMethods: {}, sessionDuration: 45, breakBetween: 10,
+                availability: {}, paymentLinks: { online: '', presencial: '', qrOnline: '', qrPresencial: '' }
             };
-            
-            // Guardar en Firebase
             await firebase.database().ref(`Staff/${uid}`).update(adminUser);
-            
-            // Actualizar estado local
             state.setCurrentUser({ role: 'admin', data: adminUser });
             closeLoginModal();
-            
-            // Guardar en localStorage
-            localStorage.setItem('vinculoCurrentUser', JSON.stringify({ 
-                role: 'admin', 
-                data: adminUser,
-                firebaseUid: uid 
-            }));
+            localStorage.setItem('vinculoCurrentUser', JSON.stringify({ role: 'admin', data: adminUser, firebaseUid: uid }));
             localStorage.setItem('vinculo_user', JSON.stringify({ role: 'admin', data: adminUser }));
-            
-            // Actualizar UI
             actualizarUIAdmin(adminUser, 'admin');
-            
-            if (btn) {
-                btn.innerHTML = 'Ingresar al Panel';
-                btn.disabled = false;
-            }
+            if (btn) { btn.innerHTML = 'Ingresar al Panel'; btn.disabled = false; }
             return;
         }
 
-        // PASO 4: Buscar en staff por email
-        const foundUser = state.staff.find(s => 
-            s.email && s.email.toLowerCase() === email.toLowerCase()
-        );
-
+        const foundUser = state.staff.find(s => s.email && s.email.toLowerCase() === email.toLowerCase());
         if (foundUser) {
             console.log("✅ Acceso profesional concedido:", foundUser.name);
-            
             const role = foundUser.isAdmin ? 'admin' : 'psych';
-            
-            // Buscar datos completos del profesional en STAFF
             const psychFullData = state.staff.find(s => s.id == foundUser.id) || foundUser;
-            
-            // Guardar usuario con TODOS los datos
-            state.setCurrentUser({ 
-                role, 
-                data: psychFullData
-            });
-            
+            state.setCurrentUser({ role, data: psychFullData });
             closeLoginModal();
-            
-            // Guardar en localStorage (con Firebase UID)
-            const userToStore = {
-                role: role,
-                firebaseUid: uid,
-                data: {
-                    id: psychFullData.id,
-                    name: psychFullData.name,
-                    email: psychFullData.email,
-                    isAdmin: psychFullData.isAdmin || false,
-                    usuario: psychFullData.usuario || '',
-                    genero: psychFullData.genero || ''
-                }
-            };
+            const userToStore = { role, firebaseUid: uid, data: { id: psychFullData.id, name: psychFullData.name, email: psychFullData.email, isAdmin: psychFullData.isAdmin || false, usuario: psychFullData.usuario || '', genero: psychFullData.genero || '' } };
             localStorage.setItem('vinculoCurrentUser', JSON.stringify(userToStore));
-            
-            // ✅ Guardar datos completos para restauración rápida
             localStorage.setItem('vinculo_user', JSON.stringify({ role, data: psychFullData }));
-            
-            // Actualizar UI
             actualizarUIAdmin(psychFullData, role);
-            
-            // 🔥 Sincronizar perfil completo desde Firebase (asegura datos actualizados)
             if (role === 'psych') {
-                setTimeout(async () => {
-                    await syncProfileFromFirebase();
-                    console.log('✅ Perfil sincronizado después del login');
-                }, 500);
+                setTimeout(async () => { await syncProfileFromFirebase(); console.log('✅ Perfil sincronizado después del login'); }, 500);
             }
-            
-            // Cargar configuración en background
             setTimeout(() => {
-                if (typeof loadMyConfig === 'function') {
-                    console.log('⚙️ Cargando configuración del profesional...');
-                    loadMyConfig();
-                }
+                if (typeof loadMyConfig === 'function') loadMyConfig();
             }, 2000);
-            
         } else {
             showToast('Usuario no autorizado en el sistema', 'error');
             await firebase.auth().signOut();
         }
-        
     } catch (error) {
         console.error('❌ Error de autenticación:', error);
-        
         let mensajeError = 'Error al iniciar sesión';
-        if (error.code === 'auth/user-not-found') {
-            mensajeError = 'Usuario no encontrado en Authentication';
-        } else if (error.code === 'auth/wrong-password') {
-            mensajeError = 'Contraseña incorrecta';
-        } else if (error.code === 'auth/invalid-email') {
-            mensajeError = 'Email inválido';
-        } else if (error.code === 'auth/invalid-login-credentials') {
-            mensajeError = 'Credenciales inválidas. Verifica usuario y contraseña.';
-        } else if (error.message === 'Usuario no encontrado') {
-            mensajeError = 'Usuario no encontrado en el sistema';
-        }
-        
+        if (error.code === 'auth/user-not-found') mensajeError = 'Usuario no encontrado en Authentication';
+        else if (error.code === 'auth/wrong-password') mensajeError = 'Contraseña incorrecta';
+        else if (error.code === 'auth/invalid-email') mensajeError = 'Email inválido';
+        else if (error.code === 'auth/invalid-login-credentials') mensajeError = 'Credenciales inválidas. Verifica usuario y contraseña.';
+        else if (error.message === 'Usuario no encontrado') mensajeError = 'Usuario no encontrado en el sistema';
         showToast(mensajeError, 'error');
     }
-    
-    if (btn) {
-        btn.innerHTML = 'Ingresar al Panel';
-        btn.disabled = false;
-    }
+    if (btn) { btn.innerHTML = 'Ingresar al Panel'; btn.disabled = false; }
 }
 
 // ============================================
@@ -679,528 +388,178 @@ export async function processLogin() {
 // ============================================
 export async function logout() {
     console.log('🚪 Cerrando sesión');
-    
-    try {
-        await firebase.auth().signOut();
-        console.log('✅ Sesión de Firebase Auth cerrada');
-    } catch (error) {
-        console.error('❌ Error al cerrar sesión en Firebase:', error);
-    }
-    
+    try { await firebase.auth().signOut(); console.log('✅ Sesión de Firebase Auth cerrada'); } catch (error) { console.error('❌ Error al cerrar sesión en Firebase:', error); }
     state.setCurrentUser(null);
     localStorage.removeItem('vinculoCurrentUser');
     localStorage.removeItem('vinculo_user');
-    
-    // Restaurar link de Staff
     const staffLink = document.querySelector('a[onclick*="mostrarMenuStaff"]');
     if (staffLink) {
         staffLink.setAttribute('onclick', 'showLoginModal(); return false;');
-        
         const staffIcon = staffLink.querySelector('i');
         const staffText = staffLink.childNodes[2];
-        
-        if (staffIcon) {
-            staffIcon.className = 'fa fa-lock';
-            staffIcon.style.color = '#2D3E4F';
-            staffIcon.style.opacity = '0.6';
-        }
-        
-        if (staffText) {
-            staffText.textContent = ' Staff';
-        }
+        if (staffIcon) { staffIcon.className = 'fa fa-lock'; staffIcon.style.color = '#2D3E4F'; staffIcon.style.opacity = '0.6'; }
+        if (staffText) staffText.textContent = ' Staff';
     }
-    
-    // Ocultar botones de edición
-    const editButtons = [
-        'adminHeroEditBtn',
-        'adminAboutEditBtn', 
-        'adminAtencionEditBtn',
-        'adminContactEditBtn',
-        'adminInstagramEditBtn'
-    ];
-    
-    editButtons.forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.style.display = 'none';
-    });
-    
-    // Ocultar pestañas de admin
-    const adminTabs = [
-        'adminTabProfesionales',
-        'adminTabEspecialidades',
-        'adminTabPagos',
-        'adminTabFondo',
-        'adminTabTextos',
-        'adminTabLogo',
-        'adminTabReinicio',
-        'messagesTab',
-        'adminTabEstadisticas'
-    ];
-    
-    adminTabs.forEach(id => {
-        const tab = document.getElementById(id);
-        if (tab) {
-            tab.style.display = 'none';
-        }
-    });
-    
-    // Volver a vista pública
+    const editButtons = ['adminHeroEditBtn','adminAboutEditBtn','adminAtencionEditBtn','adminContactEditBtn','adminInstagramEditBtn'];
+    editButtons.forEach(id => { const btn = document.getElementById(id); if (btn) btn.style.display = 'none'; });
+    const adminTabs = ['adminTabProfesionales','adminTabEspecialidades','adminTabPagos','adminTabFondo','adminTabTextos','adminTabLogo','adminTabReinicio','messagesTab','adminTabEstadisticas'];
+    adminTabs.forEach(id => { const tab = document.getElementById(id); if (tab) tab.style.display = 'none'; });
     window.volverAVistaPublica();
-    
-    // Cerrar menú si está abierto
     const menu = document.getElementById('staffMenu');
     if (menu) menu.remove();
-    
     showToast('Sesión cerrada', 'info');
 }
 
 // ============================================
 // FUNCIÓN PARA CARGAR EL DASHBOARD (DESHABILITADA)
 // ============================================
-export function cargarDashboard(role) {
-    console.warn('⚠️ cargarDashboard no debe usarse - usar irADashboard desde el menú');
-    // Esta función está deshabilitada intencionalmente
-}
+export function cargarDashboard(role) { console.warn('⚠️ cargarDashboard no debe usarse - usar irADashboard desde el menú'); }
 
 // ============================================
 // VERSIÓN DEFINITIVA - Mostrar dashboard con TODAS las pestañas visibles
 // ============================================
 function mostrarDashboardInmediato(role, userData) {
     console.log('🔄 Mostrando dashboard inmediatamente como:', role);
-    
     const clientView = document.getElementById('clientView');
     const bookingPanel = document.getElementById('bookingPanel');
     const dashboard = document.getElementById('dashboard');
-    
-    if (!dashboard) {
-        console.error('❌ Elemento dashboard no encontrado');
-        return;
-    }
-    
-    // FORZAR estilos con !important
-    if (clientView) {
-        clientView.style.setProperty('display', 'none', 'important');
-    }
-    
-    if (bookingPanel) {
-        bookingPanel.style.setProperty('display', 'none', 'important');
-    }
-    
+    if (!dashboard) { console.error('❌ Elemento dashboard no encontrado'); return; }
+    if (clientView) clientView.style.setProperty('display', 'none', 'important');
+    if (bookingPanel) bookingPanel.style.setProperty('display', 'none', 'important');
     dashboard.style.setProperty('display', 'block', 'important');
     dashboard.style.setProperty('visibility', 'visible', 'important');
     dashboard.style.setProperty('opacity', '1', 'important');
     dashboard.style.setProperty('z-index', '1000', 'important');
-    
-    // Actualizar títulos
     const dashTitle = document.getElementById('dashTitle');
     const dashSubtitle = document.getElementById('dashSubtitle');
-    
-    if (dashTitle) {
-        dashTitle.innerText = role === 'admin' ? 'Panel Administrador' : 'Mi Panel Profesional';
-    }
-    
-    if (dashSubtitle && userData) {
-        const generoEmoji = userData.genero === 'M' ? '♂️' : userData.genero === 'F' ? '♀️' : '';
-        dashSubtitle.innerText = `Bienvenido, ${userData.name} ${generoEmoji}`;
-    }
-    
-    // Forzar visibilidad de pestañas
+    if (dashTitle) dashTitle.innerText = role === 'admin' ? 'Panel Administrador' : 'Mi Panel Profesional';
+    if (dashSubtitle && userData) dashSubtitle.innerText = `Bienvenido, ${userData.name} ${userData.genero === 'M' ? '♂️' : userData.genero === 'F' ? '♀️' : ''}`;
     console.log('🔧 Forzando visibilidad de pestañas para rol:', role);
-    
-    // Pestañas de ADMIN - SIN BOXES
-    const adminTabs = [
-        'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
-        'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
-        'messagesTab', 'adminTabEstadisticas'
-    ];
-    
-    adminTabs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.style.setProperty('display', role === 'admin' ? 'inline-block' : 'none', 'important');
-            console.log(`  📌 ${id}: ${role === 'admin' ? 'VISIBLE' : 'oculto'}`);
-        } else {
-            console.log(`  ⚠️ No se encontró: ${id}`);
-        }
-    });
-    
-    // Pestañas de PSICÓLOGO
-    const psychTabs = ['psychTab', 'configTab', 'agendarTab'];
-    psychTabs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.style.setProperty('display', role === 'psych' ? 'inline-block' : 'none', 'important');
-            console.log(`  📌 ${id}: ${role === 'psych' ? 'VISIBLE' : 'oculto'}`);
-        }
-    });
-    
-    // Pestañas comunes
-    const commonTabIds = ['citas', 'solicitudes', 'pacientes'];
-    commonTabIds.forEach(tabName => {
-        const tabs = Array.from(document.querySelectorAll('.tab')).find(t => 
-            t.textContent.toLowerCase().includes(tabName)
-        );
-        if (tabs) {
-            tabs.style.setProperty('display', 'inline-block', 'important');
-        }
-    });
-    
-    // Asegurar visibilidad de pestañas nuevas (calendario, fichas) para todos los roles que tengan acceso
-    const calendarTab = document.getElementById('adminTabCalendario');
-    if (calendarTab) {
-        calendarTab.style.setProperty('display', 'inline-block', 'important');
-    }
-    
-    const fichasTab = document.getElementById('adminTabFichas');
-    if (fichasTab) {
-        fichasTab.style.setProperty('display', 'inline-block', 'important');
-    }
-    
-    // Mostrar/ocultar botón de edición de perfil
+    const adminTabs = ['adminTabProfesionales','adminTabEspecialidades','adminTabPagos','adminTabFondo','adminTabTextos','adminTabLogo','adminTabReinicio','messagesTab','adminTabEstadisticas'];
+    adminTabs.forEach(id => { const el = document.getElementById(id); if (el) el.style.setProperty('display', role === 'admin' ? 'inline-block' : 'none', 'important'); });
+    const psychTabs = ['psychTab','configTab','agendarTab'];
+    psychTabs.forEach(id => { const el = document.getElementById(id); if (el) el.style.setProperty('display', role === 'psych' ? 'inline-block' : 'none', 'important'); });
+    const commonTabIds = ['citas','solicitudes','pacientes'];
+    commonTabIds.forEach(tabName => { const tabs = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.toLowerCase().includes(tabName)); if (tabs) tabs.style.setProperty('display', 'inline-block', 'important'); });
+    const calendarTab = document.getElementById('adminTabCalendario'); if (calendarTab) calendarTab.style.setProperty('display', 'inline-block', 'important');
+    const fichasTab = document.getElementById('adminTabFichas'); if (fichasTab) fichasTab.style.setProperty('display', 'inline-block', 'important');
     const profileBtn = document.getElementById('editProfileButton');
     if (profileBtn) {
-        if (role === 'psych') {
-            profileBtn.style.setProperty('display', 'inline-flex', 'important');
-            profileBtn.onclick = window.openMyProfileModal;
-            profileBtn.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil';
-        } else {
-            profileBtn.style.setProperty('display', 'none', 'important');
-        }
+        if (role === 'psych') { profileBtn.style.setProperty('display', 'inline-flex', 'important'); profileBtn.onclick = window.openMyProfileModal; profileBtn.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil'; }
+        else profileBtn.style.setProperty('display', 'none', 'important');
     }
-    
-    // Actualizar estadísticas
-    setTimeout(() => {
-        updateStats();
-    }, 500);
-    
-    // Cambiar a pestaña de citas
+    setTimeout(() => updateStats(), 500);
     switchTab('citas');
-    
     console.log('✅ Dashboard forzado a visible con todas las pestañas configuradas');
 }
 
 // ============================================
 // FUNCIÓN SWITCH TAB MEJORADA - VERSIÓN FINAL
 // ============================================
-
 export function switchTab(tabName) {
     console.log('🔄 Cambiando a pestaña:', tabName);
-    
-    // 1. Remover clase active de todas las pestañas
-    document.querySelectorAll('#dashboardTabs .tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    // 2. Remover clase active de todos los contenidos
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    
-    // 3. Buscar y activar la pestaña clickeada
+    document.querySelectorAll('#dashboardTabs .tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     const tabs = document.querySelectorAll('#dashboardTabs .tab');
     let tabActivated = false;
-    
     for (let tab of tabs) {
-        // Buscar por onclick
         const onclick = tab.getAttribute('onclick');
-        if (onclick && onclick.includes(`'${tabName}'`)) {
-            tab.classList.add('active');
-            tabActivated = true;
-            console.log(`✅ Pestaña activada por onclick: ${tab.textContent}`);
-            break;
-        }
-        
-        // Buscar por texto
-        if (tab.textContent.toLowerCase().includes(tabName.toLowerCase())) {
-            tab.classList.add('active');
-            tabActivated = true;
-            console.log(`✅ Pestaña activada por texto: ${tab.textContent}`);
-            break;
-        }
-        
-        // Buscar por ID (para pestañas especiales)
-        if (tab.id && tab.id.toLowerCase().includes(tabName.toLowerCase())) {
-            tab.classList.add('active');
-            tabActivated = true;
-            console.log(`✅ Pestaña activada por ID: ${tab.id}`);
-            break;
-        }
+        if (onclick && onclick.includes(`'${tabName}'`)) { tab.classList.add('active'); tabActivated = true; console.log(`✅ Pestaña activada por onclick: ${tab.textContent}`); break; }
+        if (tab.textContent.toLowerCase().includes(tabName.toLowerCase())) { tab.classList.add('active'); tabActivated = true; console.log(`✅ Pestaña activada por texto: ${tab.textContent}`); break; }
+        if (tab.id && tab.id.toLowerCase().includes(tabName.toLowerCase())) { tab.classList.add('active'); tabActivated = true; console.log(`✅ Pestaña activada por ID: ${tab.id}`); break; }
     }
-    
-    // Si no se encontró, activar la primera (citas por defecto)
-    if (!tabActivated && tabs.length > 0) {
-        tabs[0].classList.add('active');
-        console.log(`✅ Activando primera pestaña por defecto: ${tabs[0].textContent}`);
-    }
-    
-    // 4. Activar el contenido correspondiente
-    const tabMap = {
-        'citas': 'tabCitas',
-        'solicitudes': 'tabSolicitudes',
-        'pacientes': 'tabPacientes',
-        'profesionales': 'tabProfesionales',
-        'especialidades': 'tabEspecialidades',
-        'pagos': 'tabPagos',
-        'fondo': 'tabFondo',
-        'textos': 'tabTextos',
-        'logo': 'tabLogo',
-        'reinicio': 'tabReinicio',
-        'disponibilidad': 'tabDisponibilidad',
-        'configuracion': 'tabConfiguracion',
-        'mensajes': 'tabMensajes',
-        'agendar': 'tabAgendar',
-        'estadisticas': 'tabEstadisticas',
-        'calendario': 'tabCalendario',
-        'fichas': 'tabFichas'
-    };
-    
+    if (!tabActivated && tabs.length > 0) { tabs[0].classList.add('active'); console.log(`✅ Activando primera pestaña por defecto: ${tabs[0].textContent}`); }
+    const tabMap = { 'citas':'tabCitas','solicitudes':'tabSolicitudes','pacientes':'tabPacientes','profesionales':'tabProfesionales','especialidades':'tabEspecialidades','pagos':'tabPagos','fondo':'tabFondo','textos':'tabTextos','logo':'tabLogo','reinicio':'tabReinicio','disponibilidad':'tabDisponibilidad','configuracion':'tabConfiguracion','mensajes':'tabMensajes','agendar':'tabAgendar','estadisticas':'tabEstadisticas','calendario':'tabCalendario','fichas':'tabFichas' };
     const contentId = tabMap[tabName] || `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
     const content = document.getElementById(contentId);
-    
     if (content) {
         content.classList.add('active');
         console.log(`✅ Contenido activado: ${contentId}`);
-        
-        // 5. Cargar datos según la pestaña (con timeout para evitar conflictos)
         setTimeout(() => {
             try {
-                if (tabName === 'pacientes' && typeof renderPatients === 'function') {
-                    renderPatients();
+                if (tabName === 'pacientes' && typeof renderPatients === 'function') renderPatients();
+                else if (tabName === 'citas' && typeof renderAppointments === 'function') renderAppointments();
+                else if (tabName === 'solicitudes' && typeof renderPendingRequests === 'function') renderPendingRequests();
+                else if (tabName === 'profesionales' && isAdmin()) {
+                    asegurarTablaProfesionales(); // ← NUEVA LLAMADA PARA CREAR LA TABLA SI ES NECESARIO
+                    if (typeof renderStaffTable === 'function') renderStaffTable();
                 }
-                else if (tabName === 'citas' && typeof renderAppointments === 'function') {
-                    renderAppointments();
-                }
-                else if (tabName === 'solicitudes' && typeof renderPendingRequests === 'function') {
-                    renderPendingRequests();
-                }
-                else if (tabName === 'profesionales' && isAdmin() && typeof renderStaffTable === 'function') {
-                    renderStaffTable();
-                }
-                else if (tabName === 'mensajes' && isAdmin() && typeof renderMessagesTable === 'function') {
-                    renderMessagesTable();
-                }
-                else if (tabName === 'disponibilidad' && isPsych()) {
-                    if (typeof window.loadTimeSlots === 'function') {
-                        window.loadTimeSlots();
-                    }
-                }
-                else if (tabName === 'configuracion' && isPsych()) {
-                    if (typeof loadMyConfig === 'function') {
-                        loadMyConfig();
-                    }
-                }
-                else if (tabName === 'pagos' && isAdmin()) {
-                    if (typeof updatePaymentMethodsInfo === 'function') {
-                        updatePaymentMethodsInfo();
-                    }
-                }
-                else if (tabName === 'reinicio' && isAdmin()) {
-                    if (typeof actualizarContadoresReinicio === 'function') {
-                        actualizarContadoresReinicio();
-                    }
-                }
-                else if (tabName === 'estadisticas' && isAdmin()) {
-                    if (window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') {
-                        window.estadisticas.renderPanelEstadisticas();
-                    }
-                }
-                else if (tabName === 'calendario' && typeof window.renderCalendar === 'function') {
-                    window.renderCalendar();
-                }
-                else if (tabName === 'fichas' && window.fichasClinicas && typeof window.fichasClinicas.renderFichasConFiltros === 'function') {
-                    if (window.fichasClinicas.cargarSelectProfesionales) window.fichasClinicas.cargarSelectProfesionales();
-                    window.fichasClinicas.renderFichasConFiltros();
-                }
-            } catch (error) {
-                console.error(`❌ Error cargando datos para ${tabName}:`, error);
-            }
+                else if (tabName === 'mensajes' && isAdmin() && typeof renderMessagesTable === 'function') renderMessagesTable();
+                else if (tabName === 'disponibilidad' && isPsych() && typeof window.loadTimeSlots === 'function') window.loadTimeSlots();
+                else if (tabName === 'configuracion' && isPsych() && typeof loadMyConfig === 'function') loadMyConfig();
+                else if (tabName === 'pagos' && isAdmin() && typeof updatePaymentMethodsInfo === 'function') updatePaymentMethodsInfo();
+                else if (tabName === 'reinicio' && isAdmin() && typeof actualizarContadoresReinicio === 'function') actualizarContadoresReinicio();
+                else if (tabName === 'estadisticas' && isAdmin() && window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') window.estadisticas.renderPanelEstadisticas();
+                else if (tabName === 'calendario' && typeof window.renderCalendar === 'function') window.renderCalendar();
+                else if (tabName === 'fichas' && window.fichasClinicas && typeof window.fichasClinicas.renderFichasConFiltros === 'function') { if (window.fichasClinicas.cargarSelectProfesionales) window.fichasClinicas.cargarSelectProfesionales(); window.fichasClinicas.renderFichasConFiltros(); }
+            } catch (error) { console.error(`❌ Error cargando datos para ${tabName}:`, error); }
         }, 100);
-    } else {
-        console.warn(`⚠️ No se encontró contenido para: ${contentId}`);
-    }
+    } else { console.warn(`⚠️ No se encontró contenido para: ${contentId}`); }
 }
 
-// Función auxiliar para obtener ID de pestaña desde nombre (para compatibilidad)
-function getTabIdFromName(tabName) {
-    const tabIdMap = {
-        'citas': 'tabCitas',
-        'solicitudes': 'tabSolicitudes',
-        'pacientes': 'tabPacientes',
-        'profesionales': 'tabProfesionales',
-        'especialidades': 'tabEspecialidades',
-        'pagos': 'tabPagos',
-        'fondo': 'tabFondo',
-        'textos': 'tabTextos',
-        'logo': 'tabLogo',
-        'reinicio': 'tabReinicio',
-        'disponibilidad': 'tabDisponibilidad',
-        'configuracion': 'tabConfiguracion',
-        'mensajes': 'tabMensajes',
-        'agendar': 'tabAgendar',
-        'estadisticas': 'tabEstadisticas'
-    };
-    return tabIdMap[tabName] || `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
-}
+function getTabIdFromName(tabName) { const tabIdMap = { 'citas':'tabCitas','solicitudes':'tabSolicitudes','pacientes':'tabPacientes','profesionales':'tabProfesionales','especialidades':'tabEspecialidades','pagos':'tabPagos','fondo':'tabFondo','textos':'tabTextos','logo':'tabLogo','reinicio':'tabReinicio','disponibilidad':'tabDisponibilidad','configuracion':'tabConfiguracion','mensajes':'tabMensajes','agendar':'tabAgendar','estadisticas':'tabEstadisticas' }; return tabIdMap[tabName] || `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`; }
 
-// ============================================
-// FUNCIONES AUXILIARES
-// ============================================
-
-function isAdmin() {
-    return state.currentUser?.role === 'admin';
-}
-
-function isPsych() {
-    return state.currentUser?.role === 'psych';
-}
+function isAdmin() { return state.currentUser?.role === 'admin'; }
+function isPsych() { return state.currentUser?.role === 'psych'; }
 
 // ============================================
 // FUNCIÓN UPDATE STATS
 // ============================================
-
 export function updateStats() {
     console.log('📊 Actualizando estadísticas...');
-    
-    if (!state.currentUser) {
-        console.log('⚠️ No hay usuario logueado');
-        return;
-    }
-
+    if (!state.currentUser) { console.log('⚠️ No hay usuario logueado'); return; }
     const miId = state.currentUser.data?.id;
     const esAdmin = isAdmin();
-    
-    let misCitas = [];
-    if (esAdmin) {
-        misCitas = state.appointments || [];
-    } else {
-        misCitas = (state.appointments || []).filter(a => a.psychId == miId);
-    }
-    
-    const ingresosPagados = misCitas
-        .filter(a => a.paymentStatus === 'pagado')
-        .reduce((sum, a) => sum + (a.price || 0), 0);
-    
-    const pacientesUnicos = new Set();
-    misCitas.forEach(a => {
-        if (a.patientId) pacientesUnicos.add(a.patientId);
-    });
-    
+    let misCitas = esAdmin ? state.appointments || [] : (state.appointments || []).filter(a => a.psychId == miId);
+    const ingresosPagados = misCitas.filter(a => a.paymentStatus === 'pagado').reduce((sum, a) => sum + (a.price || 0), 0);
+    const pacientesUnicos = new Set(); misCitas.forEach(a => { if (a.patientId) pacientesUnicos.add(a.patientId); });
     const statIncome = document.getElementById('statIncome');
     const statCitas = document.getElementById('statCitas');
     const statPatients = document.getElementById('statPatients');
-    
     if (statIncome) statIncome.innerText = `$${ingresosPagados.toLocaleString()}`;
     if (statCitas) statCitas.innerText = misCitas.length;
     if (statPatients) statPatients.innerText = pacientesUnicos.size;
 }
 
-// ============================================
-// FUNCIÓN PARA ACTUALIZAR BOTÓN DE PERFIL
-// ============================================
-
-export function updateProfileButton() {
-    const profileBtn = document.getElementById('editProfileButton');
-    if (!profileBtn) return;
-    
-    if (isPsych()) {
-        profileBtn.style.display = 'inline-flex';
-        profileBtn.onclick = window.openMyProfileModal;
-        profileBtn.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil';
-    } else {
-        profileBtn.style.display = 'none';
-    }
-}
+export function updateProfileButton() { const profileBtn = document.getElementById('editProfileButton'); if (!profileBtn) return; if (isPsych()) { profileBtn.style.display = 'inline-flex'; profileBtn.onclick = window.openMyProfileModal; profileBtn.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil'; } else profileBtn.style.display = 'none'; }
 
 // ============================================
 // 🔥 VERIFICAR SESIÓN GUARDADA MEJORADA (primero datos completos)
 // ============================================
-
 export async function verificarSesionGuardada() {
     console.log('🔍 Verificando sesión guardada...');
-    
-    // 1. Intentar cargar desde datos completos (vinculo_user)
     const savedUserFull = localStorage.getItem('vinculo_user');
     if (savedUserFull) {
         try {
             const userData = JSON.parse(savedUserFull);
             console.log('📦 Sesión completa encontrada:', userData);
-            
-            if (userData.role === 'admin') {
-                state.setCurrentUser({ role: 'admin', data: userData.data });
-                actualizarUIAdmin(userData.data, 'admin');
-                return true;
-            } else if (userData.role === 'psych') {
-                // Verificar que el profesional aún existe en staff (si ya está cargado)
+            if (userData.role === 'admin') { state.setCurrentUser({ role: 'admin', data: userData.data }); actualizarUIAdmin(userData.data, 'admin'); return true; }
+            else if (userData.role === 'psych') {
                 const exists = state.staff.some(s => s.id === userData.data.id);
                 if (exists || !state.staff.length) {
                     state.setCurrentUser({ role: 'psych', data: userData.data });
                     actualizarUIAdmin(userData.data, 'psych');
-                    // Asegurar que los datos completos estén en staff (si no están y ya se cargaron)
-                    if (!exists && state.staff.length) {
-                        state.staff.push(userData.data);
-                    }
+                    if (!exists && state.staff.length) state.staff.push(userData.data);
                     return true;
                 }
             }
-        } catch (e) {
-            console.error('Error al leer vinculo_user:', e);
-        }
+        } catch (e) { console.error('Error al leer vinculo_user:', e); }
     }
-    
-    // 2. Fallback: cargar desde vinculoCurrentUser (datos básicos)
     const savedUser = localStorage.getItem('vinculoCurrentUser');
-    if (!savedUser) {
-        console.log('ℹ️ No hay sesión guardada');
-        return false;
-    }
-    
+    if (!savedUser) { console.log('ℹ️ No hay sesión guardada'); return false; }
     try {
         const userData = JSON.parse(savedUser);
         console.log('📦 Sesión básica encontrada:', userData);
-        
-        // Verificar si hay un UID de Firebase guardado
         if (userData.firebaseUid) {
-            try {
-                const currentUser = firebase.auth().currentUser;
-                if (currentUser && currentUser.uid === userData.firebaseUid) {
-                    console.log('✅ Sesión de Firebase Auth activa:', currentUser.uid);
-                } else {
-                    console.log('⚠️ No hay sesión activa en Firebase Auth');
-                    localStorage.removeItem('vinculoCurrentUser');
-                    return false;
-                }
-            } catch (e) {
-                console.error('❌ Error verificando Firebase Auth:', e);
-            }
+            try { const currentUser = firebase.auth().currentUser; if (currentUser && currentUser.uid === userData.firebaseUid) console.log('✅ Sesión de Firebase Auth activa:', currentUser.uid); else { console.log('⚠️ No hay sesión activa en Firebase Auth'); localStorage.removeItem('vinculoCurrentUser'); return false; } } catch (e) { console.error('❌ Error verificando Firebase Auth:', e); }
         }
-        
-        if (userData.role === 'admin') {
-            state.setCurrentUser({ role: 'admin', data: userData.data });
-            actualizarUIAdmin(userData.data, 'admin');
-            return true;
-        } else {
-            // Buscar datos completos en staff (si están cargados)
+        if (userData.role === 'admin') { state.setCurrentUser({ role: 'admin', data: userData.data }); actualizarUIAdmin(userData.data, 'admin'); return true; }
+        else {
             const psychExists = state.staff.some(s => s.id == userData.data.id);
-            if (psychExists) {
-                const psychFullData = state.staff.find(s => s.id == userData.data.id);
-                state.setCurrentUser({ role: 'psych', data: psychFullData });
-                actualizarUIAdmin(psychFullData, 'psych');
-                // Guardar también la versión completa para futuras recargas
-                localStorage.setItem('vinculo_user', JSON.stringify({ role: 'psych', data: psychFullData }));
-                return true;
-            } else {
-                // Si no está en staff, asumir que es válido (podría estar cargando después)
-                state.setCurrentUser({ role: 'psych', data: userData.data });
-                actualizarUIAdmin(userData.data, 'psych');
-                console.log('⚠️ Profesional no encontrado en staff, usando datos básicos');
-                return true;
-            }
+            if (psychExists) { const psychFullData = state.staff.find(s => s.id == userData.data.id); state.setCurrentUser({ role: 'psych', data: psychFullData }); actualizarUIAdmin(psychFullData, 'psych'); localStorage.setItem('vinculo_user', JSON.stringify({ role: 'psych', data: psychFullData })); return true; }
+            else { state.setCurrentUser({ role: 'psych', data: userData.data }); actualizarUIAdmin(userData.data, 'psych'); console.log('⚠️ Profesional no encontrado en staff, usando datos básicos'); return true; }
         }
-    } catch (error) {
-        console.error('❌ Error al leer sesión guardada:', error);
-        localStorage.removeItem('vinculoCurrentUser');
-        return false;
-    }
+    } catch (error) { console.error('❌ Error al leer sesión guardada:', error); localStorage.removeItem('vinculoCurrentUser'); return false; }
 }
 
 // ============================================
@@ -1225,80 +584,43 @@ if (typeof window !== 'undefined') {
 // ============================================
 (function initAuth() {
     console.log('🔧 Inicializando autenticación...');
-    
-    // Escuchar cambios en el estado de autenticación de Firebase
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             console.log('✅ Usuario autenticado en Firebase:', user.uid);
-            
-            // Verificar si tenemos sesión guardada
             const savedUser = localStorage.getItem('vinculoCurrentUser');
             if (savedUser) {
                 try {
                     const userData = JSON.parse(savedUser);
                     if (userData.firebaseUid === user.uid) {
                         console.log('📦 Sesión sincronizada con Firebase');
-                        
-                        // Restaurar estado si es necesario
                         if (!state.currentUser) {
-                            if (userData.role === 'admin') {
-                                state.setCurrentUser({ role: 'admin', data: userData.data });
-                                actualizarUIAdmin(userData.data, 'admin');
-                            } else {
-                                const psychFullData = state.staff.find(s => s.id == userData.data.id);
-                                if (psychFullData) {
-                                    state.setCurrentUser({ role: 'psych', data: psychFullData });
-                                    actualizarUIAdmin(psychFullData, 'psych');
-                                }
-                            }
+                            if (userData.role === 'admin') { state.setCurrentUser({ role: 'admin', data: userData.data }); actualizarUIAdmin(userData.data, 'admin'); }
+                            else { const psychFullData = state.staff.find(s => s.id == userData.data.id); if (psychFullData) { state.setCurrentUser({ role: 'psych', data: psychFullData }); actualizarUIAdmin(psychFullData, 'psych'); } }
                         }
                     }
-                } catch (e) {
-                    console.error('❌ Error procesando sesión guardada:', e);
-                }
+                } catch (e) { console.error('❌ Error procesando sesión guardada:', e); }
             }
         } else {
             console.log('ℹ️ No hay usuario autenticado en Firebase');
             const savedUser = localStorage.getItem('vinculoCurrentUser');
-            if (!savedUser && state.currentUser) {
-                console.log('🧹 Limpiando estado local sin sesión');
-                state.setCurrentUser(null);
-            }
+            if (!savedUser && state.currentUser) { console.log('🧹 Limpiando estado local sin sesión'); state.setCurrentUser(null); }
         }
     });
-    
-    // Verificar sesión guardada inmediatamente
     setTimeout(() => {
         const savedUser = localStorage.getItem('vinculoCurrentUser');
         if (savedUser) {
             try {
                 const userData = JSON.parse(savedUser);
                 console.log('📦 Sesión encontrada en localStorage:', userData);
-                
                 if (userData.role === 'admin') {
                     const adminFullData = state.staff.find(s => s.id == userData.data.id) || userData.data;
                     state.setCurrentUser({ role: 'admin', data: adminFullData });
-                    
                     const staffLink = document.querySelector('a[onclick*="showLoginModal"]');
-                    if (staffLink) {
-                        staffLink.setAttribute('onclick', 'mostrarMenuStaff(true); return false;');
-                        const icon = staffLink.querySelector('i');
-                        if (icon) {
-                            icon.className = 'fa fa-user-check';
-                            icon.style.color = '#1E7A8A';
-                        }
-                        const textNode = staffLink.childNodes[2];
-                        if (textNode) textNode.textContent = adminFullData.name || 'Admin';
-                    }
-                    
+                    if (staffLink) { staffLink.setAttribute('onclick', 'mostrarMenuStaff(true); return false;'); const icon = staffLink.querySelector('i'); if (icon) { icon.className = 'fa fa-user-check'; icon.style.color = '#1E7A8A'; } const textNode = staffLink.childNodes[2]; if (textNode) textNode.textContent = adminFullData.name || 'Admin'; }
                     console.log('✅ Sesión de admin restaurada automáticamente');
                 }
-            } catch (e) {
-                console.error('❌ Error restaurando sesión:', e);
-            }
-        } else {
-            console.log('ℹ️ No hay sesión guardada');
-        }
+            } catch (e) { console.error('❌ Error restaurando sesión:', e); }
+        } else { console.log('ℹ️ No hay sesión guardada'); }
     }, 1000);
 })();
 

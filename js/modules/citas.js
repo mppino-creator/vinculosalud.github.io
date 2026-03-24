@@ -1539,7 +1539,7 @@ export function isTimeSlotAvailable(psychId, date, time) {
 }
 
 // ============================================
-// EXPONER FUNCIONES GLOBALMENTE Y COMO EXPORTACIONES NAMED
+// EXPONER FUNCIONES GLOBALMENTE (sin exportaciones duplicadas)
 // ============================================
 window.openBooking = openBooking;
 window.updateBookingDetails = updateBookingDetails;
@@ -1571,7 +1571,4 @@ window.showPatientAppointmentsByRut = showPatientAppointmentsByRut;
 window.cancelAppointmentByPatient = cancelAppointmentByPatient;
 window.calcularEdad = window.calcularEdad;
 
-// EXPORTACIONES NAMED para que auth.js pueda importarlas
-export { renderAppointments, renderPendingRequests, showPatientAppointmentsByRut, cancelAppointmentByPatient };
-
-console.log('✅ citas.js cargado con exportaciones named y funciones para consulta por RUT');
+console.log('✅ citas.js cargado con funciones para consulta por RUT y envío solo al profesional');

@@ -9,41 +9,39 @@ import { showToast, validarRut, formatDate } from './utils.js';
 window.horaSeleccionada = null;
 
 // ============================================
-// FUNCIÓN PARA SELECCIONAR HORARIO
+// FUNCIONES PARA SELECCIONAR HORARIO (exportadas y globales)
 // ============================================
-if (typeof window !== 'undefined') {
-    window.selectTimeSlot = function(time) {
-        console.log('🎯 [SELECT] Seleccionando horario:', time);
-        window.horaSeleccionada = time;
-        
-        document.querySelectorAll('.time-slot-btn').forEach(btn => {
-            btn.classList.remove('selected');
-        });
-        
-        const btn = document.querySelector(`.time-slot-btn[data-time="${time}"]`);
-        if (btn) btn.classList.add('selected');
-        
-        const select = document.getElementById('custTime');
-        if (select) {
-            select.value = time;
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        
-        if (typeof window.updateBookingDetails === 'function') {
-            window.updateBookingDetails();
-        }
-        
-        return true;
-    };
+export function selectTimeSlot(time) {
+    console.log('🎯 [SELECT] Seleccionando horario:', time);
+    window.horaSeleccionada = time;
     
-    window.selectTimePref = function(pref) {
-        console.log('📅 [PREF] Preferencia seleccionada:', pref);
-        const panel = document.getElementById('bookingPanel');
-        if (panel) panel.dataset.timePref = pref;
-        if (pref && window.showToast) {
-            window.showToast(`Preferencia: ${pref === 'AM' ? 'Mañana' : 'Tarde'}`, 'info');
-        }
-    };
+    document.querySelectorAll('.time-slot-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    const btn = document.querySelector(`.time-slot-btn[data-time="${time}"]`);
+    if (btn) btn.classList.add('selected');
+    
+    const select = document.getElementById('custTime');
+    if (select) {
+        select.value = time;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    if (typeof window.updateBookingDetails === 'function') {
+        window.updateBookingDetails();
+    }
+    
+    return true;
+}
+
+export function selectTimePref(pref) {
+    console.log('📅 [PREF] Preferencia seleccionada:', pref);
+    const panel = document.getElementById('bookingPanel');
+    if (panel) panel.dataset.timePref = pref;
+    if (pref && window.showToast) {
+        window.showToast(`Preferencia: ${pref === 'AM' ? 'Mañana' : 'Tarde'}`, 'info');
+    }
 }
 
 // ============================================
@@ -926,11 +924,11 @@ export function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                             </tr>
+                              </tr>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `
-                                <tr>
+                                 <tr>
                                     <td>${cita.date || '—'}</td>
                                     <td>${cita.time || 'A coordinar'}</td>
                                     <td>${cita.psych || '—'}</td>
@@ -948,10 +946,10 @@ export function showPatientAppointmentsByRut() {
                                             </button>
                                         ` : '—'}
                                     </td>
-                                </tr>
+                                 </tr>
                             `).join('')}
                         </tbody>
-                    </table>
+                     </table>
                 </div>
                 <p style="margin-top:20px; font-size:0.8rem;">Si deseas cancelar una cita, haz clic en "Cancelar".</p>
             </div>
@@ -1023,7 +1021,7 @@ export function renderAppointments() {
         const statusText = isPast ? 'Completada' : (a.status === 'confirmada' ? 'Confirmada' : 'Pendiente');
         
         return `
-            <tr>
+             <tr>
                 <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
                 <td>${a.psych || '—'}</td>
                 <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
@@ -1045,7 +1043,7 @@ export function renderAppointments() {
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                 </td>
-            </tr>
+             </tr>
         `;
     }).join('');
 }
@@ -1070,7 +1068,7 @@ export function renderPendingRequests() {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         
         return `
-            <tr>
+             <tr>
                 <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
                 <td>
                     <strong>${r.patient}</strong><br>
@@ -1106,7 +1104,7 @@ export function renderPendingRequests() {
                         ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                     </div>
                 </td>
-            </tr>
+             </tr>
         `;
     }).join('');
 }

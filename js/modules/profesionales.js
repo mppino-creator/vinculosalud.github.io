@@ -540,7 +540,7 @@ window.previewMyQRPresencial = function(input) {
 };
 
 // ============================================
-// 🔥 FUNCIÓN PARA GUARDAR PERFIL (CORREGIDA - SIN delete)
+// 🔥 FUNCIÓN PARA GUARDAR PERFIL (CORREGIDA - SIN GUARDAR vinculo_staff)
 // ============================================
 
 export async function saveMyProfile() {
@@ -730,8 +730,7 @@ export async function saveMyProfile() {
             state.currentUser.data = fullData;
         }
         
-        // ✅ ACTUALIZAR localStorage
-        localStorage.setItem('vinculo_staff', JSON.stringify(state.staff));
+        // ✅ ACTUALIZAR localStorage - SOLO DATOS DEL USUARIO ACTUAL (NO todo staff)
         localStorage.setItem('vinculo_user', JSON.stringify(state.currentUser));
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({
             role: 'psych',
@@ -1358,7 +1357,7 @@ export function addProfileButtonToDashboard() {
 }
 
 // ============================================
-// Sincronización forzada después de login
+// Sincronización forzada después de login (SIN GUARDAR vinculo_staff)
 // ============================================
 export async function syncProfileFromFirebase() {
     const user = firebase.auth().currentUser;
@@ -1390,9 +1389,22 @@ export async function syncProfileFromFirebase() {
         state.currentUser.data = fullData;
     }
     
-    // Guardar en localStorage
-    localStorage.setItem('vinculo_staff', JSON.stringify(state.staff));
-    if (state.currentUser) localStorage.setItem('vinculo_user', JSON.stringify(state.currentUser));
+    // Guardar en localStorage - SOLO DATOS DEL USUARIO ACTUAL
+    if (state.currentUser) {
+        localStorage.setItem('vinculo_user', JSON.stringify(state.currentUser));
+        localStorage.setItem('vinculoCurrentUser', JSON.stringify({
+            role: state.currentUser.role,
+            firebaseUid: uid,
+            data: {
+                id: uid,
+                name: fullData.name,
+                email: fullData.email,
+                isAdmin: fullData.isAdmin || false,
+                usuario: fullData.usuario || '',
+                genero: fullData.genero || ''
+            }
+        }));
+    }
     
     console.log('✅ Perfil sincronizado correctamente');
     

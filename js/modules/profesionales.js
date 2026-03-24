@@ -595,13 +595,33 @@ window.showMyProfileTab = function(tabName) {
 
 window.previewMyPhoto = function(input) {
     if (input.files && input.files[0]) {
+        const file = input.files[0];
         const reader = new FileReader();
+
         reader.onload = function(e) {
-            const preview = document.getElementById('editMyPhotoPreview');
-            if (preview) preview.src = e.target.result;
-            state.setTempImageData(e.target.result);
+            const img = new Image();
+            img.onload = function() {
+                const MAX_WIDTH = 400; // Para perfil, ancho más pequeño
+                const scale = MAX_WIDTH / img.width;
+                const newWidth = MAX_WIDTH;
+                const newHeight = img.height * scale;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = newWidth;
+                canvas.height = newHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+                const reducedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                const preview = document.getElementById('editMyPhotoPreview');
+                if (preview) preview.src = reducedDataUrl;
+                state.setTempImageData(reducedDataUrl);
+                showToast('✅ Foto optimizada', 'success');
+            };
+            img.src = e.target.result;
         };
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
     }
 };
 

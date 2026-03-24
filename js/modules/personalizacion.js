@@ -1148,28 +1148,50 @@ export function showAboutModal() {
 export function uploadAboutImage() {
     const input = document.getElementById('aboutImageInput');
     if (!input || !input.files || !input.files[0]) return;
-    
+
+    const file = input.files[0];
     const reader = new FileReader();
+
     reader.onload = function(e) {
-        aboutImage = e.target.result;
-        
-        const img = document.getElementById('aboutTeamImage');
-        const preview = document.getElementById('aboutImagePreview');
-        const placeholder = document.getElementById('aboutImagePlaceholder');
-        
-        if (img) {
-            img.src = e.target.result;
-            img.style.display = 'block';
-        }
-        if (preview) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        }
-        if (placeholder) placeholder.style.display = 'none';
-        
-        showToast('✅ Imagen cargada, guarda los cambios', 'success');
+        const img = new Image();
+        img.onload = function() {
+            // Redimensionar a un ancho máximo de 800px (manteniendo proporción)
+            const MAX_WIDTH = 800;
+            const scale = MAX_WIDTH / img.width;
+            const newWidth = MAX_WIDTH;
+            const newHeight = img.height * scale;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+            // Convertir a base64 con calidad 0.7
+            const reducedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+            // Asignar la imagen reducida
+            aboutImage = reducedDataUrl;
+
+            const teamImg = document.getElementById('aboutTeamImage');
+            const preview = document.getElementById('aboutImagePreview');
+            const placeholder = document.getElementById('aboutImagePlaceholder');
+
+            if (teamImg) {
+                teamImg.src = reducedDataUrl;
+                teamImg.style.display = 'block';
+            }
+            if (preview) {
+                preview.src = reducedDataUrl;
+                preview.style.display = 'block';
+            }
+            if (placeholder) placeholder.style.display = 'none';
+
+            showToast('✅ Imagen optimizada y cargada, guarda los cambios', 'success');
+        };
+        img.src = e.target.result;
     };
-    reader.readAsDataURL(input.files[0]);
+    reader.readAsDataURL(file);
 }
 
 export function saveAboutTexts() {

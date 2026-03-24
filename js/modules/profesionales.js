@@ -768,11 +768,8 @@ export async function saveMyProfile() {
 }
 
 // ============================================
-// RENDERIZAR TABLA DE PROFESIONALES (CON LÍMITE DE REINTENTOS)
+// RENDERIZAR TABLA DE PROFESIONALES (SIN REINTENTOS, SOLO SI ES ADMIN)
 // ============================================
-let renderStaffTableRetries = 0;
-const MAX_RETRIES = 10;
-
 export function renderStaffTable() {
     // Solo ejecutar si el usuario es admin (la tabla solo existe para admin)
     if (state.currentUser?.role !== 'admin') {
@@ -781,18 +778,10 @@ export function renderStaffTable() {
     
     const tb = document.getElementById('staffTableBody');
     if (!tb) {
-        if (renderStaffTableRetries < MAX_RETRIES) {
-            renderStaffTableRetries++;
-            console.warn(`⏳ staffTableBody no encontrado, reintento ${renderStaffTableRetries}/${MAX_RETRIES}...`);
-            setTimeout(renderStaffTable, 200);
-        } else {
-            console.warn('⚠️ staffTableBody no encontrado después de varios intentos. Deteniendo reintentos.');
-        }
+        // Si no existe el elemento, no hacer nada (sin reintentos)
+        console.warn('⚠️ staffTableBody no encontrado (probablemente el admin no está en dashboard)');
         return;
     }
-    
-    // Resetear contador si encontramos el elemento
-    renderStaffTableRetries = 0;
     
     const visibleStaff = state.staff.filter(s => !s.isHiddenAdmin);
     tb.innerHTML = visibleStaff.map(p => {

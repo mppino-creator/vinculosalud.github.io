@@ -104,29 +104,32 @@ function actualizarUIAdmin(userData, role) {
         }
     }
     
-    // 🔥 Si es psicólogo, cargar datos completos desde staff
+    // 🔥 Si es psicólogo, asegurar datos completos (buscar en staff si es necesario)
     if (role === 'psych') {
-        // Buscar datos completos del profesional en staff
-        const psychFullData = state.staff.find(s => s.id == userData.id);
-        if (psychFullData) {
-            // Actualizar currentUser con TODOS los datos
+        // Buscar datos completos del profesional en staff si no están en userData
+        let psychFullData = userData;
+        if (!userData.spec || !userData.bio) {
+            const fullData = state.staff.find(s => s.id == userData.id);
+            if (fullData) psychFullData = fullData;
+        }
+        if (psychFullData && psychFullData !== userData) {
             state.currentUser.data = psychFullData;
             console.log('✅ Datos completos del profesional cargados:', psychFullData.name);
-            
-            // Cargar configuración en el dashboard si estamos allí
-            setTimeout(() => {
-                if (document.getElementById('dashboard').style.display === 'block') {
-                    if (typeof loadMyConfig === 'function') {
-                        loadMyConfig();
-                    }
-                }
-                
-                // Cargar especialidades en los selects del perfil
-                if (typeof window.loadSpecialtiesInProfileSelects === 'function') {
-                    window.loadSpecialtiesInProfileSelects();
-                }
-            }, 1000);
         }
+        
+        // Cargar configuración en el dashboard si estamos allí
+        setTimeout(() => {
+            if (document.getElementById('dashboard').style.display === 'block') {
+                if (typeof loadMyConfig === 'function') {
+                    loadMyConfig();
+                }
+            }
+            
+            // Cargar especialidades en los selects del perfil
+            if (typeof window.loadSpecialtiesInProfileSelects === 'function') {
+                window.loadSpecialtiesInProfileSelects();
+            }
+        }, 1000);
     }
     
     // Mostrar mensaje de bienvenida
@@ -478,7 +481,7 @@ window.volverAVistaPublica = function() {
 };
 
 // ============================================
-// 🔥 FUNCIÓN DE LOGIN HÍBRIDO (usuario o email)
+// 🔥 FUNCIÓN DE LOGIN HÍBRIDO (usuario o email) - MODIFICADA PARA USAR UID
 // ============================================
 export async function processLogin() {
     const userInput = document.getElementById('loginUser')?.value;
@@ -523,23 +526,24 @@ export async function processLogin() {
 
         // 🔥 PASO 2: Iniciar sesión en Firebase Authentication
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, pass);
-        console.log('✅ Firebase Auth login exitoso:', userCredential.user.uid);
+        const uid = userCredential.user.uid;
+        console.log('✅ Firebase Auth login exitoso. UID:', uid);
         
-        // PASO 3: Verificar si es admin por defecto
-        if (userInput === "Admin" && pass === "Nina2026") {
-            console.log("✅ Acceso Admin concedido");
-            
-            const uid = userCredential.user.uid;
-            const adminUser = {
+        // PASO 3: Buscar al usuario en la base de datos por su UID
+        const staffSnapshot = await firebase.database().ref(`Staff/${uid}`).once('value');
+        let userData = staffSnapshot.val();
+
+        // PASO 4: Si no existe, verificar si es el admin por defecto
+        if (!userData && email === 'admin@vinculosalud.cl' && pass === 'Nina2026') {
+            console.log("✅ Acceso Admin concedido (por defecto)");
+            userData = {
                 id: uid,
                 name: 'Administrador',
                 usuario: 'Admin',
-                pass: 'Nina2026',
                 email: email,
                 isAdmin: true,
                 isHiddenAdmin: true,
                 spec: ['ADMIN_HIDDEN'],
-                // Campos necesarios para cumplir con el esquema de Staff
                 priceOnline: 0,
                 pricePresencial: 0,
                 img: '',
@@ -560,82 +564,49 @@ export async function processLogin() {
                 availability: {},
                 paymentLinks: { online: '', presencial: '', qrOnline: '', qrPresencial: '' }
             };
+            // Guardar en la base de datos para futuros logins
+            await firebase.database().ref(`Staff/${uid}`).set(userData);
+        }
+
+        if (userData) {
+            // Usuario válido encontrado
+            const role = userData.isAdmin ? 'admin' : 'psych';
+            console.log(`✅ Acceso ${role} concedido:`, userData.name);
             
-            // Guardar en Firebase para que las reglas de permisos funcionen
-            await firebase.database().ref(`Staff/${uid}`).update(adminUser);
-            
-            // Actualizar estado local
-            state.setCurrentUser({ role: 'admin', data: adminUser });
+            // Guardar usuario en el estado
+            state.setCurrentUser({ role, data: userData });
             closeLoginModal();
             
-            // Guardar en localStorage (con Firebase UID)
+            // Guardar en localStorage (con datos básicos)
             localStorage.setItem('vinculoCurrentUser', JSON.stringify({ 
-                role: 'admin', 
-                data: adminUser,
-                firebaseUid: uid 
+                role: role,
+                firebaseUid: uid,
+                data: {
+                    id: uid,
+                    name: userData.name,
+                    email: userData.email,
+                    isAdmin: userData.isAdmin || false,
+                    usuario: userData.usuario || '',
+                    genero: userData.genero || ''
+                }
             }));
             
             // Actualizar UI
-            actualizarUIAdmin(adminUser, 'admin');
+            actualizarUIAdmin(userData, role);
             
-            if (btn) {
-                btn.innerHTML = 'Ingresar al Panel';
-                btn.disabled = false;
+            // Cargar configuración si es profesional
+            if (role === 'psych') {
+                setTimeout(() => {
+                    if (typeof loadMyConfig === 'function') {
+                        console.log('⚙️ Cargando configuración del profesional...');
+                        loadMyConfig();
+                    }
+                }, 2000);
             }
-            return;
-        }
-
-        // PASO 4: Buscar en staff por email
-        const foundUser = state.staff.find(s => 
-            s.email && s.email.toLowerCase() === email.toLowerCase()
-        );
-
-        if (foundUser) {
-            console.log("✅ Acceso profesional concedido:", foundUser.name);
-            
-            const role = foundUser.isAdmin ? 'admin' : 'psych';
-            
-            // Buscar datos completos del profesional en STAFF
-            const psychFullData = state.staff.find(s => s.id == foundUser.id) || foundUser;
-            
-            // Guardar usuario con TODOS los datos
-            state.setCurrentUser({ 
-                role, 
-                data: psychFullData
-            });
-            
-            closeLoginModal();
-            
-            // Guardar en localStorage (con Firebase UID)
-            const userToStore = {
-                role: role,
-                firebaseUid: userCredential.user.uid,
-                data: {
-                    id: psychFullData.id,
-                    name: psychFullData.name,
-                    email: psychFullData.email,
-                    isAdmin: psychFullData.isAdmin || false,
-                    usuario: psychFullData.usuario || '',
-                    genero: psychFullData.genero || ''
-                }
-            };
-            localStorage.setItem('vinculoCurrentUser', JSON.stringify(userToStore));
-            
-            // Actualizar UI
-            actualizarUIAdmin(psychFullData, role);
-            
-            // Cargar configuración en background
-            setTimeout(() => {
-                if (typeof loadMyConfig === 'function') {
-                    console.log('⚙️ Cargando configuración del profesional...');
-                    loadMyConfig();
-                }
-            }, 2000);
             
         } else {
+            // Usuario autenticado pero no existe en Staff
             showToast('Usuario no autorizado en el sistema', 'error');
-            
-            // Si el usuario existe en Firebase Auth pero no en Staff, cerrar sesión
             await firebase.auth().signOut();
         }
         
@@ -651,8 +622,6 @@ export async function processLogin() {
             mensajeError = 'Email inválido';
         } else if (error.code === 'auth/invalid-login-credentials') {
             mensajeError = 'Credenciales inválidas. Verifica usuario y contraseña.';
-        } else if (error.message === 'Usuario no encontrado') {
-            mensajeError = 'Usuario no encontrado en el sistema';
         }
         
         showToast(mensajeError, 'error');
@@ -1123,14 +1092,11 @@ export async function verificarSesionGuardada() {
         // 🔥 Verificar si hay un UID de Firebase guardado
         if (userData.firebaseUid) {
             try {
-                // Intentar restaurar sesión en Firebase Auth
-                // Nota: Firebase maneja la persistencia automáticamente
                 const currentUser = firebase.auth().currentUser;
                 if (currentUser && currentUser.uid === userData.firebaseUid) {
                     console.log('✅ Sesión de Firebase Auth activa:', currentUser.uid);
                 } else {
                     console.log('⚠️ No hay sesión activa en Firebase Auth');
-                    // No podemos restaurar automáticamente, requerimos nuevo login
                     localStorage.removeItem('vinculoCurrentUser');
                     return false;
                 }
@@ -1146,7 +1112,6 @@ export async function verificarSesionGuardada() {
         } else {
             const psychExists = state.staff.some(s => s.id == userData.data.id);
             if (psychExists) {
-                // Obtener datos completos del staff
                 const psychFullData = state.staff.find(s => s.id == userData.data.id);
                 state.setCurrentUser({ 
                     role: 'psych', 
@@ -1154,7 +1119,6 @@ export async function verificarSesionGuardada() {
                 });
                 actualizarUIAdmin(psychFullData, 'psych');
                 
-                // Cargar configuración
                 setTimeout(() => {
                     if (typeof loadMyConfig === 'function') {
                         loadMyConfig();
@@ -1231,7 +1195,6 @@ if (typeof window !== 'undefined') {
             }
         } else {
             console.log('ℹ️ No hay usuario autenticado en Firebase');
-            // Solo limpiar estado si no hay sesión guardada que intentar restaurar
             const savedUser = localStorage.getItem('vinculoCurrentUser');
             if (!savedUser && state.currentUser) {
                 console.log('🧹 Limpiando estado local sin sesión');
@@ -1248,12 +1211,10 @@ if (typeof window !== 'undefined') {
                 const userData = JSON.parse(savedUser);
                 console.log('📦 Sesión encontrada en localStorage:', userData);
                 
-                // Buscar datos completos en staff
                 if (userData.role === 'admin') {
                     const adminFullData = state.staff.find(s => s.id == userData.data.id) || userData.data;
                     state.setCurrentUser({ role: 'admin', data: adminFullData });
                     
-                    // Actualizar UI
                     const staffLink = document.querySelector('a[onclick*="showLoginModal"]');
                     if (staffLink) {
                         staffLink.setAttribute('onclick', 'mostrarMenuStaff(true); return false;');

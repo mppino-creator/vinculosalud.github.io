@@ -1937,7 +1937,7 @@
 })();
 </script>
 
-<!-- FIX PARA ESTADÍSTICAS Y CITAS -->
+<!-- FIX PARA ESTADÍSTICAS Y CITAS (MODIFICADO: AGREGADA LLAMADA A renderStaffTable) -->
 <script>
 (function() {
     console.log('🔧 Instalando fix de estadísticas...');
@@ -1970,6 +1970,10 @@
                 if (tabName === 'estadisticas' && window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') {
                     window.estadisticas.renderPanelEstadisticas();
                 }
+                // ✅ AGREGADA LA CONDICIÓN PARA PROFESIONALES
+                if (tabName === 'profesionales' && typeof window.renderStaffTable === 'function') {
+                    window.renderStaffTable();
+                }
                 if (tabName === 'disponibilidad' && typeof window.loadTimeSlots === 'function') {
                     window.loadTimeSlots();
                 }
@@ -1983,7 +1987,7 @@
             }, 300);
         };
         
-        console.log('✅ Fix de pestañas instalado con estadísticas, disponibilidad, calendario y fichas clínicas');
+        console.log('✅ Fix de pestañas instalado con estadísticas, disponibilidad, calendario, fichas clínicas y PROFESIONALES');
     }
     
     instalarFix();

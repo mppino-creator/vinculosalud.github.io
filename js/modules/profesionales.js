@@ -644,7 +644,7 @@ window.previewMyQRPresencial = function(input) {
 };
 
 // ============================================
-// 🔥 FUNCIÓN PARA GUARDAR PERFIL PROFESIONAL
+// 🔥 FUNCIÓN PARA GUARDAR PERFIL PROFESIONAL (CORREGIDA)
 // ============================================
 
 export async function saveMyProfile() {
@@ -787,11 +787,12 @@ export async function saveMyProfile() {
         if (editMyPhone) psych.phone = editMyPhone.value;
         if (editMyAddress) psych.address = editMyAddress.value;
         
-        // 🔥 GUARDAR DIRECTAMENTE EN FIREBASE
+        // 🔥 GUARDAR DIRECTAMENTE EN FIREBASE USANDO EL ID DEL PROFESIONAL (NO EL UID)
         const cleanData = JSON.parse(JSON.stringify(psych));
         cleanData.updatedAt = new Date().toISOString();
         
-        await firebase.database().ref(`Staff/${user.uid}`).update(cleanData);
+        // ✅ CORRECCIÓN: Usar psych.id en lugar de user.uid
+        await firebase.database().ref(`Staff/${psych.id}`).update(cleanData);
         
         console.log('✅ Perfil guardado correctamente en Firebase');
         showToast('✅ Perfil actualizado correctamente', 'success');
@@ -1005,42 +1006,42 @@ export function renderStaffTable() {
         const generoTexto = p.genero === 'M' ? '♂️' : p.genero === 'F' ? '♀️' : '';
         
         return `
-          <tr>
-            <td><strong>${p.name}</strong> ${generoTexto}</td>
-            <td>${p.email || '—'}</td>
-            <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
-            <td>${p.usuario || p.name || '—'}</td>
-            <td>
-                <span style="display:flex; flex-direction:column; gap:2px;">
-                    <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span>
-                    <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
-                </span>
-            </td>
-            <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank" style="color:var(--verde-exito);">${p.whatsapp}</a>` : '—'}</td>
-            <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank" style="color:#E1306C;">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
-            <td>
-                <span style="display:flex; flex-direction:column; gap:2px;">
-                    <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
-                        ${p.paymentLinks?.online ? '✅' : '❌'} Online
+           <tr>
+                <td><strong>${p.name}</strong> ${generoTexto}</td>
+                <td>${p.email || '—'}</td>
+                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
+                <td>${p.usuario || p.name || '—'}</td>
+                <td>
+                    <span style="display:flex; flex-direction:column; gap:2px;">
+                        <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span>
+                        <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
                     </span>
-                    <span style="color:${p.paymentLinks?.presencial ? 'var(--verde-exito)' : 'var(--text-light)'}">
-                        ${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial
+                </td>
+                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank" style="color:var(--verde-exito);">${p.whatsapp}</a>` : '—'}</td>
+                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank" style="color:#E1306C;">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
+                <td>
+                    <span style="display:flex; flex-direction:column; gap:2px;">
+                        <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
+                            ${p.paymentLinks?.online ? '✅' : '❌'} Online
+                        </span>
+                        <span style="color:${p.paymentLinks?.presencial ? 'var(--verde-exito)' : 'var(--text-light)'}">
+                            ${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial
+                        </span>
                     </span>
-                </span>
-            </td>
-            <td style="min-width: 160px;">
-                <div style="display:flex; gap:5px;">
-                    <button onclick="editTherapist('${p.id}')" 
-                        style="background:var(--azul-medico); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:5px; font-size:14px;">
-                        <span style="font-size:16px;">✏️</span> Editar
-                    </button>
-                    <button onclick="deleteStaff('${p.id}')" 
-                        style="background:var(--rojo-alerta); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:5px; font-size:14px;">
-                        <span style="font-size:16px;">🗑️</span> Eliminar
-                    </button>
-                </div>
-            </td>
-          </tr>
+                </td>
+                <td style="min-width: 160px;">
+                    <div style="display:flex; gap:5px;">
+                        <button onclick="editTherapist('${p.id}')" 
+                            style="background:var(--azul-medico); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:5px; font-size:14px;">
+                            <span style="font-size:16px;">✏️</span> Editar
+                        </button>
+                        <button onclick="deleteStaff('${p.id}')" 
+                            style="background:var(--rojo-alerta); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:5px; font-size:14px;">
+                            <span style="font-size:16px;">🗑️</span> Eliminar
+                        </button>
+                    </div>
+                </td>
+            </tr>
         `;
     }).join('');
 }

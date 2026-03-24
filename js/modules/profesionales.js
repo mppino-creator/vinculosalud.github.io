@@ -807,16 +807,16 @@ export async function saveMyProfile() {
         if (editMyPhone) psych.phone = editMyPhone.value;
         if (editMyAddress) psych.address = editMyAddress.value;
         
-        // 🔥 GUARDAR DIRECTAMENTE EN FIREBASE USANDO EL ID DEL PROFESIONAL (NO EL UID)
+        // 🔥 GUARDAR DIRECTAMENTE EN FIREBASE USANDO EL UID DEL USUARIO (CLAVE DEL NODO)
         const cleanData = JSON.parse(JSON.stringify(psych));
         cleanData.updatedAt = new Date().toISOString();
         
-        // ✅ CORRECCIÓN: Usar psych.id en lugar de user.uid
-        await firebase.database().ref(`Staff/${psych.id}`).update(cleanData);
+        // ✅ CORRECCIÓN: Usar user.uid (el UID del usuario autenticado) como clave
+        await firebase.database().ref(`Staff/${user.uid}`).update(cleanData);
         console.log('✅ Perfil guardado en Firebase');
         
         // Verificar que los datos se escribieron correctamente
-        const snapshot = await firebase.database().ref(`Staff/${psych.id}`).once('value');
+        const snapshot = await firebase.database().ref(`Staff/${user.uid}`).once('value');
         const freshData = snapshot.val();
         if (freshData) {
             console.log('✅ Verificación post-guardado: datos recuperados');
@@ -826,9 +826,12 @@ export async function saveMyProfile() {
                 console.log('✅ La imagen se guardó correctamente');
             }
             // Actualizar estado local con los datos frescos
-            const staffIndex = state.staff.findIndex(s => s.id == psych.id);
+            const staffIndex = state.staff.findIndex(s => s.id == user.uid);
             if (staffIndex !== -1) {
                 state.staff[staffIndex] = { ...state.staff[staffIndex], ...freshData };
+            } else {
+                // Si no existe en el array, agregarlo
+                state.staff.push({ ...freshData, id: user.uid });
             }
             state.currentUser.data = { ...state.currentUser.data, ...freshData };
         } else {
@@ -840,7 +843,7 @@ export async function saveMyProfile() {
             role: 'psych',
             firebaseUid: user.uid,
             data: {
-                id: freshData.id,
+                id: user.uid,
                 name: freshData.name,
                 email: freshData.email,
                 isAdmin: false,
@@ -1037,11 +1040,15 @@ export async function cambiarMiPassword() {
 }
 
 // ============================================
-// RENDERIZAR TABLA DE PROFESIONALES
+// RENDERIZAR TABLA DE PROFESIONALES (CON REINTENTO)
 // ============================================
 export function renderStaffTable() {
     const tb = document.getElementById('staffTableBody');
-    if (!tb) return;
+    if (!tb) {
+        console.warn('⏳ staffTableBody no encontrado, reintentando en 200ms...');
+        setTimeout(renderStaffTable, 200);
+        return;
+    }
 
     const visibleStaff = state.staff.filter(s => !s.isHiddenAdmin);
     tb.innerHTML = visibleStaff.map(p => {
@@ -1131,8 +1138,8 @@ export async function addStaff() {
         
         // 2. Construir objeto del profesional (sin pass)
         const nuevoProfesional = {
-            id: String(Date.now()),           // ID numérico para compatibilidad
-            uid: uid,                         // Guardamos el UID de Auth
+            id: uid,                           // Usar UID como identificador principal
+            uid: uid,
             name: name,
             email: email,
             spec: selectedSpecs,
@@ -1168,8 +1175,8 @@ export async function addStaff() {
             createdAt: new Date().toISOString()
         };
         
-        // 3. Guardar en Realtime Database (sin campo pass)
-        await firebase.database().ref(`Staff/${nuevoProfesional.id}`).set(nuevoProfesional);
+        // 3. Guardar en Realtime Database usando el UID como clave
+        await firebase.database().ref(`Staff/${uid}`).set(nuevoProfesional);
         
         // 4. Actualizar estado local
         state.staff.push(nuevoProfesional);

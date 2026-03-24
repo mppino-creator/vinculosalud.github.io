@@ -540,7 +540,7 @@ window.previewMyQRPresencial = function(input) {
 };
 
 // ============================================
-// 🔥 FUNCIÓN PARA GUARDAR PERFIL (CORREGIDA)
+// 🔥 FUNCIÓN PARA GUARDAR PERFIL (CORREGIDA Y CON ACTUALIZACIÓN DE localStorage)
 // ============================================
 
 export async function saveMyProfile() {
@@ -710,21 +710,46 @@ export async function saveMyProfile() {
         await firebase.database().ref(`Staff/${user.uid}`).update(updates);
         console.log('✅ Perfil actualizado en Firebase');
         
-        // Actualizar estado local
-        const updatedData = { ...currentData, ...updates };
+        // Obtener los datos frescos después de la actualización
+        const freshSnapshot = await firebase.database().ref(`Staff/${user.uid}`).once('value');
+        const freshData = freshSnapshot.val();
+        if (!freshData) throw new Error('No se pudo recuperar el perfil después de guardar');
+        
+        // Actualizar state.staff
+        const fullData = { uid: user.uid, ...freshData };
         const staffIndex = state.staff.findIndex(p => p.uid === user.uid || p.id === user.uid);
         if (staffIndex !== -1) {
-            state.staff[staffIndex] = { ...state.staff[staffIndex], ...updatedData };
+            state.staff[staffIndex] = fullData;
         } else {
-            state.staff.push({ uid: user.uid, ...updatedData });
-        }
-        if (state.currentUser) {
-            state.currentUser.data = { ...state.currentUser.data, ...updatedData };
+            state.staff.push(fullData);
         }
         
-        // Guardar en localStorage para persistencia entre recargas
+        // Actualizar currentUser.data
+        if (state.currentUser) {
+            state.currentUser.data = fullData;
+        }
+        
+        // ✅ ACTUALIZAR localStorage
         localStorage.setItem('vinculo_staff', JSON.stringify(state.staff));
         localStorage.setItem('vinculo_user', JSON.stringify(state.currentUser));
+        // También actualizar el objeto básico de sesión (si se usa)
+        localStorage.setItem('vinculoCurrentUser', JSON.stringify({
+            role: 'psych',
+            firebaseUid: user.uid,
+            data: {
+                id: user.uid,
+                name: freshData.name,
+                email: freshData.email,
+                isAdmin: false,
+                usuario: freshData.usuario || '',
+                genero: freshData.genero || ''
+            }
+        }));
+        
+        // Limpiar datos temporales
+        state.setTempImageData(null);
+        state.setTempQrOnlineData(null);
+        state.setTempQrPresencialData(null);
         
         // Cerrar modal
         const modal = document.getElementById('editMyProfileModal');
@@ -738,6 +763,7 @@ export async function saveMyProfile() {
         }, 300);
         
         showToast('✅ Perfil actualizado correctamente', 'success');
+        
     } catch (error) {
         console.error('❌ Error guardando perfil:', error);
         showToast('Error al guardar: ' + error.message, 'error');
@@ -773,18 +799,18 @@ export function renderStaffTable() {
         
         return `
             <tr>
-                <td><strong>${p.name}</strong> ${generoTexto}</td>
-                <td>${p.email || '—'}</td>
-                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
-                <td>${p.usuario || p.name || '—'}</td>
+                <td><strong>${p.name}</strong> ${generoTexto} None
+                <td>${p.email || '—'} None
+                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'} None
+                <td>${p.usuario || p.name || '—'} None
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span>
                         <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
                     </span>
-                </td>
-                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'}</td>
-                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
+                 None
+                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'} None
+                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'} None
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
@@ -794,12 +820,12 @@ export function renderStaffTable() {
                             ${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial
                         </span>
                     </span>
-                </td>
+                 None
                 <td>
                     <button onclick="editTherapist('${p.id}')" class="btn-editar">✏️ Editar</button>
                     <button onclick="deleteStaff('${p.id}')" class="btn-eliminar">🗑️ Eliminar</button>
-                </td>
-            </tr>
+                 None
+             \\
         `;
     }).join('');
 }

@@ -730,7 +730,7 @@ export async function saveMyProfile() {
             state.currentUser.data = fullData;
         }
         
-        // ✅ ACTUALIZAR localStorage - SOLO DATOS DEL USUARIO ACTUAL (NO todo staff)
+        // ✅ ACTUALIZAR localStorage - SOLO DATOS DEL USUARIO ACTUAL
         localStorage.setItem('vinculo_user', JSON.stringify(state.currentUser));
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({
             role: 'psych',

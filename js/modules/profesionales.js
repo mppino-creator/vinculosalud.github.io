@@ -664,7 +664,7 @@ window.previewMyQRPresencial = function(input) {
 };
 
 // ============================================
-// 🔥 FUNCIÓN PARA GUARDAR PERFIL PROFESIONAL (CORREGIDA)
+// 🔥 FUNCIÓN PARA GUARDAR PERFIL PROFESIONAL (CORREGIDA Y MEJORADA)
 // ============================================
 
 export async function saveMyProfile() {
@@ -813,29 +813,39 @@ export async function saveMyProfile() {
         
         // ✅ CORRECCIÓN: Usar psych.id en lugar de user.uid
         await firebase.database().ref(`Staff/${psych.id}`).update(cleanData);
+        console.log('✅ Perfil guardado en Firebase');
         
-        console.log('✅ Perfil guardado correctamente en Firebase');
-        showToast('✅ Perfil actualizado correctamente', 'success');
-        
-        // Actualizar estado local
-        const staffIndex = state.staff.findIndex(s => s.id == psych.id);
-        if (staffIndex !== -1) {
-            state.staff[staffIndex] = { ...state.staff[staffIndex], ...cleanData };
+        // Verificar que los datos se escribieron correctamente
+        const snapshot = await firebase.database().ref(`Staff/${psych.id}`).once('value');
+        const freshData = snapshot.val();
+        if (freshData) {
+            console.log('✅ Verificación post-guardado: datos recuperados');
+            if (freshData.img !== cleanData.img) {
+                console.warn('⚠️ La imagen no coincide con lo guardado. Posible error.');
+            } else {
+                console.log('✅ La imagen se guardó correctamente');
+            }
+            // Actualizar estado local con los datos frescos
+            const staffIndex = state.staff.findIndex(s => s.id == psych.id);
+            if (staffIndex !== -1) {
+                state.staff[staffIndex] = { ...state.staff[staffIndex], ...freshData };
+            }
+            state.currentUser.data = { ...state.currentUser.data, ...freshData };
+        } else {
+            console.warn('⚠️ No se pudo recuperar el nodo después de guardar');
         }
         
-        state.currentUser.data = { ...state.currentUser.data, ...cleanData };
-        
-        // Guardar en localStorage
+        // Guardar en localStorage con datos básicos actualizados
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({
             role: 'psych',
             firebaseUid: user.uid,
             data: {
-                id: psych.id,
-                name: psych.name,
-                email: psych.email,
+                id: freshData.id,
+                name: freshData.name,
+                email: freshData.email,
                 isAdmin: false,
-                usuario: psych.usuario || '',
-                genero: psych.genero || ''
+                usuario: freshData.usuario || '',
+                genero: freshData.genero || ''
             }
         }));
         
@@ -846,9 +856,22 @@ export async function saveMyProfile() {
         const modal = document.getElementById('editMyProfileModal');
         if (modal) modal.style.display = 'none';
         
-        if (typeof window.filterProfessionals === 'function') {
-            window.filterProfessionals();
-        }
+        // Forzar actualización de la vista pública y dashboard
+        setTimeout(() => {
+            if (typeof window.filterProfessionals === 'function') {
+                console.log('🔄 Actualizando vista pública');
+                window.filterProfessionals();
+            }
+            if (typeof window.renderStaffTable === 'function') {
+                console.log('🔄 Actualizando tabla de profesionales');
+                window.renderStaffTable();
+            }
+            if (typeof window.updateStats === 'function') {
+                window.updateStats();
+            }
+        }, 300);
+        
+        showToast('✅ Perfil actualizado correctamente', 'success');
         
     } catch (error) {
         console.error('❌ Error guardando perfil:', error);
@@ -1026,7 +1049,7 @@ export function renderStaffTable() {
         const generoTexto = p.genero === 'M' ? '♂️' : p.genero === 'F' ? '♀️' : '';
         
         return `
-           <tr>
+            <tr>
                 <td><strong>${p.name}</strong> ${generoTexto}</td>
                 <td>${p.email || '—'}</td>
                 <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>

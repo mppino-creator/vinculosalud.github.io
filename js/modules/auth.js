@@ -5,7 +5,8 @@ import { renderStaffTable } from './profesionales.js';
 import { renderMessagesTable } from './mensajes.js';
 import { updatePaymentMethodsInfo, loadMyConfig } from './personalizacion.js';
 import { renderPatients } from './pacientes.js';
-import { renderPendingRequests, renderAppointments } from './citas.js';
+// CAMBIO: Importamos desde citas_v2.js (nuevo nombre)
+import { renderPendingRequests, renderAppointments } from './citas_v2.js';
 import { actualizarContadoresReinicio, asegurarTablaProfesionales } from './admin.js';
 import { syncProfileFromFirebase } from './profesionales.js';
 

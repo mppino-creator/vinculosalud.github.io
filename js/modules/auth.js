@@ -220,7 +220,7 @@ export async function processLogin() {
                 bankDetails: {}, paymentMethods: {}, sessionDuration: 45, breakBetween: 10,
                 availability: {}, paymentLinks: { online: '', presencial: '', qrOnline: '', qrPresencial: '' }
             };
-            await firebase.database().ref(`Staff/${uid}`).update(adminUser);
+            await firebase.database().ref(`staff/${uid}`).update(adminUser);
             state.setCurrentUser({ role: 'admin', data: adminUser });
             closeLoginModal();
             localStorage.setItem('vinculoCurrentUser', JSON.stringify({ role: 'admin', data: adminUser, firebaseUid: uid }));
@@ -269,7 +269,7 @@ export async function logout() {
         const staffIcon = staffLink.querySelector('i');
         const staffText = staffLink.childNodes[2];
         if (staffIcon) { staffIcon.className = 'fa fa-lock'; staffIcon.style.color = '#2D3E4F'; staffIcon.style.opacity = '0.6'; }
-        if (staffText) staffText.textContent = ' Staff';
+        if (staffText) staffText.textContent = ' staff';
     }
     const editButtons = ['adminHeroEditBtn','adminAboutEditBtn','adminAtencionEditBtn','adminContactEditBtn','adminInstagramEditBtn'];
     editButtons.forEach(id => { const btn = document.getElementById(id); if (btn) btn.style.display = 'none'; });

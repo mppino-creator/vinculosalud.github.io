@@ -321,7 +321,7 @@
         <button class="modal-close" onclick="closeAvailabilityModal()">&times;</button>
         <h2 style="margin-bottom: 25px;">Configurar Disponibilidad</h2>
         <div class="range-generator">
-            <h3>Configuración de Sesiones</h3>
+            <h3>Configuración de sesiones</h3>
             <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:15px;">
                 <div class="form-group">
                     <label>Duración (min)</label>
@@ -1418,7 +1418,7 @@
                     <option value="">Todos los tipos</option>
                     <option value="ingreso">Ficha de Ingreso</option>
                     <option value="sesion">Notas de Evolución</option>
-                    <option value="informe">Informes</option>
+                    <option value="informe">informes</option>
                 </select>
                 <select id="fichaProfesional" onchange="window.fichasClinicas?.filtrarFichas()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
                     <option value="">Todos los profesionales</option>
@@ -2019,7 +2019,7 @@
     }
     
     // NO forzar dashboard automáticamente - dejar que el usuario decida
-    // Solo actualizar el link de Staff cuando hay usuario
+    // Solo actualizar el link de staff cuando hay usuario
     setInterval(function() {
         if (window.state?.currentUser) {
             const staffLink = document.querySelector('a[onclick*="showLoginModal"]');
@@ -2046,7 +2046,7 @@
                     icon.style.opacity = '0.6';
                 }
                 const textNode = staffLink.childNodes[2];
-                if (textNode) textNode.textContent = ' Staff';
+                if (textNode) textNode.textContent = ' staff';
             }
         }
     }, 1000);

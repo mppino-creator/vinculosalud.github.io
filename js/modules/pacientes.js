@@ -334,12 +334,12 @@ function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null, info
                 <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'sesiones' ? 'active' : ''}" 
                         onclick="cambiarPestana('sesiones')"
                         style="padding:10px 20px; border:none; background:${state.ui.fichas.pestanaActiva === 'sesiones' ? 'var(--azul-apple)' : '#f0f0f0'}; color:${state.ui.fichas.pestanaActiva === 'sesiones' ? 'white' : '#333'}; border-radius:8px; cursor:pointer; flex:1;">
-                    <i class="fa fa-calendar"></i> Sesiones (${sesiones.length})
+                    <i class="fa fa-calendar"></i> sesiones (${sesiones.length})
                 </button>
                 <button class="tab-btn ${state.ui.fichas.pestanaActiva === 'informes' ? 'active' : ''}" 
                         onclick="cambiarPestana('informes')"
                         style="padding:10px 20px; border:none; background:${state.ui.fichas.pestanaActiva === 'informes' ? 'var(--azul-apple)' : '#f0f0f0'}; color:${state.ui.fichas.pestanaActiva === 'informes' ? 'white' : '#333'}; border-radius:8px; cursor:pointer; flex:1;">
-                    <i class="fa fa-file-pdf"></i> Informes (${informes.length})
+                    <i class="fa fa-file-pdf"></i> informes (${informes.length})
                 </button>
             </div>
             
@@ -401,7 +401,7 @@ function renderPerfil(patient, sesiones = [], informes = []) {
                 </div>
                 <div style="background:#f8fafc; padding:15px; border-radius:10px; text-align:center;">
                     <div style="font-size:24px; font-weight:bold; color:var(--verde-exito);">${totalSesiones}</div>
-                    <div style="font-size:12px; color:#666;">Sesiones registradas</div>
+                    <div style="font-size:12px; color:#666;">sesiones registradas</div>
                 </div>
                 <div style="background:#f8fafc; padding:15px; border-radius:10px; text-align:center;">
                     <div style="font-size:24px; font-weight:bold; color:var(--naranja-aviso);">$${totalPagado.toLocaleString()}</div>
@@ -409,7 +409,7 @@ function renderPerfil(patient, sesiones = [], informes = []) {
                 </div>
                 <div style="background:#f8fafc; padding:15px; border-radius:10px; text-align:center;">
                     <div style="font-size:24px; font-weight:bold; color:var(--azul-medico);">${totalInformes}</div>
-                    <div style="font-size:12px; color:#666;">Informes</div>
+                    <div style="font-size:12px; color:#666;">informes</div>
                 </div>
             </div>
             
@@ -589,7 +589,7 @@ function renderInformes(patient, informes) {
     return `
         <div class="informes-container" style="background:white; padding:20px; border-radius:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0;">📄 Informes</h3>
+                <h3 style="margin:0;">📄 informes</h3>
                 <div style="display:flex; gap:10px;">
                     <button class="btn-icon" onclick="window.informes?.mostrarFormularioInforme('${patient.id}', 'psicodiagnostico')" 
                             style="background: var(--azul-apple); color: white;">
@@ -699,7 +699,7 @@ export function viewPatientDetails(id) {
         statsContainer.innerHTML = `
             <div class="stat-card">
                 <div class="number">${totalSessions}</div>
-                <div class="label">Total Sesiones</div>
+                <div class="label">Total sesiones</div>
             </div>
             <div class="stat-card">
                 <div class="number">$${totalPaid.toLocaleString()}</div>
@@ -860,7 +860,7 @@ export function printPatientSummary() {
             <div class="info-box">
                 <h3>📊 Estadísticas Clínicas</h3>
                 <p><strong>Ficha de Ingreso:</strong> ${fichas.length > 0 ? '✓ Sí' : '✗ No'}</p>
-                <p><strong>Sesiones Registradas:</strong> ${sesiones.length}</p>
+                <p><strong>sesiones Registradas:</strong> ${sesiones.length}</p>
                 <p><strong>Citas Totales:</strong> ${patientApps.length}</p>
             </div>
             

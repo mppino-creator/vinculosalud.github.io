@@ -511,7 +511,7 @@ export function renderPanelEstadisticas() {
                         
                         <div class="stat-card" style="background: linear-gradient(135deg, #ff9500 0%, #ff6b6b 100%);">
                             <div style="font-size:32px; font-weight:bold; color:white;">${stats.fichasClinicas.totalSesiones}</div>
-                            <div style="color:rgba(255,255,255,0.9);">Sesiones</div>
+                            <div style="color:rgba(255,255,255,0.9);">sesiones</div>
                             <div style="font-size:12px; color:rgba(255,255,255,0.7);">${stats.fichasClinicas.totalFichasIngreso} fichas</div>
                         </div>
                         
@@ -593,7 +593,7 @@ export function renderPanelEstadisticas() {
                         </div>
                         <div style="display:flex; gap:20px; margin-top:15px; font-size:12px; color:#666;">
                             <span><span style="display:inline-block; width:12px; height:12px; background:#0071e3; border-radius:3px;"></span> Citas</span>
-                            <span><span style="display:inline-block; width:12px; height:12px; background:#34c759; border-radius:3px;"></span> Sesiones</span>
+                            <span><span style="display:inline-block; width:12px; height:12px; background:#34c759; border-radius:3px;"></span> sesiones</span>
                         </div>
                     </div>
                     
@@ -607,8 +607,8 @@ export function renderPanelEstadisticas() {
                                         <th style="padding:10px; text-align:left;">Profesional</th>
                                         <th style="padding:10px; text-align:center;">Pacientes</th>
                                         <th style="padding:10px; text-align:center;">Citas</th>
-                                        <th style="padding:10px; text-align:center;">Sesiones</th>
-                                        <th style="padding:10px; text-align:center;">Informes</th>
+                                        <th style="padding:10px; text-align:center;">sesiones</th>
+                                        <th style="padding:10px; text-align:center;">informes</th>
                                         <th style="padding:10px; text-align:right;">Ingresos</th>
                                     </tr>
                                 </thead>
@@ -644,7 +644,7 @@ export function renderPanelEstadisticas() {
                         
                         <div style="background:#f8fafc; padding:15px; border-radius:10px; text-align:center;">
                             <div style="font-size:20px; font-weight:bold;">${stats.fichasClinicas.promedioSesionesPorPaciente}</div>
-                            <div style="font-size:12px; color:#666;">Sesiones x paciente</div>
+                            <div style="font-size:12px; color:#666;">sesiones x paciente</div>
                         </div>
                         
                         <div style="background:#f8fafc; padding:15px; border-radius:10px; text-align:center;">
@@ -756,7 +756,7 @@ export function exportarEstadisticasCSV() {
     
     // Fichas clínicas
     csv += `Fichas,Fichas de ingreso,${stats.fichasClinicas.totalFichasIngreso}\n`;
-    csv += `Fichas,Informes,${stats.fichasClinicas.totalInformes}\n`;
+    csv += `Fichas,informes,${stats.fichasClinicas.totalInformes}\n`;
     csv += `Fichas,Promedio sesiones x paciente,${stats.fichasClinicas.promedioSesionesPorPaciente}\n`;
     
     // Ingresos
@@ -824,7 +824,7 @@ export function imprimirEstadisticas() {
                 </div>
                 <div class="card" style="text-align:center;">
                     <div class="stat">${stats.fichasClinicas.totalSesiones}</div>
-                    <div class="label">Sesiones</div>
+                    <div class="label">sesiones</div>
                 </div>
                 <div class="card" style="text-align:center;">
                     <div class="stat">$${(stats.pagos.totalIngresos / 1000000).toFixed(1)}M</div>
@@ -850,8 +850,8 @@ export function imprimirEstadisticas() {
             <div class="card">
                 <h2>Atenciones</h2>
                 <p><strong>Citas totales:</strong> ${stats.atenciones.totalCitas}</p>
-                <p><strong>Sesiones registradas:</strong> ${stats.atenciones.totalSesiones}</p>
-                <p><strong>Informes:</strong> ${stats.fichasClinicas.totalInformes}</p>
+                <p><strong>sesiones registradas:</strong> ${stats.atenciones.totalSesiones}</p>
+                <p><strong>informes:</strong> ${stats.fichasClinicas.totalInformes}</p>
                 <p><strong>Fichas de ingreso:</strong> ${stats.fichasClinicas.totalFichasIngreso}</p>
             </div>
             
@@ -873,7 +873,7 @@ export function imprimirEstadisticas() {
                         <th>Nombre</th>
                         <th>Pacientes</th>
                         <th>Citas</th>
-                        <th>Sesiones</th>
+                        <th>sesiones</th>
                         <th>Ingresos</th>
                     </tr>
                     ${Object.values(stats.profesionales.detalle).map(p => `

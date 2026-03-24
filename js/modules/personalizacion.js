@@ -15,7 +15,7 @@ export let aboutImage = '';
 export let atencionTexts = {
     online: {
         title: 'Online',
-        description: 'Sesiones por videollamada desde la comodidad de tu hogar',
+        description: 'sesiones por videollamada desde la comodidad de tu hogar',
         icon: 'video',
         price: 'Desde $25.000',
         active: true
@@ -1643,7 +1643,7 @@ function mostrarEstadisticasPsicologo(psychId) {
                 
                 <div class="stat-box" style="background: white; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid var(--gris-claro);">
                     <div style="font-size: 2rem; font-weight: 700; color: var(--exito);">${sesiones.length}</div>
-                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Sesiones</div>
+                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">sesiones</div>
                 </div>
                 
                 <div class="stat-box" style="background: white; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid var(--gris-claro);">
@@ -1653,7 +1653,7 @@ function mostrarEstadisticasPsicologo(psychId) {
                 
                 <div class="stat-box" style="background: white; padding: 20px; border-radius: 20px; text-align: center; border: 1px solid var(--gris-claro);">
                     <div style="font-size: 2rem; font-weight: 700; color: var(--box-color);">${informes.length}</div>
-                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">Informes</div>
+                    <div style="font-size: 0.8rem; color: var(--texto-secundario); text-transform: uppercase;">informes</div>
                 </div>
             </div>
             

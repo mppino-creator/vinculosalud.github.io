@@ -31,7 +31,7 @@ Aquí tienes el **Resumen Ejecutivo Técnico actualizado** con las últimas mejo
          ├── personalizacion.js                  # CMS completo (textos, logo, fondo, Instagram, tipos atención)
          ├── publico.js                          # Vista pública, filtros, grid profesional
          ├── fichasClinicas.js                    # EHR + visor con filtros
-         ├── informes.js                          # Informes clínicos con PDF
+         ├── informes.js                          # informes clínicos con PDF
          ├── pdfGenerator.js                       # Exportación PDF con fallback
          ├── calendario.js                         # Calendario mensual de citas
          ├── estadisticas.js                       # Analytics con gráficos
@@ -48,7 +48,7 @@ Aquí tienes el **Resumen Ejecutivo Técnico actualizado** con las últimas mejo
 | **Frontend** | HTML5 + CSS3 + JS | ES6+ | UI/UX nativa | ✅ OPTIMIZADO |
 | **Estilos** | CSS Variables + Flex/Grid | - | Diseño responsive | ✅ 2800 líneas modulares |
 | **Backend** | Firebase Realtime Database | 9.17.1 | Almacenamiento NoSQL | ✅ CON ÍNDICES |
-| **Auth** | Firebase Auth + localStorage | 9.17.1 | Sesiones persistentes | ✅ LOGIN HÍBRIDO |
+| **Auth** | Firebase Auth + localStorage | 9.17.1 | sesiones persistentes | ✅ LOGIN HÍBRIDO |
 | **Email** | EmailJS | 3.0 | Notificaciones transaccionales | ✅ NOTIFICACIÓN DUAL |
 | **PDF** | jsPDF + html2canvas | 2.5.1 / 1.4.1 | Generación client-side | ✅ CON FALLBACK |
 | **QR y pagos** | Links personalizados + QR en base64 | - | Pagos online/presencial separados | ✅ SEPARADOS |
@@ -123,14 +123,14 @@ if (psychEmail && psychEmail !== email) {
 
 ```json
 {
-  "Staff": {                 // UID de Firebase Auth como clave
+  "staff": {                 // UID de Firebase Auth como clave
     "uid": { name, email, spec, priceOnline, pricePresencial,
              paymentLinks: { online, presencial, qrOnline, qrPresencial } }
   },
-  "Patients": { ... },
-  "Appointments": { ... },
-  "PendingRequests": { ... },
-  "Messages": { ... },
+  "patients": { ... },
+  "appointments": { ... },
+  "pendingRequests": { ... },
+  "messages": { ... },
   
   // FICHAS CLÍNICAS (minúsculas para reglas)
   "fichasIngreso": { ... },
@@ -138,12 +138,12 @@ if (psychEmail && psychEmail !== email) {
   "informes": { ... },
   
   // TEXTOS EDITABLES (CMS)
-  "TextosEditables": {
+  "textosEditables": {
     "missionText": "string",
     "visionText": "string",
     "instagramData": { title, subtitle, quote, text, message, link, image }
   },
-  "Specialties": { ... }
+  "specialties": { ... }
 }
 ```
 

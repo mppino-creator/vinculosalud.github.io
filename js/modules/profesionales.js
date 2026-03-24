@@ -92,7 +92,7 @@ export async function openMyProfileModal() {
     let professionalData = state.staff?.find(p => p.uid === uid || p.id === uid);
     if (!professionalData) {
         console.log('⚠️ Profesional no encontrado en state, consultando Firebase...');
-        const snapshot = await firebase.database().ref(`Staff/${uid}`).once('value');
+        const snapshot = await firebase.database().ref(`staff/${uid}`).once('value');
         if (snapshot.exists()) {
             professionalData = { uid, ...snapshot.val() };
             // Actualizar state.staff
@@ -558,7 +558,7 @@ export async function saveMyProfile() {
     console.log('💾 Guardando perfil profesional para UID:', user.uid);
     
     // Obtener los datos actuales desde Firebase para no perder información
-    const currentSnapshot = await firebase.database().ref(`Staff/${user.uid}`).once('value');
+    const currentSnapshot = await firebase.database().ref(`staff/${user.uid}`).once('value');
     const currentData = currentSnapshot.val() || {};
     
     // Recolectar valores del formulario (si existen)
@@ -708,11 +708,11 @@ export async function saveMyProfile() {
     updates.updatedAt = new Date().toISOString();
     
     try {
-        await firebase.database().ref(`Staff/${user.uid}`).update(updates);
+        await firebase.database().ref(`staff/${user.uid}`).update(updates);
         console.log('✅ Perfil actualizado en Firebase');
         
         // Obtener los datos frescos después de la actualización
-        const freshSnapshot = await firebase.database().ref(`Staff/${user.uid}`).once('value');
+        const freshSnapshot = await firebase.database().ref(`staff/${user.uid}`).once('value');
         const freshData = freshSnapshot.val();
         if (!freshData) throw new Error('No se pudo recuperar el perfil después de guardar');
         
@@ -900,7 +900,7 @@ export async function addStaff() {
         };
         
         // 3. Guardar en Realtime Database usando el UID como clave
-        await firebase.database().ref(`Staff/${uid}`).set(nuevoProfesional);
+        await firebase.database().ref(`staff/${uid}`).set(nuevoProfesional);
         
         // 4. Actualizar estado local
         state.staff.push(nuevoProfesional);
@@ -1089,7 +1089,7 @@ export async function updateTherapist() {
     }
 
     try {
-        await firebase.database().ref(`Staff/${id}`).update(therapist);
+        await firebase.database().ref(`staff/${id}`).update(therapist);
         
         if (therapist.email !== editEmail.value) {
             showToast('⚠️ El email no se actualizó en Authentication. Si es necesario, cámbialo manualmente en Firebase Console.', 'warning');
@@ -1135,14 +1135,14 @@ export async function deleteStaff(id) {
         console.log(`📋 Profesional tiene ${patientIds.length} pacientes`);
         
         // 1. ELIMINAR DE STAFF
-        await firebase.database().ref(`Staff/${id}`).remove();
-        console.log('✅ Profesional eliminado de Staff');
+        await firebase.database().ref(`staff/${id}`).remove();
+        console.log('✅ Profesional eliminado de staff');
         
         // 2. ELIMINAR CITAS
         const appointmentsToDelete = state.appointments.filter(a => a.psychId == id);
         for (const apt of appointmentsToDelete) {
             if (apt.id) {
-                await firebase.database().ref(`Appointments/${apt.id}`).remove();
+                await firebase.database().ref(`appointments/${apt.id}`).remove();
             }
         }
         console.log(`✅ ${appointmentsToDelete.length} citas eliminadas`);
@@ -1151,7 +1151,7 @@ export async function deleteStaff(id) {
         const requestsToDelete = state.pendingRequests.filter(r => r.psychId == id);
         for (const req of requestsToDelete) {
             if (req.id) {
-                await firebase.database().ref(`PendingRequests/${req.id}`).remove();
+                await firebase.database().ref(`pendingRequests/${req.id}`).remove();
             }
         }
         console.log(`✅ ${requestsToDelete.length} solicitudes eliminadas`);
@@ -1183,7 +1183,7 @@ export async function deleteStaff(id) {
             }
             
             // Eliminar el paciente
-            await firebase.database().ref(`Patients/${patientId}`).remove();
+            await firebase.database().ref(`patients/${patientId}`).remove();
         }
         console.log(`✅ ${patientIds.length} pacientes y sus datos eliminados`);
         
@@ -1363,7 +1363,7 @@ export async function syncProfileFromFirebase() {
     const uid = user.uid;
     console.log('🔄 Sincronizando perfil desde Firebase para UID:', uid);
     
-    const snapshot = await firebase.database().ref(`Staff/${uid}`).once('value');
+    const snapshot = await firebase.database().ref(`staff/${uid}`).once('value');
     const data = snapshot.val();
     if (!data) {
         console.warn('⚠️ No se encontraron datos del profesional en Firebase');

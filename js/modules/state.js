@@ -85,7 +85,7 @@ export let aboutImage = '';
 export let atencionTexts = {
     online: {
         title: 'Online',
-        description: 'Sesiones por videollamada desde la comodidad de tu hogar'
+        description: 'sesiones por videollamada desde la comodidad de tu hogar'
     },
     presencial: {
         title: 'Presencial',
@@ -426,7 +426,7 @@ export function resetAllState() {
     atencionTexts = {
         online: {
             title: 'Online',
-            description: 'Sesiones por videollamada desde la comodidad de tu hogar'
+            description: 'sesiones por videollamada desde la comodidad de tu hogar'
         },
         presencial: {
             title: 'Presencial',

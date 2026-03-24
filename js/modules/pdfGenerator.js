@@ -316,8 +316,8 @@ export async function generarFichaIngresoPDF(fichaIngreso) {
  * Genera un resumen completo del paciente en PDF
  * @param {Object} patient - Datos del paciente
  * @param {Array} fichas - Fichas de ingreso
- * @param {Array} sesiones - Sesiones
- * @param {Array} informes - Informes
+ * @param {Array} sesiones - sesiones
+ * @param {Array} informes - informes
  * @returns {Promise<string>} URL del PDF
  */
 export async function generarResumenPacientePDF(patient, fichas = [], sesiones = [], informes = []) {
@@ -390,14 +390,14 @@ export async function generarResumenPacientePDF(patient, fichas = [], sesiones =
     
     yPos += 5;
     
-    // Sesiones
+    // sesiones
     if (yPos > 250) {
       doc.addPage();
       yPos = 20;
     }
     
     doc.setFont('helvetica', 'bold');
-    doc.text(`Sesiones Registradas (${sesiones.length})`, 20, yPos);
+    doc.text(`sesiones Registradas (${sesiones.length})`, 20, yPos);
     yPos += 7;
     
     if (sesiones.length > 0) {
@@ -426,14 +426,14 @@ export async function generarResumenPacientePDF(patient, fichas = [], sesiones =
     
     yPos += 5;
     
-    // Informes
+    // informes
     if (yPos > 250) {
       doc.addPage();
       yPos = 20;
     }
     
     doc.setFont('helvetica', 'bold');
-    doc.text(`Informes (${informes.length})`, 20, yPos);
+    doc.text(`informes (${informes.length})`, 20, yPos);
     yPos += 7;
     
     if (informes.length > 0) {

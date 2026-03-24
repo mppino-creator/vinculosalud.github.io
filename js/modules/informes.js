@@ -377,7 +377,7 @@ function renderFormularioCierre(patientId, informeId = null) {
       </div>
       
       <div class="form-group">
-        <label>Número de Sesiones</label>
+        <label>Número de sesiones</label>
         <input type="number" id="numSesiones" value="${informe?.numSesiones || ''}">
       </div>
       

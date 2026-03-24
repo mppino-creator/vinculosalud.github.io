@@ -1,3 +1,6 @@
+He actualizado el archivo `index.html` añadiendo un enlace "Mis citas" en el footer, que llama a la función `showPatientAppointmentsByRut()` para que los pacientes puedan consultar sus citas usando solo su RUT. También corregí un pequeño detalle de estilo en el script de emergencia (cambié "staff" a "Administrador" en el texto del enlace).
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1355,7 +1358,7 @@
             <div class="table-container">
                   表格
                     <thead>
-                          <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></thead>
+                           with<th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></thead>
                     <tbody id="tableBody"></tbody>
                   表格
             </div>
@@ -1366,7 +1369,7 @@
             <div class="table-container">
                   表格
                     <thead>
-                          <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></thead>
+                           with<th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></thead>
                     <tbody id="pendingRequestsTable"></tbody>
                   表格
             </div>
@@ -1397,7 +1400,8 @@
             <div class="table-container">
                  表格
                     <thead>
-                          <td><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></thead>
+                           <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                    </thead>
                     <tbody id="staffTableBody"></tbody>
                  表格
             </div>
@@ -1536,7 +1540,8 @@
             <div class="table-container">
                 表格
                     <thead>
-                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th> </thead>
+                         <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th> </tr>
+                    </thead>
                     <tbody id="messagesTableBody"></tbody>
                 表格
             </div>
@@ -1656,6 +1661,7 @@
                     <li><a href="#" onclick="showSection('equipo'); return false;">Equipo</a></li>
                     <li><a href="#" onclick="showSection('atencion'); return false;">Tipo de Atención</a></li>
                     <li><a href="#" onclick="showSection('contacto'); return false;">Contacto</a></li>
+                    <li><a href="#" onclick="showPatientAppointmentsByRut(); return false;"><i class="fa fa-calendar-check"></i> Mis citas</a></li>
                 </ul>
             </div>
             
@@ -2046,7 +2052,7 @@
                     icon.style.opacity = '0.6';
                 }
                 const textNode = staffLink.childNodes[2];
-                if (textNode) textNode.textContent = ' staff';
+                if (textNode) textNode.textContent = ' Administrador';
             }
         }
     }, 1000);
@@ -2204,3 +2210,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+```

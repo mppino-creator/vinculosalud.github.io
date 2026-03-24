@@ -3,8 +3,6 @@ import * as state from './state.js';
 import { showToast } from './utils.js';
 import { renderStaffTable } from './profesionales.js';
 import { renderMessagesTable } from './mensajes.js';
-// ⚠️ Boxes desactivado - no se importa
-// import { renderBoxesTable, renderBoxOccupancy } from './boxes.js';
 import { updatePaymentMethodsInfo, loadMyConfig } from './personalizacion.js';
 import { renderPatients } from './pacientes.js';
 import { renderPendingRequests, renderAppointments } from './citas.js';
@@ -20,7 +18,6 @@ export function showLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) modal.style.display = 'flex';
     
-    // Limpiar campos
     const userInput = document.getElementById('loginUser');
     const passInput = document.getElementById('loginPass');
     const btn = document.getElementById('loginBtn');
@@ -38,9 +35,6 @@ export function closeLoginModal() {
     if (modal) modal.style.display = 'none';
 }
 
-// ============================================
-// FUNCIÓN PARA OBTENER EMAIL DESDE USUARIO
-// ============================================
 function getEmailFromUsername(username) {
     if (username.includes('@')) return username;
     const staff = state.staff || [];
@@ -51,9 +45,6 @@ function getEmailFromUsername(username) {
     return found?.email || null;
 }
 
-// ============================================
-// FUNCIÓN PARA ACTUALIZAR UI SIN CAMBIAR DE VISTA
-// ============================================
 function actualizarUIAdmin(userData, role) {
     console.log('👑 Actualizando UI para:', role);
     
@@ -68,23 +59,12 @@ function actualizarUIAdmin(userData, role) {
             staffIcon.style.color = '#1E7A8A';
             staffIcon.style.opacity = '1';
         }
-        if (staffText) {
-            staffText.textContent = userData.name || 'Admin';
-        }
+        if (staffText) staffText.textContent = userData.name || 'Admin';
     }
     
     if (role === 'admin') {
-        const editButtons = [
-            'adminHeroEditBtn',
-            'adminAboutEditBtn', 
-            'adminAtencionEditBtn',
-            'adminContactEditBtn',
-            'adminInstagramEditBtn'
-        ];
-        editButtons.forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.style.display = 'flex';
-        });
+        const editButtons = ['adminHeroEditBtn','adminAboutEditBtn','adminAtencionEditBtn','adminContactEditBtn','adminInstagramEditBtn'];
+        editButtons.forEach(id => { const btn = document.getElementById(id); if (btn) btn.style.display = 'flex'; });
         if (window.mostrarTabsAdmin) {
             console.log('👑 Llamando a mostrarTabsAdmin desde actualizarUIAdmin');
             window.mostrarTabsAdmin();
@@ -110,23 +90,12 @@ function actualizarUIAdmin(userData, role) {
     setTimeout(() => window.mostrarMenuStaff(true), 500);
 }
 
-// ============================================
-// FUNCIÓN PARA MOSTRAR MENÚ STAFF (VERSIÓN MEJORADA)
-// ============================================
 window.mostrarMenuStaff = function(desdeLogin = false) {
-    if (!state.currentUser) {
-        showLoginModal();
-        return;
-    }
-    
+    if (!state.currentUser) { showLoginModal(); return; }
     if (state.currentUser.role === 'psych') {
         const psychFullData = state.staff.find(s => s.id == state.currentUser.data.id);
-        if (psychFullData) {
-            state.currentUser.data = psychFullData;
-            console.log('✅ Datos actualizados para menú:', psychFullData.name);
-        }
+        if (psychFullData) { state.currentUser.data = psychFullData; console.log('✅ Datos actualizados para menú:', psychFullData.name); }
     }
-    
     if (desdeLogin) console.log('👑 Mostrando menú después de login');
     const user = state.currentUser;
     const oldMenu = document.getElementById('staffMenu');
@@ -135,78 +104,32 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
     let opcionesMenu = '';
     if (user.role === 'admin') {
         opcionesMenu = `
-            <button onclick="irADashboard()" class="menu-btn primary-action">
-                <i class="fa fa-tachometer-alt"></i> Ir al Dashboard
-            </button>
+            <button onclick="irADashboard()" class="menu-btn primary-action"><i class="fa fa-tachometer-alt"></i> Ir al Dashboard</button>
             <div class="menu-divider"></div>
             <div class="menu-section-title">ACCESOS RÁPIDOS</div>
-            <button onclick="window.showSpecialtiesModal?.()" class="menu-btn">
-                <i class="fa fa-tags"></i> Gestionar Especialidades
-            </button>
-            <button onclick="window.showPaymentMethodsModal?.()" class="menu-btn">
-                <i class="fa fa-credit-card"></i> Métodos de Pago
-            </button>
+            <button onclick="window.showSpecialtiesModal?.()" class="menu-btn"><i class="fa fa-tags"></i> Gestionar Especialidades</button>
+            <button onclick="window.showPaymentMethodsModal?.()" class="menu-btn"><i class="fa fa-credit-card"></i> Métodos de Pago</button>
         `;
     } else if (user.role === 'psych') {
         opcionesMenu = `
-            <button onclick="window.openMyProfileModal?.()" class="menu-btn primary-action">
-                <i class="fa fa-user-edit"></i> Editar Mi Perfil
-            </button>
-            <button onclick="abrirGestionDisponibilidad()" class="menu-btn secondary-action">
-                <i class="fa fa-clock"></i> Gestionar Disponibilidad
-            </button>
+            <button onclick="window.openMyProfileModal?.()" class="menu-btn primary-action"><i class="fa fa-user-edit"></i> Editar Mi Perfil</button>
+            <button onclick="abrirGestionDisponibilidad()" class="menu-btn secondary-action"><i class="fa fa-clock"></i> Gestionar Disponibilidad</button>
             <div class="menu-divider"></div>
-            <button onclick="irADashboard()" class="menu-btn">
-                <i class="fa fa-tachometer-alt"></i> Ir al Dashboard
-            </button>
+            <button onclick="irADashboard()" class="menu-btn"><i class="fa fa-tachometer-alt"></i> Ir al Dashboard</button>
         `;
     }
     
     const menuHTML = `
         <div id="staffMenu">
-            <div class="menu-header">
-                <div class="user-name">${user.data.name}</div>
-                <div class="user-role">
-                    <span class="role-badge ${user.role}">
-                        ${user.role === 'admin' ? 'Administrador' : 'Profesional'}
-                    </span>
-                </div>
-            </div>
-            <div class="menu-content">
-                ${opcionesMenu}
-            </div>
-            <div class="menu-footer">
-                <button onclick="logout()" class="menu-btn logout-btn">
-                    <i class="fa fa-sign-out-alt"></i> <span>Cerrar Sesión</span>
-                </button>
-            </div>
+            <div class="menu-header"><div class="user-name">${user.data.name}</div><div class="user-role"><span class="role-badge ${user.role}">${user.role === 'admin' ? 'Administrador' : 'Profesional'}</span></div></div>
+            <div class="menu-content">${opcionesMenu}</div>
+            <div class="menu-footer"><button onclick="logout()" class="menu-btn logout-btn"><i class="fa fa-sign-out-alt"></i> <span>Cerrar Sesión</span></button></div>
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', menuHTML);
     
     const style = document.createElement('style');
-    style.textContent = `#staffMenu { position: fixed; top: 80px; right: 20px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); width: 280px; z-index: 9999; overflow: hidden; border: 1px solid var(--gris-claro); animation: slideDown 0.2s ease; }
-    #staffMenu .menu-header { padding: 16px; background: #f8f9fa; border-bottom: 1px solid #eee; }
-    #staffMenu .user-name { font-weight: 700; font-size: 1rem; color: var(--texto-principal); margin-bottom: 4px; }
-    #staffMenu .user-role { margin-top: 4px; }
-    #staffMenu .role-badge { display: inline-block; padding: 4px 10px; border-radius: 30px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
-    #staffMenu .role-badge.admin { background: var(--primario); color: white; }
-    #staffMenu .role-badge.psych { background: var(--exito); color: white; }
-    #staffMenu .menu-content { padding: 8px; }
-    #staffMenu .menu-footer { padding: 8px; border-top: 1px solid #eee; }
-    #staffMenu .menu-divider { height: 1px; background: #eee; margin: 8px 0; }
-    #staffMenu .menu-section-title { font-size: 0.75rem; color: var(--texto-secundario); padding: 4px 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-    #staffMenu .menu-btn { width: 100%; padding: 12px 16px; margin: 2px 0; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 500; text-align: left; display: flex; align-items: center; gap: 12px; transition: all 0.2s; cursor: pointer; background: transparent; color: var(--texto-principal); }
-    #staffMenu .menu-btn:hover { background: #f0f0f0; transform: translateX(4px); }
-    #staffMenu .menu-btn.primary-action { background: var(--primario); color: white; }
-    #staffMenu .menu-btn.primary-action:hover { background: var(--primario-hover); }
-    #staffMenu .menu-btn.secondary-action { background: var(--verde-azulado-claro); color: white; }
-    #staffMenu .menu-btn.secondary-action:hover { background: var(--primario); }
-    #staffMenu .logout-btn { color: #dc2626; }
-    #staffMenu .logout-btn:hover { background: #fee2e2; }
-    #staffMenu .menu-btn i { width: 20px; text-align: center; }
-    #staffMenu .menu-btn span { color: inherit; }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }`;
+    style.textContent = `#staffMenu{position:fixed;top:80px;right:20px;background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.15);width:280px;z-index:9999;overflow:hidden;border:1px solid var(--gris-claro);animation:slideDown 0.2s ease}#staffMenu .menu-header{padding:16px;background:#f8f9fa;border-bottom:1px solid #eee}#staffMenu .user-name{font-weight:700;font-size:1rem;color:var(--texto-principal);margin-bottom:4px}#staffMenu .user-role{margin-top:4px}#staffMenu .role-badge{display:inline-block;padding:4px 10px;border-radius:30px;font-size:0.7rem;font-weight:600;text-transform:uppercase}#staffMenu .role-badge.admin{background:var(--primario);color:white}#staffMenu .role-badge.psych{background:var(--exito);color:white}#staffMenu .menu-content{padding:8px}#staffMenu .menu-footer{padding:8px;border-top:1px solid #eee}#staffMenu .menu-divider{height:1px;background:#eee;margin:8px 0}#staffMenu .menu-section-title{font-size:0.75rem;color:var(--texto-secundario);padding:4px 12px;text-transform:uppercase;letter-spacing:0.5px}#staffMenu .menu-btn{width:100%;padding:12px 16px;margin:2px 0;border:none;border-radius:8px;font-size:0.9rem;font-weight:500;text-align:left;display:flex;align-items:center;gap:12px;transition:all 0.2s;cursor:pointer;background:transparent;color:var(--texto-principal)}#staffMenu .menu-btn:hover{background:#f0f0f0;transform:translateX(4px)}#staffMenu .menu-btn.primary-action{background:var(--primario);color:white}#staffMenu .menu-btn.primary-action:hover{background:var(--primario-hover)}#staffMenu .menu-btn.secondary-action{background:var(--verde-azulado-claro);color:white}#staffMenu .menu-btn.secondary-action:hover{background:var(--primario)}#staffMenu .logout-btn{color:#dc2626}#staffMenu .logout-btn:hover{background:#fee2e2}#staffMenu .menu-btn i{width:20px;text-align:center}#staffMenu .menu-btn span{color:inherit}@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}`;
     document.head.appendChild(style);
     
     setTimeout(() => {
@@ -221,30 +144,17 @@ window.mostrarMenuStaff = function(desdeLogin = false) {
     }, 100);
 };
 
-// ============================================
-// FUNCIÓN PARA ABRIR GESTIÓN DE DISPONIBILIDAD
-// ============================================
 function abrirGestionDisponibilidad() {
     console.log('📅 Abriendo gestión de disponibilidad');
-    if (state.currentUser?.role !== 'psych') {
-        showToast('Solo profesionales pueden gestionar disponibilidad', 'error');
-        return;
-    }
+    if (state.currentUser?.role !== 'psych') { showToast('Solo profesionales pueden gestionar disponibilidad', 'error'); return; }
     const dashboard = document.getElementById('dashboard');
     const clientView = document.getElementById('clientView');
-    if (dashboard && dashboard.style.display === 'block') {
-        window.switchTab('disponibilidad');
-    } else {
-        window.irADashboard();
-        setTimeout(() => window.switchTab('disponibilidad'), 500);
-    }
+    if (dashboard && dashboard.style.display === 'block') window.switchTab('disponibilidad');
+    else { window.irADashboard(); setTimeout(() => window.switchTab('disponibilidad'), 500); }
     const menu = document.getElementById('staffMenu');
     if (menu) menu.remove();
 }
 
-// ============================================
-// FUNCIÓN PARA IR AL DASHBOARD (MEJORADA CON ESPERA DE DATOS)
-// ============================================
 window.irADashboard = function() {
     console.log('📊 Cambiando a dashboard');
     document.getElementById('clientView').style.setProperty('display', 'none', 'important');
@@ -256,11 +166,7 @@ window.irADashboard = function() {
         const role = state.currentUser.role;
         const userData = state.currentUser.data;
         mostrarDashboardInmediato(role, userData);
-        if (role === 'psych') {
-            setTimeout(() => {
-                if (typeof loadMyConfig === 'function') loadMyConfig();
-            }, 500);
-        }
+        if (role === 'psych') setTimeout(() => { if (typeof loadMyConfig === 'function') loadMyConfig(); }, 500);
         const esperarDatos = () => {
             if (state.dataLoaded) {
                 console.log('✅ Datos cargados, renderizando tablas...');
@@ -269,18 +175,12 @@ window.irADashboard = function() {
                 if (role === 'admin' && typeof renderStaffTable === 'function') renderStaffTable();
                 if (role === 'admin' && typeof renderMessagesTable === 'function') renderMessagesTable();
                 if (typeof window.updateStats === 'function') window.updateStats();
-            } else {
-                console.log('⏳ Esperando carga de datos...');
-                setTimeout(esperarDatos, 200);
-            }
+            } else { console.log('⏳ Esperando carga de datos...'); setTimeout(esperarDatos, 200); }
         };
         esperarDatos();
     }
 };
 
-// ============================================
-// FUNCIÓN PARA VOLVER A VISTA PÚBLICA
-// ============================================
 window.volverAVistaPublica = function() {
     console.log('👁️ Cambiando a vista pública');
     document.getElementById('clientView').style.setProperty('display', 'block', 'important');
@@ -289,40 +189,21 @@ window.volverAVistaPublica = function() {
     if (window.showSection) window.showSection('equipo');
 };
 
-// ============================================
-// 🔥 FUNCIÓN DE LOGIN HÍBRIDO (usuario o email) - MEJORADA CON SINCRONIZACIÓN
-// ============================================
 export async function processLogin() {
     const userInput = document.getElementById('loginUser')?.value;
     const pass = document.getElementById('loginPass')?.value;
     const btn = document.getElementById('loginBtn');
 
-    if (!userInput || !pass) {
-        showToast('Ingresa usuario y contraseña', 'error');
-        return;
-    }
-
-    if (btn) {
-        btn.innerHTML = '<span class="spinner"></span> Verificando...';
-        btn.disabled = true;
-    }
+    if (!userInput || !pass) { showToast('Ingresa usuario y contraseña', 'error'); return; }
+    if (btn) { btn.innerHTML = '<span class="spinner"></span> Verificando...'; btn.disabled = true; }
 
     try {
         let email = userInput;
         if (!userInput.includes('@')) {
             const foundEmail = getEmailFromUsername(userInput);
-            if (foundEmail) {
-                email = foundEmail;
-                console.log('📧 Usuario mapeado a email:', email);
-            } else {
-                if (userInput === "Admin") {
-                    email = "admin@vinculosalud.cl";
-                } else {
-                    showToast('Usuario no encontrado. Verifica el nombre o usa tu email.', 'error');
-                    if (btn) { btn.innerHTML = 'Ingresar al Panel'; btn.disabled = false; }
-                    return;
-                }
-            }
+            if (foundEmail) email = foundEmail;
+            else if (userInput === "Admin") email = "admin@vinculosalud.cl";
+            else { showToast('Usuario no encontrado. Verifica el nombre o usa tu email.', 'error'); if (btn) { btn.innerHTML = 'Ingresar al Panel'; btn.disabled = false; } return; }
         }
 
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, pass);
@@ -360,16 +241,9 @@ export async function processLogin() {
             localStorage.setItem('vinculoCurrentUser', JSON.stringify(userToStore));
             localStorage.setItem('vinculo_user', JSON.stringify({ role, data: psychFullData }));
             actualizarUIAdmin(psychFullData, role);
-            if (role === 'psych') {
-                setTimeout(async () => { await syncProfileFromFirebase(); console.log('✅ Perfil sincronizado después del login'); }, 500);
-            }
-            setTimeout(() => {
-                if (typeof loadMyConfig === 'function') loadMyConfig();
-            }, 2000);
-        } else {
-            showToast('Usuario no autorizado en el sistema', 'error');
-            await firebase.auth().signOut();
-        }
+            if (role === 'psych') setTimeout(async () => { await syncProfileFromFirebase(); console.log('✅ Perfil sincronizado después del login'); }, 500);
+            setTimeout(() => { if (typeof loadMyConfig === 'function') loadMyConfig(); }, 2000);
+        } else { showToast('Usuario no autorizado en el sistema', 'error'); await firebase.auth().signOut(); }
     } catch (error) {
         console.error('❌ Error de autenticación:', error);
         let mensajeError = 'Error al iniciar sesión';
@@ -383,9 +257,6 @@ export async function processLogin() {
     if (btn) { btn.innerHTML = 'Ingresar al Panel'; btn.disabled = false; }
 }
 
-// ============================================
-// FUNCIÓN DE LOGOUT CORREGIDA
-// ============================================
 export async function logout() {
     console.log('🚪 Cerrando sesión');
     try { await firebase.auth().signOut(); console.log('✅ Sesión de Firebase Auth cerrada'); } catch (error) { console.error('❌ Error al cerrar sesión en Firebase:', error); }
@@ -410,14 +281,8 @@ export async function logout() {
     showToast('Sesión cerrada', 'info');
 }
 
-// ============================================
-// FUNCIÓN PARA CARGAR EL DASHBOARD (DESHABILITADA)
-// ============================================
 export function cargarDashboard(role) { console.warn('⚠️ cargarDashboard no debe usarse - usar irADashboard desde el menú'); }
 
-// ============================================
-// VERSIÓN DEFINITIVA - Mostrar dashboard con TODAS las pestañas visibles
-// ============================================
 function mostrarDashboardInmediato(role, userData) {
     console.log('🔄 Mostrando dashboard inmediatamente como:', role);
     const clientView = document.getElementById('clientView');
@@ -453,9 +318,6 @@ function mostrarDashboardInmediato(role, userData) {
     console.log('✅ Dashboard forzado a visible con todas las pestañas configuradas');
 }
 
-// ============================================
-// FUNCIÓN SWITCH TAB MEJORADA - VERSIÓN FINAL
-// ============================================
 export function switchTab(tabName) {
     console.log('🔄 Cambiando a pestaña:', tabName);
     document.querySelectorAll('#dashboardTabs .tab').forEach(tab => tab.classList.remove('active'));
@@ -481,7 +343,7 @@ export function switchTab(tabName) {
                 else if (tabName === 'citas' && typeof renderAppointments === 'function') renderAppointments();
                 else if (tabName === 'solicitudes' && typeof renderPendingRequests === 'function') renderPendingRequests();
                 else if (tabName === 'profesionales' && isAdmin()) {
-                    asegurarTablaProfesionales(); // ← NUEVA LLAMADA PARA CREAR LA TABLA SI ES NECESARIO
+                    asegurarTablaProfesionales(); // ← CREA LA TABLA SI ES NECESARIO
                     if (typeof renderStaffTable === 'function') renderStaffTable();
                 }
                 else if (tabName === 'mensajes' && isAdmin() && typeof renderMessagesTable === 'function') renderMessagesTable();
@@ -502,9 +364,6 @@ function getTabIdFromName(tabName) { const tabIdMap = { 'citas':'tabCitas','soli
 function isAdmin() { return state.currentUser?.role === 'admin'; }
 function isPsych() { return state.currentUser?.role === 'psych'; }
 
-// ============================================
-// FUNCIÓN UPDATE STATS
-// ============================================
 export function updateStats() {
     console.log('📊 Actualizando estadísticas...');
     if (!state.currentUser) { console.log('⚠️ No hay usuario logueado'); return; }
@@ -523,9 +382,6 @@ export function updateStats() {
 
 export function updateProfileButton() { const profileBtn = document.getElementById('editProfileButton'); if (!profileBtn) return; if (isPsych()) { profileBtn.style.display = 'inline-flex'; profileBtn.onclick = window.openMyProfileModal; profileBtn.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil'; } else profileBtn.style.display = 'none'; }
 
-// ============================================
-// 🔥 VERIFICAR SESIÓN GUARDADA MEJORADA (primero datos completos)
-// ============================================
 export async function verificarSesionGuardada() {
     console.log('🔍 Verificando sesión guardada...');
     const savedUserFull = localStorage.getItem('vinculo_user');
@@ -562,9 +418,6 @@ export async function verificarSesionGuardada() {
     } catch (error) { console.error('❌ Error al leer sesión guardada:', error); localStorage.removeItem('vinculoCurrentUser'); return false; }
 }
 
-// ============================================
-// EXPONER FUNCIONES GLOBALMENTE
-// ============================================
 if (typeof window !== 'undefined') {
     window.showLoginModal = showLoginModal;
     window.closeLoginModal = closeLoginModal;
@@ -579,9 +432,6 @@ if (typeof window !== 'undefined') {
     window.abrirGestionDisponibilidad = abrirGestionDisponibilidad;
 }
 
-// ============================================
-// 🔥 INICIALIZACIÓN CORREGIDA
-// ============================================
 (function initAuth() {
     console.log('🔧 Inicializando autenticación...');
     firebase.auth().onAuthStateChanged(async (user) => {

@@ -7,7 +7,6 @@ import { showToast } from './utils.js';
 // FUNCIONES DE REINICIO PARA ADMIN
 // ============================================
 
-// Actualizar contadores en la interfaz
 export function actualizarContadoresReinicio() {
     const totalPacientes = document.getElementById('totalPacientes');
     const totalMensajes = document.getElementById('totalMensajes');
@@ -19,7 +18,6 @@ export function actualizarContadoresReinicio() {
     if (totalPacientes) totalPacientes.innerText = state.patients.filter(p => !p.isHiddenAdmin).length;
     if (totalMensajes) totalMensajes.innerText = state.messages.length;
     if (totalCitas) totalCitas.innerText = state.appointments.length;
-    
     if (totalFichas) totalFichas.innerText = state.fichasIngreso.length;
     if (totalSesiones) totalSesiones.innerText = state.sesiones.length;
     if (totalInformes) totalInformes.innerText = state.informes.length;
@@ -29,13 +27,14 @@ export function actualizarContadoresReinicio() {
 // 🆕 FUNCIÓN PARA CREAR/ASEGURAR LA TABLA DE PROFESIONALES
 // ============================================
 export function asegurarTablaProfesionales() {
+    console.log('🔧 asegurarTablaProfesionales ejecutándose...');
     const contenedor = document.getElementById('tabProfesionales');
     if (!contenedor) {
         console.warn('⚠️ No se encontró el contenedor tabProfesionales');
         return false;
     }
 
-    // Asegurar que la pestaña esté activa
+    // Asegurar que la pestaña esté activa (por si acaso)
     const tabProf = document.getElementById('adminTabProfesionales');
     if (tabProf && !tabProf.classList.contains('active')) tabProf.click();
 
@@ -68,7 +67,7 @@ export function asegurarTablaProfesionales() {
     // Renderizar la tabla
     if (typeof window.renderStaffTable === 'function') {
         window.renderStaffTable();
-        console.log('✅ Tabla de profesionales renderizada');
+        console.log('✅ Tabla de profesionales renderizada con renderStaffTable()');
     } else {
         // Renderizado manual como respaldo
         const visibleStaff = state.staff.filter(s => !s.isHiddenAdmin);
@@ -78,25 +77,25 @@ export function asegurarTablaProfesionales() {
                 const generoTexto = p.genero === 'M' ? '♂️' : p.genero === 'F' ? '♀️' : '';
                 return `
                     <tr>
-                        <td><strong>${p.name}</strong> ${generoTexto}</td>
-                        <td>${p.email || '—'}</td>
-                        <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
-                        <td>${p.usuario || p.name || '—'}</td>
+                        <td><strong>${p.name}</strong> ${generoTexto} None
+                        <td>${p.email || '—'} None
+                        <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'} None
+                        <td>${p.usuario || p.name || '—'} None
                         <td>
                             <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span><br>
                             <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
-                        </td>
-                        <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'}</td>
-                        <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
+                         None
+                        <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'} None
+                        <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'} None
                         <td>
                             <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">${p.paymentLinks?.online ? '✅' : '❌'} Online</span><br>
                             <span style="color:${p.paymentLinks?.presencial ? 'var(--verde-exito)' : 'var(--text-light)'}">${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial</span>
-                        </td>
+                         None
                         <td>
                             <button onclick="editTherapist('${p.id}')" class="btn-editar">✏️ Editar</button>
                             <button onclick="deleteStaff('${p.id}')" class="btn-eliminar">🗑️ Eliminar</button>
-                        </td>
-                    </tr>
+                         None
+                    更
                 `;
             }).join('');
             console.log('✅ Tabla renderizada manualmente');
@@ -160,7 +159,7 @@ export function mostrarTabsAdmin() {
 }
 
 // ============================================
-// 🆕 FUNCIÓN PARA AGREGAR BOTONES DE EDICIÓN EN EL DASHBOARD (ACTUALIZADA - SIN BOXES)
+// 🆕 FUNCIÓN PARA AGREGAR BOTONES DE EDICIÓN EN EL DASHBOARD
 // ============================================
 export function addEditButtonsToAdmin() {
     console.log('🔧 Agregando botones de edición al panel de admin...');
@@ -325,7 +324,7 @@ if (typeof window !== 'undefined') {
     window.mostrarTabsAdmin = mostrarTabsAdmin;
     window.refrescarVistaPublica = refrescarVistaPublica;
     window.verificarPermisosFirebase = verificarPermisosFirebase;
-    window.asegurarTablaProfesionales = asegurarTablaProfesionales; // ← NUEVO
+    window.asegurarTablaProfesionales = asegurarTablaProfesionales; // ← EXPORTAR GLOBALMENTE
 
     setTimeout(() => {
         if (state.currentUser?.role === 'admin') {

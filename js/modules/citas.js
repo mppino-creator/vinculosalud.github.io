@@ -359,7 +359,7 @@ export function showPaymentDetails() {
 }
 
 // ============================================
-// FUNCIÓN PRINCIPAL DE HORARIOS
+// FUNCIÓN PRINCIPAL DE HORARIOS (MEJORADA CON LOGS)
 // ============================================
 
 export function updateAvailableTimes() {
@@ -427,6 +427,9 @@ export function updateAvailableTimes() {
         .map(r => r.time);
     
     const bookedTimes = [...new Set([...bookedAppointments, ...bookedRequests])];
+    
+    // Depuración: muestra los horarios ocupados
+    console.log(`📅 Horarios ocupados para ${date}:`, bookedTimes);
 
     const now = new Date();
     const availableTimes = availableSlots
@@ -919,6 +922,35 @@ export function executeBooking() {
         }
     }
 
+    // ============================================
+    // VALIDACIÓN ADICIONAL: Verificar que el horario no esté ocupado
+    // ============================================
+    if (type === 'online' && time) {
+        // Buscar si ya existe una cita o solicitud en el mismo día y hora
+        const ocupado = state.appointments.some(a => 
+            a.psychId == state.selectedPsych.id && 
+            a.date === date && 
+            a.time === time && 
+            (a.status === 'confirmada' || a.status === 'pendiente')
+        ) || state.pendingRequests.some(r => 
+            r.psychId == state.selectedPsych.id && 
+            r.date === date && 
+            r.time === time && 
+            r.time !== 'Pendiente'
+        );
+        
+        if (ocupado) {
+            showToast('⚠️ Este horario ya está ocupado. Por favor selecciona otro.', 'error');
+            bookingEnProceso = false;
+            const bookBtn = document.getElementById('bookBtn');
+            if (bookBtn) {
+                bookBtn.innerHTML = bookBtn.getAttribute('data-original-text') || 'SOLICITAR CITA';
+                bookBtn.disabled = false;
+            }
+            return;
+        }
+    }
+
     const bookBtn = document.getElementById('bookBtn');
     const originalText = bookBtn.innerHTML;
     bookBtn.innerHTML = '<span class="spinner"></span> Procesando...';
@@ -1059,7 +1091,11 @@ export function executeBooking() {
 
             await import('../main.js').then(main => main.save());
             window.horaSeleccionada = null;
-            if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
+            
+            // Forzar actualización de horarios después de guardar (con pequeño retraso)
+            setTimeout(() => {
+                if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
+            }, 300);
 
             bookBtn.innerHTML = originalText;
             bookBtn.disabled = false;
@@ -1571,4 +1607,4 @@ window.showPatientAppointmentsByRut = showPatientAppointmentsByRut;
 window.cancelAppointmentByPatient = cancelAppointmentByPatient;
 window.calcularEdad = window.calcularEdad;
 
-console.log('✅ citas.js cargado con funciones para consulta por RUT y envío solo al profesional');
+console.log('✅ citas.js cargado con funciones para consulta por RUT, envío solo al profesional y validación de horarios duplicados');

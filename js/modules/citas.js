@@ -427,6 +427,8 @@ export function updateAvailableTimes() {
     
     const bookedTimes = [...new Set([...bookedAppointments, ...bookedRequests])];
     
+    console.log(`📅 Horarios ocupados para ${date}:`, bookedTimes);
+
     const now = new Date();
     const availableTimes = availableSlots
         .filter(slot => !bookedTimes.includes(slot.time))
@@ -679,8 +681,11 @@ export function executeBooking() {
         }
     }
 
-    // Validación duplicados
+    // ============================================
+    // VALIDACIÓN DE HORARIO OCUPADO (MEJORADA)
+    // ============================================
     if (type === 'online' && time) {
+        // Verificar en appointments y pendingRequests
         const ocupado = state.appointments.some(a => 
             a.psychId == state.selectedPsych.id && 
             a.date === date && 
@@ -770,6 +775,7 @@ export function executeBooking() {
 
             const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
 
+            // Crear appointment asegurando que patientTutor nunca sea undefined
             const appointment = {
                 id: Date.now(),
                 patientId: patient.id,
@@ -800,7 +806,7 @@ export function executeBooking() {
                 preferredTime: time || null,
                 preferredAMPM: preferenciaAMPM,
                 patientBirthdate: birthdate || null,
-                patientTutor: patient.tutor || null
+                patientTutor: patient.tutor || null   // ← Asegurar null si no hay tutor
             };
 
             if (type === 'online') {
@@ -816,9 +822,14 @@ export function executeBooking() {
                 if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
             }
 
+            // ============================================
+            // NO SE ENVÍA CORREO (ELIMINADO)
+            // ============================================
+
             await import('../main.js').then(main => main.save());
             window.horaSeleccionada = null;
             
+            // Forzar actualización de horarios después de guardar
             setTimeout(() => {
                 if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
             }, 300);
@@ -827,6 +838,7 @@ export function executeBooking() {
             bookBtn.disabled = false;
             bookingEnProceso = false;
 
+            // Mostrar mensaje con instrucciones para consultar citas
             setTimeout(() => {
                 if (confirm('✅ Cita registrada.\n\nPuedes consultar tus citas ingresando tu RUT en la sección "Mis citas".\n\n¿Volver al listado de profesionales?')) {
                     document.getElementById('bookingPanel').style.display = 'none';
@@ -918,7 +930,7 @@ export function showPatientAppointmentsByRut() {
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `
-                                 <tr>
+                                <tr>
                                     <td>${cita.date || '—'}</td>
                                     <td>${cita.time || 'A coordinar'}</td>
                                     <td>${cita.psych || '—'}</td>
@@ -936,7 +948,7 @@ export function showPatientAppointmentsByRut() {
                                             </button>
                                         ` : '—'}
                                     </td>
-                                 </tr>
+                                </tr>
                             `).join('')}
                         </tbody>
                     </table>
@@ -1365,4 +1377,4 @@ window.showPatientAppointmentsByRut = showPatientAppointmentsByRut;
 window.cancelAppointmentByPatient = cancelAppointmentByPatient;
 window.calcularEdad = window.calcularEdad;
 
-console.log('✅ citas.js simplificado: sin correos, sin boxes, solo reserva y consulta por RUT');
+console.log('✅ citas.js simplificado: sin correos, validación de horarios duplicados y consulta por RUT');

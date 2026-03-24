@@ -417,23 +417,24 @@ export function cargarDatosIniciales() {
     if (filtros) filtros.style.display = 'none';
 
     // 🔥 1. CARGA ÚNICA (Promise.all) con manejo de errores individuales
+    // IMPORTANTE: Los nodos en Firebase están con mayúscula inicial (Staff, Patients, etc.)
     const promesas = [
-        db.ref('staff').once('value').catch(err => { console.warn('⚠️ Error staff:', err); return null; }),
-        db.ref('patients').once('value').catch(err => { console.warn('⚠️ Error patients:', err); return null; }),
-        db.ref('appointments').once('value').catch(err => { console.warn('⚠️ Error appointments:', err); return null; }),
-        db.ref('pendingRequests').once('value').catch(err => { console.warn('⚠️ Error pendingRequests:', err); return null; }),
-        db.ref('messages').once('value').catch(err => { console.warn('⚠️ Error messages:', err); return null; }),
-        db.ref('fichasIngreso').once('value').catch(err => { console.warn('⚠️ Error fichasIngreso:', err); return null; }),
-        db.ref('sesiones').once('value').catch(err => { console.warn('⚠️ Error sesiones:', err); return null; }),
-        db.ref('informes').once('value').catch(err => { console.warn('⚠️ Error informes:', err); return null; }),
-        db.ref('specialties').once('value').catch(err => { console.warn('⚠️ Error specialties:', err); return null; }),
-        db.ref('textosEditables').once('value').catch(err => { console.warn('⚠️ Error textosEditables:', err); return null; })
+        db.ref('Staff').once('value').catch(err => { console.warn('⚠️ Error Staff:', err); return null; }),
+        db.ref('Patients').once('value').catch(err => { console.warn('⚠️ Error Patients:', err); return null; }),
+        db.ref('Appointments').once('value').catch(err => { console.warn('⚠️ Error Appointments:', err); return null; }),
+        db.ref('PendingRequests').once('value').catch(err => { console.warn('⚠️ Error PendingRequests:', err); return null; }),
+        db.ref('Messages').once('value').catch(err => { console.warn('⚠️ Error Messages:', err); return null; }),
+        db.ref('FichasIngreso').once('value').catch(err => { console.warn('⚠️ Error FichasIngreso:', err); return null; }),
+        db.ref('Sesiones').once('value').catch(err => { console.warn('⚠️ Error Sesiones:', err); return null; }),
+        db.ref('Informes').once('value').catch(err => { console.warn('⚠️ Error Informes:', err); return null; }),
+        db.ref('Specialties').once('value').catch(err => { console.warn('⚠️ Error Specialties:', err); return null; }),
+        db.ref('TextosEditables').once('value').catch(err => { console.warn('⚠️ Error TextosEditables:', err); return null; })
     ];
     
     Promise.all(promesas).then(resultados => {
         console.log('📦 Datos cargados (algunos pueden ser null si no hay permisos)');
         
-        // Procesar staff (siempre debe estar disponible)
+        // Procesar Staff (siempre debe estar disponible)
         const staffSnapshot = resultados[0];
         const staffData = staffSnapshot?.val();
         if (staffData) {
@@ -515,7 +516,7 @@ export function cargarDatosIniciales() {
             console.log('👤 Administrador oculto agregado');
         }
 
-        // Procesar pacientes (solo si se obtuvo)
+        // Procesar Patients
         const patientsSnapshot = resultados[1];
         if (patientsSnapshot) {
             const patientsData = patientsSnapshot.val();
@@ -524,7 +525,7 @@ export function cargarDatosIniciales() {
             state.setPatients([]);
         }
         
-        // Procesar citas
+        // Procesar Appointments
         const appointmentsSnapshot = resultados[2];
         if (appointmentsSnapshot) {
             const appointmentsData = appointmentsSnapshot.val();
@@ -533,7 +534,7 @@ export function cargarDatosIniciales() {
             state.setAppointments([]);
         }
         
-        // Procesar solicitudes
+        // Procesar PendingRequests
         const pendingSnapshot = resultados[3];
         if (pendingSnapshot) {
             const pendingData = pendingSnapshot.val();
@@ -542,7 +543,7 @@ export function cargarDatosIniciales() {
             state.setPendingRequests([]);
         }
         
-        // Procesar mensajes
+        // Procesar Messages
         const messagesSnapshot = resultados[4];
         if (messagesSnapshot) {
             const messagesData = messagesSnapshot.val();
@@ -564,7 +565,7 @@ export function cargarDatosIniciales() {
             ]);
         }
         
-        // Procesar fichas clínicas
+        // Procesar FichasIngreso
         const fichasSnapshot = resultados[5];
         if (fichasSnapshot) {
             const fichasData = fichasSnapshot.val();
@@ -573,6 +574,7 @@ export function cargarDatosIniciales() {
             state.setFichasIngreso([]);
         }
         
+        // Procesar Sesiones
         const sesionesSnapshot = resultados[6];
         if (sesionesSnapshot) {
             const sesionesData = sesionesSnapshot.val();
@@ -581,6 +583,7 @@ export function cargarDatosIniciales() {
             state.setSesiones([]);
         }
         
+        // Procesar Informes
         const informesSnapshot = resultados[7];
         if (informesSnapshot) {
             const informesData = informesSnapshot.val();
@@ -589,7 +592,7 @@ export function cargarDatosIniciales() {
             state.setInformes([]);
         }
         
-        // Especialidades
+        // Procesar Specialties
         const specialtiesSnapshot = resultados[8];
         if (specialtiesSnapshot) {
             const specialtiesData = specialtiesSnapshot.val();
@@ -672,7 +675,7 @@ export function cargarDatosIniciales() {
     
     // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES
     // Staff (actualizaciones en tiempo real) - siempre visible
-    db.ref('staff').on('value', (snapshot) => {
+    db.ref('Staff').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             const staffArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
@@ -681,20 +684,20 @@ export function cargarDatosIniciales() {
             if (state.currentUser?.role === 'admin') renderStaffTable();
         }
     }, (error) => {
-        console.warn('⚠️ Error en listener staff:', error);
+        console.warn('⚠️ Error en listener Staff:', error);
     });
     
-    // Pacientes (solo si se puede)
-    db.ref('patients').on('value', (snapshot) => {
+    // Patients (solo si se puede)
+    db.ref('Patients').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPatients();
     }, (error) => {
-        console.warn('⚠️ Error en listener patients:', error);
+        console.warn('⚠️ Error en listener Patients:', error);
     });
     
-    // Citas
-    db.ref('appointments').on('value', (snapshot) => {
+    // Appointments
+    db.ref('Appointments').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] }));
@@ -707,53 +710,55 @@ export function cargarDatosIniciales() {
             state.setAppointments([]);
         }
     }, (error) => {
-        console.warn('⚠️ Error en listener appointments:', error);
+        console.warn('⚠️ Error en listener Appointments:', error);
     });
     
-    // Solicitudes
-    db.ref('pendingRequests').on('value', (snapshot) => {
+    // PendingRequests
+    db.ref('PendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPendingRequests();
     }, (error) => {
-        console.warn('⚠️ Error en listener pendingRequests:', error);
+        console.warn('⚠️ Error en listener PendingRequests:', error);
     });
     
-    // Mensajes
-    db.ref('messages').on('value', (snapshot) => {
+    // Messages
+    db.ref('Messages').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setMessages(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         renderMessages();
         updateMarquee();
         if (state.currentUser?.role === 'admin') import('./mensajes.js').then(mod => mod.renderMessagesTable());
     }, (error) => {
-        console.warn('⚠️ Error en listener messages:', error);
+        console.warn('⚠️ Error en listener Messages:', error);
     });
     
-    // Fichas clínicas (cambios en tiempo real)
-    db.ref('fichasIngreso').on('value', (snapshot) => {
+    // FichasIngreso
+    db.ref('FichasIngreso').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
     }, (error) => {
-        console.warn('⚠️ Error en listener fichasIngreso:', error);
+        console.warn('⚠️ Error en listener FichasIngreso:', error);
     });
     
-    db.ref('sesiones').on('value', (snapshot) => {
+    // Sesiones
+    db.ref('Sesiones').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
     }, (error) => {
-        console.warn('⚠️ Error en listener sesiones:', error);
+        console.warn('⚠️ Error en listener Sesiones:', error);
     });
     
-    db.ref('informes').on('value', (snapshot) => {
+    // Informes
+    db.ref('Informes').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
     }, (error) => {
-        console.warn('⚠️ Error en listener informes:', error);
+        console.warn('⚠️ Error en listener Informes:', error);
     });
     
-    // Textos editables (tiempo real)
-    db.ref('textosEditables').on('value', (snapshot) => {
+    // TextosEditables
+    db.ref('TextosEditables').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             if (data.missionText) state.setMissionText(data.missionText);
@@ -772,7 +777,7 @@ export function cargarDatosIniciales() {
             updateContactSection();
         }
     }, (error) => {
-        console.warn('⚠️ Error en listener textosEditables:', error);
+        console.warn('⚠️ Error en listener TextosEditables:', error);
     });
     
     console.log('📝 Cargando textos editables (carga única)...');

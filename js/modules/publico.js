@@ -416,26 +416,26 @@ export function cargarDatosIniciales() {
     const filtros = document.querySelector('.filters');
     if (filtros) filtros.style.display = 'none';
 
-    // 🔥 1. CARGA ÚNICA (Promise.all) para datos principales
+    // 🔥 1. CARGA ÚNICA (Promise.all) con manejo de errores individuales
     const promesas = [
-        db.ref('staff').once('value'),
-        db.ref('patients').once('value'),
-        db.ref('appointments').once('value'),
-        db.ref('pendingRequests').once('value'),
-        db.ref('messages').once('value'),
-        db.ref('fichasIngreso').once('value'),
-        db.ref('sesiones').once('value'),
-        db.ref('informes').once('value'),
-        db.ref('specialties').once('value'),
-        db.ref('textosEditables').once('value')
+        db.ref('staff').once('value').catch(err => { console.warn('⚠️ Error staff:', err); return null; }),
+        db.ref('patients').once('value').catch(err => { console.warn('⚠️ Error patients:', err); return null; }),
+        db.ref('appointments').once('value').catch(err => { console.warn('⚠️ Error appointments:', err); return null; }),
+        db.ref('pendingRequests').once('value').catch(err => { console.warn('⚠️ Error pendingRequests:', err); return null; }),
+        db.ref('messages').once('value').catch(err => { console.warn('⚠️ Error messages:', err); return null; }),
+        db.ref('fichasIngreso').once('value').catch(err => { console.warn('⚠️ Error fichasIngreso:', err); return null; }),
+        db.ref('sesiones').once('value').catch(err => { console.warn('⚠️ Error sesiones:', err); return null; }),
+        db.ref('informes').once('value').catch(err => { console.warn('⚠️ Error informes:', err); return null; }),
+        db.ref('specialties').once('value').catch(err => { console.warn('⚠️ Error specialties:', err); return null; }),
+        db.ref('textosEditables').once('value').catch(err => { console.warn('⚠️ Error textosEditables:', err); return null; })
     ];
     
     Promise.all(promesas).then(resultados => {
-        console.log('📦 Datos cargados una sola vez desde Firebase');
+        console.log('📦 Datos cargados (algunos pueden ser null si no hay permisos)');
         
-        // Procesar staff
+        // Procesar staff (siempre debe estar disponible)
         const staffSnapshot = resultados[0];
-        const staffData = staffSnapshot.val();
+        const staffData = staffSnapshot?.val();
         if (staffData) {
             const staffArray = Object.keys(staffData).map(key => {
                 const item = staffData[key];
@@ -515,27 +515,48 @@ export function cargarDatosIniciales() {
             console.log('👤 Administrador oculto agregado');
         }
 
-        // Procesar pacientes
+        // Procesar pacientes (solo si se obtuvo)
         const patientsSnapshot = resultados[1];
-        const patientsData = patientsSnapshot.val();
-        state.setPatients(patientsData ? Object.keys(patientsData).map(key => ({ id: key, ...patientsData[key] })) : []);
+        if (patientsSnapshot) {
+            const patientsData = patientsSnapshot.val();
+            state.setPatients(patientsData ? Object.keys(patientsData).map(key => ({ id: key, ...patientsData[key] })) : []);
+        } else {
+            state.setPatients([]);
+        }
         
         // Procesar citas
         const appointmentsSnapshot = resultados[2];
-        const appointmentsData = appointmentsSnapshot.val();
-        state.setAppointments(appointmentsData ? Object.keys(appointmentsData).map(key => ({ id: key, ...appointmentsData[key] })) : []);
+        if (appointmentsSnapshot) {
+            const appointmentsData = appointmentsSnapshot.val();
+            state.setAppointments(appointmentsData ? Object.keys(appointmentsData).map(key => ({ id: key, ...appointmentsData[key] })) : []);
+        } else {
+            state.setAppointments([]);
+        }
         
         // Procesar solicitudes
         const pendingSnapshot = resultados[3];
-        const pendingData = pendingSnapshot.val();
-        state.setPendingRequests(pendingData ? Object.keys(pendingData).map(key => ({ id: key, ...pendingData[key] })) : []);
+        if (pendingSnapshot) {
+            const pendingData = pendingSnapshot.val();
+            state.setPendingRequests(pendingData ? Object.keys(pendingData).map(key => ({ id: key, ...pendingData[key] })) : []);
+        } else {
+            state.setPendingRequests([]);
+        }
         
         // Procesar mensajes
         const messagesSnapshot = resultados[4];
-        const messagesData = messagesSnapshot.val();
-        if (messagesData) {
-            state.setMessages(Object.keys(messagesData).map(key => ({ id: key, ...messagesData[key] })));
+        if (messagesSnapshot) {
+            const messagesData = messagesSnapshot.val();
+            if (messagesData) {
+                state.setMessages(Object.keys(messagesData).map(key => ({ id: key, ...messagesData[key] })));
+            } else {
+                state.setMessages([
+                    { id: 1, name: 'Carolina Méndez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad.', date: '2024-02-15' },
+                    { id: 2, name: 'Roberto Campos', rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: '2024-02-16' },
+                    { id: 3, name: 'María José', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: '2024-02-17' }
+                ]);
+            }
         } else {
+            // Si no hay acceso, usar datos de ejemplo
             state.setMessages([
                 { id: 1, name: 'Carolina Méndez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad.', date: '2024-02-15' },
                 { id: 2, name: 'Roberto Campos', rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: '2024-02-16' },
@@ -545,22 +566,49 @@ export function cargarDatosIniciales() {
         
         // Procesar fichas clínicas
         const fichasSnapshot = resultados[5];
-        const fichasData = fichasSnapshot.val();
-        state.setFichasIngreso(fichasData ? Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] })) : []);
+        if (fichasSnapshot) {
+            const fichasData = fichasSnapshot.val();
+            state.setFichasIngreso(fichasData ? Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] })) : []);
+        } else {
+            state.setFichasIngreso([]);
+        }
         
         const sesionesSnapshot = resultados[6];
-        const sesionesData = sesionesSnapshot.val();
-        state.setSesiones(sesionesData ? Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] })) : []);
+        if (sesionesSnapshot) {
+            const sesionesData = sesionesSnapshot.val();
+            state.setSesiones(sesionesData ? Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] })) : []);
+        } else {
+            state.setSesiones([]);
+        }
         
         const informesSnapshot = resultados[7];
-        const informesData = informesSnapshot.val();
-        state.setInformes(informesData ? Object.keys(informesData).map(key => ({ id: key, ...informesData[key] })) : []);
+        if (informesSnapshot) {
+            const informesData = informesSnapshot.val();
+            state.setInformes(informesData ? Object.keys(informesData).map(key => ({ id: key, ...informesData[key] })) : []);
+        } else {
+            state.setInformes([]);
+        }
         
         // Especialidades
         const specialtiesSnapshot = resultados[8];
-        const specialtiesData = specialtiesSnapshot.val();
-        if (specialtiesData) {
-            state.setSpecialties(Object.keys(specialtiesData).map(key => ({ id: key, name: specialtiesData[key].name })));
+        if (specialtiesSnapshot) {
+            const specialtiesData = specialtiesSnapshot.val();
+            if (specialtiesData) {
+                state.setSpecialties(Object.keys(specialtiesData).map(key => ({ id: key, name: specialtiesData[key].name })));
+            } else {
+                state.setSpecialties([
+                    { id: 1, name: 'Psicología Clínica' },
+                    { id: 2, name: 'Psiquiatría' },
+                    { id: 3, name: 'Terapia de Pareja' },
+                    { id: 4, name: 'Terapia Familiar' },
+                    { id: 5, name: 'Mindfulness' },
+                    { id: 6, name: 'Ansiedad' },
+                    { id: 7, name: 'Depresión' },
+                    { id: 8, name: 'Terapia Infantil' },
+                    { id: 9, name: 'Neuropsicología' },
+                    { id: 10, name: 'Sexología' }
+                ]);
+            }
         } else {
             state.setSpecialties([
                 { id: 1, name: 'Psicología Clínica' },
@@ -576,28 +624,29 @@ export function cargarDatosIniciales() {
             ]);
         }
         
-        // Textos editables - USANDO SETTERS CORRECTAMENTE
+        // Textos editables
         const textosSnapshot = resultados[9];
-        const textosData = textosSnapshot.val();
-        if (textosData) {
-            if (textosData.missionText) state.setMissionText(textosData.missionText);
-            if (textosData.visionText) state.setVisionText(textosData.visionText);
-            if (textosData.aboutTeamText) state.setAboutTeamText(textosData.aboutTeamText);
-            if (textosData.aboutImage) state.setAboutImage(textosData.aboutImage);
-            if (textosData.atencionTexts) state.setAtencionTexts(textosData.atencionTexts);
-            if (textosData.contactInfo) state.setContactInfo(textosData.contactInfo);
-            if (textosData.heroTexts) state.setHeroTexts(textosData.heroTexts);
-            if (textosData.logoImage) state.setLogoImage(textosData.logoImage);
-            if (textosData.backgroundImage) state.setBackgroundImage(textosData.backgroundImage);
-            if (textosData.instagramData) state.setInstagramData(textosData.instagramData);
+        if (textosSnapshot) {
+            const textosData = textosSnapshot.val();
+            if (textosData) {
+                if (textosData.missionText) state.setMissionText(textosData.missionText);
+                if (textosData.visionText) state.setVisionText(textosData.visionText);
+                if (textosData.aboutTeamText) state.setAboutTeamText(textosData.aboutTeamText);
+                if (textosData.aboutImage) state.setAboutImage(textosData.aboutImage);
+                if (textosData.atencionTexts) state.setAtencionTexts(textosData.atencionTexts);
+                if (textosData.contactInfo) state.setContactInfo(textosData.contactInfo);
+                if (textosData.heroTexts) state.setHeroTexts(textosData.heroTexts);
+                if (textosData.logoImage) state.setLogoImage(textosData.logoImage);
+                if (textosData.backgroundImage) state.setBackgroundImage(textosData.backgroundImage);
+                if (textosData.instagramData) state.setInstagramData(textosData.instagramData);
+            }
         }
         
-        console.log('✅ Todos los datos cargados correctamente');
+        console.log('✅ Datos cargados correctamente');
         state.setDataLoaded(true);
         
         // Si hay usuario logueado, actualizar UI del dashboard (si está visible)
         if (state.currentUser) {
-            // Si el dashboard ya está visible, renderizar tablas
             if (document.getElementById('dashboard').style.display === 'block') {
                 if (typeof renderAppointments === 'function') renderAppointments();
                 if (typeof renderPendingRequests === 'function') renderPendingRequests();
@@ -615,14 +664,14 @@ export function cargarDatosIniciales() {
         if (state.currentUser?.role === 'admin') renderStaffTable();
         
     }).catch(error => {
-        console.error('❌ Error cargando datos:', error);
+        console.error('❌ Error general en carga de datos:', error);
         showToast('Error al cargar datos', 'error');
-        state.setDataLoaded(true); // marcar como cargado aunque haya error para no bloquear
+        state.setDataLoaded(true);
         setTimeout(() => showSection('inicio'), 500);
     });
     
     // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES
-    // Staff (actualizaciones en tiempo real)
+    // Staff (actualizaciones en tiempo real) - siempre visible
     db.ref('staff').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -631,13 +680,17 @@ export function cargarDatosIniciales() {
             filterProfessionals();
             if (state.currentUser?.role === 'admin') renderStaffTable();
         }
+    }, (error) => {
+        console.warn('⚠️ Error en listener staff:', error);
     });
     
-    // Pacientes
+    // Pacientes (solo si se puede)
     db.ref('patients').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPatients();
+    }, (error) => {
+        console.warn('⚠️ Error en listener patients:', error);
     });
     
     // Citas
@@ -653,6 +706,8 @@ export function cargarDatosIniciales() {
         } else {
             state.setAppointments([]);
         }
+    }, (error) => {
+        console.warn('⚠️ Error en listener appointments:', error);
     });
     
     // Solicitudes
@@ -660,6 +715,8 @@ export function cargarDatosIniciales() {
         const data = snapshot.val();
         state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
         if (state.currentUser) renderPendingRequests();
+    }, (error) => {
+        console.warn('⚠️ Error en listener pendingRequests:', error);
     });
     
     // Mensajes
@@ -669,25 +726,33 @@ export function cargarDatosIniciales() {
         renderMessages();
         updateMarquee();
         if (state.currentUser?.role === 'admin') import('./mensajes.js').then(mod => mod.renderMessagesTable());
+    }, (error) => {
+        console.warn('⚠️ Error en listener messages:', error);
     });
     
     // Fichas clínicas (cambios en tiempo real)
     db.ref('fichasIngreso').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    }, (error) => {
+        console.warn('⚠️ Error en listener fichasIngreso:', error);
     });
     
     db.ref('sesiones').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    }, (error) => {
+        console.warn('⚠️ Error en listener sesiones:', error);
     });
     
     db.ref('informes').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    }, (error) => {
+        console.warn('⚠️ Error en listener informes:', error);
     });
     
-    // Textos editables (tiempo real) - USANDO SETTERS CORRECTAMENTE
+    // Textos editables (tiempo real)
     db.ref('textosEditables').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -706,6 +771,8 @@ export function cargarDatosIniciales() {
             updateAtencionSection();
             updateContactSection();
         }
+    }, (error) => {
+        console.warn('⚠️ Error en listener textosEditables:', error);
     });
     
     console.log('📝 Cargando textos editables (carga única)...');

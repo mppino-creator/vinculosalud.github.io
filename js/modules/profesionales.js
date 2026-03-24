@@ -752,7 +752,10 @@ export async function saveMyProfile() {
         // Forzar actualización de vistas
         setTimeout(() => {
             if (typeof window.filterProfessionals === 'function') window.filterProfessionals();
-            if (typeof window.renderStaffTable === 'function') window.renderStaffTable();
+            // Solo renderizar tabla de staff si el usuario es admin
+            if (state.currentUser?.role === 'admin' && typeof window.renderStaffTable === 'function') {
+                window.renderStaffTable();
+            }
             if (typeof window.updateStats === 'function') window.updateStats();
         }, 300);
         
@@ -771,6 +774,11 @@ let renderStaffTableRetries = 0;
 const MAX_RETRIES = 10;
 
 export function renderStaffTable() {
+    // Solo ejecutar si el usuario es admin (la tabla solo existe para admin)
+    if (state.currentUser?.role !== 'admin') {
+        return;
+    }
+    
     const tb = document.getElementById('staffTableBody');
     if (!tb) {
         if (renderStaffTableRetries < MAX_RETRIES) {
@@ -1410,7 +1418,10 @@ export async function syncProfileFromFirebase() {
     
     // Refrescar vistas
     if (typeof window.filterProfessionals === 'function') window.filterProfessionals();
-    if (typeof window.renderStaffTable === 'function') window.renderStaffTable();
+    // Solo renderizar tabla de staff si el usuario es admin
+    if (state.currentUser?.role === 'admin' && typeof window.renderStaffTable === 'function') {
+        window.renderStaffTable();
+    }
 }
 
 // ============================================

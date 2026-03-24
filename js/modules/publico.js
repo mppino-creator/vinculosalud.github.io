@@ -713,6 +713,20 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener appointments:', error);
     });
     
+    db.ref('appointments').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+        const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+        state.setAppointments(newApps);
+        if (state.currentUser) {
+            if (typeof window.updateStats === 'function') window.updateStats();
+            renderPendingRequests();
+            renderAppointments(); // ← Agregar esta línea
+        }
+    } else {
+        state.setAppointments([]);
+    }
+});
     // pendingRequests
     db.ref('pendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();

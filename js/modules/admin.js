@@ -197,6 +197,19 @@ export function addEditButtonsToAdmin() {
         buttonContainer.className = 'admin-edit-buttons';
         buttonContainer.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;';
         buttonContainer.innerHTML = `
+        // Agregar estilo para que los botones sean visibles
+const style = document.createElement('style');
+style.textContent = `
+    #tabPersonalizacion .btn-staff {
+        color: #2D3E4F !important;
+        background: #f8fafc !important;
+        border: 1px solid #ddd !important;
+    }
+    #tabPersonalizacion .btn-staff:hover {
+        background: #e9ecef !important;
+    }
+`;
+document.head.appendChild(style);
             <button class="btn-staff" onclick="showAboutModal()" style="background: var(--primario); padding: 15px; font-size: 1rem;"><i class="fa fa-users"></i> Editar Quiénes Somos</button>
             <button class="btn-staff" onclick="showAtencionModal()" style="background: var(--ocre-calido); padding: 15px; font-size: 1rem;"><i class="fa fa-list"></i> Editar Tipos de Atención</button>
             <button class="btn-staff" onclick="showContactModal()" style="background: var(--verde-azulado-claro); padding: 15px; font-size: 1rem;"><i class="fa fa-address-card"></i> Editar Contacto</button>

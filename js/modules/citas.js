@@ -825,6 +825,11 @@ export function executeBooking() {
             // ============================================
 
             await import('../main.js').then(main => main.save());
+            // Si el dashboard está abierto, refrescar las tablas de citas
+if (state.currentUser && document.getElementById('dashboard').style.display === 'block') {
+    if (typeof renderAppointments === 'function') renderAppointments();
+    if (typeof renderPendingRequests === 'function') renderPendingRequests();
+}
             window.horaSeleccionada = null;
             
             // Forzar actualización de horarios después de guardar

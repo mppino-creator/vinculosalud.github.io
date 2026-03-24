@@ -417,7 +417,6 @@ export function cargarDatosIniciales() {
     if (filtros) filtros.style.display = 'none';
 
     // 🔥 1. CARGA ÚNICA (Promise.all) con manejo de errores individuales
-    // IMPORTANTE: Los nodos en Firebase están con mayúscula inicial (staff, patients, etc.)
     const promesas = [
         db.ref('staff').once('value').catch(err => { console.warn('⚠️ Error staff:', err); return null; }),
         db.ref('patients').once('value').catch(err => { console.warn('⚠️ Error patients:', err); return null; }),
@@ -434,7 +433,7 @@ export function cargarDatosIniciales() {
     Promise.all(promesas).then(resultados => {
         console.log('📦 Datos cargados (algunos pueden ser null si no hay permisos)');
         
-        // Procesar staff (siempre debe estar disponible)
+        // Procesar staff
         const staffSnapshot = resultados[0];
         const staffData = staffSnapshot?.val();
         if (staffData) {
@@ -557,7 +556,6 @@ export function cargarDatosIniciales() {
                 ]);
             }
         } else {
-            // Si no hay acceso, usar datos de ejemplo
             state.setMessages([
                 { id: 1, name: 'Carolina Méndez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad.', date: '2024-02-15' },
                 { id: 2, name: 'Roberto Campos', rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: '2024-02-16' },
@@ -674,7 +672,7 @@ export function cargarDatosIniciales() {
     });
     
     // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES
-    // staff (actualizaciones en tiempo real) - siempre visible
+    // staff
     db.ref('staff').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -687,7 +685,7 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener staff:', error);
     });
     
-    // patients (solo si se puede)
+    // patients
     db.ref('patients').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -705,6 +703,7 @@ export function cargarDatosIniciales() {
             if (state.currentUser) {
                 if (typeof window.updateStats === 'function') window.updateStats();
                 renderPendingRequests();
+                renderAppointments();  // ← Agregado para que la tabla se actualice en tiempo real
             }
         } else {
             state.setAppointments([]);
@@ -713,20 +712,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener appointments:', error);
     });
     
-    db.ref('appointments').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-        const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-        state.setAppointments(newApps);
-        if (state.currentUser) {
-            if (typeof window.updateStats === 'function') window.updateStats();
-            renderPendingRequests();
-            renderAppointments(); // ← Agregar esta línea
-        }
-    } else {
-        state.setAppointments([]);
-    }
-});
     // pendingRequests
     db.ref('pendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();

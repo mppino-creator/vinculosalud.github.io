@@ -790,18 +790,18 @@ export function renderStaffTable() {
         
         return `
             <tr>
-                <td><strong>${p.name}</strong> ${generoTexto} None
-                <td>${p.email || '—'} None
-                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'} None
-                <td>${p.usuario || p.name || '—'} None
+                <td><strong>${p.name}</strong> ${generoTexto}</td>
+                <td>${p.email || '—'}</td>
+                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
+                <td>${p.usuario || p.name || '—'}</td>
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span>
                         <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
                     </span>
-                 None
-                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'} None
-                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'} None
+                </td>
+                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'}</td>
+                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
@@ -811,12 +811,12 @@ export function renderStaffTable() {
                             ${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial
                         </span>
                     </span>
-                 None
+                </td>
                 <td>
                     <button onclick="editTherapist('${p.id}')" class="btn-editar">✏️ Editar</button>
                     <button onclick="deleteStaff('${p.id}')" class="btn-eliminar">🗑️ Eliminar</button>
-                 None
-             \\
+                </td>
+            </tr>
         `;
     }).join('');
 }

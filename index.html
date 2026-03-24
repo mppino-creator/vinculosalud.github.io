@@ -1397,7 +1397,7 @@
             <div class="table-container">
                  表格
                     <thead>
-                          <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></thead>
+                          <td><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></thead>
                     <tbody id="staffTableBody"></tbody>
                  表格
             </div>
@@ -1937,7 +1937,7 @@
 })();
 </script>
 
-<!-- FIX PARA ESTADÍSTICAS Y CITAS (MODIFICADO: AGREGADA LLAMADA A renderStaffTable) -->
+<!-- FIX PARA ESTADÍSTICAS Y CITAS (MODIFICADO: AGREGADA LLAMADA A renderStaffTable CON RETRASO) -->
 <script>
 (function() {
     console.log('🔧 Instalando fix de estadísticas...');
@@ -1970,9 +1970,14 @@
                 if (tabName === 'estadisticas' && window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') {
                     window.estadisticas.renderPanelEstadisticas();
                 }
-                // ✅ AGREGADA LA CONDICIÓN PARA PROFESIONALES
-                if (tabName === 'profesionales' && typeof window.renderStaffTable === 'function') {
-                    window.renderStaffTable();
+                // ✅ Condición para profesionales con retraso para asegurar que el DOM esté listo
+                if (tabName === 'profesionales') {
+                    setTimeout(() => {
+                        if (typeof window.renderStaffTable === 'function') {
+                            console.log('📋 Llamando a renderStaffTable desde fix (retrasado)');
+                            window.renderStaffTable();
+                        }
+                    }, 200);
                 }
                 if (tabName === 'disponibilidad' && typeof window.loadTimeSlots === 'function') {
                     window.loadTimeSlots();
@@ -1987,7 +1992,7 @@
             }, 300);
         };
         
-        console.log('✅ Fix de pestañas instalado con estadísticas, disponibilidad, calendario, fichas clínicas y PROFESIONALES');
+        console.log('✅ Fix de pestañas instalado con estadísticas, disponibilidad, calendario, fichas clínicas y PROFESIONALES (con retraso)');
     }
     
     instalarFix();

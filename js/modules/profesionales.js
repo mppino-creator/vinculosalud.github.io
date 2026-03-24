@@ -540,7 +540,7 @@ window.previewMyQRPresencial = function(input) {
 };
 
 // ============================================
-// 🔥 FUNCIÓN PARA GUARDAR PERFIL (CORREGIDA Y CON ACTUALIZACIÓN DE localStorage)
+// 🔥 FUNCIÓN PARA GUARDAR PERFIL (CORREGIDA - SIN delete)
 // ============================================
 
 export async function saveMyProfile() {
@@ -685,17 +685,18 @@ export async function saveMyProfile() {
     if (state.tempImageData) {
         updates.img = state.tempImageData;
         updates.photoURL = state.tempImageData;
-        delete state.tempImageData;
+        // Limpiar usando el setter
+        state.setTempImageData(null);
     }
     if (state.tempQrOnlineData) {
         if (!updates.paymentLinks) updates.paymentLinks = {};
         updates.paymentLinks.qrOnline = state.tempQrOnlineData;
-        delete state.tempQrOnlineData;
+        state.setTempQrOnlineData(null);
     }
     if (state.tempQrPresencialData) {
         if (!updates.paymentLinks) updates.paymentLinks = {};
         updates.paymentLinks.qrPresencial = state.tempQrPresencialData;
-        delete state.tempQrPresencialData;
+        state.setTempQrPresencialData(null);
     }
     
     // Si no hay cambios, salir
@@ -732,7 +733,6 @@ export async function saveMyProfile() {
         // ✅ ACTUALIZAR localStorage
         localStorage.setItem('vinculo_staff', JSON.stringify(state.staff));
         localStorage.setItem('vinculo_user', JSON.stringify(state.currentUser));
-        // También actualizar el objeto básico de sesión (si se usa)
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({
             role: 'psych',
             firebaseUid: user.uid,
@@ -745,11 +745,6 @@ export async function saveMyProfile() {
                 genero: freshData.genero || ''
             }
         }));
-        
-        // Limpiar datos temporales
-        state.setTempImageData(null);
-        state.setTempQrOnlineData(null);
-        state.setTempQrPresencialData(null);
         
         // Cerrar modal
         const modal = document.getElementById('editMyProfileModal');

@@ -173,15 +173,17 @@ export async function cargarTodasLasFichas() {
 // ============================================
 
 export async function mostrarFormularioFichaIngreso(patientId) {
-    const tienePermiso = await puedeEditarFichas(patientId);
-    if (!tienePermiso) {
-        showToast('No tienes permisos para crear una ficha', 'error');
-        return;
-    }
-
+    // Verificar que el paciente existe
     const patient = state.patients.find(p => p.id == patientId);
     if (!patient) {
         showToast('Paciente no encontrado', 'error');
+        console.error('❌ Paciente no encontrado para ID:', patientId);
+        return;
+    }
+
+    const tienePermiso = await puedeEditarFichas(patientId);
+    if (!tienePermiso) {
+        showToast('No tienes permisos para crear una ficha', 'error');
         return;
     }
 
@@ -257,6 +259,7 @@ export async function mostrarFormularioFichaIngreso(patientId) {
         `;
         document.body.appendChild(modal);
     } else {
+        // Actualizar datos del paciente en el modal existente
         const title = modal.querySelector('h2');
         if (title) title.textContent = 'Crear Ficha de Ingreso';
         const patientInfo = modal.querySelector('p');
@@ -276,16 +279,34 @@ export async function mostrarFormularioFichaIngreso(patientId) {
 }
 
 function mostrarFormularioEdicionFichaIngreso(ficha) {
+    // Verificar que el paciente asociado existe
+    const patient = state.patients.find(p => p.id == ficha.patientId);
+    if (!patient) {
+        showToast('El paciente asociado a esta ficha ya no existe. No se puede editar.', 'error');
+        console.error('❌ Paciente no encontrado para ficha:', ficha.id);
+        return;
+    }
+
+    // Si el modal no existe, primero lo creamos
     let modal = document.getElementById('modalFichaIngreso');
     if (!modal) {
         mostrarFormularioFichaIngreso(ficha.patientId);
-        setTimeout(() => llenarDatosFichaParaEdicion(ficha), 100);
+        // Esperar a que el modal esté listo
+        const waitForModal = setInterval(() => {
+            if (document.getElementById('modalFichaIngreso')) {
+                clearInterval(waitForModal);
+                llenarDatosFichaParaEdicion(ficha);
+            }
+        }, 50);
+        // Timeout de seguridad
+        setTimeout(() => clearInterval(waitForModal), 5000);
     } else {
         llenarDatosFichaParaEdicion(ficha);
     }
 }
 
 function llenarDatosFichaParaEdicion(ficha) {
+    // Verificar que los elementos existen antes de asignar
     const title = document.querySelector('#modalFichaIngreso h2');
     if (title) title.textContent = 'Editar Ficha de Ingreso';
     
@@ -295,19 +316,26 @@ function llenarDatosFichaParaEdicion(ficha) {
         if (patient) patientInfo.innerHTML = `Paciente: <strong>${patient.name}</strong> (${patient.rut})`;
     }
     
-    document.getElementById('fichaId').value = ficha.id;
-    document.getElementById('fichaPatientId').value = ficha.patientId;
-    document.getElementById('motivoConsulta').value = ficha.motivoConsulta || '';
+    const fichaIdElem = document.getElementById('fichaId');
+    if (fichaIdElem) fichaIdElem.value = ficha.id;
+    const patientIdElem = document.getElementById('fichaPatientId');
+    if (patientIdElem) patientIdElem.value = ficha.patientId;
+    const motivoElem = document.getElementById('motivoConsulta');
+    if (motivoElem) motivoElem.value = ficha.motivoConsulta || '';
     
-    if (ficha.sintomatologia) {
-        document.getElementById('fechaInicio').value = ficha.sintomatologia.fechaInicio || '';
-        document.getElementById('progresion').value = ficha.sintomatologia.progresion || '';
-        document.getElementById('tratamientosPrevios').value = ficha.sintomatologia.tratamientosPrevios || '';
-        document.getElementById('medicamentos').value = ficha.sintomatologia.medicamentos || '';
-    }
+    const fechaInicioElem = document.getElementById('fechaInicio');
+    if (fechaInicioElem) fechaInicioElem.value = ficha.sintomatologia?.fechaInicio || '';
+    const progresionElem = document.getElementById('progresion');
+    if (progresionElem) progresionElem.value = ficha.sintomatologia?.progresion || '';
+    const tratamientosElem = document.getElementById('tratamientosPrevios');
+    if (tratamientosElem) tratamientosElem.value = ficha.sintomatologia?.tratamientosPrevios || '';
+    const medicamentosElem = document.getElementById('medicamentos');
+    if (medicamentosElem) medicamentosElem.value = ficha.sintomatologia?.medicamentos || '';
     
-    document.getElementById('composicionFamiliar').value = ficha.composicionFamiliar || '';
-    document.getElementById('otrosAntecedentes').value = ficha.otrosAntecedentes || '';
+    const compFamiliarElem = document.getElementById('composicionFamiliar');
+    if (compFamiliarElem) compFamiliarElem.value = ficha.composicionFamiliar || '';
+    const otrosElem = document.getElementById('otrosAntecedentes');
+    if (otrosElem) otrosElem.value = ficha.otrosAntecedentes || '';
     
     const modal = document.getElementById('modalFichaIngreso');
     if (modal) modal.style.display = 'flex';
@@ -487,12 +515,15 @@ export function verDetalleFicha(id, tipo) {
     if (tipo === 'ingreso') {
         const ficha = state.fichasIngreso.find(f => f.id == id);
         if (ficha) mostrarFormularioEdicionFichaIngreso(ficha);
+        else showToast('Ficha no encontrada', 'error');
     } else if (tipo === 'sesion') {
         const sesion = state.sesiones.find(s => s.id == id);
         if (sesion) verNotaSesion(id);
+        else showToast('Sesión no encontrada', 'error');
     } else {
         const informe = state.informes.find(i => i.id == id);
         if (informe && window.informes?.verInforme) window.informes.verInforme(id);
+        else showToast('Informe no encontrado', 'error');
     }
 }
 

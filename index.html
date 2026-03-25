@@ -1353,24 +1353,24 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
+                         <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                </table>
+                 </table>
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
+                         <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                </table>
+                 </table>
             </div>
         </div>
 
@@ -1397,12 +1397,12 @@
                 </button>
             </div>
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                         <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                </table>
+                 </table>
             </div>
         </div>
 
@@ -1537,12 +1537,12 @@
             </div>
             
             <div class="table-container">
-                <table>
+                 <table>
                     <thead>
-                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
+                         <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                </table>
+                 </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">
@@ -1633,6 +1633,69 @@
                 <h4>📦 Respaldo</h4>
                 <button class="btn-staff" style="background:var(--exito);" onclick="exportarTodasLasFichas()">Exportar backup</button>
                 <button class="btn-staff" style="background:var(--azul-medico);" onclick="importarFichas()">Importar backup</button>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- PESTAÑA AGENDAR (para confirmar solicitudes) -->
+        <!-- ============================================ -->
+        <div id="tabAgendar" class="tab-content" style="display: none;">
+            <div class="dashboard-header" style="margin-bottom: 20px;">
+                <h2>📅 Agendar Cita</h2>
+                <p>Selecciona la hora para la solicitud presencial</p>
+            </div>
+            <div class="booking-grid" style="grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div>
+                    <div class="form-group">
+                        <label>RUT del paciente</label>
+                        <input type="text" id="therapistRut" class="filter-input" placeholder="12.345.678-9" onblur="searchPatientByRutTherapist()">
+                    </div>
+                    <div id="patientInfo" style="display: none; margin: 15px 0; padding: 15px; background: #f0f9f0; border-radius: 12px;">
+                        <p><strong>Paciente:</strong> <span id="patientInfoName"></span></p>
+                        <p><strong>Email:</strong> <span id="patientInfoEmail"></span></p>
+                        <p><strong>Teléfono:</strong> <span id="patientInfoPhone"></span></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Atención</label>
+                        <select id="therapistAppointmentType" class="filter-input" onchange="updateTherapistBookingDetails()">
+                            <option value="online">Online</option>
+                            <option value="presencial">Presencial</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" id="therapistDate" class="filter-input" onchange="updateTherapistAvailableSlots()">
+                    </div>
+                    <div class="form-group">
+                        <label>Horario disponible</label>
+                        <select id="therapistTime" class="filter-input"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Notas / Motivo</label>
+                        <textarea id="therapistMsg" rows="3" class="filter-input"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Método de Pago</label>
+                        <select id="therapistPaymentMethod" class="filter-input">
+                            <option value="transfer">Transferencia</option>
+                            <option value="cash">Efectivo</option>
+                            <option value="card-presencial">Tarjeta en consulta</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="glass" style="padding: 25px; background: var(--primario) !important; color: white; border-radius: 20px;">
+                    <h3 style="margin-bottom: 20px;">Resumen de la cita</h3>
+                    <p><strong>Paciente:</strong> <span id="therapistPatientName">—</span></p>
+                    <p><strong>Fecha:</strong> <span id="therapistDateDisplay">—</span></p>
+                    <p><strong>Hora:</strong> <span id="therapistTimeDisplay">—</span></p>
+                    <p><strong>Tipo:</strong> <span id="therapistTypeDisplay">Online</span></p>
+                    <p><strong>Valor:</strong> <span id="therapistPrice">$0</span></p>
+                    <div style="margin-top: 20px;">
+                        <button class="btn-staff" onclick="executeTherapistBooking()" style="background: var(--exito); width: 100%;">
+                            <i class="fa fa-check-circle"></i> Confirmar Cita
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

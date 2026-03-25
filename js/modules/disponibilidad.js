@@ -501,7 +501,7 @@ if (typeof window !== 'undefined') {
     window.saveAvailability = saveAvailability;
     window.loadTimeSlots = loadTimeSlots;
     window.addOvercupo = addOvercupo;
-    window.excludeSpecificDates = excludeSpecificDates;  // <-- NUEVA FUNCIÓN
+    window.excludeSpecificDates = excludeSpecificDates;
 }
 
 console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada + excluir fechas');

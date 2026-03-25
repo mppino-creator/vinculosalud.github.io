@@ -854,21 +854,24 @@ export function executeBooking() {
                 if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
             }, 300);
 
+            // ============================================
+            // LIMPIAR FORMULARIO DESPUÉS DE RESERVA
+            // ============================================
+            limpiarFormularioReserva();
+            
+            // Mostrar resumen y opciones
+            mostrarResumenYAcciones({
+                paciente: name,
+                profesional: state.selectedPsych.name,
+                fecha: date,
+                hora: horaFinal,
+                tipo: type === 'online' ? 'Online' : 'Presencial',
+                valor: price
+            });
+
             bookBtn.innerHTML = originalText;
             bookBtn.disabled = false;
             bookingEnProceso = false;
-
-            // Mostrar mensaje con instrucciones para consultar citas
-            setTimeout(() => {
-                if (confirm('✅ Cita registrada.\n\nPuedes consultar tus citas ingresando tu RUT en la sección "Mis citas".\n\n¿Volver al listado de profesionales?')) {
-                    document.getElementById('bookingPanel').style.display = 'none';
-                    document.getElementById('clientView').style.display = 'block';
-                    window.horaSeleccionada = null;
-                    if (typeof window.filterProfessionals === 'function') {
-                        window.filterProfessionals();
-                    }
-                }
-            }, 2000);
 
         } catch (error) {
             console.error('❌ Error en executeBooking:', error);
@@ -880,142 +883,105 @@ export function executeBooking() {
     }, 1500);
 }
 
-export function cancelAppointment(id) {
-    if (!confirm('¿Cancelar cita?')) return;
-    
-    const appointment = state.appointments.find(a => a.id == id);
-    if (!appointment) {
-        showToast('Cita no encontrada', 'error');
-        return;
-    }
-    
-    state.setAppointments(state.appointments.filter(a => a.id != id));
-    
-    import('../main.js').then(main => {
-        main.save();
-        showToast('Cita cancelada', 'success');
-        if (typeof renderAppointments === 'function') renderAppointments();
-        if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
+// ============================================
+// NUEVA FUNCIÓN: Limpiar el formulario de reserva
+// ============================================
+function limpiarFormularioReserva() {
+    const campos = ['custRut', 'custName', 'custEmail', 'custPhone', 'custBirthdate', 'custMsg'];
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
     });
-}
-
-export function rejectRequest(requestId) {
-    if (!confirm('¿Rechazar solicitud?')) return;
     
-    const request = state.pendingRequests.find(r => r.id == requestId);
-    if (!request) return;
+    const prevision = document.getElementById('custPrevision');
+    if (prevision) prevision.value = '';
     
-    state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
+    const tutorName = document.getElementById('tutorName');
+    const tutorRut = document.getElementById('tutorRut');
+    const tutorRelationship = document.getElementById('tutorRelationship');
+    if (tutorName) tutorName.value = '';
+    if (tutorRut) tutorRut.value = '';
+    if (tutorRelationship) tutorRelationship.value = '';
     
-    import('../main.js').then(main => {
-        main.save();
-        showToast('Solicitud rechazada', 'success');
-        renderPendingRequests();
-    });
-}
-
-export function showPatientAppointmentsByRut() {
-    const rut = prompt('Ingresa tu RUT para consultar tus citas (formato 12.345.678-9):');
-    if (!rut) return;
+    const edadDisplay = document.getElementById('edadDisplay');
+    if (edadDisplay) edadDisplay.innerHTML = '';
     
-    const rutLimpio = rut.replace(/[.-]/g, '');
-    const patient = state.patients.find(p => p.rut === rut || p.rut.replace(/[.-]/g, '') === rutLimpio);
+    const paymentMethod = document.getElementById('paymentMethod');
+    if (paymentMethod) paymentMethod.value = '';
     
-    if (!patient) {
-        showToast('No se encontraron citas para ese RUT', 'error');
-        return;
-    }
+    const paymentDetails = document.getElementById('paymentDetails');
+    if (paymentDetails) paymentDetails.style.display = 'none';
     
-    const citasPaciente = [...state.appointments, ...state.pendingRequests]
-        .filter(c => c.patientId == patient.id)
-        .sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
+    const paymentLinkContainer = document.getElementById('paymentLinkContainer');
+    if (paymentLinkContainer) paymentLinkContainer.style.display = 'none';
     
-    if (citasPaciente.length === 0) {
-        showToast('No tienes citas registradas', 'info');
-        return;
-    }
+    const acceptPolicy = document.getElementById('acceptPolicy');
+    if (acceptPolicy) acceptPolicy.checked = false;
     
-    const modalContent = `
-        <div id="modalCitasPaciente" class="modal" style="display:flex;">
-            <div class="modal-content" style="max-width: 800px;">
-                <button class="modal-close" onclick="document.getElementById('modalCitasPaciente').remove()">&times;</button>
-                <h2 style="margin-bottom: 20px;">📅 Mis Citas</h2>
-                <p><strong>Paciente:</strong> ${patient.name} (${patient.rut})</p>
-                <div style="overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse;">
-                        <thead>
-                            <tr style="background:#f0f0f0;">
-                                <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                             </tr>
-                        </thead>
-                        <tbody>
-                            ${citasPaciente.map(cita => `
-                                <tr>
-                                    <td>${cita.date || '—'}</td>
-                                    <td>${cita.time || 'A coordinar'}</td>
-                                    <td>${cita.psych || '—'}</td>
-                                    <td>${cita.type === 'online' ? 'Online' : 'Presencial'}</td>
-                                    <td>
-                                        ${cita.status === 'confirmada' ? 'Confirmada' : 
-                                          cita.status === 'pendiente' ? 'Pendiente' : 
-                                          cita.status === 'cancelada' ? 'Cancelada' : '—'}
-                                    </td>
-                                    <td>
-                                        ${cita.status !== 'cancelada' && new Date(cita.date + 'T' + (cita.time || '00:00')) > new Date() ? `
-                                            <button onclick="cancelAppointmentByPatient('${cita.id}', '${patient.rut}')" 
-                                                style="background:var(--rojo-alerta); color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">
-                                                Cancelar
-                                            </button>
-                                        ` : '—'}
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <p style="margin-top:20px; font-size:0.8rem;">Si deseas cancelar una cita, haz clic en "Cancelar".</p>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalContent);
-}
-
-export async function cancelAppointmentByPatient(appointmentId, patientRut) {
-    let appointment = state.appointments.find(a => a.id == appointmentId);
-    let isPending = false;
-    if (!appointment) {
-        appointment = state.pendingRequests.find(r => r.id == appointmentId);
-        isPending = true;
-    }
-    if (!appointment) {
-        showToast('Cita no encontrada', 'error');
-        return;
-    }
+    window.horaSeleccionada = null;
     
-    const patient = state.patients.find(p => p.id == appointment.patientId);
-    if (!patient || (patient.rut !== patientRut && patient.rut.replace(/[.-]/g, '') !== patientRut.replace(/[.-]/g, ''))) {
-        showToast('No tienes permiso para cancelar esta cita', 'error');
-        return;
-    }
+    const custTime = document.getElementById('custTime');
+    if (custTime) custTime.value = '';
     
-    if (!confirm('¿Cancelar esta cita? Esta acción no se puede deshacer.')) return;
-    
-    if (isPending) {
-        state.setPendingRequests(state.pendingRequests.filter(r => r.id != appointmentId));
-    } else {
-        state.setAppointments(state.appointments.filter(a => a.id != appointmentId));
-    }
-    
-    await import('../main.js').then(main => main.save());
-    showToast('Cita cancelada correctamente', 'success');
-    
-    const modal = document.getElementById('modalCitasPaciente');
-    if (modal) modal.remove();
-    showToast('Cancelación realizada.', 'success');
+    const timeSlots = document.querySelectorAll('.time-slot-btn');
+    timeSlots.forEach(btn => btn.classList.remove('selected'));
 }
 
 // ============================================
-// RENDERIZADO DE TABLAS (simplificado)
+// NUEVA FUNCIÓN: Mostrar resumen de cita y opciones
+// ============================================
+function mostrarResumenYAcciones(datos) {
+    const modalHtml = `
+        <div id="modalResumenCita" class="modal" style="display:flex; z-index:10000;">
+            <div class="modal-content" style="max-width: 500px; text-align: center;">
+                <button class="modal-close" onclick="document.getElementById('modalResumenCita').remove()">&times;</button>
+                <i class="fa fa-check-circle" style="font-size: 64px; color: var(--verde-exito); margin-bottom: 20px;"></i>
+                <h2>✅ Cita registrada</h2>
+                <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left;">
+                    <p><strong>Paciente:</strong> ${datos.paciente}</p>
+                    <p><strong>Profesional:</strong> ${datos.profesional}</p>
+                    <p><strong>Fecha:</strong> ${datos.fecha}</p>
+                    <p><strong>Hora:</strong> ${datos.hora}</p>
+                    <p><strong>Tipo:</strong> ${datos.tipo}</p>
+                    <p><strong>Valor:</strong> $${datos.valor.toLocaleString()}</p>
+                </div>
+                <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                    <button id="btnNuevaReserva" class="btn-staff" style="background: var(--verde-exito);">
+                        <i class="fa fa-plus-circle"></i> Nueva reserva
+                    </button>
+                    <button id="btnVolverInicio" class="btn-staff" style="background: var(--primario);">
+                        <i class="fa fa-home"></i> Volver al inicio
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    const modal = document.getElementById('modalResumenCita');
+    const btnNueva = document.getElementById('btnNuevaReserva');
+    const btnVolver = document.getElementById('btnVolverInicio');
+    
+    btnNueva.onclick = () => {
+        modal.remove();
+        // Ya se limpió el formulario, solo volvemos a mostrar el panel de reserva
+        document.getElementById('bookingPanel').style.display = 'block';
+        // Reiniciar fecha a hoy
+        const custDate = document.getElementById('custDate');
+        if (custDate) custDate.value = new Date().toISOString().split('T')[0];
+        if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
+    };
+    
+    btnVolver.onclick = () => {
+        modal.remove();
+        document.getElementById('bookingPanel').style.display = 'none';
+        document.getElementById('clientView').style.display = 'block';
+        if (typeof window.filterProfessionals === 'function') window.filterProfessionals();
+    };
+}
+
+// ============================================
+// FUNCIONES DE TABLAS (simplificadas)
 // ============================================
 
 export function renderAppointments() {
@@ -1101,7 +1067,7 @@ export function renderPendingRequests() {
                 </td>
                 <td>${r.psych}</td>
                 <td>${r.date}</td>
-                <td>${r.time || 'A coordinar'}</td>
+                <td>${r.time === 'Pendiente' ? 'A coordinar' : (r.time || 'A coordinar')}</td>
                 <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
                 <td>${r.prevision || '—'}</td>
                 <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
@@ -1275,8 +1241,12 @@ export function showConfirmRequestModal(requestId) {
 
     window.currentRequestId = requestId;
 
-    updateTherapistBookingDetails();
-    setTimeout(() => updateTherapistAvailableSlots(), 500);
+    // Esperar a que la pestaña "Agendar" esté visible y los elementos cargados
+    setTimeout(() => {
+        updateTherapistBookingDetails();
+        setTimeout(() => updateTherapistAvailableSlots(), 500);
+    }, 100);
+    
     import('./auth.js').then(auth => auth.switchTab('agendar'));
 }
 
@@ -1331,19 +1301,30 @@ export function searchPatientByRutTherapist() {
 export function updateTherapistBookingDetails() {
     if (!state.currentUser?.data) return;
     
-    const type = document.getElementById('therapistAppointmentType').value;
-    const price = type === 'online' ? state.currentUser.data.priceOnline : state.currentUser.data.pricePresencial;
-    document.getElementById('therapistPrice').innerText = `$${price.toLocaleString()}`;
-    document.getElementById('therapistTypeDisplay').innerText = type === 'online' ? 'Online' : 'Presencial';
+    const type = document.getElementById('therapistAppointmentType')?.value;
+    let price = 0;
+    if (type === 'online') {
+        price = state.currentUser.data.priceOnline || 0;
+    } else {
+        price = state.currentUser.data.pricePresencial || 0;
+    }
+    
+    const priceElement = document.getElementById('therapistPrice');
+    if (priceElement) {
+        priceElement.innerText = `$${price.toLocaleString()}`;
+    }
+    const typeDisplay = document.getElementById('therapistTypeDisplay');
+    if (typeDisplay) {
+        typeDisplay.innerText = type === 'online' ? 'Online' : 'Presencial';
+    }
 
     updateTherapistAvailableSlots();
 }
 
 export function updateTherapistAvailableSlots() {
-    const date = document.getElementById('therapistDate').value;
+    const date = document.getElementById('therapistDate')?.value;
     const timeSelect = document.getElementById('therapistTime');
-
-    if (!date || !state.currentUser?.data) return;
+    if (!date || !timeSelect || !state.currentUser?.data) return;
 
     // Obtener horas ocupadas por citas confirmadas
     const bookedTimes = state.appointments
@@ -1381,11 +1362,11 @@ export function executeTherapistBooking() {
         return;
     }
 
-    const date = document.getElementById('therapistDate').value;
-    const time = document.getElementById('therapistTime').value;
-    const type = document.getElementById('therapistAppointmentType').value;
-    const paymentMethod = document.getElementById('therapistPaymentMethod').value;
-    const msg = document.getElementById('therapistMsg').value;
+    const date = document.getElementById('therapistDate')?.value;
+    const time = document.getElementById('therapistTime')?.value;
+    const type = document.getElementById('therapistAppointmentType')?.value;
+    const paymentMethod = document.getElementById('therapistPaymentMethod')?.value;
+    const msg = document.getElementById('therapistMsg')?.value;
 
     if (!date || !time) {
         showToast('Selecciona fecha y horario', 'error');
@@ -1483,6 +1464,145 @@ export function executeTherapistBooking() {
     if (typeof updateTherapistAvailableSlots === 'function') updateTherapistAvailableSlots();
     
     import('./auth.js').then(auth => auth.switchTab('citas'));
+}
+
+export function cancelAppointment(id) {
+    if (!confirm('¿Cancelar cita?')) return;
+    
+    const appointment = state.appointments.find(a => a.id == id);
+    if (!appointment) {
+        showToast('Cita no encontrada', 'error');
+        return;
+    }
+    
+    state.setAppointments(state.appointments.filter(a => a.id != id));
+    
+    import('../main.js').then(main => {
+        main.save();
+        showToast('Cita cancelada', 'success');
+        if (typeof renderAppointments === 'function') renderAppointments();
+        if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
+    });
+}
+
+export function rejectRequest(requestId) {
+    if (!confirm('¿Rechazar solicitud?')) return;
+    
+    const request = state.pendingRequests.find(r => r.id == requestId);
+    if (!request) return;
+    
+    state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
+    
+    import('../main.js').then(main => {
+        main.save();
+        showToast('Solicitud rechazada', 'success');
+        renderPendingRequests();
+        // Refrescar disponibilidad si la solicitud tenía hora
+        if (request.time && request.time !== 'Pendiente') {
+            if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
+            if (typeof updateTherapistAvailableSlots === 'function') updateTherapistAvailableSlots();
+        }
+    });
+}
+
+export function showPatientAppointmentsByRut() {
+    const rut = prompt('Ingresa tu RUT para consultar tus citas (formato 12.345.678-9):');
+    if (!rut) return;
+    
+    const rutLimpio = rut.replace(/[.-]/g, '');
+    const patient = state.patients.find(p => p.rut === rut || p.rut.replace(/[.-]/g, '') === rutLimpio);
+    
+    if (!patient) {
+        showToast('No se encontraron citas para ese RUT', 'error');
+        return;
+    }
+    
+    const citasPaciente = [...state.appointments, ...state.pendingRequests]
+        .filter(c => c.patientId == patient.id)
+        .sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
+    
+    if (citasPaciente.length === 0) {
+        showToast('No tienes citas registradas', 'info');
+        return;
+    }
+    
+    const modalContent = `
+        <div id="modalCitasPaciente" class="modal" style="display:flex;">
+            <div class="modal-content" style="max-width: 800px;">
+                <button class="modal-close" onclick="document.getElementById('modalCitasPaciente').remove()">&times;</button>
+                <h2 style="margin-bottom: 20px;">📅 Mis Citas</h2>
+                <p><strong>Paciente:</strong> ${patient.name} (${patient.rut})</p>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#f0f0f0;">
+                                <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${citasPaciente.map(cita => `
+                                <tr>
+                                    <td>${cita.date || '—'}</td>
+                                    <td>${cita.time || 'A coordinar'}</td>
+                                    <td>${cita.psych || '—'}</td>
+                                    <td>${cita.type === 'online' ? 'Online' : 'Presencial'}</td>
+                                    <td>
+                                        ${cita.status === 'confirmada' ? 'Confirmada' : 
+                                          cita.status === 'pendiente' ? 'Pendiente' : 
+                                          cita.status === 'cancelada' ? 'Cancelada' : '—'}
+                                    </td>
+                                    <td>
+                                        ${cita.status !== 'cancelada' && new Date(cita.date + 'T' + (cita.time || '00:00')) > new Date() ? `
+                                            <button onclick="cancelAppointmentByPatient('${cita.id}', '${patient.rut}')" 
+                                                style="background:var(--rojo-alerta); color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">
+                                                Cancelar
+                                            </button>
+                                        ` : '—'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <p style="margin-top:20px; font-size:0.8rem;">Si deseas cancelar una cita, haz clic en "Cancelar".</p>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalContent);
+}
+
+export async function cancelAppointmentByPatient(appointmentId, patientRut) {
+    let appointment = state.appointments.find(a => a.id == appointmentId);
+    let isPending = false;
+    if (!appointment) {
+        appointment = state.pendingRequests.find(r => r.id == appointmentId);
+        isPending = true;
+    }
+    if (!appointment) {
+        showToast('Cita no encontrada', 'error');
+        return;
+    }
+    
+    const patient = state.patients.find(p => p.id == appointment.patientId);
+    if (!patient || (patient.rut !== patientRut && patient.rut.replace(/[.-]/g, '') !== patientRut.replace(/[.-]/g, ''))) {
+        showToast('No tienes permiso para cancelar esta cita', 'error');
+        return;
+    }
+    
+    if (!confirm('¿Cancelar esta cita? Esta acción no se puede deshacer.')) return;
+    
+    if (isPending) {
+        state.setPendingRequests(state.pendingRequests.filter(r => r.id != appointmentId));
+    } else {
+        state.setAppointments(state.appointments.filter(a => a.id != appointmentId));
+    }
+    
+    await import('../main.js').then(main => main.save());
+    showToast('Cita cancelada correctamente', 'success');
+    
+    const modal = document.getElementById('modalCitasPaciente');
+    if (modal) modal.remove();
+    showToast('Cancelación realizada.', 'success');
 }
 
 // ============================================

@@ -30,6 +30,30 @@ export function showAvailabilityModal() {
         if (breakBetween) breakBetween.value = state.currentUser.data.breakBetween || 10;
     }
 
+    // Inicializar selección de días de la semana (todos seleccionados por defecto)
+    const weekdays = document.querySelectorAll('#weekdaySelector .weekday');
+    weekdays.forEach(day => {
+        const dayName = day.innerText.trim();
+        if (!state.selectedWeekdays.includes(dayName)) {
+            day.classList.add('selected');
+        }
+    });
+    // Si state.selectedWeekdays está vacío, llenar con todos los días
+    if (state.selectedWeekdays.length === 0) {
+        const allDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
+        state.setSelectedWeekdays(allDays);
+    } else {
+        // Sincronizar clases con state
+        weekdays.forEach(day => {
+            const dayName = day.innerText.trim();
+            if (state.selectedWeekdays.includes(dayName)) {
+                day.classList.add('selected');
+            } else {
+                day.classList.remove('selected');
+            }
+        });
+    }
+
     generateTimeSlots();
 }
 
@@ -39,17 +63,28 @@ export function closeAvailabilityModal() {
 }
 
 // ============================================
-// FUNCIONES DE DÍAS DE SEMANA
+// FUNCIONES DE DÍAS DE SEMANA (CORREGIDAS)
 // ============================================
 
-export function toggleWeekday(day) {
-    const element = event.target;
-    if (state.selectedWeekdays.includes(day)) {
-        state.setSelectedWeekdays(state.selectedWeekdays.filter(d => d !== day));
-        element.classList.remove('selected');
+export function toggleWeekday(dayName) {
+    const element = document.querySelector(`#weekdaySelector .weekday:contains("${dayName}")`);
+    if (!element) {
+        // Fallback: buscar por texto
+        const all = document.querySelectorAll('#weekdaySelector .weekday');
+        for (let d of all) {
+            if (d.innerText.trim() === dayName) {
+                element = d;
+                break;
+            }
+        }
+    }
+    
+    if (state.selectedWeekdays.includes(dayName)) {
+        state.setSelectedWeekdays(state.selectedWeekdays.filter(d => d !== dayName));
+        if (element) element.classList.remove('selected');
     } else {
-        state.setSelectedWeekdays([...state.selectedWeekdays, day]);
-        element.classList.add('selected');
+        state.setSelectedWeekdays([...state.selectedWeekdays, dayName]);
+        if (element) element.classList.add('selected');
     }
 }
 
@@ -141,7 +176,7 @@ export function blockTimeRange() {
 }
 
 // ============================================
-// FUNCIONES DE APLICACIÓN DE HORARIOS
+// FUNCIONES DE APLICACIÓN DE HORARIOS (CORREGIDAS)
 // ============================================
 
 export function applyGeneratedSlots() {
@@ -161,32 +196,48 @@ export function applyGeneratedSlots() {
         return;
     }
 
+    // Mapeo de nombres de días a números (0 = domingo)
     const weekdayMap = { 'Lun': 1, 'Mar': 2, 'Mie': 3, 'Jue': 4, 'Vie': 5, 'Sab': 6, 'Dom': 0 };
     const selectedDayNumbers = state.selectedWeekdays.map(d => weekdayMap[d]);
 
+    console.log('Días seleccionados:', state.selectedWeekdays, '→ números:', selectedDayNumbers);
+
     if (!state.currentUser.data.availability) state.currentUser.data.availability = {};
+
+    // Crear nueva disponibilidad fusionando con la existente
+    const newAvailability = { ...state.currentUser.data.availability };
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
         const dayOfWeek = d.getDay();
 
         if (selectedDayNumbers.includes(dayOfWeek)) {
-            if (!state.currentUser.data.availability[dateStr]) state.currentUser.data.availability[dateStr] = [];
+            if (!newAvailability[dateStr]) newAvailability[dateStr] = [];
 
+            // Agregar los slots generados que no existan ya
             state.generatedSlots.forEach(slot => {
-                if (!state.currentUser.data.availability[dateStr].some(s => s.time === slot.time)) {
-                    state.currentUser.data.availability[dateStr].push(slot);
+                if (!newAvailability[dateStr].some(s => s.time === slot.time)) {
+                    newAvailability[dateStr].push(slot);
                 }
             });
+        } else {
+            console.log(`Fecha ${dateStr} (día ${dayOfWeek}) no seleccionada, omitida`);
         }
     }
 
+    state.currentUser.data.availability = newAvailability;
+
+    // Actualizar el staff
     const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
-    if (staffIndex !== -1) state.staff[staffIndex].availability = state.currentUser.data.availability;
+    if (staffIndex !== -1) state.staff[staffIndex].availability = newAvailability;
 
     import('../main.js').then(main => main.save());
     closeAvailabilityModal();
-    loadTimeSlots();
+    // Refrescar la vista de disponibilidad si la fecha actual está en el rango
+    const currentDateInput = document.getElementById('availDate');
+    if (currentDateInput && currentDateInput.value) {
+        loadTimeSlots();
+    }
     showToast('Horarios aplicados', 'success');
 }
 
@@ -201,6 +252,7 @@ export function clearAllSlots() {
         if (staffIndex !== -1) state.staff[staffIndex].availability = {};
         import('../main.js').then(main => main.save());
         closeAvailabilityModal();
+        loadTimeSlots();
         showToast('Disponibilidad eliminada', 'success');
     }
 }

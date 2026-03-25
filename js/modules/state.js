@@ -102,7 +102,7 @@ export let atencionTexts = {
 };
 
 export let contactInfo = {
-    email: 'vinculosalud@gmail.com',
+    email: 'vinculosalud@hotmail.com',
     phone: '+56 9 1234 5678',
     address: 'Ohiggins 263, Concepción'
 };
@@ -443,7 +443,7 @@ export function resetAllState() {
     };
     
     contactInfo = {
-        email: 'vinculosalud@gmail.com',
+        email: 'vinculosalud@hotmail.com',
         phone: '+56 9 1234 5678',
         address: 'Ohiggins 263, Concepción'
     };

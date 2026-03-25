@@ -44,7 +44,7 @@ export let atencionTexts = {
 };
 
 export let contactInfo = {
-    email: 'vinculosalud@gmail.com',
+    email: 'vinculosalud@hotmail.com',
     phone: '+56 9 1234 5678',
     address: 'Ohiggins 263, Concepción'
 };
@@ -1439,7 +1439,7 @@ function updateFooterFromContactInfo() {
     const footerAddress = document.getElementById('footerAddress');
 
     if (footerPhone) footerPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
-    if (footerEmail) footerEmail.innerText = contactInfo.email || 'vinculosalud@gmail.com';
+    if (footerEmail) footerEmail.innerText = contactInfo.email || 'vinculosalud@hotmail.com';
     if (footerAddress) footerAddress.innerText = contactInfo.address || 'Ohiggins 263, Concepción';
     
     console.log('📞 Footer actualizado con:', {
@@ -1465,7 +1465,7 @@ export function updateContactSection() {
     const contactPhone = document.getElementById('contactPhoneDisplay');
     const contactAddress = document.getElementById('contactAddressDisplay');
     
-    if (contactEmail) contactEmail.innerText = contactInfo.email || 'vinculosalud@gmail.com';
+    if (contactEmail) contactEmail.innerText = contactInfo.email || 'vinculosalud@hotmail.com';
     if (contactPhone) contactPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
     if (contactAddress) contactAddress.innerText = contactInfo.address || 'Ohiggins 263, Concepción';
     
@@ -1482,7 +1482,7 @@ export function showContactModal() {
                 
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="contactEmailInput" class="filter-input" placeholder="vinculosalud@gmail.com">
+                    <input type="email" id="contactEmailInput" class="filter-input" placeholder="vinculosalud@hotmail.com">
                 </div>
                 
                 <div class="form-group">

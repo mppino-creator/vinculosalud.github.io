@@ -125,7 +125,7 @@
     </div>
 </div>
 
-<!-- Modal de Edición de Terapeuta -->
+<!-- Modal de Edición de Terapeuta (CORREGIDO) -->
 <div class="modal" id="editTherapistModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeEditTherapistModal()">&times;</button>
@@ -194,6 +194,11 @@
             <div class="form-group">
                 <label>Precio Presencial ($)</label>
                 <input type="number" id="editPricePresencial">
+            </div>
+            <div class="form-group">
+                <label>Antelación mínima (min)</label>
+                <input type="number" id="editAdvanceNotice" class="filter-input" value="60" min="0" step="15">
+                <small>Tiempo antes de la hora que se bloquean nuevas reservas</small>
             </div>
             
             <!-- Datos Bancarios -->
@@ -325,7 +330,7 @@
     </div>
 </div>
 
-<!-- Modal de Disponibilidad (CORREGIDO: días con abreviatura) -->
+<!-- Modal de Disponibilidad -->
 <div class="modal" id="availabilityModal">
     <div class="modal-content" style="max-width: 900px;">
         <button class="modal-close" onclick="closeAvailabilityModal()">&times;</button>
@@ -397,7 +402,7 @@
     </div>
 </div>
 
-<!-- Modal para Añadir Profesional -->
+<!-- Modal para Añadir Profesional (con advanceNotice) -->
 <div class="modal" id="addStaffModal">
     <div class="modal-content" style="max-width: 800px;">
         <button class="modal-close" onclick="closeAddStaffModal()">&times;</button>
@@ -463,6 +468,11 @@
             <div class="form-group">
                 <label>Precio Presencial ($)</label>
                 <input type="number" id="addPricePresencial">
+            </div>
+            <div class="form-group">
+                <label>Antelación mínima (min)</label>
+                <input type="number" id="addAdvanceNotice" class="filter-input" value="60" min="0" step="15">
+                <small>Tiempo antes de la hora que se bloquean nuevas reservas</small>
             </div>
             
             <!-- Datos Bancarios -->
@@ -623,7 +633,7 @@
 </div>
 
 <!-- ============================================ -->
-<!-- MODAL DE EDICIÓN DE PERFIL PROFESIONAL -->
+<!-- MODAL DE EDICIÓN DE PERFIL PROFESIONAL (con campo de antelación) -->
 <!-- ============================================ -->
 <div id="editMyProfileModal" class="modal" style="display: none;">
     <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
@@ -723,7 +733,7 @@
             </div>
         </div>
         
-        <!-- TAB 3: PRECIOS Y HORARIOS -->
+        <!-- TAB 3: PRECIOS Y HORARIOS (con campo de antelación) -->
         <div id="tabPrices" class="profile-tab" style="display: none;">
             <h4 style="margin-bottom: 15px;">💰 Precios de consulta</h4>
             
@@ -739,6 +749,11 @@
                 <div class="form-group" style="flex: 0.5;">
                     <label>Duración (min)</label>
                     <input type="number" id="editMyDuration" class="filter-input" value="45">
+                </div>
+                <div class="form-group" style="flex: 0.5;">
+                    <label>Antelación mínima (min)</label>
+                    <input type="number" id="editMyAdvanceNotice" class="filter-input" value="60" min="0" step="15">
+                    <small>Tiempo antes de la hora que se bloquean nuevas reservas</small>
                 </div>
             </div>
             
@@ -1379,24 +1394,24 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                  <table>
+                <table>
                     <thead>
-                          <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Previsión</th><th>Pago</th><th>Estado</th><th>Acciones</th> </tr>
+                        <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Previsión</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                  </table>
+                </table>
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                  <table>
+                <table>
                     <thead>
-                          <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Previsión</th><th>Motivo</th><th>Acciones</th> </tr>
+                        <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Previsión</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                  </table>
+                </table>
             </div>
         </div>
 
@@ -1423,12 +1438,12 @@
                 </button>
             </div>
             <div class="table-container">
-                  <table>
+                <table>
                     <thead>
-                          <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                        <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                  </table>
+                </table>
             </div>
         </div>
 
@@ -1563,12 +1578,12 @@
             </div>
             
             <div class="table-container">
-                  <table>
+                <table>
                     <thead>
-                          <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
+                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                  </table>
+                </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">

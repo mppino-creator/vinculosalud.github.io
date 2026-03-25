@@ -33,7 +33,7 @@ function getAverageRating(psychId) {
 }
 
 // ============================================
-// 🔥 NUEVA FUNCIÓN: Calcular cupos disponibles HOY (igual que en citas.js)
+// 🔥 FUNCIÓN ACTUALIZADA: Calcular cupos disponibles HOY (considera advanceNotice)
 // ============================================
 function getAvailableSlotsCountForToday(psych) {
     const today = new Date().toISOString().split('T')[0];
@@ -56,10 +56,14 @@ function getAvailableSlotsCountForToday(psych) {
     
     const bookedTimes = [...new Set([...bookedAppointments, ...bookedRequests])];
     
-    // Filtrar slots: no ocupados y con hora futura
+    // 🔥 Aplicar antelación mínima (advanceNotice)
+    const advanceMinutes = psych.advanceNotice ?? 60; // 60 minutos por defecto
+    const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+    
+    // Filtrar slots: no ocupados y con hora futura según antelación
     const available = todaySlots.filter(slot => 
         !bookedTimes.includes(slot.time) && 
-        new Date(today + 'T' + slot.time) > now
+        new Date(today + 'T' + slot.time) > cutoffTime
     );
     
     return available.length;
@@ -387,7 +391,7 @@ export function renderProfessionals(professionals) {
     }
 
     grid.innerHTML = professionals.map(p => {
-        // 🔥 CÁLCULO CORRECTO DE DISPONIBILIDAD HOY
+        // 🔥 CÁLCULO CORRECTO DE DISPONIBILIDAD HOY (con advanceNotice)
         const disponiblesHoy = getAvailableSlotsCountForToday(p);
         const disponibilidad = disponiblesHoy > 0 ? `${disponiblesHoy} disponible(s) hoy` : 'Sin disponibilidad hoy';
 

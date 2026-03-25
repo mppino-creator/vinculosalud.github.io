@@ -133,6 +133,7 @@ export async function openMyProfileModal() {
     const editMyPriceOnline = document.getElementById('editMyPriceOnline');
     const editMyPricePresencial = document.getElementById('editMyPricePresencial');
     const editMyDuration = document.getElementById('editMyDuration');
+    const editMyAdvanceNotice = document.getElementById('editMyAdvanceNotice');
     const editMyBank = document.getElementById('editMyBank');
     const editMyAccountType = document.getElementById('editMyAccountType');
     const editMyAccountNumber = document.getElementById('editMyAccountNumber');
@@ -168,10 +169,11 @@ export async function openMyProfileModal() {
     if (editMyInstagram) editMyInstagram.value = professionalData.socialLinks?.instagram || '';
     if (editMyWebsite) editMyWebsite.value = professionalData.socialLinks?.website || '';
     
-    // Precios
+    // Precios y antelación
     if (editMyPriceOnline) editMyPriceOnline.value = professionalData.priceOnline || '';
     if (editMyPricePresencial) editMyPricePresencial.value = professionalData.pricePresencial || '';
     if (editMyDuration) editMyDuration.value = professionalData.sessionDuration || 45;
+    if (editMyAdvanceNotice) editMyAdvanceNotice.value = professionalData.advanceNotice ?? 60;
     
     // Métodos de pago (checkboxes)
     const methods = professionalData.paymentMethods || state.globalPaymentMethods;
@@ -353,6 +355,11 @@ function crearModalEdicionProfesional() {
                     <div class="form-group" style="flex: 0.5;">
                         <label>Duración (min)</label>
                         <input type="number" id="editMyDuration" class="filter-input" value="45">
+                    </div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <label>Antelación mínima (min)</label>
+                        <input type="number" id="editMyAdvanceNotice" class="filter-input" value="60" min="0" step="15">
+                        <small>Tiempo antes de la hora que se bloquean nuevas reservas</small>
                     </div>
                 </div>
                 <div style="margin-top: 30px;">
@@ -572,10 +579,11 @@ export async function saveMyProfile() {
     const editMyEducation = document.getElementById('editMyEducation')?.value.trim();
     const editMyLanguages = document.getElementById('editMyLanguages')?.value.trim();
     
-    // Precios
+    // Precios y antelación
     const editMyPriceOnline = parseInt(document.getElementById('editMyPriceOnline')?.value);
     const editMyPricePresencial = parseInt(document.getElementById('editMyPricePresencial')?.value);
     const editMyDuration = parseInt(document.getElementById('editMyDuration')?.value);
+    const editMyAdvanceNotice = parseInt(document.getElementById('editMyAdvanceNotice')?.value);
     
     // Métodos de pago
     const editMyPaymentTransfer = document.getElementById('editMyPaymentTransfer')?.checked;
@@ -628,6 +636,7 @@ export async function saveMyProfile() {
     if (!isNaN(editMyPriceOnline) && editMyPriceOnline !== currentData.priceOnline) updates.priceOnline = editMyPriceOnline;
     if (!isNaN(editMyPricePresencial) && editMyPricePresencial !== currentData.pricePresencial) updates.pricePresencial = editMyPricePresencial;
     if (!isNaN(editMyDuration) && editMyDuration !== currentData.sessionDuration) updates.sessionDuration = editMyDuration;
+    if (!isNaN(editMyAdvanceNotice) && editMyAdvanceNotice !== currentData.advanceNotice) updates.advanceNotice = editMyAdvanceNotice;
     
     // Métodos de pago (comparar objeto)
     const newPaymentMethods = {
@@ -790,18 +799,18 @@ export function renderStaffTable() {
         
         return `
             <tr>
-                <td><strong>${p.name}</strong> ${generoTexto}</td>
-                <td>${p.email || '—'}</td>
-                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
-                <td>${p.usuario || p.name || '—'}</td>
+                <td><strong>${p.name}</strong> ${generoTexto}78
+                <td>${p.email || '—'}78
+                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}78
+                <td>${p.usuario || p.name || '—'}78
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span>
                         <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
                     </span>
-                </td>
-                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'}</td>
-                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
+                78
+                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'}78
+                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'}78
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
@@ -811,12 +820,12 @@ export function renderStaffTable() {
                             ${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial
                         </span>
                     </span>
-                </td>
+                78
                 <td>
                     <button onclick="editTherapist('${p.id}')" class="btn-editar">✏️ Editar</button>
                     <button onclick="deleteStaff('${p.id}')" class="btn-eliminar">🗑️ Eliminar</button>
-                </td>
-            </tr>
+                78
+            `
         `;
     }).join('');
 }
@@ -896,6 +905,7 @@ export async function addStaff() {
             },
             isAdmin: false,
             isHiddenAdmin: false,
+            advanceNotice: 60, // <-- NUEVO: antelación mínima por defecto (60 minutos)
             createdAt: new Date().toISOString()
         };
         
@@ -942,6 +952,7 @@ export function editTherapist(id) {
     const editPriceOnline = document.getElementById('editPriceOnline');
     const editPricePresencial = document.getElementById('editPricePresencial');
     const editGenero = document.getElementById('editGenero');
+    const editAdvanceNotice = document.getElementById('editAdvanceNotice'); // <-- NUEVO
     const editBank = document.getElementById('editBank');
     const editAccountType = document.getElementById('editAccountType');
     const editAccountNumber = document.getElementById('editAccountNumber');
@@ -976,6 +987,10 @@ export function editTherapist(id) {
     
     if (editGenero) {
         editGenero.value = therapist.genero || '';
+    }
+    
+    if (editAdvanceNotice) {
+        editAdvanceNotice.value = therapist.advanceNotice ?? 60;
     }
 
     const bank = therapist.bankDetails || {};
@@ -1044,6 +1059,7 @@ export async function updateTherapist() {
     const editPriceOnline = document.getElementById('editPriceOnline');
     const editPricePresencial = document.getElementById('editPricePresencial');
     const editGenero = document.getElementById('editGenero');
+    const editAdvanceNotice = document.getElementById('editAdvanceNotice'); // <-- NUEVO
     const editBank = document.getElementById('editBank');
     const editAccountType = document.getElementById('editAccountType');
     const editAccountNumber = document.getElementById('editAccountNumber');
@@ -1071,6 +1087,10 @@ export async function updateTherapist() {
     
     if (editGenero) {
         therapist.genero = editGenero.value;
+    }
+    
+    if (editAdvanceNotice) {
+        therapist.advanceNotice = parseInt(editAdvanceNotice.value) || 0;
     }
     
     therapist.bankDetails = {

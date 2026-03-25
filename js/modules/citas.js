@@ -561,6 +561,8 @@ export function checkOnlineAvailability() {
 let bookingEnProceso = false;
 
 export function executeBooking() {
+    console.log("🟢 executeBooking llamada");
+    
     if (bookingEnProceso) {
         console.log('⏳ Reserva ya en proceso');
         return;
@@ -804,7 +806,7 @@ export function executeBooking() {
                 preferredTime: time || null,
                 preferredAMPM: preferenciaAMPM,
                 patientBirthdate: birthdate || null,
-                patientTutor: patient.tutor || null   // ← Asegurar null si no hay tutor
+                patientTutor: patient.tutor || null
             };
 
             if (type === 'online') {
@@ -825,11 +827,13 @@ export function executeBooking() {
             // ============================================
 
             await import('../main.js').then(main => main.save());
-            // Si el dashboard está abierto, refrescar las tablas de citas
-if (state.currentUser && document.getElementById('dashboard').style.display === 'block') {
-    if (typeof renderAppointments === 'function') renderAppointments();
-    if (typeof renderPendingRequests === 'function') renderPendingRequests();
-}
+            
+            // Refrescar tablas si el dashboard está visible
+            if (state.currentUser && document.getElementById('dashboard').style.display === 'block') {
+                if (typeof renderAppointments === 'function') renderAppointments();
+                if (typeof renderPendingRequests === 'function') renderPendingRequests();
+            }
+            
             window.horaSeleccionada = null;
             
             // Forzar actualización de horarios después de guardar
@@ -929,11 +933,11 @@ export function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                              </tr>
+                            </tr>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `
-                                 <tr>
+                                <tr>
                                     <td>${cita.date || '—'}</td>
                                     <td>${cita.time || 'A coordinar'}</td>
                                     <td>${cita.psych || '—'}</td>
@@ -951,10 +955,10 @@ export function showPatientAppointmentsByRut() {
                                             </button>
                                         ` : '—'}
                                     </td>
-                                 </tr>
+                                </tr>
                             `).join('')}
                         </tbody>
-                     </table>
+                    </table>
                 </div>
                 <p style="margin-top:20px; font-size:0.8rem;">Si deseas cancelar una cita, haz clic en "Cancelar".</p>
             </div>
@@ -1013,7 +1017,7 @@ export function renderAppointments() {
     }
 
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = '<td colspan="8" style="text-align:center; padding:40px;">No hay citas</td>';
+        tb.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">No hay citas</td></tr>';
         return;
     }
 
@@ -1026,7 +1030,7 @@ export function renderAppointments() {
         const statusText = isPast ? 'Completada' : (a.status === 'confirmada' ? 'Confirmada' : 'Pendiente');
         
         return `
-             <tr>
+            <tr>
                 <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
                 <td>${a.psych || '—'}</td>
                 <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
@@ -1048,7 +1052,7 @@ export function renderAppointments() {
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                 </td>
-             </tr>
+            </tr>
         `;
     }).join('');
 }
@@ -1065,7 +1069,7 @@ export function renderPendingRequests() {
     }
 
     if (requestsToShow.length === 0) {
-        tb.innerHTML = '<td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes</td>';
+        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
         return;
     }
 
@@ -1073,7 +1077,7 @@ export function renderPendingRequests() {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         
         return `
-             <tr>
+            <tr>
                 <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
                 <td>
                     <strong>${r.patient}</strong><br>
@@ -1109,7 +1113,7 @@ export function renderPendingRequests() {
                         ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                     </div>
                 </td>
-             </tr>
+            </tr>
         `;
     }).join('');
 }

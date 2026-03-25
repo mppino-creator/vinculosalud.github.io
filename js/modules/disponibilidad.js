@@ -30,13 +30,11 @@ export function showAvailabilityModal() {
         if (breakBetween) breakBetween.value = state.currentUser.data.breakBetween || 10;
     }
 
-    // Inicializar selección de días de la semana (todos seleccionados por defecto)
     const weekdays = document.querySelectorAll('#weekdaySelector .weekday');
     if (state.selectedWeekdays.length === 0) {
         const allDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
         state.setSelectedWeekdays(allDays);
     }
-    // Sincronizar clases con state
     weekdays.forEach(day => {
         const dayName = day.innerText.trim();
         if (state.selectedWeekdays.includes(dayName)) {
@@ -55,7 +53,7 @@ export function closeAvailabilityModal() {
 }
 
 // ============================================
-// FUNCIONES DE DÍAS DE SEMANA (CORREGIDAS)
+// DÍAS DE SEMANA
 // ============================================
 
 export function toggleWeekday(dayName) {
@@ -163,7 +161,7 @@ export function blockTimeRange() {
 }
 
 // ============================================
-// APLICAR HORARIOS GENERADOS (CON ASYNC)
+// APLICAR HORARIOS GENERADOS (con zona horaria corregida)
 // ============================================
 
 export async function applyGeneratedSlots() {
@@ -175,8 +173,9 @@ export async function applyGeneratedSlots() {
         return;
     }
     
-    const startDate = new Date(startDateInput.value);
-    const endDate = new Date(endDateInput.value);
+    // Usar fechas en UTC para evitar desfases horarios
+    const startDate = new Date(startDateInput.value + 'T12:00:00Z');
+    const endDate = new Date(endDateInput.value + 'T12:00:00Z');
 
     if (!startDateInput.value || !endDateInput.value) {
         showToast('Selecciona rango de fechas', 'error');
@@ -192,13 +191,16 @@ export async function applyGeneratedSlots() {
 
     const newAvailability = { ...state.currentUser.data.availability };
 
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    // Iterar fechas correctamente
+    for (let d = new Date(startDate); d.getTime() <= endDate.getTime(); d.setUTCDate(d.getUTCDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
-        const dayOfWeek = d.getDay();
+        const dayOfWeek = d.getUTCDay();
+        console.log(`Procesando fecha: ${dateStr}, día de la semana: ${dayOfWeek}`);
 
         if (selectedDayNumbers.includes(dayOfWeek)) {
             if (!newAvailability[dateStr]) newAvailability[dateStr] = [];
 
+            // Agregar los slots generados que no existan ya
             state.generatedSlots.forEach(slot => {
                 if (!newAvailability[dateStr].some(s => s.time === slot.time)) {
                     newAvailability[dateStr].push(slot);
@@ -325,6 +327,8 @@ export function loadTimeSlots() {
     const currentAvailability = state.currentUser.data.availability || {};
     const selectedSlots = currentAvailability[date] || [];
     const showOvercupo = document.getElementById('showOvercupo')?.checked || false;
+
+    console.log(`🔍 Cargando horarios para fecha ${date}:`, selectedSlots);
 
     container.innerHTML = '';
 
@@ -532,4 +536,4 @@ if (typeof window !== 'undefined') {
     window.excludeSpecificDates = excludeSpecificDates;
 }
 
-console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada + excluir fechas + fecha automática');
+console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada + excluir fechas + zona horaria UTC');

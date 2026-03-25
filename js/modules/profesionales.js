@@ -1366,7 +1366,7 @@ export function addProfileButtonToDashboard() {
 }
 
 // ============================================
-// Sincronización forzada después de login (SIN GUARDAR vinculo_staff)
+// Sincronización forzada después de login (INCLUYE AVAILABILITY)
 // ============================================
 export async function syncProfileFromFirebase() {
     const user = firebase.auth().currentUser;

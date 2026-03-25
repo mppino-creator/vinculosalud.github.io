@@ -1284,7 +1284,6 @@ export function showTherapistBookingModal() {
     document.getElementById('therapistTimeDisplay').innerText = '—';
     document.getElementById('therapistTypeDisplay').innerText = 'Online';
     document.getElementById('therapistPrice').innerText = '$0';
-    // No hay elementos therapistBoxField ni therapistBoxDisplay en la nueva pestaña, así que no los referenciamos
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('therapistDate').min = today;
     import('./auth.js').then(auth => auth.switchTab('agendar'));
@@ -1323,7 +1322,6 @@ export function updateTherapistBookingDetails() {
     document.getElementById('therapistPrice').innerText = `$${price.toLocaleString()}`;
     document.getElementById('therapistTypeDisplay').innerText = type === 'online' ? 'Online' : 'Presencial';
 
-    // No referenciamos elementos de boxes porque no existen en la pestaña Agendar
     updateTherapistAvailableSlots();
 }
 
@@ -1362,6 +1360,8 @@ export function updateTherapistAvailableSlots() {
 }
 
 export function executeTherapistBooking() {
+    console.log("🟢 executeTherapistBooking llamada");
+
     if (!state.selectedPatientForTherapist) {
         showToast('Debes seleccionar un paciente', 'error');
         return;
@@ -1398,6 +1398,12 @@ export function executeTherapistBooking() {
 
     const price = type === 'online' ? state.currentUser.data.priceOnline : state.currentUser.data.pricePresencial;
 
+    console.log(`💰 Precio para ${type}: ${price}`);
+    if (price === 0) {
+        console.warn('⚠️ El precio es 0. Verifica la configuración del profesional.');
+        showToast('⚠️ El precio no está configurado. Se creará la cita con valor 0.', 'warning');
+    }
+
     const appointment = {
         id: Date.now(),
         patientId: state.selectedPatientForTherapist.id,
@@ -1430,7 +1436,12 @@ export function executeTherapistBooking() {
     }
 
     import('../main.js').then(main => main.save());
-    showToast('✅ Cita creada', 'success');
+    showToast(`✅ Cita creada con valor $${price.toLocaleString()}`, 'success');
+    
+    // Actualizar vistas
+    if (typeof renderAppointments === 'function') renderAppointments();
+    if (typeof renderPendingRequests === 'function') renderPendingRequests();
+    if (typeof window.renderCalendar === 'function') window.renderCalendar();
     
     import('./auth.js').then(auth => auth.switchTab('citas'));
 }

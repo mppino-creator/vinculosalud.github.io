@@ -1284,9 +1284,7 @@ export function showTherapistBookingModal() {
     document.getElementById('therapistTimeDisplay').innerText = '—';
     document.getElementById('therapistTypeDisplay').innerText = 'Online';
     document.getElementById('therapistPrice').innerText = '$0';
-    document.getElementById('therapistBoxDisplay').style.display = 'none';
-    document.getElementById('therapistBoxField').style.display = 'none';
-
+    // No hay elementos therapistBoxField ni therapistBoxDisplay en la nueva pestaña, así que no los referenciamos
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('therapistDate').min = today;
     import('./auth.js').then(auth => auth.switchTab('agendar'));
@@ -1325,13 +1323,7 @@ export function updateTherapistBookingDetails() {
     document.getElementById('therapistPrice').innerText = `$${price.toLocaleString()}`;
     document.getElementById('therapistTypeDisplay').innerText = type === 'online' ? 'Online' : 'Presencial';
 
-    if (type === 'presencial') {
-        document.getElementById('therapistBoxField').style.display = 'none';
-        document.getElementById('therapistBoxDisplay').style.display = 'none';
-    } else {
-        document.getElementById('therapistBoxField').style.display = 'none';
-        document.getElementById('therapistBoxDisplay').style.display = 'none';
-    }
+    // No referenciamos elementos de boxes porque no existen en la pestaña Agendar
     updateTherapistAvailableSlots();
 }
 

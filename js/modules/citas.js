@@ -9,7 +9,15 @@ import { showToast, validarRut, formatDate } from './utils.js';
 window.horaSeleccionada = null;
 
 // ============================================
-// FUNCIONES PARA SELECCIONAR HORARIO (exportadas y globales)
+// FUNCIÓN AUXILIAR PARA NORMALIZAR RUT
+// ============================================
+function normalizarRut(rut) {
+    if (!rut) return '';
+    return rut.replace(/[\.\-]/g, '').replace(/\s/g, '').toUpperCase();
+}
+
+// ============================================
+// FUNCIONES PARA SELECCIONAR HORARIO
 // ============================================
 export function selectTimeSlot(time) {
     console.log('🎯 [SELECT] Seleccionando horario:', time);
@@ -88,7 +96,7 @@ function calcularEdadDesdeFecha(birthdate) {
 }
 
 // ============================================
-// FUNCIÓN PARA CONFIGURAR LA SECCIÓN TUTOR SEGÚN EDAD (SIEMPRE VISIBLE)
+// FUNCIÓN PARA CONFIGURAR LA SECCIÓN TUTOR SEGÚN EDAD
 // ============================================
 function configurarTutorSegunEdad(edad) {
     const tutorSection = document.getElementById('tutorSection');
@@ -121,7 +129,7 @@ function configurarTutorSegunEdad(edad) {
 }
 
 // ============================================
-// FUNCIÓN GLOBAL calcularEdad (mejorada)
+// FUNCIÓN GLOBAL calcularEdad
 // ============================================
 window.calcularEdad = function() {
     console.log('📅 calcularEdad ejecutada');
@@ -227,7 +235,7 @@ export function openBooking(id) {
 }
 
 // ============================================
-// FUNCIÓN PARA CARGAR MÉTODOS DE PAGO SEGÚN TIPO DE ATENCIÓN
+// FUNCIÓN PARA CARGAR MÉTODOS DE PAGO
 // ============================================
 function loadPaymentMethods() {
     const select = document.getElementById('paymentMethod');
@@ -266,7 +274,7 @@ function loadPaymentMethods() {
 }
 
 // ============================================
-// FUNCIÓN PARA MOSTRAR DETALLES DE PAGO SEGÚN MÉTODO Y TIPO
+// FUNCIÓN PARA MOSTRAR DETALLES DE PAGO
 // ============================================
 export function showPaymentDetails() {
     const method = document.getElementById('paymentMethod')?.value;
@@ -380,7 +388,6 @@ export function updateAvailableTimes() {
     if (noSlotsMessage) noSlotsMessage.style.display = 'none';
 
     if (type === 'presencial') {
-        // Verificar si hay disponibilidad en la fecha seleccionada (al menos un horario)
         const availableSlots = state.selectedPsych.availability?.[date] || [];
         const hasAvailability = availableSlots.length > 0;
         
@@ -536,14 +543,18 @@ export function updateBookingDetails() {
     updateAvailableTimes(); // Esto ahora maneja la disponibilidad para presencial también
 }
 
+// ============================================
+// 🔥 FUNCIÓN MEJORADA: BUSCAR PACIENTE POR RUT (NORMALIZADO)
+// ============================================
 export function searchPatientByRutBooking() {
-    const rut = document.getElementById('custRut').value;
-    if (!rut) return;
+    const rutInput = document.getElementById('custRut').value;
+    if (!rutInput) return;
 
-    console.log('🔍 Buscando paciente con RUT:', rut);
+    const rutNormalizado = normalizarRut(rutInput);
+    console.log('🔍 Buscando paciente con RUT normalizado:', rutNormalizado);
     console.log('📋 Total pacientes:', state.patients.length);
     
-    const patient = state.patients.find(p => p.rut === rut);
+    const patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
     if (patient) {
         console.log('✅ Paciente encontrado:', patient.name);
         document.getElementById('custName').value = patient.name || '';
@@ -583,6 +594,9 @@ export function searchPatientByRutBooking() {
         
         showToast('Datos cargados', 'success');
         showPaymentDetails();
+    } else {
+        console.log('ℹ️ Paciente no encontrado. Se creará uno nuevo al reservar.');
+        showToast('Paciente no registrado. Completa los datos.', 'info', 3000);
     }
 }
 
@@ -609,7 +623,8 @@ export function executeBooking() {
     
     bookingEnProceso = true;
     
-    const rut = document.getElementById('custRut').value;
+    const rutInput = document.getElementById('custRut').value;
+    const rutNormalizado = normalizarRut(rutInput);
     const name = document.getElementById('custName').value;
     const email = document.getElementById('custEmail').value;
     const birthdate = document.getElementById('custBirthdate')?.value || '';
@@ -630,13 +645,13 @@ export function executeBooking() {
     
     let tutorData = null;
     const tutorName = document.getElementById('tutorName')?.value;
-    const tutorRut = document.getElementById('tutorRut')?.value;
+    const tutorRutRaw = document.getElementById('tutorRut')?.value;
     const tutorRelationship = document.getElementById('tutorRelationship')?.value;
     
-    if (tutorName && tutorRut && tutorRelationship) {
+    if (tutorName && tutorRutRaw && tutorRelationship) {
         tutorData = {
             nombre: tutorName,
-            rut: tutorRut,
+            rut: normalizarRut(tutorRutRaw),
             parentesco: tutorRelationship
         };
     }
@@ -652,13 +667,13 @@ export function executeBooking() {
     const msg = document.getElementById('custMsg').value;
     const acceptPolicy = document.getElementById('acceptPolicy').checked;
 
-    if (!rut || !name || !email || !date) {
+    if (!rutInput || !name || !email || !date) {
         showToast('Completa todos los campos', 'error');
         bookingEnProceso = false;
         return;
     }
 
-    if (!validarRut(rut)) {
+    if (!validarRut(rutInput)) {
         showToast('RUT inválido', 'error');
         bookingEnProceso = false;
         return;
@@ -735,7 +750,6 @@ export function executeBooking() {
     // VALIDACIÓN DE HORARIO OCUPADO (MEJORADA)
     // ============================================
     if (type === 'online' && time) {
-        // Verificar en appointments y pendingRequests
         const ocupado = state.appointments.some(a => 
             a.psychId == state.selectedPsych.id && 
             a.date === date && 
@@ -767,13 +781,13 @@ export function executeBooking() {
 
     setTimeout(async () => {
         try {
-            let patient = state.patients.find(p => p.rut === rut);
+            let patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
             
             if (!patient) {
                 const edad = birthdate ? calcularEdadDesdeFecha(birthdate) : 0;
                 patient = {
                     id: Date.now(),
-                    rut,
+                    rut: rutNormalizado,  // Guardar RUT normalizado
                     name,
                     email,
                     phone,
@@ -830,12 +844,11 @@ export function executeBooking() {
 
             const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
 
-            // Crear appointment asegurando que patientTutor nunca sea undefined
             const appointment = {
                 id: Date.now(),
                 patientId: patient.id,
                 patient: name,
-                patientRut: rut,
+                patientRut: rutNormalizado, // Guardar RUT normalizado
                 patientEmail: email,
                 patientPhone: phone,
                 psych: state.selectedPsych.name,
@@ -877,10 +890,6 @@ export function executeBooking() {
                 showToast(mensaje, 'success');
                 if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
             }
-
-            // ============================================
-            // NO SE ENVÍA CORREO (ELIMINADO)
-            // ============================================
 
             await import('../main.js').then(main => main.save());
             
@@ -1039,7 +1048,7 @@ export function renderAppointments() {
     }
 
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td></tr>';
+        tb.innerHTML = ' <td colspan="9" style="text-align:center; padding:40px;">No hay citas</td> ';
         return;
     }
 
@@ -1091,7 +1100,7 @@ export function renderPendingRequests() {
     }
 
     if (requestsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
+        tb.innerHTML = ' <td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td> ';
         return;
     }
 
@@ -1317,10 +1326,11 @@ export function showTherapistBookingModal() {
 }
 
 export function searchPatientByRutTherapist() {
-    const rut = document.getElementById('therapistRut').value;
-    if (!rut) return;
+    const rutInput = document.getElementById('therapistRut').value;
+    if (!rutInput) return;
 
-    const patient = state.patients.find(p => p.rut === rut);
+    const rutNormalizado = normalizarRut(rutInput);
+    const patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
     if (patient) {
         state.setSelectedPatientForTherapist(patient);
         document.getElementById('patientInfoName').innerText = patient.name || '';
@@ -1331,7 +1341,7 @@ export function searchPatientByRutTherapist() {
         showToast('Paciente encontrado', 'success');
     } else {
         if (confirm('¿Crear nuevo paciente?')) {
-            document.getElementById('patientRut').value = rut;
+            document.getElementById('patientRut').value = rutInput;
             document.getElementById('patientName').value = '';
             document.getElementById('patientEmail').value = '';
             document.getElementById('patientPhone').value = '';
@@ -1549,11 +1559,11 @@ export function rejectRequest(requestId) {
 }
 
 export function showPatientAppointmentsByRut() {
-    const rut = prompt('Ingresa tu RUT para consultar tus citas (formato 12.345.678-9):');
-    if (!rut) return;
+    const rutInput = prompt('Ingresa tu RUT para consultar tus citas (formato 12.345.678-9):');
+    if (!rutInput) return;
     
-    const rutLimpio = rut.replace(/[.-]/g, '');
-    const patient = state.patients.find(p => p.rut === rut || p.rut.replace(/[.-]/g, '') === rutLimpio);
+    const rutNormalizado = normalizarRut(rutInput);
+    const patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
     
     if (!patient) {
         showToast('No se encontraron citas para ese RUT', 'error');
@@ -1627,7 +1637,7 @@ export async function cancelAppointmentByPatient(appointmentId, patientRut) {
     }
     
     const patient = state.patients.find(p => p.id == appointment.patientId);
-    if (!patient || (patient.rut !== patientRut && patient.rut.replace(/[.-]/g, '') !== patientRut.replace(/[.-]/g, ''))) {
+    if (!patient || normalizarRut(patient.rut) !== normalizarRut(patientRut)) {
         showToast('No tienes permiso para cancelar esta cita', 'error');
         return;
     }

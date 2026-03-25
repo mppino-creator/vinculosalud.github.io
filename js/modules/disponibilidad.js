@@ -30,11 +30,13 @@ export function showAvailabilityModal() {
         if (breakBetween) breakBetween.value = state.currentUser.data.breakBetween || 10;
     }
 
+    // Inicializar selección de días de la semana (todos seleccionados por defecto)
     const weekdays = document.querySelectorAll('#weekdaySelector .weekday');
     if (state.selectedWeekdays.length === 0) {
         const allDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
         state.setSelectedWeekdays(allDays);
     }
+    // Sincronizar clases con state
     weekdays.forEach(day => {
         const dayName = day.innerText.trim();
         if (state.selectedWeekdays.includes(dayName)) {
@@ -161,7 +163,7 @@ export function blockTimeRange() {
 }
 
 // ============================================
-// APLICAR HORARIOS GENERADOS (con zona horaria corregida)
+// APLICAR HORARIOS GENERADOS (con zona horaria UTC)
 // ============================================
 
 export async function applyGeneratedSlots() {
@@ -191,7 +193,6 @@ export async function applyGeneratedSlots() {
 
     const newAvailability = { ...state.currentUser.data.availability };
 
-    // Iterar fechas correctamente
     for (let d = new Date(startDate); d.getTime() <= endDate.getTime(); d.setUTCDate(d.getUTCDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
         const dayOfWeek = d.getUTCDay();

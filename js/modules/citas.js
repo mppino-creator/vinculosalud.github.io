@@ -356,7 +356,7 @@ export function showPaymentDetails() {
 }
 
 // ============================================
-// FUNCIÓN PRINCIPAL DE HORARIOS
+// FUNCIÓN PRINCIPAL DE HORARIOS (MEJORADA CON VALIDACIÓN PARA PRESENCIAL)
 // ============================================
 
 export function updateAvailableTimes() {
@@ -370,6 +370,7 @@ export function updateAvailableTimes() {
     const onlineMsg = document.getElementById('onlineAvailabilityMsg');
     const presencialWarning = document.getElementById('presencialWarning');
     const noSlotsMessage = document.getElementById('noSlotsMessage');
+    const bookBtn = document.getElementById('bookBtn');
 
     if (!date || !state.selectedPsych) return;
 
@@ -379,23 +380,49 @@ export function updateAvailableTimes() {
     if (noSlotsMessage) noSlotsMessage.style.display = 'none';
 
     if (type === 'presencial') {
+        // Verificar si hay disponibilidad en la fecha seleccionada (al menos un horario)
+        const availableSlots = state.selectedPsych.availability?.[date] || [];
+        const hasAvailability = availableSlots.length > 0;
+        
         if (presencialWarning) {
             presencialWarning.style.display = 'block';
-            presencialWarning.innerHTML = `
-                <i class="fa fa-info-circle"></i> 
-                <strong>Solicitud Presencial:</strong> El profesional confirmará la hora y coordinará la dirección.
-                <div style="margin-top:15px;">
-                    <label>Preferencia de horario (opcional):</label>
-                    <div style="display:flex; gap:15px;">
-                        <label><input type="radio" name="presencialTimePref" value="AM" onchange="selectTimePref('AM')"> Mañana</label>
-                        <label><input type="radio" name="presencialTimePref" value="PM" onchange="selectTimePref('PM')"> Tarde</label>
-                        <label><input type="radio" name="presencialTimePref" value="" checked> Sin preferencia</label>
+            if (!hasAvailability) {
+                presencialWarning.innerHTML = `
+                    <i class="fa fa-exclamation-triangle" style="color: #ff6b6b;"></i>
+                    <strong>No hay disponibilidad para esta fecha.</strong> 
+                    El profesional no tiene horarios configurados para este día. Por favor selecciona otra fecha.
+                    <div style="margin-top:15px;">
+                        <label>Preferencia de horario (opcional):</label>
+                        <div style="display:flex; gap:15px;">
+                            <label><input type="radio" name="presencialTimePref" value="AM" onchange="selectTimePref('AM')"> Mañana</label>
+                            <label><input type="radio" name="presencialTimePref" value="PM" onchange="selectTimePref('PM')"> Tarde</label>
+                            <label><input type="radio" name="presencialTimePref" value="" checked> Sin preferencia</label>
+                        </div>
                     </div>
-                </div>
-                <p style="margin-top:15px; background:#fff3cd; padding:10px; border-radius:8px;">
-                    <i class="fa fa-map-marker-alt"></i> La dirección exacta se coordinará directamente con el psicólogo.
-                </p>
-            `;
+                `;
+                presencialWarning.style.backgroundColor = '#ffe6e6';
+                presencialWarning.style.borderLeft = '4px solid #ff6b6b';
+                if (bookBtn) bookBtn.disabled = true;
+            } else {
+                presencialWarning.innerHTML = `
+                    <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
+                    <strong>Solicitud Presencial:</strong> El profesional confirmará la hora y coordinará la dirección.
+                    <div style="margin-top:15px;">
+                        <label>Preferencia de horario (opcional):</label>
+                        <div style="display:flex; gap:15px;">
+                            <label><input type="radio" name="presencialTimePref" value="AM" onchange="selectTimePref('AM')"> Mañana</label>
+                            <label><input type="radio" name="presencialTimePref" value="PM" onchange="selectTimePref('PM')"> Tarde</label>
+                            <label><input type="radio" name="presencialTimePref" value="" checked> Sin preferencia</label>
+                        </div>
+                    </div>
+                    <p style="margin-top:15px; background:#fff3cd; padding:10px; border-radius:8px;">
+                        <i class="fa fa-map-marker-alt"></i> La dirección exacta se coordinará directamente con el psicólogo.
+                    </p>
+                `;
+                presencialWarning.style.backgroundColor = '#e8f4fd';
+                presencialWarning.style.borderLeft = '';
+                if (bookBtn) bookBtn.disabled = false;
+            }
         }
         if (onlineMsg) onlineMsg.style.display = 'none';
         return;
@@ -411,7 +438,10 @@ export function updateAvailableTimes() {
             noSlotsMessage.innerHTML = 'No hay horarios disponibles';
         }
         if (onlineMsg) onlineMsg.style.display = 'none';
+        if (bookBtn) bookBtn.disabled = true;
         return;
+    } else {
+        if (bookBtn) bookBtn.disabled = false;
     }
 
     const bookedAppointments = state.appointments
@@ -444,7 +474,10 @@ export function updateAvailableTimes() {
         if (selectedSlot) selectedSlot.classList.remove('selected');
         if (timeSelect) timeSelect.value = '';
         window.horaSeleccionada = null;
+        if (bookBtn) bookBtn.disabled = true;
         return;
+    } else {
+        if (bookBtn) bookBtn.disabled = false;
     }
 
     const amTimes = availableTimes.filter(slot => getTimePeriod(slot.time) === 'AM');
@@ -500,7 +533,7 @@ export function updateBookingDetails() {
     document.getElementById('paymentLinkContainer').style.display = 'none';
     
     loadPaymentMethods();
-    updateAvailableTimes();
+    updateAvailableTimes(); // Esto ahora maneja la disponibilidad para presencial también
 }
 
 export function searchPatientByRutBooking() {
@@ -674,6 +707,16 @@ export function executeBooking() {
         showToast('Selecciona un horario', 'error');
         bookingEnProceso = false;
         return;
+    }
+
+    // Para presencial: verificar que haya disponibilidad en la fecha
+    if (type === 'presencial') {
+        const availableSlots = state.selectedPsych.availability?.[date] || [];
+        if (availableSlots.length === 0) {
+            showToast('⚠️ No hay disponibilidad para esta fecha. El profesional no tiene horarios configurados.', 'error');
+            bookingEnProceso = false;
+            return;
+        }
     }
 
     let horaFinal = time || 'Pendiente';
@@ -1537,7 +1580,7 @@ export function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                            </tr>
+                             </tr>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `
@@ -1632,4 +1675,4 @@ window.showPatientAppointmentsByRut = showPatientAppointmentsByRut;
 window.cancelAppointmentByPatient = cancelAppointmentByPatient;
 window.calcularEdad = window.calcularEdad;
 
-console.log('✅ citas.js simplificado: sin correos, validación de horarios duplicados y consulta por RUT');
+console.log('✅ citas.js simplificado: sin correos, validación de horarios duplicados, consulta por RUT y validación de disponibilidad para presencial');

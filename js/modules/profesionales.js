@@ -133,7 +133,7 @@ export async function openMyProfileModal() {
     const editMyPriceOnline = document.getElementById('editMyPriceOnline');
     const editMyPricePresencial = document.getElementById('editMyPricePresencial');
     const editMyDuration = document.getElementById('editMyDuration');
-    const editMyAdvanceNotice = document.getElementById('editMyAdvanceNotice'); // <-- NUEVO
+    const editMyAdvanceNotice = document.getElementById('editMyAdvanceNotice');
     const editMyBank = document.getElementById('editMyBank');
     const editMyAccountType = document.getElementById('editMyAccountType');
     const editMyAccountNumber = document.getElementById('editMyAccountNumber');
@@ -173,7 +173,7 @@ export async function openMyProfileModal() {
     if (editMyPriceOnline) editMyPriceOnline.value = professionalData.priceOnline || '';
     if (editMyPricePresencial) editMyPricePresencial.value = professionalData.pricePresencial || '';
     if (editMyDuration) editMyDuration.value = professionalData.sessionDuration || 45;
-    if (editMyAdvanceNotice) editMyAdvanceNotice.value = professionalData.advanceNotice ?? 60; // <-- NUEVO
+    if (editMyAdvanceNotice) editMyAdvanceNotice.value = professionalData.advanceNotice ?? 60;
     
     // Métodos de pago (checkboxes)
     const methods = professionalData.paymentMethods || state.globalPaymentMethods;
@@ -583,7 +583,7 @@ export async function saveMyProfile() {
     const editMyPriceOnline = parseInt(document.getElementById('editMyPriceOnline')?.value);
     const editMyPricePresencial = parseInt(document.getElementById('editMyPricePresencial')?.value);
     const editMyDuration = parseInt(document.getElementById('editMyDuration')?.value);
-    const editMyAdvanceNotice = parseInt(document.getElementById('editMyAdvanceNotice')?.value); // <-- NUEVO
+    const editMyAdvanceNotice = parseInt(document.getElementById('editMyAdvanceNotice')?.value);
     
     // Métodos de pago
     const editMyPaymentTransfer = document.getElementById('editMyPaymentTransfer')?.checked;
@@ -636,7 +636,7 @@ export async function saveMyProfile() {
     if (!isNaN(editMyPriceOnline) && editMyPriceOnline !== currentData.priceOnline) updates.priceOnline = editMyPriceOnline;
     if (!isNaN(editMyPricePresencial) && editMyPricePresencial !== currentData.pricePresencial) updates.pricePresencial = editMyPricePresencial;
     if (!isNaN(editMyDuration) && editMyDuration !== currentData.sessionDuration) updates.sessionDuration = editMyDuration;
-    if (!isNaN(editMyAdvanceNotice) && editMyAdvanceNotice !== currentData.advanceNotice) updates.advanceNotice = editMyAdvanceNotice; // <-- NUEVO
+    if (!isNaN(editMyAdvanceNotice) && editMyAdvanceNotice !== currentData.advanceNotice) updates.advanceNotice = editMyAdvanceNotice;
     
     // Métodos de pago (comparar objeto)
     const newPaymentMethods = {
@@ -777,7 +777,7 @@ export async function saveMyProfile() {
 }
 
 // ============================================
-// RENDERIZAR TABLA DE PROFESIONALES (SIN REINTENTOS, SOLO SI ES ADMIN)
+// RENDERIZAR TABLA DE PROFESIONALES (CORREGIDO)
 // ============================================
 export function renderStaffTable() {
     // Solo ejecutar si el usuario es admin (la tabla solo existe para admin)
@@ -799,18 +799,18 @@ export function renderStaffTable() {
         
         return `
             <tr>
-                <td><strong>${p.name}</strong> ${generoTexto}78
-                <td>${p.email || '—'}78
-                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}78
-                <td>${p.usuario || p.name || '—'}78
+                <td><strong>${p.name}</strong> ${generoTexto}</td>
+                <td>${p.email || '—'}</td>
+                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
+                <td>${p.usuario || p.name || '—'}</td>
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span>
                         <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
                     </span>
-                78
-                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'}78
-                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'}78
+                </td>
+                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'}</td>
+                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
@@ -820,12 +820,12 @@ export function renderStaffTable() {
                             ${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial
                         </span>
                     </span>
-                78
+                </td>
                 <td>
                     <button onclick="editTherapist('${p.id}')" class="btn-editar">✏️ Editar</button>
                     <button onclick="deleteStaff('${p.id}')" class="btn-eliminar">🗑️ Eliminar</button>
-                78
-            `
+                </td>
+            </tr>
         `;
     }).join('');
 }
@@ -842,7 +842,7 @@ export async function addStaff() {
     const pricePresencial = document.getElementById('addPricePresencial')?.value;
     const usuario = document.getElementById('addUser')?.value;
     const pass = document.getElementById('addPass')?.value;
-    const advanceNotice = document.getElementById('addAdvanceNotice')?.value; // <-- NUEVO
+    const advanceNotice = document.getElementById('addAdvanceNotice')?.value;
     
     const genero = document.getElementById('addGenero')?.value || '';
     
@@ -906,7 +906,7 @@ export async function addStaff() {
             },
             isAdmin: false,
             isHiddenAdmin: false,
-            advanceNotice: advanceNotice ? parseInt(advanceNotice) : 60, // <-- NUEVO
+            advanceNotice: advanceNotice ? parseInt(advanceNotice) : 60,
             createdAt: new Date().toISOString()
         };
         
@@ -953,7 +953,7 @@ export function editTherapist(id) {
     const editPriceOnline = document.getElementById('editPriceOnline');
     const editPricePresencial = document.getElementById('editPricePresencial');
     const editGenero = document.getElementById('editGenero');
-    const editAdvanceNotice = document.getElementById('editAdvanceNotice'); // <-- NUEVO
+    const editAdvanceNotice = document.getElementById('editAdvanceNotice');
     const editBank = document.getElementById('editBank');
     const editAccountType = document.getElementById('editAccountType');
     const editAccountNumber = document.getElementById('editAccountNumber');
@@ -985,7 +985,7 @@ export function editTherapist(id) {
     if (editPhone) editPhone.value = therapist.phone || '';
     if (editPriceOnline) editPriceOnline.value = therapist.priceOnline || '';
     if (editPricePresencial) editPricePresencial.value = therapist.pricePresencial || '';
-    if (editAdvanceNotice) editAdvanceNotice.value = therapist.advanceNotice ?? 60; // <-- NUEVO
+    if (editAdvanceNotice) editAdvanceNotice.value = therapist.advanceNotice ?? 60;
     if (editGenero) {
         editGenero.value = therapist.genero || '';
     }
@@ -1056,7 +1056,7 @@ export async function updateTherapist() {
     const editPriceOnline = document.getElementById('editPriceOnline');
     const editPricePresencial = document.getElementById('editPricePresencial');
     const editGenero = document.getElementById('editGenero');
-    const editAdvanceNotice = document.getElementById('editAdvanceNotice'); // <-- NUEVO
+    const editAdvanceNotice = document.getElementById('editAdvanceNotice');
     const editBank = document.getElementById('editBank');
     const editAccountType = document.getElementById('editAccountType');
     const editAccountNumber = document.getElementById('editAccountNumber');
@@ -1081,7 +1081,7 @@ export async function updateTherapist() {
     if (editPhone) therapist.phone = editPhone.value;
     if (editPriceOnline) therapist.priceOnline = parseInt(editPriceOnline.value);
     if (editPricePresencial) therapist.pricePresencial = parseInt(editPricePresencial.value);
-    if (editAdvanceNotice) therapist.advanceNotice = parseInt(editAdvanceNotice.value); // <-- NUEVO
+    if (editAdvanceNotice) therapist.advanceNotice = parseInt(editAdvanceNotice.value);
     if (editGenero) {
         therapist.genero = editGenero.value;
     }

@@ -924,7 +924,7 @@ export async function addStaff() {
 }
 
 // ============================================
-// FUNCIONES DE EDICIÓN Y ACTUALIZACIÓN (SIN CAMBIO DE CONTRASEÑA)
+// FUNCIONES DE EDICIÓN Y ACTUALIZACIÓN (CON ENVÍO DE CORREO SI CAMBIA CONTRASEÑA)
 // ============================================
 export function editTherapist(id) {
     const therapist = state.staff.find(s => s.id == id);
@@ -952,10 +952,12 @@ export function editTherapist(id) {
     const editQrOnlinePreview = document.getElementById('editQrOnlinePreview');
     const editQrPresencialPreview = document.getElementById('editQrPresencialPreview');
     const editPhotoPreview = document.getElementById('editPhotoPreview');
+    const editPass = document.getElementById('editPass');
     
     if (editTherapistId) editTherapistId.value = therapist.id;
     if (editName) editName.value = therapist.name || '';
     if (editEmail) editEmail.value = therapist.email || '';
+    if (editPass) editPass.value = ''; // Nunca mostrar contraseña guardada (no se guarda en DB)
     
     const therapistSpecs = Array.isArray(therapist.spec) ? therapist.spec : [therapist.spec];
     if (editSpecSelect) {
@@ -1049,7 +1051,9 @@ export async function updateTherapist() {
     const editBankEmail = document.getElementById('editBankEmail');
     const editPaymentLinkOnline = document.getElementById('editPaymentLinkOnline');
     const editPaymentLinkPresencial = document.getElementById('editPaymentLinkPresencial');
-
+    const editPass = document.getElementById('editPass');
+    
+    // Guardar cambios en la base de datos (staff)
     if (editName) therapist.name = editName.value;
     if (editEmail) therapist.email = editEmail.value;
     
@@ -1089,16 +1093,24 @@ export async function updateTherapist() {
     }
 
     try {
+        // Guardar en Firebase Database
         await firebase.database().ref(`staff/${id}`).update(therapist);
+        console.log('✅ Profesional actualizado en DB');
         
-        if (therapist.email !== editEmail.value) {
-            showToast('⚠️ El email no se actualizó en Authentication. Si es necesario, cámbialo manualmente en Firebase Console.', 'warning');
+        // Si se proporcionó una nueva contraseña, enviar correo de restablecimiento
+        const newPassword = editPass?.value.trim();
+        if (newPassword && newPassword !== '') {
+            console.log('🔑 Se detectó cambio de contraseña, enviando correo de restablecimiento...');
+            await sendPasswordResetEmailForProfessional(therapist.email);
+            showToast(`📧 Se ha enviado un correo a ${therapist.email} para establecer su nueva contraseña.`, 'info');
         }
         
+        // Actualizar estado local
         import('../main.js').then(main => main.save());
         closeEditTherapistModal();
         renderStaffTable();
-        showToast('Profesional actualizado', 'success');
+        showToast('Profesional actualizado correctamente', 'success');
+        
     } catch (error) {
         console.error('Error actualizando profesional:', error);
         showToast('Error al actualizar: ' + error.message, 'error');

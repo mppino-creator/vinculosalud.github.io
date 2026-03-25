@@ -166,10 +166,10 @@ export function blockTimeRange() {
 }
 
 // ============================================
-// APLICAR HORARIOS GENERADOS A UN RANGO DE FECHAS
+// APLICAR HORARIOS GENERADOS A UN RANGO DE FECHAS (CON ASYNC)
 // ============================================
 
-export function applyGeneratedSlots() {
+export async function applyGeneratedSlots() {
     const startDateInput = document.getElementById('rangeStartDate');
     const endDateInput = document.getElementById('rangeEndDate');
     
@@ -219,23 +219,36 @@ export function applyGeneratedSlots() {
 
     // Actualizar el staff
     const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
-    if (staffIndex !== -1) state.staff[staffIndex].availability = newAvailability;
-
-    import('../main.js').then(main => main.save());
-    closeAvailabilityModal();
-    // Refrescar la vista de disponibilidad si la fecha actual está en el rango
-    const currentDateInput = document.getElementById('availDate');
-    if (currentDateInput && currentDateInput.value) {
-        loadTimeSlots();
+    console.log('staffIndex:', staffIndex, 'staff IDs:', state.staff.map(s => s.id), 'currentUserId:', state.currentUser.data.id);
+    if (staffIndex !== -1) {
+        state.staff[staffIndex].availability = newAvailability;
+    } else {
+        console.warn('⚠️ No se encontró al profesional en state.staff, se actualizará solo state.currentUser');
     }
-    showToast('Horarios aplicados', 'success');
+
+    try {
+        // Esperar a que se complete el guardado
+        const mainModule = await import('../main.js');
+        await mainModule.save();
+        console.log('✅ Disponibilidad guardada en Firebase');
+        closeAvailabilityModal();
+        // Refrescar la vista de disponibilidad si la fecha actual está en el rango
+        const currentDateInput = document.getElementById('availDate');
+        if (currentDateInput && currentDateInput.value) {
+            loadTimeSlots();
+        }
+        showToast('Horarios aplicados', 'success');
+    } catch (error) {
+        console.error('❌ Error al guardar disponibilidad:', error);
+        showToast('Error al guardar los horarios', 'error');
+    }
 }
 
 // ============================================
 // EXCLUIR FECHAS ESPECÍFICAS (DÍAS INHÁBILES)
 // ============================================
 
-export function excludeSpecificDates() {
+export async function excludeSpecificDates() {
     const datesInput = prompt('Ingresa las fechas a excluir (formato YYYY-MM-DD), separadas por comas:\nEjemplo: 2026-03-30, 2026-04-01');
     if (!datesInput) return;
 
@@ -260,11 +273,17 @@ export function excludeSpecificDates() {
     if (modified) {
         const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
         if (staffIndex !== -1) state.staff[staffIndex].availability = state.currentUser.data.availability;
-        import('../main.js').then(main => main.save());
-        showToast(`Se eliminó la disponibilidad en ${validDates.length} fecha(s)`, 'success');
-        // Refrescar vista actual si está visible
-        const currentDateInput = document.getElementById('availDate');
-        if (currentDateInput && currentDateInput.value && loadTimeSlots) loadTimeSlots();
+        try {
+            const mainModule = await import('../main.js');
+            await mainModule.save();
+            showToast(`Se eliminó la disponibilidad en ${validDates.length} fecha(s)`, 'success');
+            // Refrescar vista actual si está visible
+            const currentDateInput = document.getElementById('availDate');
+            if (currentDateInput && currentDateInput.value && loadTimeSlots) loadTimeSlots();
+        } catch (error) {
+            console.error('❌ Error al guardar exclusión:', error);
+            showToast('Error al excluir fechas', 'error');
+        }
     } else {
         showToast('Ninguna de las fechas tenía disponibilidad', 'info');
     }
@@ -274,15 +293,21 @@ export function excludeSpecificDates() {
 // FUNCIONES DE LIMPIEZA
 // ============================================
 
-export function clearAllSlots() {
+export async function clearAllSlots() {
     if (confirm('¿Eliminar toda la disponibilidad?')) {
         state.currentUser.data.availability = {};
         const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
         if (staffIndex !== -1) state.staff[staffIndex].availability = {};
-        import('../main.js').then(main => main.save());
-        closeAvailabilityModal();
-        loadTimeSlots();
-        showToast('Disponibilidad eliminada', 'success');
+        try {
+            const mainModule = await import('../main.js');
+            await mainModule.save();
+            closeAvailabilityModal();
+            loadTimeSlots();
+            showToast('Disponibilidad eliminada', 'success');
+        } catch (error) {
+            console.error('❌ Error al limpiar disponibilidad:', error);
+            showToast('Error al eliminar disponibilidad', 'error');
+        }
     }
 }
 
@@ -397,12 +422,18 @@ export function addOvercupo() {
 }
 
 // ============================================
-// FUNCIÓN DE GUARDADO
+// FUNCIÓN DE GUARDADO (con async)
 // ============================================
 
-export function saveAvailability() {
-    import('../main.js').then(main => main.save());
-    showToast('Disponibilidad guardada', 'success');
+export async function saveAvailability() {
+    try {
+        const mainModule = await import('../main.js');
+        await mainModule.save();
+        showToast('Disponibilidad guardada', 'success');
+    } catch (error) {
+        console.error('❌ Error al guardar disponibilidad:', error);
+        showToast('Error al guardar', 'error');
+    }
 }
 
 // ============================================
@@ -504,4 +535,4 @@ if (typeof window !== 'undefined') {
     window.excludeSpecificDates = excludeSpecificDates;
 }
 
-console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada + excluir fechas');
+console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada + excluir fechas + guardado asíncrono');

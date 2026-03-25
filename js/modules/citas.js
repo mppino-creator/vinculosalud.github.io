@@ -946,7 +946,7 @@ export function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                            </tr>
+                             </tr>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `
@@ -1445,9 +1445,31 @@ export function executeTherapistBooking() {
 
     state.appointments.push(appointment);
 
+    // Eliminar la solicitud pendiente asociada (presencial)
+    let deleted = false;
     if (window.currentRequestId) {
-        state.setPendingRequests(state.pendingRequests.filter(r => r.id != window.currentRequestId));
-        window.currentRequestId = null;
+        const req = state.pendingRequests.find(r => r.id == window.currentRequestId);
+        if (req) {
+            state.setPendingRequests(state.pendingRequests.filter(r => r.id != window.currentRequestId));
+            deleted = true;
+            console.log(`✅ Solicitud eliminada por ID: ${window.currentRequestId}`);
+        }
+    }
+    if (!deleted && type === 'presencial') {
+        // Buscar solicitud pendiente para el mismo paciente y fecha
+        const pending = state.pendingRequests.find(r =>
+            r.patientId == state.selectedPatientForTherapist.id &&
+            r.date === date &&
+            r.type === 'presencial'
+        );
+        if (pending) {
+            state.setPendingRequests(state.pendingRequests.filter(r => r.id != pending.id));
+            console.log(`✅ Solicitud eliminada por coincidencia: paciente ${state.selectedPatientForTherapist.id}, fecha ${date}`);
+            deleted = true;
+        }
+    }
+    if (!deleted) {
+        console.warn('⚠️ No se encontró solicitud pendiente para eliminar.');
     }
 
     import('../main.js').then(main => main.save());
@@ -1457,6 +1479,8 @@ export function executeTherapistBooking() {
     if (typeof renderAppointments === 'function') renderAppointments();
     if (typeof renderPendingRequests === 'function') renderPendingRequests();
     if (typeof window.renderCalendar === 'function') window.renderCalendar();
+    // Refrescar horarios disponibles en la pestaña Agendar
+    if (typeof updateTherapistAvailableSlots === 'function') updateTherapistAvailableSlots();
     
     import('./auth.js').then(auth => auth.switchTab('citas'));
 }

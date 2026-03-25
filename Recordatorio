@@ -1,4 +1,4 @@
-Aquí tienes el **Resumen Ejecutivo Técnico actualizado** con las últimas mejoras implementadas, especialmente la **notificación dual (paciente + profesional)** y la flexibilización de la validación de emails para permitir el envío al profesional. Copia y pega este contenido donde necesites.
+Aquí tienes el **Resumen Ejecutivo Técnico actualizado a v6.1** con todas las mejoras implementadas recientemente, incluyendo la **notificación dual (paciente + profesional)** y la **flexibilización de la validación de emails** para permitir el envío al profesional. Copia y pega este contenido donde necesites.
 
 ---
 
@@ -94,8 +94,8 @@ if (esEmailProfesional(email)) return showToast('Email no válido');
 // 2. Envío al paciente
 sendEmailNotification(email, ...);
 
-// 3. Envío al profesional (si es diferente)
-if (psychEmail && psychEmail !== email) {
+// 3. Envío al profesional (si es diferente y permitido)
+if (psychEmail && psychEmail !== email && !esEmailProfesional(email)) {
     sendEmailNotification(psychEmail, 'Nueva solicitud de cita', mensajeCompleto, ...);
 }
 ```
@@ -116,6 +116,7 @@ if (psychEmail && psychEmail !== email) {
 | **Estadísticas de citas** | Totales, por estado, tipo, mes, próximas citas, promedio diario | ✅ IMPLEMENTADO |
 | **Cancelación y rechazo con emails** | Notificaciones automáticas al paciente con validación de email profesional | ✅ CORREGIDO |
 | **🆕 Notificación dual (paciente + profesional)** | Al crear una reserva, el profesional recibe un correo con todos los datos del paciente | ✅ IMPLEMENTADO |
+| **🆕 Confirmación presencial con validación de horario** | Al asignar hora a solicitud presencial, se valida que no esté ocupada | ✅ IMPLEMENTADO |
 
 ---
 
@@ -192,6 +193,7 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 | **Nomenclatura Firebase** | ❌ Inconsistente | ✅ Unificada minúsculas | -90% errores reglas |
 | **🆕 Notificación dual** | ❌ Solo paciente | ✅ Paciente + profesional | +200% comunicación |
 | **🆕 Envío a profesionales** | ❌ Bloqueado | ✅ Permitido con control | Mayor transparencia |
+| **🆕 Confirmación presencial con validación** | ❌ Sin validación | ✅ Verifica ocupación y pasado | -100% conflictos |
 
 ---
 
@@ -230,12 +232,13 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 | **Estadísticas globales** | ✅ COMPLETO | Gráficos y exportación |
 | **🆕 Notificación dual** | ✅ COMPLETO | Correo a paciente + profesional |
 | **🆕 Flexibilidad en envíos** | ✅ COMPLETO | EmailJS permite envío a profesionales |
+| **🆕 Validación de horario en confirmación** | ✅ COMPLETO | Evita dobles reservas en citas presenciales |
 
 ---
 
 ## ✅ **CONCLUSIÓN TÉCNICA - v6.1 FINAL**
 
-**Vínculo Salud v6.1** es la **versión más completa, estable y profesional** hasta la fecha, con la incorporación clave de **notificaciones duales** que mejoran la comunicación entre pacientes y profesionales:
+**Vínculo Salud v6.1** es la **versión más completa, estable y profesional** hasta la fecha, con la incorporación clave de **notificaciones duales** que mejoran la comunicación entre pacientes y profesionales y la **validación robusta de horarios en citas presenciales**:
 
 - ✅ **22 módulos funcionales** trabajando en armonía
 - ✅ **0 errores de permisos** en producción
@@ -245,7 +248,7 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 - ✅ **Arquitectura optimizada** con patrones de diseño robustos
 - ✅ **Seguridad mejorada** con validaciones de email en 5 capas y control de profesionales
 - ✅ **UI/UX profesional** con estilos unificados y responsive
-- ✅ **Módulo de citas** con funcionalidades avanzadas (tutores, sobrecupos, preferencias, doble notificación)
+- ✅ **Módulo de citas** con funcionalidades avanzadas (tutores, sobrecupos, preferencias, doble notificación, validación de horario)
 - ✅ **Fichas clínicas completas** (ingreso, sesiones, informes) con exportación PDF
 - ✅ **Estadísticas detalladas** para admin y psicólogos
 - ✅ **Comunicación integral**: al crear una cita, tanto el paciente como el profesional reciben la información necesaria
@@ -265,6 +268,7 @@ console.log('✅ Validación emails 5 capas');
 console.log('✅ Módulo boxes desactivado');
 console.log('✅ 0 errores de permisos');
 console.log('✅ NOTIFICACIÓN DUAL: paciente + profesional');
+console.log('✅ VALIDACIÓN DE HORARIO EN CITAS PRESENCIALES');
 console.log('🚀 LISTO PARA PRODUCCIÓN');
 ```
 

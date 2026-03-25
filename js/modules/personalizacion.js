@@ -1254,7 +1254,7 @@ export function updateAtencionSection() {
             </div>
             <h3 style="color: var(--verde-azulado-profundo); font-size: 1.5rem; margin-bottom: 10px;">${tipo.title}</h3>
             <p style="color: var(--texto-secundario); margin-bottom: 15px;">${tipo.description}</p>
-            <span style="background: var(--ocre-calido); color: white; padding: 5px 15px; border-radius: 50px; font-weight: 600; display: inline-block;">${tipo.price}</span>
+            <span style="color: var(--verde-azulado-profundo); font-weight: 600; font-size: 1.1rem; display: block; margin-top: 8px;">${tipo.price}</span>
         </div>
         `;
     }

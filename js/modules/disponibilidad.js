@@ -32,27 +32,20 @@ export function showAvailabilityModal() {
 
     // Inicializar selección de días de la semana (todos seleccionados por defecto)
     const weekdays = document.querySelectorAll('#weekdaySelector .weekday');
-    weekdays.forEach(day => {
-        const dayName = day.innerText.trim();
-        if (!state.selectedWeekdays.includes(dayName)) {
-            day.classList.add('selected');
-        }
-    });
     // Si state.selectedWeekdays está vacío, llenar con todos los días
     if (state.selectedWeekdays.length === 0) {
         const allDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
         state.setSelectedWeekdays(allDays);
-    } else {
-        // Sincronizar clases con state
-        weekdays.forEach(day => {
-            const dayName = day.innerText.trim();
-            if (state.selectedWeekdays.includes(dayName)) {
-                day.classList.add('selected');
-            } else {
-                day.classList.remove('selected');
-            }
-        });
     }
+    // Sincronizar clases con state
+    weekdays.forEach(day => {
+        const dayName = day.innerText.trim();
+        if (state.selectedWeekdays.includes(dayName)) {
+            day.classList.add('selected');
+        } else {
+            day.classList.remove('selected');
+        }
+    });
 
     generateTimeSlots();
 }
@@ -67,15 +60,13 @@ export function closeAvailabilityModal() {
 // ============================================
 
 export function toggleWeekday(dayName) {
-    const element = document.querySelector(`#weekdaySelector .weekday:contains("${dayName}")`);
-    if (!element) {
-        // Fallback: buscar por texto
-        const all = document.querySelectorAll('#weekdaySelector .weekday');
-        for (let d of all) {
-            if (d.innerText.trim() === dayName) {
-                element = d;
-                break;
-            }
+    // Buscar el elemento por su texto (fallback si no se pasa event)
+    let element = null;
+    const allDays = document.querySelectorAll('#weekdaySelector .weekday');
+    for (let d of allDays) {
+        if (d.innerText.trim() === dayName) {
+            element = d;
+            break;
         }
     }
     

@@ -33,6 +33,39 @@ function getAverageRating(psychId) {
 }
 
 // ============================================
+// 🔥 NUEVA FUNCIÓN: Calcular cupos disponibles HOY (igual que en citas.js)
+// ============================================
+function getAvailableSlotsCountForToday(psych) {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    
+    // Obtener slots del profesional para hoy
+    const todaySlots = psych.availability?.[today] || [];
+    if (todaySlots.length === 0) return 0;
+    
+    // Obtener horas ocupadas por citas confirmadas/pendientes
+    const bookedAppointments = (state.appointments || []).filter(a => 
+        a.psychId == psych.id && a.date === today && 
+        (a.status === 'confirmada' || a.status === 'pendiente')
+    ).map(a => a.time);
+    
+    // Obtener horas ocupadas por solicitudes presenciales con hora asignada
+    const bookedRequests = (state.pendingRequests || []).filter(r => 
+        r.psychId == psych.id && r.date === today && r.time && r.time !== 'Pendiente'
+    ).map(r => r.time);
+    
+    const bookedTimes = [...new Set([...bookedAppointments, ...bookedRequests])];
+    
+    // Filtrar slots: no ocupados y con hora futura
+    const available = todaySlots.filter(slot => 
+        !bookedTimes.includes(slot.time) && 
+        new Date(today + 'T' + slot.time) > now
+    );
+    
+    return available.length;
+}
+
+// ============================================
 // FUNCIÓN PARA TOGGLE DE INFORMACIÓN (ACCORDION)
 // ============================================
 window.toggleInfo = function(button) {
@@ -95,7 +128,7 @@ window.toggleInfo = function(button) {
 };
 
 // ============================================
-// 🆕 FUNCIÓN DE NAVEGACIÓN MEJORADA - VERSIÓN CORREGIDA
+// FUNCIÓN DE NAVEGACIÓN MEJORADA
 // ============================================
 export function showSection(sectionId) {
     console.log('🔄 Mostrando sección:', sectionId);
@@ -158,14 +191,14 @@ export function showSection(sectionId) {
     const filtros = document.querySelector('.filters');
     
     if (sectionId === 'equipo') {
-        if (grid) grid.style.display = '';           // Restaura el estilo por defecto (grid)
+        if (grid) grid.style.display = '';
         if (filtros) filtros.style.display = 'flex';
         if (typeof filterProfessionals === 'function') {
             filterProfessionals();
         }
     } else {
         if (filtros) filtros.style.display = 'none';
-        if (grid) grid.style.display = 'none';       // Oculta explícitamente el grid en otras secciones
+        if (grid) grid.style.display = 'none';
         if (sectionId === 'about') {
             updateAboutSection();
         } else if (sectionId === 'atencion') {
@@ -179,7 +212,7 @@ export function showSection(sectionId) {
 }
 
 // ============================================
-// FUNCIÓN PARA ABRIR AGENDA
+// ABRIR AGENDA
 // ============================================
 export function abrirAgenda() {
     console.log('📅 Abriendo agenda con profesionales y filtros...');
@@ -189,13 +222,13 @@ export function abrirAgenda() {
     if (filtros) filtros.style.display = 'flex';
     
     const grid = document.getElementById('equipo');
-    if (grid) grid.style.display = '';   // Restaura el estilo por defecto (grid)
+    if (grid) grid.style.display = '';
     
     showToast('Selecciona un profesional para ver su disponibilidad y agendar tu hora', 'info', 3000);
 }
 
 // ============================================
-// FUNCIÓN PARA ENVIAR CONTACTO
+// ENVIAR CONTACTO
 // ============================================
 export function enviarContacto() {
     const nombre = document.getElementById('contactName')?.value;
@@ -266,7 +299,7 @@ export function copiarAlPortapapeles(texto) {
 }
 
 // ============================================
-// FUNCIÓN LEGACY PARA COMPATIBILIDAD
+// FUNCIÓN LEGACY
 // ============================================
 export function showTherapistInfo(psychId) {
     console.log('📋 Usando nuevo sistema accordion para profesional:', psychId);
@@ -277,7 +310,7 @@ export function showTherapistInfo(psychId) {
 }
 
 // ============================================
-// FILTRO Y RENDERIZADO DE PROFESIONALES
+// FILTRO DE PROFESIONALES (ACTUALIZADO)
 // ============================================
 export function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
@@ -305,15 +338,24 @@ export function filterProfessionals() {
 
         let matchesAvailability = true;
         if (availabilityFilter === 'available' || availabilityFilter === 'today') {
-            const today = new Date().toISOString().split('T')[0];
-            const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
-            matchesAvailability = slotsHoy.length > 0;
+            const disponiblesHoy = getAvailableSlotsCountForToday(p);
+            matchesAvailability = disponiblesHoy > 0;
         } else if (availabilityFilter === 'tomorrow') {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
-            const slotsManana = p.availability && p.availability[tomorrowStr] ? p.availability[tomorrowStr] : [];
-            matchesAvailability = slotsManana.length > 0;
+            const slotsManana = p.availability?.[tomorrowStr] || [];
+            // Para mañana, solo contamos slots sin ocupar (sin importar hora, porque aún no ha pasado)
+            const bookedTomorrow = (state.appointments || []).filter(a => 
+                a.psychId == p.id && a.date === tomorrowStr && 
+                (a.status === 'confirmada' || a.status === 'pendiente')
+            ).map(a => a.time);
+            const bookedRequestsTomorrow = (state.pendingRequests || []).filter(r => 
+                r.psychId == p.id && r.date === tomorrowStr && r.time && r.time !== 'Pendiente'
+            ).map(r => r.time);
+            const bookedTomorrowTimes = [...new Set([...bookedTomorrow, ...bookedRequestsTomorrow])];
+            const libresManana = slotsManana.filter(slot => !bookedTomorrowTimes.includes(slot.time));
+            matchesAvailability = libresManana.length > 0;
         }
 
         return matchesSearch && matchesSpecialty && matchesAvailability;
@@ -324,6 +366,9 @@ export function filterProfessionals() {
     renderProfessionals(filtered);
 }
 
+// ============================================
+// RENDERIZADO DE PROFESIONALES (CON BADGE CORREGIDO)
+// ============================================
 export function renderProfessionals(professionals) {
     const grid = document.getElementById('equipo');
     if (!grid) {
@@ -342,12 +387,9 @@ export function renderProfessionals(professionals) {
     }
 
     grid.innerHTML = professionals.map(p => {
-        const today = new Date().toISOString().split('T')[0];
-        const citasHoy = window.state?.appointments?.filter(a => a.psychId == p.id && a.date === today && (a.status === 'confirmada' || a.status === 'pendiente')) || [];
-        const solicitudesHoy = window.state?.pendingRequests?.filter(r => r.psychId == p.id && r.date === today && r.time && r.time !== 'Pendiente') || [];
-        const totalOcupadosHoy = citasHoy.length + solicitudesHoy.length;
-        const slotsHoy = p.availability && p.availability[today] ? p.availability[today] : [];
-        const horasLibres = slotsHoy.length - totalOcupadosHoy;
+        // 🔥 CÁLCULO CORRECTO DE DISPONIBILIDAD HOY
+        const disponiblesHoy = getAvailableSlotsCountForToday(p);
+        const disponibilidad = disponiblesHoy > 0 ? `${disponiblesHoy} disponible(s) hoy` : 'Sin disponibilidad hoy';
 
         const rating = getAverageRating(p.id);
         const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
@@ -357,9 +399,8 @@ export function renderProfessionals(professionals) {
         const title = p.title || (p.genero === 'M' ? 'Psicólogo' : p.genero === 'F' ? 'Psicóloga' : 'Psicólogo/a');
         const img = p.img || p.photoURL || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
         const address = p.address || 'Dirección no especificada';
-        const disponibilidad = horasLibres > 0 ? `${horasLibres} disponible(s) hoy` : 'Sin disponibilidad hoy';
         
-        // Badges de WhatsApp e Instagram (si existen)
+        // Badges de WhatsApp e Instagram
         const whatsappBadge = p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank" class="whatsapp-badge"><i class="fab fa-whatsapp"></i></a>` : '';
         const instagramBadge = p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank" class="instagram-badge"><i class="fab fa-instagram"></i></a>` : '';
 
@@ -403,7 +444,7 @@ export function renderProfessionals(professionals) {
 }
 
 // ============================================
-// CARGA INICIAL DE DATOS (MEJORADA CON CARGA ÚNICA Y LISTENERS)
+// CARGA INICIAL DE DATOS (SIN CAMBIOS)
 // ============================================
 export function cargarDatosIniciales() {
     console.log('🚀 Cargando datos iniciales (carga única + escucha en tiempo real)...');
@@ -671,8 +712,7 @@ export function cargarDatosIniciales() {
         setTimeout(() => showSection('inicio'), 500);
     });
     
-    // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES
-    // staff
+    // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES (sin cambios)
     db.ref('staff').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -685,7 +725,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener staff:', error);
     });
     
-    // patients
     db.ref('patients').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -694,7 +733,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener patients:', error);
     });
     
-    // appointments
     db.ref('appointments').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -703,7 +741,7 @@ export function cargarDatosIniciales() {
             if (state.currentUser) {
                 if (typeof window.updateStats === 'function') window.updateStats();
                 renderPendingRequests();
-                renderAppointments();  // ← Agregado para que la tabla se actualice en tiempo real
+                renderAppointments();
             }
         } else {
             state.setAppointments([]);
@@ -712,7 +750,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener appointments:', error);
     });
     
-    // pendingRequests
     db.ref('pendingRequests').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -721,7 +758,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener pendingRequests:', error);
     });
     
-    // messages
     db.ref('messages').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setMessages(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -732,7 +768,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener messages:', error);
     });
     
-    // fichasIngreso
     db.ref('fichasIngreso').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -740,7 +775,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener fichasIngreso:', error);
     });
     
-    // sesiones
     db.ref('sesiones').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -748,7 +782,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener sesiones:', error);
     });
     
-    // informes
     db.ref('informes').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -756,7 +789,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener informes:', error);
     });
     
-    // textosEditables
     db.ref('textosEditables').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {

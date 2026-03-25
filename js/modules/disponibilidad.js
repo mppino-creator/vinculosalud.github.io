@@ -32,7 +32,6 @@ export function showAvailabilityModal() {
 
     // Inicializar selección de días de la semana (todos seleccionados por defecto)
     const weekdays = document.querySelectorAll('#weekdaySelector .weekday');
-    // Si state.selectedWeekdays está vacío, llenar con todos los días
     if (state.selectedWeekdays.length === 0) {
         const allDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
         state.setSelectedWeekdays(allDays);
@@ -60,7 +59,7 @@ export function closeAvailabilityModal() {
 // ============================================
 
 export function toggleWeekday(dayName) {
-    // Buscar el elemento por su texto (fallback si no se pasa event)
+    // Buscar el elemento por su texto (sin usar :contains)
     let element = null;
     const allDays = document.querySelectorAll('#weekdaySelector .weekday');
     for (let d of allDays) {
@@ -148,7 +147,7 @@ function toggleGeneratedSlot(time) {
 }
 
 // ============================================
-// FUNCIONES DE BLOQUEO DE RANGOS
+// BLOQUEAR RANGO DE HORAS (EJ. ALMUERZO)
 // ============================================
 
 export function blockTimeRange() {
@@ -163,11 +162,11 @@ export function blockTimeRange() {
     const slots = state.generatedSlots.filter(slot => slot.time < startTime || slot.time >= endTime);
     state.setGeneratedSlots(slots);
     renderGeneratedSlots();
-    showToast('Rango de horas eliminado', 'success');
+    showToast('Rango de horas eliminado de los horarios generados', 'success');
 }
 
 // ============================================
-// FUNCIONES DE APLICACIÓN DE HORARIOS (CORREGIDAS)
+// APLICAR HORARIOS GENERADOS A UN RANGO DE FECHAS
 // ============================================
 
 export function applyGeneratedSlots() {
@@ -233,6 +232,45 @@ export function applyGeneratedSlots() {
 }
 
 // ============================================
+// EXCLUIR FECHAS ESPECÍFICAS (DÍAS INHÁBILES)
+// ============================================
+
+export function excludeSpecificDates() {
+    const datesInput = prompt('Ingresa las fechas a excluir (formato YYYY-MM-DD), separadas por comas:\nEjemplo: 2026-03-30, 2026-04-01');
+    if (!datesInput) return;
+
+    const dates = datesInput.split(',').map(d => d.trim());
+    const validDates = dates.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d));
+
+    if (validDates.length === 0) {
+        showToast('No se ingresaron fechas válidas', 'error');
+        return;
+    }
+
+    if (!state.currentUser.data.availability) return;
+
+    let modified = false;
+    validDates.forEach(date => {
+        if (state.currentUser.data.availability[date]) {
+            delete state.currentUser.data.availability[date];
+            modified = true;
+        }
+    });
+
+    if (modified) {
+        const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
+        if (staffIndex !== -1) state.staff[staffIndex].availability = state.currentUser.data.availability;
+        import('../main.js').then(main => main.save());
+        showToast(`Se eliminó la disponibilidad en ${validDates.length} fecha(s)`, 'success');
+        // Refrescar vista actual si está visible
+        const currentDateInput = document.getElementById('availDate');
+        if (currentDateInput && currentDateInput.value && loadTimeSlots) loadTimeSlots();
+    } else {
+        showToast('Ninguna de las fechas tenía disponibilidad', 'info');
+    }
+}
+
+// ============================================
 // FUNCIONES DE LIMPIEZA
 // ============================================
 
@@ -249,7 +287,7 @@ export function clearAllSlots() {
 }
 
 // ============================================
-// FUNCIONES DE CARGA DE HORARIOS
+// FUNCIONES DE CARGA DE HORARIOS (PESTAÑA DISPONIBILIDAD)
 // ============================================
 
 export function loadTimeSlots() {
@@ -368,7 +406,7 @@ export function saveAvailability() {
 }
 
 // ============================================
-// ESTADÍSTICAS DE DISPONIBILIDAD
+// ESTADÍSTICAS DE DISPONIBILIDAD (AUXILIARES)
 // ============================================
 
 export function getAvailabilityStats(psychId) {
@@ -463,6 +501,7 @@ if (typeof window !== 'undefined') {
     window.saveAvailability = saveAvailability;
     window.loadTimeSlots = loadTimeSlots;
     window.addOvercupo = addOvercupo;
+    window.excludeSpecificDates = excludeSpecificDates;  // <-- NUEVA FUNCIÓN
 }
 
-console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada (sin boxes)');
+console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada + excluir fechas');

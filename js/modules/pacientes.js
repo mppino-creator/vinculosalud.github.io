@@ -87,6 +87,7 @@ export function renderPatients() {
                     <span><i class="fa fa-id-card"></i> ${p.rut || 'Sin RUT'}</span>
                     <span><i class="fa fa-envelope"></i> ${p.email}</span>
                     ${p.phone ? `<span><i class="fa fa-phone"></i> ${p.phone}</span>` : ''}
+                    ${p.prevision ? `<span><i class="fa fa-id-card"></i> ${p.prevision}</span>` : ''}
                 </div>
                 
                 <div style="margin-top:10px; font-size:0.85rem;">
@@ -243,6 +244,7 @@ function mostrarOpcionCrearFicha(patient, sesiones = []) {
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
                     <div><strong>Email:</strong> ${patient.email}</div>
                     <div><strong>Teléfono:</strong> ${patient.phone || '—'}</div>
+                    <div><strong>Previsión:</strong> ${patient.prevision || '—'}</div>
                     <div><strong>Fecha Registro:</strong> ${patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : '—'}</div>
                     <div><strong>Notas:</strong> ${patient.notes || '—'}</div>
                 </div>
@@ -328,6 +330,7 @@ function renderPerfil(patient, sesiones = []) {
                 <div><strong>RUT:</strong> ${patient.rut || '—'}</div>
                 <div><strong>Email:</strong> ${patient.email}</div>
                 <div><strong>Teléfono:</strong> ${patient.phone || '—'}</div>
+                <div><strong>Previsión:</strong> ${patient.prevision || '—'}</div>
                 <div><strong>Fecha Nac.:</strong> ${patient.birthdate || '—'} (${edad} años)</div>
                 <div><strong>Notas:</strong> ${patient.notes || '—'}</div>
                 <div><strong>Registrado:</strong> ${patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : '—'}</div>
@@ -471,7 +474,7 @@ export function volverALista() {
 }
 
 // ============================================
-// FUNCIONES EXISTENTES (SIN CAMBIOS)
+// FUNCIONES EXISTENTES (CON PREVISIÓN)
 // ============================================
 
 export function showNewPatientModal() {
@@ -480,6 +483,7 @@ export function showNewPatientModal() {
     document.getElementById('patientName').value = '';
     document.getElementById('patientEmail').value = '';
     document.getElementById('patientPhone').value = '';
+    document.getElementById('patientPrevision').value = '';
     document.getElementById('patientBirthdate').value = '';
     document.getElementById('patientNotes').value = '';
     document.getElementById('patientModalTitle').innerText = 'Nuevo Paciente';
@@ -497,6 +501,7 @@ export function viewPatientDetails(id) {
     document.getElementById('patientName').value = patient.name || '';
     document.getElementById('patientEmail').value = patient.email || '';
     document.getElementById('patientPhone').value = patient.phone || '';
+    document.getElementById('patientPrevision').value = patient.prevision || '';
     document.getElementById('patientBirthdate').value = patient.birthdate || '';
     document.getElementById('patientNotes').value = patient.notes || '';
     document.getElementById('patientModalTitle').innerText = 'Editar Paciente';
@@ -563,6 +568,7 @@ export function searchPatientByRut() {
         document.getElementById('patientName').value = patient.name || '';
         document.getElementById('patientEmail').value = patient.email || '';
         document.getElementById('patientPhone').value = patient.phone || '';
+        document.getElementById('patientPrevision').value = patient.prevision || '';
         document.getElementById('patientBirthdate').value = patient.birthdate || '';
         document.getElementById('patientNotes').value = patient.notes || '';
         showToast('Datos cargados automáticamente', 'success');
@@ -575,6 +581,7 @@ export function savePatient() {
     const name = document.getElementById('patientName').value;
     const email = document.getElementById('patientEmail').value;
     const phone = document.getElementById('patientPhone').value;
+    const prevision = document.getElementById('patientPrevision').value;
     const birthdate = document.getElementById('patientBirthdate').value;
     const notes = document.getElementById('patientNotes').value;
 
@@ -595,6 +602,7 @@ export function savePatient() {
             patient.name = name;
             patient.email = email;
             patient.phone = phone;
+            patient.prevision = prevision;
             patient.birthdate = birthdate;
             patient.notes = notes;
         }
@@ -605,6 +613,7 @@ export function savePatient() {
                 existingPatient.name = name;
                 existingPatient.email = email;
                 existingPatient.phone = phone;
+                existingPatient.prevision = prevision;
                 existingPatient.birthdate = birthdate;
                 existingPatient.notes = notes;
             } else {
@@ -617,6 +626,7 @@ export function savePatient() {
                 name,
                 email,
                 phone,
+                prevision,
                 birthdate,
                 notes,
                 psychId: state.currentUser?.role === 'psych' ? state.currentUser.data.id : null,
@@ -670,6 +680,7 @@ export function printPatientSummary() {
                 <p><strong>RUT:</strong> ${patient.rut}</p>
                 <p><strong>Email:</strong> ${patient.email}</p>
                 <p><strong>Teléfono:</strong> ${patient.phone || '—'}</p>
+                <p><strong>Previsión:</strong> ${patient.prevision || '—'}</p>
             </div>
             
             <div class="info-box">
@@ -681,8 +692,7 @@ export function printPatientSummary() {
             
             <table class="table">
                 <thead>
-                    <tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr>
-                </thead>
+                    <tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th> </thead>
                 <tbody>
     `;
 

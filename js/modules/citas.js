@@ -524,6 +524,12 @@ export function searchPatientByRutBooking() {
             }
         }
         
+        // Cargar previsión
+        const previsionSelect = document.getElementById('custPrevision');
+        if (previsionSelect && patient.prevision) {
+            previsionSelect.value = patient.prevision;
+        }
+        
         if (patient.tutor) {
             const tutorName = document.getElementById('tutorName');
             const tutorRut = document.getElementById('tutorRut');
@@ -574,6 +580,7 @@ export function executeBooking() {
     const name = document.getElementById('custName').value;
     const email = document.getElementById('custEmail').value;
     const birthdate = document.getElementById('custBirthdate')?.value || '';
+    const prevision = document.getElementById('custPrevision')?.value || '';
     
     // Validación simple de email (no se envía correo)
     if (!email || !email.includes('@')) {
@@ -729,6 +736,7 @@ export function executeBooking() {
                     phone,
                     birthdate: birthdate,
                     edad: edad,
+                    prevision: prevision,
                     tutor: (edad < 18 && tutorData) ? tutorData : null,
                     notes: msg || '',
                     psychId: state.selectedPsych.id,
@@ -747,6 +755,10 @@ export function executeBooking() {
                 if (!patient.birthdate && birthdate) {
                     patient.birthdate = birthdate;
                     patient.edad = calcularEdadDesdeFecha(birthdate);
+                    datosActualizados = true;
+                }
+                if (!patient.prevision && prevision) {
+                    patient.prevision = prevision;
                     datosActualizados = true;
                 }
                 if (tutorData && patient.edad < 18) {
@@ -806,7 +818,8 @@ export function executeBooking() {
                 preferredTime: time || null,
                 preferredAMPM: preferenciaAMPM,
                 patientBirthdate: birthdate || null,
-                patientTutor: patient.tutor || null
+                patientTutor: patient.tutor || null,
+                prevision: prevision
             };
 
             if (type === 'online') {
@@ -1017,7 +1030,7 @@ export function renderAppointments() {
     }
 
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">No hay citas</td></tr>';
+        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td></tr>';
         return;
     }
 
@@ -1035,7 +1048,7 @@ export function renderAppointments() {
                 <td>${a.psych || '—'}</td>
                 <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
                 <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>—</td>
+                <td>${a.prevision || '—'}</td>
                 <td><span>${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span></td>
                 <td><span>${statusText}</span></td>
                 <td>
@@ -1069,7 +1082,7 @@ export function renderPendingRequests() {
     }
 
     if (requestsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
+        tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
         return;
     }
 
@@ -1090,7 +1103,7 @@ export function renderPendingRequests() {
                 <td>${r.date}</td>
                 <td>${r.time || 'A coordinar'}</td>
                 <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>—</td>
+                <td>${r.prevision || '—'}</td>
                 <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
                 <td>
                     <div style="display:flex; flex-direction:column; gap:5px;">
@@ -1200,7 +1213,8 @@ export async function confirmPresencialTime(requestId, date, time) {
         status: 'confirmada',
         createdAt: new Date().toISOString(),
         confirmedBy: state.currentUser?.data?.name,
-        emailConfirmacionEnviado: false
+        emailConfirmacionEnviado: false,
+        prevision: request.prevision
     };
     
     state.appointments.push(appointment);
@@ -1425,7 +1439,8 @@ export function executeTherapistBooking() {
         status: 'confirmada',
         createdAt: new Date().toISOString(),
         createdBy: state.currentUser.data.name,
-        emailEnviado: false
+        emailEnviado: false,
+        prevision: state.selectedPatientForTherapist.prevision || ''
     };
 
     state.appointments.push(appointment);

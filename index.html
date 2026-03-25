@@ -298,6 +298,16 @@
             <input type="text" id="patientPhone">
         </div>
         <div class="form-group">
+            <label>Previsión</label>
+            <select id="patientPrevision" class="filter-input">
+                <option value="">Selecciona previsión</option>
+                <option value="Fonasa">Fonasa</option>
+                <option value="Isapre">Isapre</option>
+                <option value="Particular">Particular</option>
+                <option value="Otra">Otra</option>
+            </select>
+        </div>
+        <div class="form-group">
             <label>Fecha de nacimiento</label>
             <input type="date" id="patientBirthdate">
         </div>
@@ -1110,7 +1120,39 @@
         <div class="booking-grid">
             <div>
                 <h3>Información del Paciente</h3><br>
-                
+
+                <!-- FECHA Y HORARIO (movido aquí para seleccionar primero) -->
+                <div style="display:grid; grid-template-columns: 1fr; gap:15px;">
+                    <div class="form-group">
+                        <label>Fecha *</label>
+                        <input type="date" id="custDate" class="filter-input" onchange="updateAvailableTimes()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Horario *</label>
+                        <div class="time-slots-container">
+                            <div id="amSlots" style="display:none;">
+                                <h4><i class="fa fa-sun"></i> Horarios AM</h4>
+                                <div class="time-slot-grid" id="amSlotsContainer"></div>
+                            </div>
+                            
+                            <div id="pmSlots" style="display:none;">
+                                <h4><i class="fa fa-moon"></i> Horarios PM</h4>
+                                <div class="time-slot-grid" id="pmSlotsContainer"></div>
+                            </div>
+                            
+                            <select id="custTime" class="filter-input" style="display:none;">
+                                <option value="">Selecciona un horario</option>
+                            </select>
+                            
+                            <div id="noSlotsMessage" style="text-align:center; padding:20px; color:#666; display:none;">
+                                No hay horarios disponibles para esta fecha
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DATOS DEL PACIENTE (después de la fecha/hora) -->
                 <div class="form-group">
                     <label>RUT *</label>
                     <input type="text" id="custRut" placeholder="12.345.678-9" oninput="formatRut(this)" onblur="searchPatientByRutBooking()">
@@ -1144,6 +1186,18 @@
                         <input type="text" id="custPhone" placeholder="9135 7990" style="width: 60%; min-width: 150px; padding: 12px; border-radius: 12px; border: 1px solid var(--gris-oscuro);" maxlength="8" pattern="[0-9]*" inputmode="numeric">
                     </div>
                     <small style="color: var(--text-light); display: block; margin-top: 5px;">Ejemplo: +56 9 9135 7990</small>
+                </div>
+
+                <!-- PREVISIÓN -->
+                <div class="form-group">
+                    <label>Previsión</label>
+                    <select id="custPrevision" class="filter-input">
+                        <option value="">Selecciona previsión</option>
+                        <option value="Fonasa">Fonasa</option>
+                        <option value="Isapre">Isapre</option>
+                        <option value="Particular">Particular</option>
+                        <option value="Otra">Otra</option>
+                    </select>
                 </div>
 
                 <!-- FECHA DE NACIMIENTO Y EDAD -->
@@ -1194,37 +1248,6 @@
                 <div class="form-group">
                     <label>Notas / Motivo</label>
                     <textarea id="custMsg" rows="4"></textarea>
-                </div>
-                
-                <!-- FECHA Y HORARIO -->
-                <div style="display:grid; grid-template-columns: 1fr; gap:15px;">
-                    <div class="form-group">
-                        <label>Fecha *</label>
-                        <input type="date" id="custDate" class="filter-input" onchange="updateAvailableTimes()">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Horario *</label>
-                        <div class="time-slots-container">
-                            <div id="amSlots" style="display:none;">
-                                <h4><i class="fa fa-sun"></i> Horarios AM</h4>
-                                <div class="time-slot-grid" id="amSlotsContainer"></div>
-                            </div>
-                            
-                            <div id="pmSlots" style="display:none;">
-                                <h4><i class="fa fa-moon"></i> Horarios PM</h4>
-                                <div class="time-slot-grid" id="pmSlotsContainer"></div>
-                            </div>
-                            
-                            <select id="custTime" class="filter-input" style="display:none;">
-                                <option value="">Selecciona un horario</option>
-                            </select>
-                            
-                            <div id="noSlotsMessage" style="text-align:center; padding:20px; color:#666; display:none;">
-                                No hay horarios disponibles para esta fecha
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 
                 <div id="onlineAvailabilityMsg" style="background:#e6f7e6; padding:15px; border-radius:12px; margin:15px 0; display:none;">
@@ -1353,24 +1376,22 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                 <table>
+                 表格
                     <thead>
-                         <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
-                    </thead>
+                         with<th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Previsión</th><th>Pago</th><th>Estado</th><th>Acciones</th></thead>
                     <tbody id="tableBody"></tbody>
-                 </table>
+                 表格
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                 <table>
+                 表格
                     <thead>
-                         <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Motivo</th><th>Acciones</th></tr>
-                    </thead>
+                         with<th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Previsión</th><th>Motivo</th><th>Acciones</th></thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                 </table>
+                 表格
             </div>
         </div>
 
@@ -1397,12 +1418,12 @@
                 </button>
             </div>
             <div class="table-container">
-                 <table>
+                 表格
                     <thead>
-                         <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                            <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                 </table>
+                 表格
             </div>
         </div>
 
@@ -1537,12 +1558,12 @@
             </div>
             
             <div class="table-container">
-                 <table>
+                 表格
                     <thead>
                          <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                 </table>
+                 表格
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">

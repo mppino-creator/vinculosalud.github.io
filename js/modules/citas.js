@@ -1148,10 +1148,37 @@ export function confirmPayment(appointmentId) {
     });
 }
 
-export function confirmPresencialTime(requestId, date, time) {
+export async function confirmPresencialTime(requestId, date, time) {
     const request = state.pendingRequests.find(r => r.id == requestId);
-    if (!request) return;
-    
+    if (!request) {
+        showToast('Solicitud no encontrada', 'error');
+        return;
+    }
+
+    // Validar que la hora no esté ocupada (online o presencial)
+    const ocupado = state.appointments.some(a => 
+        a.psychId == request.psychId &&
+        a.date === date &&
+        a.time === time &&
+        (a.status === 'confirmada' || a.status === 'pendiente')
+    ) || state.pendingRequests.some(r => 
+        r.psychId == request.psychId &&
+        r.date === date &&
+        r.time === time &&
+        r.time !== 'Pendiente'
+    );
+
+    if (ocupado) {
+        showToast('⚠️ La hora seleccionada ya está ocupada. Elige otra.', 'error');
+        return;
+    }
+
+    // Validar que la fecha/hora no sea en el pasado
+    if (new Date(date + 'T' + time) < new Date()) {
+        showToast('No se puede agendar en una fecha/hora pasada.', 'error');
+        return;
+    }
+
     const appointment = {
         id: Date.now(),
         patientId: request.patientId,
@@ -1179,25 +1206,58 @@ export function confirmPresencialTime(requestId, date, time) {
     state.appointments.push(appointment);
     state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
     
-    import('../main.js').then(main => main.save());
+    await import('../main.js').then(main => main.save());
     showToast('✅ Cita confirmada', 'success');
+
+    // Refrescar tablas y calendario
+    if (typeof renderAppointments === 'function') renderAppointments();
+    if (typeof renderPendingRequests === 'function') renderPendingRequests();
+    if (typeof window.renderCalendar === 'function') window.renderCalendar();
 }
 
 export function showConfirmRequestModal(requestId) {
     const request = state.pendingRequests.find(r => r.id == requestId);
-    if (!request) return;
+    if (!request) {
+        showToast('Solicitud no encontrada', 'error');
+        return;
+    }
+
+    // Verificar que la pestaña "Agendar" esté disponible en el DOM
+    const agendarTab = document.getElementById('agendarTab');
+    if (!agendarTab) {
+        showToast('La pestaña "Agendar" no está disponible. Contacta al administrador.', 'error');
+        return;
+    }
+
+    // Asegurar que los elementos existan
+    const therapistRut = document.getElementById('therapistRut');
+    const patientInfo = document.getElementById('patientInfo');
+    const patientInfoName = document.getElementById('patientInfoName');
+    const patientInfoEmail = document.getElementById('patientInfoEmail');
+    const patientInfoPhone = document.getElementById('patientInfoPhone');
+    const therapistPatientName = document.getElementById('therapistPatientName');
+    const therapistAppointmentType = document.getElementById('therapistAppointmentType');
+    const therapistDate = document.getElementById('therapistDate');
+    const therapistMsg = document.getElementById('therapistMsg');
+    const therapistPaymentMethod = document.getElementById('therapistPaymentMethod');
+
+    if (!therapistRut || !patientInfo || !patientInfoName || !patientInfoEmail || !patientInfoPhone ||
+        !therapistPatientName || !therapistAppointmentType || !therapistDate || !therapistMsg || !therapistPaymentMethod) {
+        showToast('Error: Faltan elementos en la interfaz para confirmar la solicitud.', 'error');
+        return;
+    }
 
     state.setSelectedPatientForTherapist(state.patients.find(p => p.id == request.patientId));
-    document.getElementById('therapistRut').value = state.selectedPatientForTherapist?.rut || '';
-    document.getElementById('patientInfoName').innerText = state.selectedPatientForTherapist?.name || '';
-    document.getElementById('patientInfoEmail').innerText = state.selectedPatientForTherapist?.email || '';
-    document.getElementById('patientInfoPhone').innerText = state.selectedPatientForTherapist?.phone || '';
-    document.getElementById('patientInfo').style.display = 'block';
-    document.getElementById('therapistPatientName').innerText = state.selectedPatientForTherapist?.name || '';
-    document.getElementById('therapistAppointmentType').value = 'presencial';
-    document.getElementById('therapistDate').value = request.date;
-    document.getElementById('therapistMsg').value = request.msg;
-    document.getElementById('therapistPaymentMethod').value = request.paymentMethod || 'transfer';
+    therapistRut.value = state.selectedPatientForTherapist?.rut || '';
+    patientInfoName.innerText = state.selectedPatientForTherapist?.name || '';
+    patientInfoEmail.innerText = state.selectedPatientForTherapist?.email || '';
+    patientInfoPhone.innerText = state.selectedPatientForTherapist?.phone || '';
+    patientInfo.style.display = 'block';
+    therapistPatientName.innerText = state.selectedPatientForTherapist?.name || '';
+    therapistAppointmentType.value = 'presencial';
+    therapistDate.value = request.date;
+    therapistMsg.value = request.msg;
+    therapistPaymentMethod.value = request.paymentMethod || 'transfer';
 
     window.currentRequestId = requestId;
 
@@ -1281,9 +1341,17 @@ export function updateTherapistAvailableSlots() {
 
     if (!date || !state.currentUser?.data) return;
 
+    // Obtener horas ocupadas por citas confirmadas
     const bookedTimes = state.appointments
         .filter(a => a.psychId == state.currentUser.data.id && a.date === date && a.status === 'confirmada')
         .map(a => a.time);
+
+    // También considerar solicitudes presenciales que ya tengan hora asignada (aunque estén en pendingRequests)
+    const bookedRequests = state.pendingRequests
+        .filter(r => r.psychId == state.currentUser.data.id && r.date === date && r.time && r.time !== 'Pendiente')
+        .map(r => r.time);
+
+    const allBooked = [...new Set([...bookedTimes, ...bookedRequests])];
 
     const availableSlots = state.currentUser.data.availability?.[date] || [];
 
@@ -1291,7 +1359,7 @@ export function updateTherapistAvailableSlots() {
 
     const now = new Date();
     availableSlots.forEach(slot => {
-        if (!bookedTimes.includes(slot.time) && new Date(date + 'T' + slot.time) > now) {
+        if (!allBooked.includes(slot.time) && new Date(date + 'T' + slot.time) > now) {
             const option = document.createElement('option');
             option.value = slot.time;
             option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
@@ -1315,6 +1383,24 @@ export function executeTherapistBooking() {
 
     if (!date || !time) {
         showToast('Selecciona fecha y horario', 'error');
+        return;
+    }
+
+    // Validar que la hora no esté ocupada (por si acaso)
+    const ocupado = state.appointments.some(a =>
+        a.psychId == state.currentUser.data.id &&
+        a.date === date &&
+        a.time === time &&
+        (a.status === 'confirmada' || a.status === 'pendiente')
+    ) || state.pendingRequests.some(r =>
+        r.psychId == state.currentUser.data.id &&
+        r.date === date &&
+        r.time === time &&
+        r.time !== 'Pendiente'
+    );
+
+    if (ocupado) {
+        showToast('⚠️ La hora seleccionada ya está ocupada. Elige otra.', 'error');
         return;
     }
 

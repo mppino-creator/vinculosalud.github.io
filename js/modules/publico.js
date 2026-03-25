@@ -33,34 +33,30 @@ function getAverageRating(psychId) {
 }
 
 // ============================================
-// 🔥 FUNCIÓN ACTUALIZADA: Calcular cupos disponibles HOY (considera advanceNotice)
+// 🔥 FUNCIÓN: Calcular cupos disponibles HOY (con antelación)
 // ============================================
 function getAvailableSlotsCountForToday(psych) {
     const today = new Date().toISOString().split('T')[0];
     const now = new Date();
     
-    // Obtener slots del profesional para hoy
     const todaySlots = psych.availability?.[today] || [];
     if (todaySlots.length === 0) return 0;
     
-    // Obtener horas ocupadas por citas confirmadas/pendientes
     const bookedAppointments = (state.appointments || []).filter(a => 
         a.psychId == psych.id && a.date === today && 
         (a.status === 'confirmada' || a.status === 'pendiente')
     ).map(a => a.time);
     
-    // Obtener horas ocupadas por solicitudes presenciales con hora asignada
     const bookedRequests = (state.pendingRequests || []).filter(r => 
         r.psychId == psych.id && r.date === today && r.time && r.time !== 'Pendiente'
     ).map(r => r.time);
     
     const bookedTimes = [...new Set([...bookedAppointments, ...bookedRequests])];
     
-    // 🔥 Aplicar antelación mínima (advanceNotice)
-    const advanceMinutes = psych.advanceNotice ?? 60; // 60 minutos por defecto
+    // Antelación configurada (por defecto 60 minutos)
+    const advanceMinutes = psych.advanceNotice ?? 60;
     const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
     
-    // Filtrar slots: no ocupados y con hora futura según antelación
     const available = todaySlots.filter(slot => 
         !bookedTimes.includes(slot.time) && 
         new Date(today + 'T' + slot.time) > cutoffTime
@@ -314,7 +310,7 @@ export function showTherapistInfo(psychId) {
 }
 
 // ============================================
-// FILTRO DE PROFESIONALES (ACTUALIZADO)
+// FILTRO DE PROFESIONALES
 // ============================================
 export function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
@@ -371,7 +367,7 @@ export function filterProfessionals() {
 }
 
 // ============================================
-// RENDERIZADO DE PROFESIONALES (CON BADGE CORREGIDO)
+// RENDERIZADO DE PROFESIONALES
 // ============================================
 export function renderProfessionals(professionals) {
     const grid = document.getElementById('equipo');
@@ -391,7 +387,6 @@ export function renderProfessionals(professionals) {
     }
 
     grid.innerHTML = professionals.map(p => {
-        // 🔥 CÁLCULO CORRECTO DE DISPONIBILIDAD HOY (con advanceNotice)
         const disponiblesHoy = getAvailableSlotsCountForToday(p);
         const disponibilidad = disponiblesHoy > 0 ? `${disponiblesHoy} disponible(s) hoy` : 'Sin disponibilidad hoy';
 
@@ -404,7 +399,6 @@ export function renderProfessionals(professionals) {
         const img = p.img || p.photoURL || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
         const address = p.address || 'Dirección no especificada';
         
-        // Badges de WhatsApp e Instagram
         const whatsappBadge = p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank" class="whatsapp-badge"><i class="fab fa-whatsapp"></i></a>` : '';
         const instagramBadge = p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank" class="instagram-badge"><i class="fab fa-instagram"></i></a>` : '';
 
@@ -448,7 +442,7 @@ export function renderProfessionals(professionals) {
 }
 
 // ============================================
-// CARGA INICIAL DE DATOS (SIN CAMBIOS)
+// CARGA INICIAL DE DATOS (PÚBLICOS + PRIVADOS CONDICIONALES)
 // ============================================
 export function cargarDatosIniciales() {
     console.log('🚀 Cargando datos iniciales (carga única + escucha en tiempo real)...');
@@ -461,22 +455,16 @@ export function cargarDatosIniciales() {
     const filtros = document.querySelector('.filters');
     if (filtros) filtros.style.display = 'none';
 
-    // 🔥 1. CARGA ÚNICA (Promise.all) con manejo de errores individuales
-    const promesas = [
+    // 🔥 1. CARGA ÚNICA DE NODOS PÚBLICOS
+    const promesasPublicas = [
         db.ref('staff').once('value').catch(err => { console.warn('⚠️ Error staff:', err); return null; }),
-        db.ref('patients').once('value').catch(err => { console.warn('⚠️ Error patients:', err); return null; }),
-        db.ref('appointments').once('value').catch(err => { console.warn('⚠️ Error appointments:', err); return null; }),
-        db.ref('pendingRequests').once('value').catch(err => { console.warn('⚠️ Error pendingRequests:', err); return null; }),
         db.ref('messages').once('value').catch(err => { console.warn('⚠️ Error messages:', err); return null; }),
-        db.ref('fichasIngreso').once('value').catch(err => { console.warn('⚠️ Error fichasIngreso:', err); return null; }),
-        db.ref('sesiones').once('value').catch(err => { console.warn('⚠️ Error sesiones:', err); return null; }),
-        db.ref('informes').once('value').catch(err => { console.warn('⚠️ Error informes:', err); return null; }),
         db.ref('specialties').once('value').catch(err => { console.warn('⚠️ Error specialties:', err); return null; }),
         db.ref('textosEditables').once('value').catch(err => { console.warn('⚠️ Error textosEditables:', err); return null; })
     ];
     
-    Promise.all(promesas).then(resultados => {
-        console.log('📦 Datos cargados (algunos pueden ser null si no hay permisos)');
+    Promise.all(promesasPublicas).then(resultados => {
+        console.log('📦 Datos públicos cargados (staff, messages, specialties, textosEditables)');
         
         // Procesar staff
         const staffSnapshot = resultados[0];
@@ -559,36 +547,9 @@ export function cargarDatosIniciales() {
             });
             console.log('👤 Administrador oculto agregado');
         }
-
-        // Procesar patients
-        const patientsSnapshot = resultados[1];
-        if (patientsSnapshot) {
-            const patientsData = patientsSnapshot.val();
-            state.setPatients(patientsData ? Object.keys(patientsData).map(key => ({ id: key, ...patientsData[key] })) : []);
-        } else {
-            state.setPatients([]);
-        }
-        
-        // Procesar appointments
-        const appointmentsSnapshot = resultados[2];
-        if (appointmentsSnapshot) {
-            const appointmentsData = appointmentsSnapshot.val();
-            state.setAppointments(appointmentsData ? Object.keys(appointmentsData).map(key => ({ id: key, ...appointmentsData[key] })) : []);
-        } else {
-            state.setAppointments([]);
-        }
-        
-        // Procesar pendingRequests
-        const pendingSnapshot = resultados[3];
-        if (pendingSnapshot) {
-            const pendingData = pendingSnapshot.val();
-            state.setPendingRequests(pendingData ? Object.keys(pendingData).map(key => ({ id: key, ...pendingData[key] })) : []);
-        } else {
-            state.setPendingRequests([]);
-        }
         
         // Procesar messages
-        const messagesSnapshot = resultados[4];
+        const messagesSnapshot = resultados[1];
         if (messagesSnapshot) {
             const messagesData = messagesSnapshot.val();
             if (messagesData) {
@@ -608,35 +569,8 @@ export function cargarDatosIniciales() {
             ]);
         }
         
-        // Procesar fichasIngreso
-        const fichasSnapshot = resultados[5];
-        if (fichasSnapshot) {
-            const fichasData = fichasSnapshot.val();
-            state.setFichasIngreso(fichasData ? Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] })) : []);
-        } else {
-            state.setFichasIngreso([]);
-        }
-        
-        // Procesar sesiones
-        const sesionesSnapshot = resultados[6];
-        if (sesionesSnapshot) {
-            const sesionesData = sesionesSnapshot.val();
-            state.setSesiones(sesionesData ? Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] })) : []);
-        } else {
-            state.setSesiones([]);
-        }
-        
-        // Procesar informes
-        const informesSnapshot = resultados[7];
-        if (informesSnapshot) {
-            const informesData = informesSnapshot.val();
-            state.setInformes(informesData ? Object.keys(informesData).map(key => ({ id: key, ...informesData[key] })) : []);
-        } else {
-            state.setInformes([]);
-        }
-        
         // Procesar specialties
-        const specialtiesSnapshot = resultados[8];
+        const specialtiesSnapshot = resultados[2];
         if (specialtiesSnapshot) {
             const specialtiesData = specialtiesSnapshot.val();
             if (specialtiesData) {
@@ -671,7 +605,7 @@ export function cargarDatosIniciales() {
         }
         
         // Textos editables
-        const textosSnapshot = resultados[9];
+        const textosSnapshot = resultados[3];
         if (textosSnapshot) {
             const textosData = textosSnapshot.val();
             if (textosData) {
@@ -688,17 +622,12 @@ export function cargarDatosIniciales() {
             }
         }
         
-        console.log('✅ Datos cargados correctamente');
+        console.log('✅ Datos públicos cargados correctamente');
         state.setDataLoaded(true);
         
-        // Si hay usuario logueado, actualizar UI del dashboard (si está visible)
+        // Si hay usuario logueado, cargar datos privados
         if (state.currentUser) {
-            if (document.getElementById('dashboard').style.display === 'block') {
-                if (typeof renderAppointments === 'function') renderAppointments();
-                if (typeof renderPendingRequests === 'function') renderPendingRequests();
-                if (typeof renderStaffTable === 'function' && state.currentUser.role === 'admin') renderStaffTable();
-                if (typeof window.updateStats === 'function') window.updateStats();
-            }
+            cargarDatosPrivados();
         }
         
         // Mostrar sección inicio después de cargar
@@ -710,13 +639,13 @@ export function cargarDatosIniciales() {
         if (state.currentUser?.role === 'admin') renderStaffTable();
         
     }).catch(error => {
-        console.error('❌ Error general en carga de datos:', error);
+        console.error('❌ Error general en carga de datos públicos:', error);
         showToast('Error al cargar datos', 'error');
         state.setDataLoaded(true);
         setTimeout(() => showSection('inicio'), 500);
     });
     
-    // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES (sin cambios)
+    // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES (SOLO PÚBLICOS)
     db.ref('staff').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -729,39 +658,6 @@ export function cargarDatosIniciales() {
         console.warn('⚠️ Error en listener staff:', error);
     });
     
-    db.ref('patients').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-        if (state.currentUser) renderPatients();
-    }, (error) => {
-        console.warn('⚠️ Error en listener patients:', error);
-    });
-    
-    db.ref('appointments').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            state.setAppointments(newApps);
-            if (state.currentUser) {
-                if (typeof window.updateStats === 'function') window.updateStats();
-                renderPendingRequests();
-                renderAppointments();
-            }
-        } else {
-            state.setAppointments([]);
-        }
-    }, (error) => {
-        console.warn('⚠️ Error en listener appointments:', error);
-    });
-    
-    db.ref('pendingRequests').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-        if (state.currentUser) renderPendingRequests();
-    }, (error) => {
-        console.warn('⚠️ Error en listener pendingRequests:', error);
-    });
-    
     db.ref('messages').on('value', (snapshot) => {
         const data = snapshot.val();
         state.setMessages(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -770,27 +666,6 @@ export function cargarDatosIniciales() {
         if (state.currentUser?.role === 'admin') import('./mensajes.js').then(mod => mod.renderMessagesTable());
     }, (error) => {
         console.warn('⚠️ Error en listener messages:', error);
-    });
-    
-    db.ref('fichasIngreso').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-    }, (error) => {
-        console.warn('⚠️ Error en listener fichasIngreso:', error);
-    });
-    
-    db.ref('sesiones').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-    }, (error) => {
-        console.warn('⚠️ Error en listener sesiones:', error);
-    });
-    
-    db.ref('informes').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-    }, (error) => {
-        console.warn('⚠️ Error en listener informes:', error);
     });
     
     db.ref('textosEditables').on('value', (snapshot) => {
@@ -831,6 +706,155 @@ export function cargarDatosIniciales() {
         updateAtencionSection();
         updateContactSection();
     }, 500);
+}
+
+// ============================================
+// CARGA DE DATOS PRIVADOS (SOLO SI HAY USUARIO)
+// ============================================
+function cargarDatosPrivados() {
+    console.log('🔒 Cargando datos privados (requieren autenticación)...');
+    
+    const promesasPrivadas = [
+        db.ref('patients').once('value').catch(err => { console.warn('⚠️ Error patients:', err); return null; }),
+        db.ref('appointments').once('value').catch(err => { console.warn('⚠️ Error appointments:', err); return null; }),
+        db.ref('pendingRequests').once('value').catch(err => { console.warn('⚠️ Error pendingRequests:', err); return null; }),
+        db.ref('fichasIngreso').once('value').catch(err => { console.warn('⚠️ Error fichasIngreso:', err); return null; }),
+        db.ref('sesiones').once('value').catch(err => { console.warn('⚠️ Error sesiones:', err); return null; }),
+        db.ref('informes').once('value').catch(err => { console.warn('⚠️ Error informes:', err); return null; })
+    ];
+    
+    Promise.all(promesasPrivadas).then(resultados => {
+        console.log('📦 Datos privados cargados (patients, appointments, pendingRequests, etc.)');
+        
+        // Procesar patients
+        const patientsSnapshot = resultados[0];
+        if (patientsSnapshot) {
+            const patientsData = patientsSnapshot.val();
+            state.setPatients(patientsData ? Object.keys(patientsData).map(key => ({ id: key, ...patientsData[key] })) : []);
+        } else {
+            state.setPatients([]);
+        }
+        
+        // Procesar appointments
+        const appointmentsSnapshot = resultados[1];
+        if (appointmentsSnapshot) {
+            const appointmentsData = appointmentsSnapshot.val();
+            state.setAppointments(appointmentsData ? Object.keys(appointmentsData).map(key => ({ id: key, ...appointmentsData[key] })) : []);
+        } else {
+            state.setAppointments([]);
+        }
+        
+        // Procesar pendingRequests
+        const pendingSnapshot = resultados[2];
+        if (pendingSnapshot) {
+            const pendingData = pendingSnapshot.val();
+            state.setPendingRequests(pendingData ? Object.keys(pendingData).map(key => ({ id: key, ...pendingData[key] })) : []);
+        } else {
+            state.setPendingRequests([]);
+        }
+        
+        // Procesar fichasIngreso
+        const fichasSnapshot = resultados[3];
+        if (fichasSnapshot) {
+            const fichasData = fichasSnapshot.val();
+            state.setFichasIngreso(fichasData ? Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] })) : []);
+        } else {
+            state.setFichasIngreso([]);
+        }
+        
+        // Procesar sesiones
+        const sesionesSnapshot = resultados[4];
+        if (sesionesSnapshot) {
+            const sesionesData = sesionesSnapshot.val();
+            state.setSesiones(sesionesData ? Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] })) : []);
+        } else {
+            state.setSesiones([]);
+        }
+        
+        // Procesar informes
+        const informesSnapshot = resultados[5];
+        if (informesSnapshot) {
+            const informesData = informesSnapshot.val();
+            state.setInformes(informesData ? Object.keys(informesData).map(key => ({ id: key, ...informesData[key] })) : []);
+        } else {
+            state.setInformes([]);
+        }
+        
+        console.log('✅ Datos privados cargados correctamente');
+        
+        // Actualizar vistas si el dashboard está visible
+        if (document.getElementById('dashboard').style.display === 'block') {
+            if (typeof renderAppointments === 'function') renderAppointments();
+            if (typeof renderPendingRequests === 'function') renderPendingRequests();
+            if (typeof renderStaffTable === 'function' && state.currentUser.role === 'admin') renderStaffTable();
+            if (typeof window.updateStats === 'function') window.updateStats();
+        }
+        
+        // Iniciar escuchas en tiempo real para nodos privados
+        iniciarEscuchasPrivadas();
+        
+    }).catch(error => {
+        console.error('❌ Error general en carga de datos privados:', error);
+    });
+}
+
+function iniciarEscuchasPrivadas() {
+    // Solo si hay usuario autenticado
+    if (!state.currentUser) return;
+    
+    db.ref('patients').on('value', (snapshot) => {
+        const data = snapshot.val();
+        state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+        if (state.currentUser) renderPatients();
+    }, (error) => {
+        console.warn('⚠️ Error en listener patients:', error);
+    });
+    
+    db.ref('appointments').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            state.setAppointments(newApps);
+            if (state.currentUser) {
+                if (typeof window.updateStats === 'function') window.updateStats();
+                renderPendingRequests();
+                renderAppointments();
+            }
+        } else {
+            state.setAppointments([]);
+        }
+    }, (error) => {
+        console.warn('⚠️ Error en listener appointments:', error);
+    });
+    
+    db.ref('pendingRequests').on('value', (snapshot) => {
+        const data = snapshot.val();
+        state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+        if (state.currentUser) renderPendingRequests();
+    }, (error) => {
+        console.warn('⚠️ Error en listener pendingRequests:', error);
+    });
+    
+    db.ref('fichasIngreso').on('value', (snapshot) => {
+        const data = snapshot.val();
+        state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    }, (error) => {
+        console.warn('⚠️ Error en listener fichasIngreso:', error);
+    });
+    
+    db.ref('sesiones').on('value', (snapshot) => {
+        const data = snapshot.val();
+        state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    }, (error) => {
+        console.warn('⚠️ Error en listener sesiones:', error);
+    });
+    
+    db.ref('informes').on('value', (snapshot) => {
+        const data = snapshot.val();
+        state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+    }, (error) => {
+        console.warn('⚠️ Error en listener informes:', error);
+    });
 }
 
 // ============================================

@@ -303,7 +303,8 @@ function mostrarDashboardInmediato(role, userData) {
     console.log('🔧 Forzando visibilidad de pestañas para rol:', role);
     const adminTabs = ['adminTabProfesionales','adminTabEspecialidades','adminTabPagos','adminTabFondo','adminTabTextos','adminTabLogo','adminTabReinicio','messagesTab','adminTabEstadisticas'];
     adminTabs.forEach(id => { const el = document.getElementById(id); if (el) el.style.setProperty('display', role === 'admin' ? 'inline-block' : 'none', 'important'); });
-    const psychTabs = ['psychTab','configTab','agendarTab'];
+    // Solo mostramos la pestaña de disponibilidad para psicólogo. 'configTab' y 'agendarTab' no tienen contenido en HTML, así que no las mostramos.
+    const psychTabs = ['psychTab']; // Quitamos 'configTab' y 'agendarTab' porque no tienen contenido asociado.
     psychTabs.forEach(id => { const el = document.getElementById(id); if (el) el.style.setProperty('display', role === 'psych' ? 'inline-block' : 'none', 'important'); });
     const commonTabIds = ['citas','solicitudes','pacientes'];
     commonTabIds.forEach(tabName => { const tabs = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.toLowerCase().includes(tabName)); if (tabs) tabs.style.setProperty('display', 'inline-block', 'important'); });

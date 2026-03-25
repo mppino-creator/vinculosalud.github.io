@@ -59,7 +59,6 @@ export function closeAvailabilityModal() {
 // ============================================
 
 export function toggleWeekday(dayName) {
-    // Buscar el elemento por su texto (sin usar :contains)
     let element = null;
     const allDays = document.querySelectorAll('#weekdaySelector .weekday');
     for (let d of allDays) {
@@ -79,7 +78,7 @@ export function toggleWeekday(dayName) {
 }
 
 // ============================================
-// FUNCIONES DE GENERACIÓN DE HORARIOS (MEJORADA)
+// GENERACIÓN DE HORARIOS
 // ============================================
 
 export function generateTimeSlots() {
@@ -102,12 +101,10 @@ export function generateTimeSlots() {
 
     const slots = [];
     
-    // Generar horarios redondeados a horas y medias horas
     while (currentMinutes + duration <= endMinutes) {
         const hour = Math.floor(currentMinutes / 60);
         const minute = currentMinutes % 60;
         
-        // Generar solo horas en punto y medias horas
         if (minute === 0 || minute === 30) {
             const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
             slots.push({ time: timeStr, isOvercupo: false });
@@ -147,7 +144,7 @@ function toggleGeneratedSlot(time) {
 }
 
 // ============================================
-// BLOQUEAR RANGO DE HORAS (EJ. ALMUERZO)
+// BLOQUEAR RANGO DE HORAS
 // ============================================
 
 export function blockTimeRange() {
@@ -166,7 +163,7 @@ export function blockTimeRange() {
 }
 
 // ============================================
-// APLICAR HORARIOS GENERADOS A UN RANGO DE FECHAS (CON ASYNC)
+// APLICAR HORARIOS GENERADOS (CON ASYNC)
 // ============================================
 
 export async function applyGeneratedSlots() {
@@ -186,7 +183,6 @@ export async function applyGeneratedSlots() {
         return;
     }
 
-    // Mapeo de nombres de días a números (0 = domingo)
     const weekdayMap = { 'Lun': 1, 'Mar': 2, 'Mie': 3, 'Jue': 4, 'Vie': 5, 'Sab': 6, 'Dom': 0 };
     const selectedDayNumbers = state.selectedWeekdays.map(d => weekdayMap[d]);
 
@@ -194,7 +190,6 @@ export async function applyGeneratedSlots() {
 
     if (!state.currentUser.data.availability) state.currentUser.data.availability = {};
 
-    // Crear nueva disponibilidad fusionando con la existente
     const newAvailability = { ...state.currentUser.data.availability };
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -204,7 +199,6 @@ export async function applyGeneratedSlots() {
         if (selectedDayNumbers.includes(dayOfWeek)) {
             if (!newAvailability[dateStr]) newAvailability[dateStr] = [];
 
-            // Agregar los slots generados que no existan ya
             state.generatedSlots.forEach(slot => {
                 if (!newAvailability[dateStr].some(s => s.time === slot.time)) {
                     newAvailability[dateStr].push(slot);
@@ -217,7 +211,6 @@ export async function applyGeneratedSlots() {
 
     state.currentUser.data.availability = newAvailability;
 
-    // Actualizar el staff
     const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
     console.log('staffIndex:', staffIndex, 'staff IDs:', state.staff.map(s => s.id), 'currentUserId:', state.currentUser.data.id);
     if (staffIndex !== -1) {
@@ -227,16 +220,12 @@ export async function applyGeneratedSlots() {
     }
 
     try {
-        // Esperar a que se complete el guardado
         const mainModule = await import('../main.js');
         await mainModule.save();
         console.log('✅ Disponibilidad guardada en Firebase');
         closeAvailabilityModal();
-        // Refrescar la vista de disponibilidad si la fecha actual está en el rango
-        const currentDateInput = document.getElementById('availDate');
-        if (currentDateInput && currentDateInput.value) {
-            loadTimeSlots();
-        }
+        // Recargar la vista de disponibilidad con la fecha actual
+        loadTimeSlots();
         showToast('Horarios aplicados', 'success');
     } catch (error) {
         console.error('❌ Error al guardar disponibilidad:', error);
@@ -245,7 +234,7 @@ export async function applyGeneratedSlots() {
 }
 
 // ============================================
-// EXCLUIR FECHAS ESPECÍFICAS (DÍAS INHÁBILES)
+// EXCLUIR FECHAS ESPECÍFICAS
 // ============================================
 
 export async function excludeSpecificDates() {
@@ -277,9 +266,7 @@ export async function excludeSpecificDates() {
             const mainModule = await import('../main.js');
             await mainModule.save();
             showToast(`Se eliminó la disponibilidad en ${validDates.length} fecha(s)`, 'success');
-            // Refrescar vista actual si está visible
-            const currentDateInput = document.getElementById('availDate');
-            if (currentDateInput && currentDateInput.value && loadTimeSlots) loadTimeSlots();
+            loadTimeSlots();
         } catch (error) {
             console.error('❌ Error al guardar exclusión:', error);
             showToast('Error al excluir fechas', 'error');
@@ -290,7 +277,7 @@ export async function excludeSpecificDates() {
 }
 
 // ============================================
-// FUNCIONES DE LIMPIEZA
+// LIMPIEZA TOTAL
 // ============================================
 
 export async function clearAllSlots() {
@@ -312,12 +299,22 @@ export async function clearAllSlots() {
 }
 
 // ============================================
-// FUNCIONES DE CARGA DE HORARIOS (PESTAÑA DISPONIBILIDAD)
+// CARGA DE HORARIOS EN PESTAÑA DISPONIBILIDAD
 // ============================================
 
 export function loadTimeSlots() {
     const dateInput = document.getElementById('availDate');
     if (!dateInput) return;
+    
+    // Si no hay fecha seleccionada, asignar la fecha actual
+    if (!dateInput.value) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        dateInput.value = `${yyyy}-${mm}-${dd}`;
+        console.log(`📅 Fecha no seleccionada, se asigna hoy: ${dateInput.value}`);
+    }
     
     const date = dateInput.value;
     if (!date || !state.currentUser?.data) return;
@@ -399,7 +396,7 @@ function toggleTimeSlot(time, isOvercupo = false) {
 }
 
 // ============================================
-// FUNCIONES DE SOBRECUPO
+// SOBRECUPO
 // ============================================
 
 export function addOvercupo() {
@@ -422,7 +419,7 @@ export function addOvercupo() {
 }
 
 // ============================================
-// FUNCIÓN DE GUARDADO (con async)
+// GUARDADO MANUAL
 // ============================================
 
 export async function saveAvailability() {
@@ -437,7 +434,7 @@ export async function saveAvailability() {
 }
 
 // ============================================
-// ESTADÍSTICAS DE DISPONIBILIDAD (AUXILIARES)
+// ESTADÍSTICAS (AUXILIARES)
 // ============================================
 
 export function getAvailabilityStats(psychId) {
@@ -535,4 +532,4 @@ if (typeof window !== 'undefined') {
     window.excludeSpecificDates = excludeSpecificDates;
 }
 
-console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada + excluir fechas + guardado asíncrono');
+console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada + excluir fechas + fecha automática');

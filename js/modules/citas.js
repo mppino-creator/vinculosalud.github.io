@@ -204,7 +204,7 @@ export function openBooking(id) {
     }
     
     state.setSelectedPsych(psych);
-    state.setSelectedBoxId(null);
+    // NOTA: se elimina la línea state.setSelectedBoxId(null) porque ya no existe
 
     const today = new Date().toISOString().split('T')[0];
     
@@ -1303,7 +1303,7 @@ export function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                              </tr>
+                            </tr>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `

@@ -726,6 +726,10 @@
                     <input type="text" id="editMyEducation" class="filter-input" placeholder="Ej: Universidad de Chile, 2015">
                 </div>
                 
+                <div class="form-group">
+                    <label>Idiomas (separados por coma)</label>
+                    <input type="text" id="editMyLanguages" class="filter-input" placeholder="Ej: Español, Inglés, Portugués">
+                </div>
             </div>
         </div>
         
@@ -1390,24 +1394,24 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
-                         <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Previsión</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
+                      <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Previsión</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                 </table>
+                  </table>
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
-                         <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Previsión</th><th>Motivo</th><th>Acciones</th></tr>
+                      <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Previsión</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                 </table>
+                  </table>
             </div>
         </div>
 
@@ -1434,12 +1438,12 @@
                 </button>
             </div>
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
-                         <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                      <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                 </table>
+                  </table>
             </div>
         </div>
 
@@ -1574,12 +1578,12 @@
             </div>
             
             <div class="table-container">
-                 <table>
+                  <table>
                     <thead>
-                         <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
+                      <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                 </table>
+                  </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">
@@ -2042,7 +2046,7 @@
 })();
 </script>
 
-<!-- FIX PARA ESTADÍSTICAS Y CITAS (MODIFICADO: AGREGADA LLAMADA A renderStaffTable CON RETRASO) -->
+<!-- FIX PARA ESTADÍSTICAS Y CITAS (CORREGIDO: usa funciones globales directas) -->
 <script>
 (function() {
     console.log('🔧 Instalando fix de estadísticas...');
@@ -2066,11 +2070,11 @@
                 if (tabName === 'pacientes' && typeof window.renderPatients === 'function') {
                     window.renderPatients();
                 }
-                if (tabName === 'citas' && window.citas && typeof window.citas.renderAppointments === 'function') {
-                    window.citas.renderAppointments();
+                if (tabName === 'citas' && typeof window.renderAppointments === 'function') {
+                    window.renderAppointments();
                 }
-                if (tabName === 'solicitudes' && window.citas && typeof window.citas.renderPendingRequests === 'function') {
-                    window.citas.renderPendingRequests();
+                if (tabName === 'solicitudes' && typeof window.renderPendingRequests === 'function') {
+                    window.renderPendingRequests();
                 }
                 if (tabName === 'estadisticas' && window.estadisticas && typeof window.estadisticas.renderPanelEstadisticas === 'function') {
                     window.estadisticas.renderPanelEstadisticas();

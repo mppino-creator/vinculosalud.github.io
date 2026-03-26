@@ -307,10 +307,6 @@ function crearModalEdicionProfesional() {
                         <label>Formación académica</label>
                         <input type="text" id="editMyEducation" class="filter-input" placeholder="Ej: Universidad de Chile, 2015">
                     </div>
-                    <div class="form-group">
-                        <label>Idiomas (separados por coma)</label>
-                        <input type="text" id="editMyLanguages" class="filter-input" placeholder="Ej: Español, Inglés, Portugués">
-                    </div>
                 </div>
             </div>
             

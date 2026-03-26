@@ -102,11 +102,6 @@ window.toggleInfo = function(button) {
             infoHTML += `<div class="info-section"><h4><i class="fa fa-heart"></i> Enfoque clínico</h4><p>${psych.clinicalExperience}</p></div>`;
         }
         
-        if (psych.languages) {
-            const langs = Array.isArray(psych.languages) ? psych.languages.join(', ') : psych.languages;
-            infoHTML += `<div class="info-section"><h4><i class="fa fa-language"></i> Idiomas</h4><p>${langs}</p></div>`;
-        }
-        
         if (psych.whatsapp) {
             infoHTML += `<div class="info-section"><h4><i class="fa fa-phone"></i> Contacto</h4><a href="https://wa.me/${psych.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent('Hola, necesito información sobre tus atenciones.')}" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> Contactar por WhatsApp</a></div>`;
         }

@@ -2,7 +2,7 @@
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
-import { renderMessages, updateMarquee } from './mensajes.js';
+import { renderMessages, updateMarquee, renderMessagesTable } from './mensajes.js';
 import { 
     cargarEspecialidades, 
     cargarMetodosPago, 
@@ -647,44 +647,56 @@ export function cargarDatosIniciales() {
     
     // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES (SOLO PÚBLICOS)
     db.ref('staff').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            const staffArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            state.setStaff(staffArray);
-            filterProfessionals();
-            if (state.currentUser?.role === 'admin') renderStaffTable();
+        try {
+            const data = snapshot.val();
+            if (data) {
+                const staffArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                state.setStaff(staffArray);
+                filterProfessionals();
+                if (state.currentUser?.role === 'admin') renderStaffTable();
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando listener staff:', error);
         }
     }, (error) => {
         console.warn('⚠️ Error en listener staff:', error);
     });
     
     db.ref('messages').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setMessages(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-        renderMessages();
-        updateMarquee();
-        if (state.currentUser?.role === 'admin') import('./mensajes.js').then(mod => mod.renderMessagesTable());
+        try {
+            const data = snapshot.val();
+            state.setMessages(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+            renderMessages();
+            updateMarquee();
+            if (state.currentUser?.role === 'admin') renderMessagesTable();
+        } catch (error) {
+            console.warn('⚠️ Error procesando listener messages:', error);
+        }
     }, (error) => {
         console.warn('⚠️ Error en listener messages:', error);
     });
     
     db.ref('textosEditables').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            if (data.missionText) state.setMissionText(data.missionText);
-            if (data.visionText) state.setVisionText(data.visionText);
-            if (data.aboutTeamText) state.setAboutTeamText(data.aboutTeamText);
-            if (data.aboutImage) state.setAboutImage(data.aboutImage);
-            if (data.atencionTexts) state.setAtencionTexts(data.atencionTexts);
-            if (data.contactInfo) state.setContactInfo(data.contactInfo);
-            if (data.heroTexts) state.setHeroTexts(data.heroTexts);
-            if (data.logoImage) state.setLogoImage(data.logoImage);
-            if (data.backgroundImage) state.setBackgroundImage(data.backgroundImage);
-            if (data.instagramData) state.setInstagramData(data.instagramData);
-            
-            updateAboutSection();
-            updateAtencionSection();
-            updateContactSection();
+        try {
+            const data = snapshot.val();
+            if (data) {
+                if (data.missionText) state.setMissionText(data.missionText);
+                if (data.visionText) state.setVisionText(data.visionText);
+                if (data.aboutTeamText) state.setAboutTeamText(data.aboutTeamText);
+                if (data.aboutImage) state.setAboutImage(data.aboutImage);
+                if (data.atencionTexts) state.setAtencionTexts(data.atencionTexts);
+                if (data.contactInfo) state.setContactInfo(data.contactInfo);
+                if (data.heroTexts) state.setHeroTexts(data.heroTexts);
+                if (data.logoImage) state.setLogoImage(data.logoImage);
+                if (data.backgroundImage) state.setBackgroundImage(data.backgroundImage);
+                if (data.instagramData) state.setInstagramData(data.instagramData);
+                
+                updateAboutSection();
+                updateAtencionSection();
+                updateContactSection();
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando listener textosEditables:', error);
         }
     }, (error) => {
         console.warn('⚠️ Error en listener textosEditables:', error);
@@ -803,55 +815,79 @@ function iniciarEscuchasPrivadas() {
     if (!state.currentUser) return;
     
     db.ref('patients').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-        if (state.currentUser) renderPatients();
+        try {
+            const data = snapshot.val();
+            state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+            if (state.currentUser) renderPatients();
+        } catch (error) {
+            console.warn('⚠️ Error procesando listener patients:', error);
+        }
     }, (error) => {
         console.warn('⚠️ Error en listener patients:', error);
     });
     
     db.ref('appointments').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            state.setAppointments(newApps);
-            if (state.currentUser) {
-                if (typeof window.updateStats === 'function') window.updateStats();
-                renderPendingRequests();
-                renderAppointments();
+        try {
+            const data = snapshot.val();
+            if (data) {
+                const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                state.setAppointments(newApps);
+                if (state.currentUser) {
+                    if (typeof window.updateStats === 'function') window.updateStats();
+                    renderPendingRequests();
+                    renderAppointments();
+                }
+            } else {
+                state.setAppointments([]);
             }
-        } else {
-            state.setAppointments([]);
+        } catch (error) {
+            console.warn('⚠️ Error procesando listener appointments:', error);
         }
     }, (error) => {
         console.warn('⚠️ Error en listener appointments:', error);
     });
     
     db.ref('pendingRequests').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-        if (state.currentUser) renderPendingRequests();
+        try {
+            const data = snapshot.val();
+            state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+            if (state.currentUser) renderPendingRequests();
+        } catch (error) {
+            console.warn('⚠️ Error procesando listener pendingRequests:', error);
+        }
     }, (error) => {
         console.warn('⚠️ Error en listener pendingRequests:', error);
     });
     
     db.ref('fichasIngreso').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+        try {
+            const data = snapshot.val();
+            state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+        } catch (error) {
+            console.warn('⚠️ Error procesando listener fichasIngreso:', error);
+        }
     }, (error) => {
         console.warn('⚠️ Error en listener fichasIngreso:', error);
     });
     
     db.ref('sesiones').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+        try {
+            const data = snapshot.val();
+            state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+        } catch (error) {
+            console.warn('⚠️ Error procesando listener sesiones:', error);
+        }
     }, (error) => {
         console.warn('⚠️ Error en listener sesiones:', error);
     });
     
     db.ref('informes').on('value', (snapshot) => {
-        const data = snapshot.val();
-        state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+        try {
+            const data = snapshot.val();
+            state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
+        } catch (error) {
+            console.warn('⚠️ Error procesando listener informes:', error);
+        }
     }, (error) => {
         console.warn('⚠️ Error en listener informes:', error);
     });
@@ -894,4 +930,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js cargado con carga única mejorada y escucha en tiempo real');
+console.log('✅ publico.js refactorizado: import estático de renderMessagesTable, mejor manejo de errores en listeners');

@@ -1,8 +1,9 @@
 // js/modules/pacientes.js
 import * as state from './state.js';
-import { showToast, validarRut, formatRut, formatDate, calculateAge, getInitials } from './utils.js';
+import { showToast, validarRut, formatRut, formatDate, calculateAge, getInitials, normalizarRut } from './utils.js';
 import { puedeAccederAPaciente, puedeEditarFichas } from './permisos.js';
 import { obtenerSesionesDePaciente, obtenerFichasIngresoDePaciente } from './fichasClinicas.js';
+import { save } from '../main.js';
 
 // ============================================
 // RENDERIZAR LISTA DE PACIENTES
@@ -562,7 +563,8 @@ export function searchPatientByRut() {
     const rut = document.getElementById('patientRut').value;
     if (!rut) return;
 
-    const patient = state.patients.find(p => p.rut === rut);
+    const rutNormalizado = normalizarRut(rut);
+    const patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
     if (patient) {
         document.getElementById('editPatientId').value = patient.id;
         document.getElementById('patientName').value = patient.name || '';
@@ -575,7 +577,7 @@ export function searchPatientByRut() {
     }
 }
 
-export function savePatient() {
+export async function savePatient() {
     const id = document.getElementById('editPatientId').value;
     const rut = document.getElementById('patientRut').value;
     const name = document.getElementById('patientName').value;
@@ -595,10 +597,12 @@ export function savePatient() {
         return;
     }
 
+    const rutNormalizado = normalizarRut(rut);
+
     if (id) {
         const patient = state.patients.find(p => p.id == id);
         if (patient) {
-            patient.rut = rut;
+            patient.rut = rutNormalizado;  // Guardar normalizado
             patient.name = name;
             patient.email = email;
             patient.phone = phone;
@@ -607,7 +611,8 @@ export function savePatient() {
             patient.notes = notes;
         }
     } else {
-        const existingPatient = state.patients.find(p => p.rut === rut);
+        // Buscar por RUT normalizado para evitar duplicados con diferentes formatos
+        const existingPatient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
         if (existingPatient) {
             if (confirm('Ya existe un paciente con este RUT. ¿Actualizar sus datos?')) {
                 existingPatient.name = name;
@@ -616,13 +621,14 @@ export function savePatient() {
                 existingPatient.prevision = prevision;
                 existingPatient.birthdate = birthdate;
                 existingPatient.notes = notes;
+                // Si se actualiza, no se agrega nuevo
             } else {
                 return;
             }
         } else {
             state.patients.push({
                 id: Date.now(),
-                rut,
+                rut: rutNormalizado,  // Guardar normalizado
                 name,
                 email,
                 phone,
@@ -636,11 +642,12 @@ export function savePatient() {
         }
     }
 
-    import('../main.js').then(main => main.save());
+    await save();
     closePatientModal();
 
+    // Si estamos en la pestaña de agenda, actualizar el campo de RUT del psicólogo
     if (document.getElementById('tabAgendar')?.classList.contains('active')) {
-        document.getElementById('therapistRut').value = rut;
+        document.getElementById('therapistRut').value = rutNormalizado;
         import('./citas.js').then(citas => citas.searchPatientByRutTherapist());
     }
 
@@ -692,7 +699,8 @@ export function printPatientSummary() {
             
             <table class="table">
                 <thead>
-                    <tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th> </thead>
+                    <tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr>
+                </thead>
                 <tbody>
     `;
 
@@ -742,4 +750,4 @@ if (typeof window !== 'undefined') {
     window.volverALista = volverALista;
 }
 
-console.log('✅ pacientes.js cargado sin informes ni pdfGenerator');
+console.log('✅ pacientes.js refactorizado: import save directo, async/await, normalización de RUT');

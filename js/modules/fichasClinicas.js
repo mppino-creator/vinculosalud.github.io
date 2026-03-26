@@ -3,64 +3,75 @@ import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { puedeEditarFichas } from './permisos.js';
 import { showToast } from './utils.js';
+import { save } from '../main.js';
+
+// ============================================
+// FUNCIONES AUXILIARES INTERNAS
+// ============================================
+
+function getCurrentUserInfo() {
+    const userId = state.currentUser?.data?.id || state.currentUser?.id;
+    const userName = state.currentUser?.data?.name || state.currentUser?.name || 'Desconocido';
+    return { userId, userName };
+}
 
 // ============================================
 // FICHA DE INGRESO
 // ============================================
 
 export async function guardarFichaIngreso(patientId, data) {
-  console.log('💾 Guardando ficha de ingreso para paciente:', patientId);
-  
-  const tienePermiso = await puedeEditarFichas(patientId);
-  if (!tienePermiso) {
-    showToast('No tienes permisos para editar esta ficha', 'error');
-    throw new Error('No tienes permisos para editar esta ficha');
-  }
-  
-  const patient = state.patients.find(p => p.id == patientId);
-  if (!patient) {
-    showToast('Paciente no encontrado', 'error');
-    throw new Error('Paciente no encontrado');
-  }
-  
-  const userId = state.currentUser?.data?.id || state.currentUser?.id;
-  const userName = state.currentUser?.data?.name || state.currentUser?.name || 'Desconocido';
-  
-  const ficha = {
-    patientId,
-    patientName: patient.name,
-    patientRut: patient.rut,
-    ...data,
-    realizadoPor: userId,
-    realizadoPorNombre: userName,
-    fechaCreacion: data.id ? undefined : new Date().toISOString(),
-    fechaModificacion: new Date().toISOString()
-  };
-  
-  try {
-    let fichaId;
+    console.log('💾 Guardando ficha de ingreso para paciente:', patientId);
     
-    if (data.id) {
-      fichaId = data.id;
-      await db.ref(`fichasIngreso/${fichaId}`).update(ficha);
-      const fichasActualizadas = state.fichasIngreso.map(f => 
-        f.id === fichaId ? { ...ficha, id: fichaId } : f
-      );
-      state.setFichasIngreso(fichasActualizadas);
-      showToast('Ficha de ingreso actualizada', 'success');
-    } else {
-      const newRef = db.ref('fichasIngreso').push();
-      fichaId = newRef.key;
-      await newRef.set(ficha);
-      state.setFichasIngreso([...state.fichasIngreso, { ...ficha, id: fichaId }]);
-      showToast('Ficha de ingreso guardada', 'success');
+    const tienePermiso = await puedeEditarFichas(patientId);
+    if (!tienePermiso) {
+        showToast('No tienes permisos para editar esta ficha', 'error');
+        throw new Error('No tienes permisos para editar esta ficha');
     }
-    return { success: true, id: fichaId };
-  } catch (error) {
-    console.error('❌ Error guardando ficha ingreso:', error);
-    showToast('Error al guardar la ficha', 'error');
-    throw error;
-  }
+    
+    const patient = state.patients.find(p => p.id == patientId);
+    if (!patient) {
+        showToast('Paciente no encontrado', 'error');
+        throw new Error('Paciente no encontrado');
+    }
+    
+    const { userId, userName } = getCurrentUserInfo();
+    
+    const ficha = {
+        patientId,
+        patientName: patient.name,
+        patientRut: patient.rut,
+        ...data,
+        realizadoPor: userId,
+        realizadoPorNombre: userName,
+        fechaModificacion: new Date().toISOString()
+    };
+    
+    try {
+        let fichaId;
+        
+        if (data.id) {
+            fichaId = data.id;
+            await db.ref(`fichasIngreso/${fichaId}`).update(ficha);
+            const fichasActualizadas = state.fichasIngreso.map(f => 
+                f.id === fichaId ? { ...ficha, id: fichaId } : f
+            );
+            state.setFichasIngreso(fichasActualizadas);
+            showToast('Ficha de ingreso actualizada', 'success');
+        } else {
+            ficha.fechaCreacion = new Date().toISOString();
+            const newRef = db.ref('fichasIngreso').push();
+            fichaId = newRef.key;
+            await newRef.set(ficha);
+            state.setFichasIngreso([...state.fichasIngreso, { ...ficha, id: fichaId }]);
+            showToast('Ficha de ingreso guardada', 'success');
+        }
+        await save();
+        return { success: true, id: fichaId };
+    } catch (error) {
+        console.error('❌ Error guardando ficha ingreso:', error);
+        showToast('Error al guardar la ficha', 'error');
+        throw error;
+    }
 }
 
 // ============================================
@@ -68,47 +79,49 @@ export async function guardarFichaIngreso(patientId, data) {
 // ============================================
 
 export async function guardarNotaSesion(patientId, data) {
-  console.log('💾 Guardando nota de sesión para paciente:', patientId);
-  
-  const tienePermiso = await puedeEditarFichas(patientId);
-  if (!tienePermiso) {
-    showToast('No tienes permisos', 'error');
-    throw new Error('No tienes permisos');
-  }
-  
-  const patient = state.patients.find(p => p.id == patientId);
-  const userId = state.currentUser?.data?.id || state.currentUser?.id;
-  const userName = state.currentUser?.data?.name || state.currentUser?.name || 'Desconocido';
-  
-  const sesion = {
-    patientId,
-    patientName: patient?.name || 'Desconocido',
-    ...data,
-    realizadoPor: userId,
-    realizadoPorNombre: userName,
-    fechaGuardado: new Date().toISOString()
-  };
-  
-  try {
-    if (data.id) {
-      await db.ref(`sesiones/${data.id}`).update(sesion);
-      const sesionesActualizadas = state.sesiones.map(s => 
-        s.id === data.id ? { ...sesion, id: data.id } : s
-      );
-      state.setSesiones(sesionesActualizadas);
-      showToast('Nota de sesión actualizada', 'success');
-    } else {
-      const newRef = db.ref('sesiones').push();
-      await newRef.set(sesion);
-      state.setSesiones([...state.sesiones, { ...sesion, id: newRef.key }]);
-      showToast('Nota de sesión guardada', 'success');
+    console.log('💾 Guardando nota de sesión para paciente:', patientId);
+    
+    const tienePermiso = await puedeEditarFichas(patientId);
+    if (!tienePermiso) {
+        showToast('No tienes permisos', 'error');
+        throw new Error('No tienes permisos');
     }
-    return { success: true };
-  } catch (error) {
-    console.error('❌ Error guardando sesión:', error);
-    showToast('Error al guardar la sesión', 'error');
-    throw error;
-  }
+    
+    const patient = state.patients.find(p => p.id == patientId);
+    const { userId, userName } = getCurrentUserInfo();
+    
+    const sesion = {
+        patientId,
+        patientName: patient?.name || 'Desconocido',
+        ...data,
+        realizadoPor: userId,
+        realizadoPorNombre: userName,
+        fechaGuardado: new Date().toISOString()
+    };
+    
+    try {
+        if (data.id) {
+            await db.ref(`sesiones/${data.id}`).update(sesion);
+            const sesionesActualizadas = state.sesiones.map(s => 
+                s.id === data.id ? { ...sesion, id: data.id } : s
+            );
+            state.setSesiones(sesionesActualizadas);
+            showToast('Nota de sesión actualizada', 'success');
+        } else {
+            const newRef = db.ref('sesiones').push();
+            const newId = newRef.key;
+            sesion.fechaCreacion = new Date().toISOString();
+            await newRef.set(sesion);
+            state.setSesiones([...state.sesiones, { ...sesion, id: newId }]);
+            showToast('Nota de sesión guardada', 'success');
+        }
+        await save();
+        return { success: true };
+    } catch (error) {
+        console.error('❌ Error guardando sesión:', error);
+        showToast('Error al guardar la sesión', 'error');
+        throw error;
+    }
 }
 
 // ============================================
@@ -128,17 +141,17 @@ export async function obtenerFichasIngresoDePaciente(patientId) {
 }
 
 export async function obtenerSesionesDePaciente(patientId) {
-  try {
-    if (state.sesiones && state.sesiones.length > 0) {
-      return state.sesiones
-        .filter(s => s.patientId == patientId)
-        .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion));
+    try {
+        if (state.sesiones && state.sesiones.length > 0) {
+            return state.sesiones
+                .filter(s => s.patientId == patientId)
+                .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion));
+        }
+        return [];
+    } catch (error) {
+        console.error('Error obteniendo sesiones:', error);
+        return [];
     }
-    return [];
-  } catch (error) {
-    console.error('Error obteniendo sesiones:', error);
-    return [];
-  }
 }
 
 // ============================================
@@ -146,26 +159,26 @@ export async function obtenerSesionesDePaciente(patientId) {
 // ============================================
 
 export async function cargarTodasLasFichas() {
-  try {
-    console.log('📂 Cargando todas las fichas clínicas...');
-    
-    const fichasSnapshot = await db.ref('fichasIngreso').once('value');
-    const fichasData = fichasSnapshot.val();
-    state.setFichasIngreso(fichasData ? Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] })) : []);
-    
-    const sesionesSnapshot = await db.ref('sesiones').once('value');
-    const sesionesData = sesionesSnapshot.val();
-    state.setSesiones(sesionesData ? Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] })) : []);
-    
-    const informesSnapshot = await db.ref('informes').once('value');
-    const informesData = informesSnapshot.val();
-    state.setInformes(informesData ? Object.keys(informesData).map(key => ({ id: key, ...informesData[key] })) : []);
-    
-    console.log('✅ Fichas clínicas cargadas completamente');
-  } catch (error) {
-    console.error('❌ Error cargando fichas:', error);
-    showToast('Error al cargar fichas clínicas', 'error');
-  }
+    try {
+        console.log('📂 Cargando todas las fichas clínicas...');
+        
+        const fichasSnapshot = await db.ref('fichasIngreso').once('value');
+        const fichasData = fichasSnapshot.val();
+        state.setFichasIngreso(fichasData ? Object.keys(fichasData).map(key => ({ id: key, ...fichasData[key] })) : []);
+        
+        const sesionesSnapshot = await db.ref('sesiones').once('value');
+        const sesionesData = sesionesSnapshot.val();
+        state.setSesiones(sesionesData ? Object.keys(sesionesData).map(key => ({ id: key, ...sesionesData[key] })) : []);
+        
+        const informesSnapshot = await db.ref('informes').once('value');
+        const informesData = informesSnapshot.val();
+        state.setInformes(informesData ? Object.keys(informesData).map(key => ({ id: key, ...informesData[key] })) : []);
+        
+        console.log('✅ Fichas clínicas cargadas completamente');
+    } catch (error) {
+        console.error('❌ Error cargando fichas:', error);
+        showToast('Error al cargar fichas clínicas', 'error');
+    }
 }
 
 // ============================================
@@ -173,7 +186,6 @@ export async function cargarTodasLasFichas() {
 // ============================================
 
 export async function mostrarFormularioFichaIngreso(patientId) {
-    // Verificar que el paciente existe
     const patient = state.patients.find(p => p.id == patientId);
     if (!patient) {
         showToast('Paciente no encontrado', 'error');
@@ -197,6 +209,7 @@ export async function mostrarFormularioFichaIngreso(patientId) {
         }
     }
 
+    // Crear modal si no existe
     let modal = document.getElementById('modalFichaIngreso');
     if (!modal) {
         modal = document.createElement('div');
@@ -279,7 +292,6 @@ export async function mostrarFormularioFichaIngreso(patientId) {
 }
 
 function mostrarFormularioEdicionFichaIngreso(ficha) {
-    // Verificar que el paciente asociado existe
     const patient = state.patients.find(p => p.id == ficha.patientId);
     if (!patient) {
         showToast('El paciente asociado a esta ficha ya no existe. No se puede editar.', 'error');
@@ -287,18 +299,15 @@ function mostrarFormularioEdicionFichaIngreso(ficha) {
         return;
     }
 
-    // Si el modal no existe, primero lo creamos
     let modal = document.getElementById('modalFichaIngreso');
     if (!modal) {
         mostrarFormularioFichaIngreso(ficha.patientId);
-        // Esperar a que el modal esté listo
         const waitForModal = setInterval(() => {
             if (document.getElementById('modalFichaIngreso')) {
                 clearInterval(waitForModal);
                 llenarDatosFichaParaEdicion(ficha);
             }
         }, 50);
-        // Timeout de seguridad
         setTimeout(() => clearInterval(waitForModal), 5000);
     } else {
         llenarDatosFichaParaEdicion(ficha);
@@ -306,7 +315,6 @@ function mostrarFormularioEdicionFichaIngreso(ficha) {
 }
 
 function llenarDatosFichaParaEdicion(ficha) {
-    // Verificar que los elementos existen antes de asignar
     const title = document.querySelector('#modalFichaIngreso h2');
     if (title) title.textContent = 'Editar Ficha de Ingreso';
     
@@ -382,14 +390,13 @@ export async function guardarFichaIngresoDesdeFormulario() {
 }
 
 // ============================================
-// FUNCIONES PARA VISOR DE FICHAS CLÍNICAS (NUEVO)
+// FUNCIONES PARA VISOR DE FICHAS CLÍNICAS
 // ============================================
 
 export function renderFichasConFiltros() {
     const container = document.getElementById('fichasList');
     if (!container) return;
 
-    // Obtener datos según rol
     let fichasIngreso = state.fichasIngreso;
     let sesiones = state.sesiones;
     let informes = state.informes;
@@ -402,12 +409,10 @@ export function renderFichasConFiltros() {
         informes = informes.filter(i => misPacientesIds.includes(i.patientId));
     }
 
-    // Obtener filtros
     const searchTerm = document.getElementById('fichaSearch')?.value.toLowerCase() || '';
     const tipoFiltro = document.getElementById('fichaTipo')?.value;
     const profesionalFiltro = document.getElementById('fichaProfesional')?.value;
 
-    // Preparar datos unificados
     let items = [];
 
     if (!tipoFiltro || tipoFiltro === 'ingreso') {
@@ -456,14 +461,12 @@ export function renderFichasConFiltros() {
         });
     }
 
-    // Aplicar filtros adicionales
     items = items.filter(item => {
         if (searchTerm && !item.paciente.toLowerCase().includes(searchTerm) && !item.pacienteRut.includes(searchTerm)) return false;
         if (profesionalFiltro && item.profesional !== profesionalFiltro) return false;
         return true;
     });
 
-    // Ordenar por fecha descendente
     items.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
     if (items.length === 0) {
@@ -576,23 +579,23 @@ export function mostrarFormularioNotaSesion(patientId) {
 // EXPORTAR FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {
-  window.fichasClinicas = {
-    guardarFichaIngreso,
-    guardarNotaSesion,
-    obtenerSesionesDePaciente,
-    obtenerFichasIngresoDePaciente,
-    cargarTodasLasFichas,
-    mostrarFormularioFichaIngreso,
-    guardarFichaIngresoDesdeFormulario,
-    editarFichaIngreso,
-    verNotaSesion,
-    mostrarFormularioNotaSesion,
-    renderFichasConFiltros,
-    filtrarFichas,
-    cargarSelectProfesionales,
-    verDetalleFicha
-  };
-  console.log('✅ window.fichasClinicas expuesto correctamente');
+    window.fichasClinicas = {
+        guardarFichaIngreso,
+        guardarNotaSesion,
+        obtenerSesionesDePaciente,
+        obtenerFichasIngresoDePaciente,
+        cargarTodasLasFichas,
+        mostrarFormularioFichaIngreso,
+        guardarFichaIngresoDesdeFormulario,
+        editarFichaIngreso,
+        verNotaSesion,
+        mostrarFormularioNotaSesion,
+        renderFichasConFiltros,
+        filtrarFichas,
+        cargarSelectProfesionales,
+        verDetalleFicha
+    };
+    console.log('✅ window.fichasClinicas expuesto correctamente');
 }
 
-console.log('✅ fichasClinicas.js cargado correctamente con formulario de creación, setters y visor de fichas');
+console.log('✅ fichasClinicas.js refactorizado: import save directo, async/await, mejora en persistencia');

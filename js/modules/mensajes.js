@@ -1,6 +1,7 @@
 // js/modules/mensajes.js
 import * as state from './state.js';
 import { showToast } from './utils.js';
+import { save } from '../main.js';
 
 // ============================================
 // FUNCIONES PARA MODAL DE MENSAJES
@@ -59,7 +60,7 @@ export function setRating(rating) {
 // FUNCIÓN PARA GUARDAR MENSAJE (MEJORADA)
 // ============================================
 
-export function saveMessage() {
+export async function saveMessage() {
     const nameInput = document.getElementById('messageName');
     const emailInput = document.getElementById('messageEmail');
     const whatsappInput = document.getElementById('messageWhatsapp');
@@ -100,13 +101,16 @@ export function saveMessage() {
 
     state.messages.push(newMessage);
     
-    // ✅ RUTA CORREGIDA: usa '../main.js'
-    import('../main.js').then(main => main.save());
-    
-    renderMessages();
-    updateMarquee();
-    closeMessageModal();
-    showToast('¡Gracias por tu mensaje!', 'success');
+    try {
+        await save();
+        renderMessages();
+        updateMarquee();
+        closeMessageModal();
+        showToast('¡Gracias por tu mensaje!', 'success');
+    } catch (error) {
+        console.error('❌ Error guardando mensaje:', error);
+        showToast('Error al guardar el mensaje', 'error');
+    }
 }
 
 // ============================================
@@ -153,13 +157,13 @@ export function renderMessagesTable() {
             <td>
                 ${m.email ? `<i class="fa fa-envelope"></i> ` : ''}
                 ${m.whatsapp ? `<i class="fab fa-whatsapp"></i>` : ''}
-            </td>
+             </td>
             <td>
                 <button onclick="deleteMessage('${m.id}')" class="btn-icon" style="background:var(--rojo-alerta); color:white;">
                     <i class="fa fa-trash"></i>
                 </button>
-            </td>
-        </tr>
+             </td>
+         </tr>
     `).join('');
 }
 
@@ -167,7 +171,7 @@ export function renderMessagesTable() {
 // FUNCIÓN PARA ELIMINAR MENSAJE (CORREGIDA)
 // ============================================
 
-export function deleteMessage(id) {
+export async function deleteMessage(id) {
     console.log("🗑️ Intentando eliminar mensaje con ID:", id);
     console.log("📊 Tipo de ID:", typeof id);
     console.log("📊 Mensajes antes:", state.messages.length);
@@ -179,17 +183,16 @@ export function deleteMessage(id) {
         
         state.setMessages(newMessages);
         
-        // ✅ RUTA CORREGIDA: '../main.js'
-        import('../main.js').then(main => {
-            main.save();
+        try {
+            await save();
             renderMessagesTable();
             renderMessages();
             updateMarquee();
             showToast('Mensaje eliminado permanentemente', 'success');
-        }).catch(err => {
+        } catch (err) {
             console.error("❌ Error al guardar:", err);
             showToast('Error al eliminar el mensaje', 'error');
-        });
+        }
     }
 }
 
@@ -304,7 +307,7 @@ export function searchMessages(searchTerm) {
 /**
  * Elimina todos los mensajes
  */
-export function deleteAllMessages() {
+export async function deleteAllMessages() {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
         showToast('Solo administradores pueden hacer esto', 'error');
         return;
@@ -313,11 +316,16 @@ export function deleteAllMessages() {
     if (confirm('⚠️ ¿Eliminar TODOS los mensajes? Esta acción no se puede deshacer.')) {
         const cantidad = state.messages.length;
         state.setMessages([]);
-        import('../main.js').then(main => main.save());
-        renderMessagesTable();
-        renderMessages();
-        updateMarquee();
-        showToast(`✅ ${cantidad} mensajes eliminados`, 'success');
+        try {
+            await save();
+            renderMessagesTable();
+            renderMessages();
+            updateMarquee();
+            showToast(`✅ ${cantidad} mensajes eliminados`, 'success');
+        } catch (error) {
+            console.error('❌ Error al eliminar mensajes:', error);
+            showToast('Error al eliminar mensajes', 'error');
+        }
     }
 }
 
@@ -350,7 +358,7 @@ export function exportMessages() {
 /**
  * Importa mensajes desde JSON
  */
-export function importMessages() {
+export async function importMessages() {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
         showToast('Solo administradores pueden hacer esto', 'error');
         return;
@@ -360,18 +368,19 @@ export function importMessages() {
     input.type = 'file';
     input.accept = '.json';
     
-    input.onchange = function(e) {
+    input.onchange = async function(e) {
         const file = e.target.files[0];
-        const reader = new FileReader();
+        if (!file) return;
         
-        reader.onload = function(ev) {
+        const reader = new FileReader();
+        reader.onload = async function(ev) {
             try {
                 const data = JSON.parse(ev.target.result);
                 
                 if (data.messages && Array.isArray(data.messages)) {
                     if (confirm(`¿Importar ${data.messages.length} mensajes?`)) {
                         state.setMessages([...state.messages, ...data.messages]);
-                        import('../main.js').then(main => main.save());
+                        await save();
                         renderMessagesTable();
                         renderMessages();
                         updateMarquee();
@@ -385,7 +394,6 @@ export function importMessages() {
                 showToast('❌ Error al importar', 'error');
             }
         };
-        
         reader.readAsText(file);
     };
     
@@ -395,7 +403,7 @@ export function importMessages() {
 /**
  * Restaura mensajes de ejemplo
  */
-export function restoreSampleMessages() {
+export async function restoreSampleMessages() {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
         showToast('Solo administradores pueden hacer esto', 'error');
         return;
@@ -445,11 +453,16 @@ export function restoreSampleMessages() {
     ];
     
     state.setMessages(sampleMessages);
-    import('../main.js').then(main => main.save());
-    renderMessagesTable();
-    renderMessages();
-    updateMarquee();
-    showToast('✅ Mensajes de ejemplo restaurados', 'success');
+    try {
+        await save();
+        renderMessagesTable();
+        renderMessages();
+        updateMarquee();
+        showToast('✅ Mensajes de ejemplo restaurados', 'success');
+    } catch (error) {
+        console.error('❌ Error restaurando mensajes:', error);
+        showToast('Error al restaurar mensajes', 'error');
+    }
 }
 
 // ============================================
@@ -475,4 +488,4 @@ if (typeof window !== 'undefined') {
     window.restoreSampleMessages = restoreSampleMessages;
 }
 
-console.log('✅ mensajes.js cargado con estadísticas y funciones admin (sin boxes)');
+console.log('✅ mensajes.js refactorizado: import save directo, async/await, manejo de errores');

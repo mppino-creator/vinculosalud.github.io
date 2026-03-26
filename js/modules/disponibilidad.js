@@ -1,6 +1,7 @@
 // js/modules/disponibilidad.js
 import * as state from './state.js';
 import { showToast } from './utils.js';
+import { save } from '../main.js';
 
 // ============================================
 // FUNCIONES DE MODAL
@@ -223,8 +224,7 @@ export async function applyGeneratedSlots() {
     }
 
     try {
-        const mainModule = await import('../main.js');
-        await mainModule.save();
+        await save();
         console.log('✅ Disponibilidad guardada en Firebase');
         closeAvailabilityModal();
         // Recargar la vista de disponibilidad con la fecha actual
@@ -266,8 +266,7 @@ export async function excludeSpecificDates() {
         const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
         if (staffIndex !== -1) state.staff[staffIndex].availability = state.currentUser.data.availability;
         try {
-            const mainModule = await import('../main.js');
-            await mainModule.save();
+            await save();
             showToast(`Se eliminó la disponibilidad en ${validDates.length} fecha(s)`, 'success');
             loadTimeSlots();
         } catch (error) {
@@ -289,8 +288,7 @@ export async function clearAllSlots() {
         const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
         if (staffIndex !== -1) state.staff[staffIndex].availability = {};
         try {
-            const mainModule = await import('../main.js');
-            await mainModule.save();
+            await save();
             closeAvailabilityModal();
             loadTimeSlots();
             showToast('Disponibilidad eliminada', 'success');
@@ -429,8 +427,7 @@ export function addOvercupo() {
 
 export async function saveAvailability() {
     try {
-        const mainModule = await import('../main.js');
-        await mainModule.save();
+        await save();
         showToast('Disponibilidad guardada', 'success');
     } catch (error) {
         console.error('❌ Error al guardar disponibilidad:', error);
@@ -537,4 +534,4 @@ if (typeof window !== 'undefined') {
     window.excludeSpecificDates = excludeSpecificDates;
 }
 
-console.log('✅ disponibilidad.js cargado con agenda AM/PM mejorada + excluir fechas + zona horaria UTC');
+console.log('✅ disponibilidad.js refactorizado: import save directo, async/await, mejora en persistencia');

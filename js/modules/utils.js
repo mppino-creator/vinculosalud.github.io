@@ -331,4 +331,31 @@ if (typeof window !== 'undefined') {
     window.esEmailProfesional = esEmailProfesional;
 }
 
+// Normalizar RUT (solo números y dígito verificador)
+export function normalizarRut(rut) {
+    if (!rut) return '';
+    return rut.replace(/[\.\-]/g, '').replace(/\s/g, '').toUpperCase();
+}
+
+// Convertir fecha dd/mm/aaaa a aaaa-mm-dd
+export function normalizarFecha(fechaStr) {
+    if (!fechaStr) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return fechaStr;
+    let partes = fechaStr.split(/[\/\-]/);
+    if (partes.length === 3) {
+        let dia = partes[0].padStart(2, '0');
+        let mes = partes[1].padStart(2, '0');
+        let año = partes[2];
+        if (dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12 && año.length === 4) {
+            return `${año}-${mes}-${dia}`;
+        }
+    }
+    return '';
+}
+
+// Obtener período AM/PM
+export function getTimePeriod(time) {
+    const hour = parseInt(time.split(':')[0]);
+    return hour < 12 ? 'AM' : 'PM';
+}
 console.log('✅ utils.js actualizado con calcularEdad y alias');

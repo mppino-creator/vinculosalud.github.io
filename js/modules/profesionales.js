@@ -1,7 +1,8 @@
 // js/modules/profesionales.js
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
-import { showToast } from './utils.js';
+import { showToast, normalizarRut, validarRut } from './utils.js';
+import { save } from '../main.js';
 
 // ============================================
 // FUNCIONES DE ADMIN PARA PROFESIONALES
@@ -72,11 +73,10 @@ export function closeAddStaffModal() {
 }
 
 // ============================================
-// 🆕 FUNCIÓN PARA QUE EL PROFESIONAL EDITE SU PERFIL (CORREGIDA)
+// FUNCIÓN PARA QUE EL PROFESIONAL EDITE SU PERFIL (CORREGIDA)
 // ============================================
 
 export async function openMyProfileModal() {
-    // Verificar que hay un profesional logueado
     if (!state.currentUser || state.currentUser.role !== 'psych') {
         showToast('Debes iniciar sesión como profesional', 'error');
         return;
@@ -88,17 +88,14 @@ export async function openMyProfileModal() {
         return;
     }
     
-    // Intentar obtener los datos del profesional (primero de state, luego de Firebase)
     let professionalData = state.staff?.find(p => p.uid === uid || p.id === uid);
     if (!professionalData) {
         console.log('⚠️ Profesional no encontrado en state, consultando Firebase...');
         const snapshot = await firebase.database().ref(`staff/${uid}`).once('value');
         if (snapshot.exists()) {
             professionalData = { uid, ...snapshot.val() };
-            // Actualizar state.staff
             if (!state.staff) state.staff = [];
             state.staff.push(professionalData);
-            // Actualizar currentUser.data si es el mismo
             if (state.currentUser && state.currentUser.uid === uid) {
                 state.currentUser.data = professionalData;
             }
@@ -111,12 +108,11 @@ export async function openMyProfileModal() {
     
     console.log('🔓 Abriendo edición de perfil para:', professionalData.name);
     
-    // Asegurar que el modal existe (si no, crearlo)
     if (!document.getElementById('editMyProfileModal')) {
         crearModalEdicionProfesional();
     }
     
-    // Llenar el formulario con los datos actuales
+    // Llenar formulario con datos actuales
     const editMyName = document.getElementById('editMyName');
     const editMyEmail = document.getElementById('editMyEmail');
     const editMyTitle = document.getElementById('editMyTitle');
@@ -150,7 +146,6 @@ export async function openMyProfileModal() {
     if (editMyTitle) editMyTitle.value = professionalData.title || '';
     if (editMyGenero) editMyGenero.value = professionalData.genero || '';
     
-    // Especialidades
     if (editMySpec) {
         const psychSpecs = Array.isArray(professionalData.spec) ? professionalData.spec : [professionalData.spec];
         Array.from(editMySpec.options).forEach(opt => {
@@ -164,18 +159,15 @@ export async function openMyProfileModal() {
     if (editMyEducation) editMyEducation.value = professionalData.education || '';
     if (editMyLanguages) editMyLanguages.value = professionalData.languages ? professionalData.languages.join(', ') : '';
     
-    // Redes sociales
     if (editMyLinkedin) editMyLinkedin.value = professionalData.socialLinks?.linkedin || '';
     if (editMyInstagram) editMyInstagram.value = professionalData.socialLinks?.instagram || '';
     if (editMyWebsite) editMyWebsite.value = professionalData.socialLinks?.website || '';
     
-    // Precios
     if (editMyPriceOnline) editMyPriceOnline.value = professionalData.priceOnline || '';
     if (editMyPricePresencial) editMyPricePresencial.value = professionalData.pricePresencial || '';
     if (editMyDuration) editMyDuration.value = professionalData.sessionDuration || 45;
     if (editMyAdvanceNotice) editMyAdvanceNotice.value = professionalData.advanceNotice ?? 60;
     
-    // Métodos de pago (checkboxes)
     const methods = professionalData.paymentMethods || state.globalPaymentMethods;
     const editMyPaymentTransfer = document.getElementById('editMyPaymentTransfer');
     const editMyPaymentCardPresencial = document.getElementById('editMyPaymentCardPresencial');
@@ -191,7 +183,6 @@ export async function openMyProfileModal() {
     if (editMyPaymentMercadopago) editMyPaymentMercadopago.checked = methods.mercadopago || false;
     if (editMyPaymentWebpay) editMyPaymentWebpay.checked = methods.webpay || false;
     
-    // Datos bancarios
     const bank = professionalData.bankDetails || {};
     if (editMyBank) editMyBank.value = bank.bank || '';
     if (editMyAccountType) editMyAccountType.value = bank.accountType || 'corriente';
@@ -199,22 +190,14 @@ export async function openMyProfileModal() {
     if (editMyBankRut) editMyBankRut.value = bank.rut || '';
     if (editMyBankEmail) editMyBankEmail.value = bank.email || '';
     
-    // Links de pago
     if (editMyPaymentLinkOnline) editMyPaymentLinkOnline.value = professionalData.paymentLinks?.online || '';
     if (editMyPaymentLinkPresencial) editMyPaymentLinkPresencial.value = professionalData.paymentLinks?.presencial || '';
     
-    // Foto de perfil
     if (photoPreview) {
-        if (professionalData.img || professionalData.photoURL) {
-            photoPreview.src = professionalData.img || professionalData.photoURL;
-            photoPreview.style.display = 'block';
-        } else {
-            photoPreview.src = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
-            photoPreview.style.display = 'block';
-        }
+        photoPreview.src = professionalData.img || professionalData.photoURL || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
+        photoPreview.style.display = 'block';
     }
     
-    // QR Online
     if (qrOnlinePreview) {
         if (professionalData.paymentLinks?.qrOnline) {
             qrOnlinePreview.src = professionalData.paymentLinks.qrOnline;
@@ -224,7 +207,6 @@ export async function openMyProfileModal() {
         }
     }
     
-    // QR Presencial
     if (qrPresencialPreview) {
         if (professionalData.paymentLinks?.qrPresencial) {
             qrPresencialPreview.src = professionalData.paymentLinks.qrPresencial;
@@ -234,25 +216,17 @@ export async function openMyProfileModal() {
         }
     }
     
-    // Mostrar modal
     const modal = document.getElementById('editMyProfileModal');
     if (modal) modal.style.display = 'flex';
 }
 
-// ============================================
-// 🆕 FUNCIÓN PARA CREAR MODAL DE EDICIÓN (si no existe)
-// ============================================
-
 function crearModalEdicionProfesional() {
-    // Verificar si ya existe el modal
     if (document.getElementById('editMyProfileModal')) return;
     
-    // Obtener especialidades para los selects
     const specialtiesHtml = state.specialties
         .map(s => `<option value="${s.name}">${s.name}</option>`)
         .join('');
     
-    // Crear el modal HTML (igual al que ya tenías, manteniendo estructura)
     const modalHTML = `
     <div id="editMyProfileModal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
@@ -458,7 +432,6 @@ function crearModalEdicionProfesional() {
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // Estilos para tabs si no existen
     if (!document.getElementById('profileTabStyles')) {
         const styles = document.createElement('style');
         styles.id = 'profileTabStyles';
@@ -479,10 +452,6 @@ function crearModalEdicionProfesional() {
         document.head.appendChild(styles);
     }
 }
-
-// ============================================
-// FUNCIONES AUXILIARES DE TABS Y PREVIEW
-// ============================================
 
 window.showMyProfileTab = function(tabName) {
     document.querySelectorAll('.profile-tab').forEach(tab => tab.style.display = 'none');
@@ -546,10 +515,6 @@ window.previewMyQRPresencial = function(input) {
     }
 };
 
-// ============================================
-// 🔥 FUNCIÓN PARA GUARDAR PERFIL (CORREGIDA - SIN GUARDAR vinculo_staff)
-// ============================================
-
 export async function saveMyProfile() {
     if (!state.currentUser || state.currentUser.role !== 'psych') {
         showToast('No autorizado', 'error');
@@ -564,11 +529,9 @@ export async function saveMyProfile() {
     
     console.log('💾 Guardando perfil profesional para UID:', user.uid);
     
-    // Obtener los datos actuales desde Firebase para no perder información
     const currentSnapshot = await firebase.database().ref(`staff/${user.uid}`).once('value');
     const currentData = currentSnapshot.val() || {};
     
-    // Recolectar valores del formulario (si existen)
     const editMyName = document.getElementById('editMyName')?.value.trim();
     const editMyEmail = document.getElementById('editMyEmail')?.value.trim();
     const editMyTitle = document.getElementById('editMyTitle')?.value.trim();
@@ -578,14 +541,11 @@ export async function saveMyProfile() {
     const editMyExperience = parseInt(document.getElementById('editMyExperience')?.value);
     const editMyEducation = document.getElementById('editMyEducation')?.value.trim();
     const editMyLanguages = document.getElementById('editMyLanguages')?.value.trim();
-    
-    // Precios
     const editMyPriceOnline = parseInt(document.getElementById('editMyPriceOnline')?.value);
     const editMyPricePresencial = parseInt(document.getElementById('editMyPricePresencial')?.value);
     const editMyDuration = parseInt(document.getElementById('editMyDuration')?.value);
     const editMyAdvanceNotice = parseInt(document.getElementById('editMyAdvanceNotice')?.value);
     
-    // Métodos de pago
     const editMyPaymentTransfer = document.getElementById('editMyPaymentTransfer')?.checked;
     const editMyPaymentCardPresencial = document.getElementById('editMyPaymentCardPresencial')?.checked;
     const editMyPaymentCash = document.getElementById('editMyPaymentCash')?.checked;
@@ -593,18 +553,13 @@ export async function saveMyProfile() {
     const editMyPaymentMercadopago = document.getElementById('editMyPaymentMercadopago')?.checked;
     const editMyPaymentWebpay = document.getElementById('editMyPaymentWebpay')?.checked;
     
-    // Datos bancarios
     const editMyBank = document.getElementById('editMyBank')?.value.trim();
     const editMyAccountType = document.getElementById('editMyAccountType')?.value;
     const editMyAccountNumber = document.getElementById('editMyAccountNumber')?.value.trim();
     const editMyBankRut = document.getElementById('editMyBankRut')?.value.trim();
     const editMyBankEmail = document.getElementById('editMyBankEmail')?.value.trim();
-    
-    // Links de pago
     const editMyPaymentLinkOnline = document.getElementById('editMyPaymentLinkOnline')?.value.trim();
     const editMyPaymentLinkPresencial = document.getElementById('editMyPaymentLinkPresencial')?.value.trim();
-    
-    // Redes sociales
     const editMyLinkedin = document.getElementById('editMyLinkedin')?.value.trim();
     const editMyInstagram = document.getElementById('editMyInstagram')?.value.trim();
     const editMyWebsite = document.getElementById('editMyWebsite')?.value.trim();
@@ -612,14 +567,11 @@ export async function saveMyProfile() {
     const editMyPhone = document.getElementById('editMyPhone')?.value.trim();
     const editMyAddress = document.getElementById('editMyAddress')?.value.trim();
     
-    // Especialidades
     const specSelect = document.getElementById('editMySpec');
     const specialties = specSelect ? Array.from(specSelect.selectedOptions).map(opt => opt.value) : currentData.spec || [];
     
-    // Construir objeto con solo los campos que han cambiado (o no están vacíos)
     const updates = {};
     
-    // Comparar y agregar solo si hay cambio
     if (editMyName !== undefined && editMyName !== currentData.name) updates.name = editMyName;
     if (editMyEmail !== undefined && editMyEmail !== currentData.email) updates.email = editMyEmail;
     if (editMyTitle !== undefined && editMyTitle !== currentData.title) updates.title = editMyTitle;
@@ -632,13 +584,11 @@ export async function saveMyProfile() {
         const languagesArray = editMyLanguages ? editMyLanguages.split(',').map(l => l.trim()) : [];
         if (JSON.stringify(languagesArray) !== JSON.stringify(currentData.languages || [])) updates.languages = languagesArray;
     }
-    
     if (!isNaN(editMyPriceOnline) && editMyPriceOnline !== currentData.priceOnline) updates.priceOnline = editMyPriceOnline;
     if (!isNaN(editMyPricePresencial) && editMyPricePresencial !== currentData.pricePresencial) updates.pricePresencial = editMyPricePresencial;
     if (!isNaN(editMyDuration) && editMyDuration !== currentData.sessionDuration) updates.sessionDuration = editMyDuration;
     if (!isNaN(editMyAdvanceNotice) && editMyAdvanceNotice !== currentData.advanceNotice) updates.advanceNotice = editMyAdvanceNotice;
     
-    // Métodos de pago (comparar objeto)
     const newPaymentMethods = {
         transfer: editMyPaymentTransfer || false,
         cardPresencial: editMyPaymentCardPresencial || false,
@@ -651,7 +601,6 @@ export async function saveMyProfile() {
         updates.paymentMethods = newPaymentMethods;
     }
     
-    // Datos bancarios
     const newBankDetails = {
         bank: editMyBank || '',
         accountType: editMyAccountType || 'corriente',
@@ -663,7 +612,6 @@ export async function saveMyProfile() {
         updates.bankDetails = newBankDetails;
     }
     
-    // Links de pago
     const newPaymentLinks = {
         online: editMyPaymentLinkOnline || '',
         presencial: editMyPaymentLinkPresencial || '',
@@ -674,7 +622,6 @@ export async function saveMyProfile() {
         updates.paymentLinks = newPaymentLinks;
     }
     
-    // Redes sociales
     const newSocialLinks = {
         linkedin: editMyLinkedin || '',
         instagram: editMyInstagram || '',
@@ -690,11 +637,9 @@ export async function saveMyProfile() {
     
     if (JSON.stringify(specialties) !== JSON.stringify(currentData.spec || [])) updates.spec = specialties;
     
-    // Imagen y QR (si se subieron nuevos)
     if (state.tempImageData) {
         updates.img = state.tempImageData;
         updates.photoURL = state.tempImageData;
-        // Limpiar usando el setter
         state.setTempImageData(null);
     }
     if (state.tempQrOnlineData) {
@@ -708,7 +653,6 @@ export async function saveMyProfile() {
         state.setTempQrPresencialData(null);
     }
     
-    // Si no hay cambios, salir
     if (Object.keys(updates).length === 0) {
         showToast('No se detectaron cambios', 'info');
         return;
@@ -720,12 +664,10 @@ export async function saveMyProfile() {
         await firebase.database().ref(`staff/${user.uid}`).update(updates);
         console.log('✅ Perfil actualizado en Firebase');
         
-        // Obtener los datos frescos después de la actualización
         const freshSnapshot = await firebase.database().ref(`staff/${user.uid}`).once('value');
         const freshData = freshSnapshot.val();
         if (!freshData) throw new Error('No se pudo recuperar el perfil después de guardar');
         
-        // Actualizar state.staff
         const fullData = { uid: user.uid, ...freshData };
         const staffIndex = state.staff.findIndex(p => p.uid === user.uid || p.id === user.uid);
         if (staffIndex !== -1) {
@@ -734,12 +676,11 @@ export async function saveMyProfile() {
             state.staff.push(fullData);
         }
         
-        // Actualizar currentUser.data
         if (state.currentUser) {
             state.currentUser.data = fullData;
         }
         
-        // ✅ ACTUALIZAR localStorage - SOLO DATOS DEL USUARIO ACTUAL
+        // Actualizar localStorage
         localStorage.setItem('vinculo_user', JSON.stringify(state.currentUser));
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({
             role: 'psych',
@@ -754,14 +695,11 @@ export async function saveMyProfile() {
             }
         }));
         
-        // Cerrar modal
         const modal = document.getElementById('editMyProfileModal');
         if (modal) modal.style.display = 'none';
         
-        // Forzar actualización de vistas
         setTimeout(() => {
             if (typeof window.filterProfessionals === 'function') window.filterProfessionals();
-            // Solo renderizar tabla de staff si el usuario es admin
             if (state.currentUser?.role === 'admin' && typeof window.renderStaffTable === 'function') {
                 window.renderStaffTable();
             }
@@ -776,18 +714,13 @@ export async function saveMyProfile() {
     }
 }
 
-// ============================================
-// RENDERIZAR TABLA DE PROFESIONALES (CORREGIDO)
-// ============================================
 export function renderStaffTable() {
-    // Solo ejecutar si el usuario es admin (la tabla solo existe para admin)
     if (state.currentUser?.role !== 'admin') {
         return;
     }
     
     const tb = document.getElementById('staffTableBody');
     if (!tb) {
-        // Si no existe el elemento, no hacer nada (sin reintentos)
         console.warn('⚠️ staffTableBody no encontrado (probablemente el admin no está en dashboard)');
         return;
     }
@@ -830,9 +763,6 @@ export function renderStaffTable() {
     }).join('');
 }
 
-// ============================================
-// FUNCIÓN PARA AGREGAR PROFESIONAL (CON CREACIÓN EN AUTH)
-// ============================================
 export async function addStaff() {
     const name = document.getElementById('addName')?.value;
     const email = document.getElementById('addEmail')?.value;
@@ -843,9 +773,7 @@ export async function addStaff() {
     const usuario = document.getElementById('addUser')?.value;
     const pass = document.getElementById('addPass')?.value;
     const advanceNotice = document.getElementById('addAdvanceNotice')?.value;
-    
     const genero = document.getElementById('addGenero')?.value || '';
-    
     const whatsapp = document.getElementById('addWhatsapp')?.value || '';
     const instagram = document.getElementById('addInstagram')?.value || '';
     const address = document.getElementById('addAddress')?.value || '';
@@ -855,7 +783,6 @@ export async function addStaff() {
     const accountNumber = document.getElementById('addAccountNumber')?.value || '';
     const bankRut = document.getElementById('addBankRut')?.value || '';
     const bankEmail = document.getElementById('addBankEmail')?.value || '';
-    
     const paymentLinkOnline = document.getElementById('addPaymentLinkOnline')?.value || '';
     const paymentLinkPresencial = document.getElementById('addPaymentLinkPresencial')?.value || '';
     
@@ -863,14 +790,12 @@ export async function addStaff() {
         showToast('Completa todos los campos obligatorios', 'error');
         return;
     }
-
+    
     try {
-        // 1. Crear usuario en Firebase Authentication
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, pass);
         const uid = userCredential.user.uid;
         console.log('✅ Usuario creado en Auth con UID:', uid);
         
-        // 2. Construir objeto del profesional (sin pass)
         const nuevoProfesional = {
             id: uid,
             uid: uid,
@@ -910,12 +835,8 @@ export async function addStaff() {
             createdAt: new Date().toISOString()
         };
         
-        // 3. Guardar en Realtime Database usando el UID como clave
         await firebase.database().ref(`staff/${uid}`).set(nuevoProfesional);
-        
-        // 4. Actualizar estado local
         state.staff.push(nuevoProfesional);
-        
         closeAddStaffModal();
         renderStaffTable();
         showToast('Profesional añadido correctamente', 'success');
@@ -934,9 +855,6 @@ export async function addStaff() {
     }
 }
 
-// ============================================
-// FUNCIONES DE EDICIÓN Y ACTUALIZACIÓN (CON ENVÍO DE CORREO SI CAMBIA CONTRASEÑA)
-// ============================================
 export function editTherapist(id) {
     const therapist = state.staff.find(s => s.id == id);
     if (!therapist) return;
@@ -969,7 +887,7 @@ export function editTherapist(id) {
     if (editTherapistId) editTherapistId.value = therapist.id;
     if (editName) editName.value = therapist.name || '';
     if (editEmail) editEmail.value = therapist.email || '';
-    if (editPass) editPass.value = ''; // Nunca mostrar contraseña guardada (no se guarda en DB)
+    if (editPass) editPass.value = '';
     
     const therapistSpecs = Array.isArray(therapist.spec) ? therapist.spec : [therapist.spec];
     if (editSpecSelect) {
@@ -986,10 +904,8 @@ export function editTherapist(id) {
     if (editPriceOnline) editPriceOnline.value = therapist.priceOnline || '';
     if (editPricePresencial) editPricePresencial.value = therapist.pricePresencial || '';
     if (editAdvanceNotice) editAdvanceNotice.value = therapist.advanceNotice ?? 60;
-    if (editGenero) {
-        editGenero.value = therapist.genero || '';
-    }
-
+    if (editGenero) editGenero.value = therapist.genero || '';
+    
     const bank = therapist.bankDetails || {};
     if (editBank) editBank.value = bank.bank || '';
     if (editAccountType) editAccountType.value = bank.accountType || 'corriente';
@@ -1044,7 +960,7 @@ export async function updateTherapist() {
     const id = document.getElementById('editTherapistId')?.value;
     const therapist = state.staff.find(s => s.id == id);
     if (!therapist) return;
-
+    
     const editName = document.getElementById('editName');
     const editEmail = document.getElementById('editEmail');
     const editSpecSelect = document.getElementById('editSpec');
@@ -1066,14 +982,9 @@ export async function updateTherapist() {
     const editPaymentLinkPresencial = document.getElementById('editPaymentLinkPresencial');
     const editPass = document.getElementById('editPass');
     
-    // Guardar cambios en la base de datos (staff)
     if (editName) therapist.name = editName.value;
     if (editEmail) therapist.email = editEmail.value;
-    
-    if (editSpecSelect) {
-        therapist.spec = Array.from(editSpecSelect.selectedOptions).map(opt => opt.value);
-    }
-    
+    if (editSpecSelect) therapist.spec = Array.from(editSpecSelect.selectedOptions).map(opt => opt.value);
     if (editUser) therapist.usuario = editUser.value;
     if (editWhatsapp) therapist.whatsapp = editWhatsapp.value;
     if (editInstagram) therapist.instagram = editInstagram.value;
@@ -1082,9 +993,7 @@ export async function updateTherapist() {
     if (editPriceOnline) therapist.priceOnline = parseInt(editPriceOnline.value);
     if (editPricePresencial) therapist.pricePresencial = parseInt(editPricePresencial.value);
     if (editAdvanceNotice) therapist.advanceNotice = parseInt(editAdvanceNotice.value);
-    if (editGenero) {
-        therapist.genero = editGenero.value;
-    }
+    if (editGenero) therapist.genero = editGenero.value;
     
     therapist.bankDetails = {
         bank: editBank?.value || '',
@@ -1093,24 +1002,22 @@ export async function updateTherapist() {
         rut: editBankRut?.value || '',
         email: editBankEmail?.value || ''
     };
-
+    
     therapist.paymentLinks = {
         online: editPaymentLinkOnline?.value || '',
         presencial: editPaymentLinkPresencial?.value || '',
         qrOnline: state.tempQrOnlineData || therapist.paymentLinks?.qrOnline || '',
         qrPresencial: state.tempQrPresencialData || therapist.paymentLinks?.qrPresencial || ''
     };
-
+    
     if (state.tempImageData) {
         therapist.img = state.tempImageData;
     }
-
+    
     try {
-        // Guardar en Firebase Database
         await firebase.database().ref(`staff/${id}`).update(therapist);
         console.log('✅ Profesional actualizado en DB');
         
-        // Si se proporcionó una nueva contraseña, enviar correo de restablecimiento
         const newPassword = editPass?.value.trim();
         if (newPassword && newPassword !== '') {
             console.log('🔑 Se detectó cambio de contraseña, enviando correo de restablecimiento...');
@@ -1118,8 +1025,7 @@ export async function updateTherapist() {
             showToast(`📧 Se ha enviado un correo a ${therapist.email} para establecer su nueva contraseña.`, 'info');
         }
         
-        // Actualizar estado local
-        import('../main.js').then(main => main.save());
+        await save();
         closeEditTherapistModal();
         renderStaffTable();
         showToast('Profesional actualizado correctamente', 'success');
@@ -1130,9 +1036,6 @@ export async function updateTherapist() {
     }
 }
 
-// ============================================
-// ELIMINAR PROFESIONAL (CON ELIMINACIÓN DE DATOS ASOCIADOS)
-// ============================================
 export async function deleteStaff(id) {
     const therapist = state.staff.find(s => s.id == id);
     if (therapist?.isHiddenAdmin) {
@@ -1152,67 +1055,44 @@ export async function deleteStaff(id) {
         console.log('🗑️ Eliminando profesional:', id);
         showToast('Eliminando profesional y sus datos...', 'info');
         
-        // Buscar pacientes de este profesional
         const patientIds = state.patients
             .filter(p => p.psychId == id)
             .map(p => p.id);
         
         console.log(`📋 Profesional tiene ${patientIds.length} pacientes`);
         
-        // 1. ELIMINAR DE STAFF
         await firebase.database().ref(`staff/${id}`).remove();
         console.log('✅ Profesional eliminado de staff');
         
-        // 2. ELIMINAR CITAS
         const appointmentsToDelete = state.appointments.filter(a => a.psychId == id);
         for (const apt of appointmentsToDelete) {
-            if (apt.id) {
-                await firebase.database().ref(`appointments/${apt.id}`).remove();
-            }
+            if (apt.id) await firebase.database().ref(`appointments/${apt.id}`).remove();
         }
         console.log(`✅ ${appointmentsToDelete.length} citas eliminadas`);
         
-        // 3. ELIMINAR SOLICITUDES
         const requestsToDelete = state.pendingRequests.filter(r => r.psychId == id);
         for (const req of requestsToDelete) {
-            if (req.id) {
-                await firebase.database().ref(`pendingRequests/${req.id}`).remove();
-            }
+            if (req.id) await firebase.database().ref(`pendingRequests/${req.id}`).remove();
         }
         console.log(`✅ ${requestsToDelete.length} solicitudes eliminadas`);
         
-        // 4. ELIMINAR PACIENTES Y SUS DATOS
         for (const patientId of patientIds) {
-            // Eliminar fichas de ingreso
             const fichasToDelete = state.fichasIngreso.filter(f => f.patientId == patientId);
             for (const ficha of fichasToDelete) {
-                if (ficha.id) {
-                    await firebase.database().ref(`fichasIngreso/${ficha.id}`).remove();
-                }
+                if (ficha.id) await firebase.database().ref(`fichasIngreso/${ficha.id}`).remove();
             }
-            
-            // Eliminar sesiones
             const sesionesToDelete = state.sesiones.filter(s => s.patientId == patientId);
             for (const sesion of sesionesToDelete) {
-                if (sesion.id) {
-                    await firebase.database().ref(`sesiones/${sesion.id}`).remove();
-                }
+                if (sesion.id) await firebase.database().ref(`sesiones/${sesion.id}`).remove();
             }
-            
-            // Eliminar informes
             const informesToDelete = state.informes.filter(i => i.patientId == patientId);
             for (const informe of informesToDelete) {
-                if (informe.id) {
-                    await firebase.database().ref(`informes/${informe.id}`).remove();
-                }
+                if (informe.id) await firebase.database().ref(`informes/${informe.id}`).remove();
             }
-            
-            // Eliminar el paciente
             await firebase.database().ref(`patients/${patientId}`).remove();
         }
         console.log(`✅ ${patientIds.length} pacientes y sus datos eliminados`);
         
-        // 5. ACTUALIZAR ESTADO LOCAL
         state.setStaff(state.staff.filter(s => s.id != id));
         state.setAppointments(state.appointments.filter(a => a.psychId != id));
         state.setPendingRequests(state.pendingRequests.filter(r => r.psychId != id));
@@ -1221,10 +1101,7 @@ export async function deleteStaff(id) {
         state.setSesiones(state.sesiones.filter(s => !patientIds.includes(s.patientId)));
         state.setInformes(state.informes.filter(i => !patientIds.includes(i.patientId)));
         
-        // 6. ACTUALIZAR VISTA
         renderStaffTable();
-        
-        // 7. Disparar evento de actualización
         window.dispatchEvent(new CustomEvent('staff-updated'));
         
         showToast('✅ Profesional y todos sus datos eliminados', 'success');
@@ -1235,19 +1112,14 @@ export async function deleteStaff(id) {
     }
 }
 
-// ============================================
-// FUNCIONES DE ESTADÍSTICAS Y UTILIDAD
-// ============================================
 export function getPsychologistSummary(psychId) {
     const psych = state.staff.find(s => s.id == psychId);
     if (!psych) return null;
     
     const misPacientes = state.patients.filter(p => p.psychId == psychId);
     const misPatientIds = misPacientes.map(p => p.id);
-    
     const misCitas = state.appointments.filter(a => a.psychId == psychId);
     const citasPagadas = misCitas.filter(a => a.paymentStatus === 'pagado');
-    
     const ingresosTotales = citasPagadas.reduce((sum, a) => sum + (a.price || 0), 0);
     const ingresosMes = citasPagadas
         .filter(a => {
@@ -1295,13 +1167,11 @@ export function getPsychologistSummary(psychId) {
 
 export function getPatientsWithClinicalData(psychId) {
     const misPacientes = state.patients.filter(p => p.psychId == psychId);
-    
     return misPacientes.map(patient => {
         const fichas = state.fichasIngreso.filter(f => f.patientId == patient.id);
         const sesiones = state.sesiones.filter(s => s.patientId == patient.id);
         const informes = state.informes.filter(i => i.patientId == patient.id);
         const citas = state.appointments.filter(a => a.patientId == patient.id);
-        
         return {
             ...patient,
             estadisticas: {
@@ -1329,7 +1199,6 @@ export function getRecentSessions(psychId, limit = 10) {
     const misPatientIds = state.patients
         .filter(p => p.psychId == psychId)
         .map(p => p.id);
-    
     return state.sesiones
         .filter(s => misPatientIds.includes(s.patientId))
         .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion))
@@ -1347,24 +1216,17 @@ export function getRecentSessions(psychId, limit = 10) {
 export function loadSpecialtiesInSelects() {
     const addSpecSelect = document.getElementById('addSpec');
     const editSpecSelect = document.getElementById('editSpec');
-    
     if (!addSpecSelect || !editSpecSelect) return;
-    
     const specialtiesHtml = state.specialties
         .map(s => `<option value="${s.name}">${s.name}</option>`)
         .join('');
-    
     addSpecSelect.innerHTML = specialtiesHtml;
     editSpecSelect.innerHTML = specialtiesHtml;
 }
 
-// ============================================
-// AGREGAR BOTÓN DE EDICIÓN EN EL DASHBOARD
-// ============================================
 export function addProfileButtonToDashboard() {
     const dashboardHeader = document.querySelector('.dashboard-header');
     if (!dashboardHeader) return;
-    
     if (document.getElementById('editProfileButton')) return;
     
     const button = document.createElement('button');
@@ -1374,30 +1236,21 @@ export function addProfileButtonToDashboard() {
     button.style.background = 'var(--primario)';
     button.innerHTML = '<i class="fa fa-user-edit"></i> Editar Mi Perfil';
     button.onclick = openMyProfileModal;
-    
     dashboardHeader.appendChild(button);
 }
 
-// ============================================
-// Sincronización forzada después de login (INCLUYE AVAILABILITY)
-// ============================================
 export async function syncProfileFromFirebase() {
     const user = firebase.auth().currentUser;
     if (!user) return;
-    
     const uid = user.uid;
     console.log('🔄 Sincronizando perfil desde Firebase para UID:', uid);
-    
     const snapshot = await firebase.database().ref(`staff/${uid}`).once('value');
     const data = snapshot.val();
     if (!data) {
         console.warn('⚠️ No se encontraron datos del profesional en Firebase');
         return;
     }
-    
     const fullData = { uid, ...data };
-    
-    // Actualizar state.staff
     if (!state.staff) state.staff = [];
     const existingIndex = state.staff.findIndex(p => p.uid === uid);
     if (existingIndex >= 0) {
@@ -1405,13 +1258,9 @@ export async function syncProfileFromFirebase() {
     } else {
         state.staff.push(fullData);
     }
-    
-    // Actualizar currentUser.data
     if (state.currentUser && state.currentUser.uid === uid) {
         state.currentUser.data = fullData;
     }
-    
-    // Guardar en localStorage - SOLO DATOS DEL USUARIO ACTUAL
     if (state.currentUser) {
         localStorage.setItem('vinculo_user', JSON.stringify(state.currentUser));
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({
@@ -1427,26 +1276,18 @@ export async function syncProfileFromFirebase() {
             }
         }));
     }
-    
     console.log('✅ Perfil sincronizado correctamente');
-    
-    // Refrescar vistas
     if (typeof window.filterProfessionals === 'function') window.filterProfessionals();
-    // Solo renderizar tabla de staff si el usuario es admin
     if (state.currentUser?.role === 'admin' && typeof window.renderStaffTable === 'function') {
         window.renderStaffTable();
     }
 }
 
-// ============================================
-// FUNCIONES PARA MODAL DE DISPONIBILIDAD
-// ============================================
 export function openMyAvailabilityModal() {
     if (!state.currentUser || state.currentUser.role !== 'psych') {
         showToast('Debes iniciar sesión', 'error');
         return;
     }
-    
     if (typeof window.openAvailabilityModal === 'function') {
         window.openAvailabilityModal(state.currentUser.data.id);
     } else {
@@ -1459,17 +1300,13 @@ export function viewMyPublicProfile() {
         showToast('Debes iniciar sesión', 'error');
         return;
     }
-    
     const psychId = state.currentUser.data.id;
-    
     const clientView = document.getElementById('clientView');
     const bookingPanel = document.getElementById('bookingPanel');
     const loginPanel = document.getElementById('loginPanel');
-    
     if (clientView) clientView.style.display = 'block';
     if (bookingPanel) bookingPanel.style.display = 'none';
     if (loginPanel) loginPanel.style.display = 'none';
-    
     setTimeout(() => {
         const psychCard = document.querySelector(`.therapist-card[data-id="${psychId}"], .staff-card[data-id="${psychId}"]`);
         if (psychCard) {
@@ -1479,7 +1316,6 @@ export function viewMyPublicProfile() {
                 psychCard.style.boxShadow = '';
             }, 2000);
         }
-        
         showToast('Vista previa de tu perfil público', 'info');
     }, 500);
 }
@@ -1487,13 +1323,10 @@ export function viewMyPublicProfile() {
 export function loadSpecialtiesInProfileSelects() {
     const editMySpec = document.getElementById('editMySpec');
     if (!editMySpec) return;
-    
     const specialtiesHtml = state.specialties
         .map(s => `<option value="${s.name}">${s.name}</option>`)
         .join('');
-    
     editMySpec.innerHTML = specialtiesHtml;
-    
     if (state.currentUser?.role === 'psych' && state.currentUser.data) {
         const psych = state.currentUser.data;
         const psychSpecs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
@@ -1530,32 +1363,26 @@ export async function cambiarMiPassword() {
         showToast('No autorizado', 'error');
         return;
     }
-
     const currentPassword = document.getElementById('editMyCurrentPassword')?.value;
     const newPassword = document.getElementById('editMyNewPassword')?.value;
     const confirmPassword = document.getElementById('editMyConfirmPassword')?.value;
-
     if (!currentPassword || !newPassword || !confirmPassword) {
         showToast('Completa todos los campos', 'error');
         return;
     }
-
     if (newPassword !== confirmPassword) {
         showToast('Las contraseñas nuevas no coinciden', 'error');
         return;
     }
-
     if (newPassword.length < 6) {
         showToast('La nueva contraseña debe tener al menos 6 caracteres', 'error');
         return;
     }
-
     const user = firebase.auth().currentUser;
     if (!user) {
         showToast('No hay sesión activa', 'error');
         return;
     }
-
     const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
     try {
         await user.reauthenticateWithCredential(credential);
@@ -1578,9 +1405,6 @@ export async function cambiarMiPassword() {
     }
 }
 
-// ============================================
-// EXPORTAR FUNCIONES AL OBJETO WINDOW
-// ============================================
 if (typeof window !== 'undefined') {
     window.showAddStaffModal = showAddStaffModal;
     window.closeAddStaffModal = closeAddStaffModal;
@@ -1595,7 +1419,6 @@ if (typeof window !== 'undefined') {
     window.canPsychologistAccessPatient = canPsychologistAccessPatient;
     window.getRecentSessions = getRecentSessions;
     window.loadSpecialtiesInSelects = loadSpecialtiesInSelects;
-    
     window.openMyProfileModal = openMyProfileModal;
     window.saveMyProfile = saveMyProfile;
     window.openMyAvailabilityModal = openMyAvailabilityModal;
@@ -1608,7 +1431,6 @@ if (typeof window !== 'undefined') {
     
     setTimeout(addProfileButtonToDashboard, 2000);
     
-    // Escuchar cambios en el estado de autenticación para sincronizar
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user && state.currentUser?.role === 'psych') {
             await syncProfileFromFirebase();
@@ -1616,4 +1438,4 @@ if (typeof window !== 'undefined') {
     });
 }
 
-console.log('✅ profesionales.js cargado con funciones de fichas clínicas y edición de perfil profesional (sin contraseñas en DB)');
+console.log('✅ profesionales.js refactorizado: import save directo, async/await, normalización de RUT');

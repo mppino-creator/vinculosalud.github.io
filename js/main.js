@@ -133,10 +133,13 @@ window.closePaymentMethodsModal = personalizacion.closePaymentMethodsModal;
 window.saveGlobalPaymentMethods = personalizacion.saveGlobalPaymentMethods;
 window.updatePaymentMethodsInfo = personalizacion.updatePaymentMethodsInfo;
 
+// 🔥 Funciones de especialidades (CRUD completo)
 window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
 window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
 window.addSpecialty = personalizacion.addSpecialty;
 window.deleteSpecialty = personalizacion.deleteSpecialty;
+window.editSpecialty = personalizacion.editSpecialty;
+window.renderSpecialtiesTable = personalizacion.renderSpecialtiesTable;
 
 window.loadMyConfig = personalizacion.loadMyConfig;
 window.saveMyConfig = personalizacion.saveMyConfig;
@@ -185,6 +188,11 @@ window.compartirPerfil = publico.compartirPerfil;
 window.copiarAlPortapapeles = publico.copiarAlPortapapeles;
 window.showTherapistInfo = publico.showTherapistInfo;
 window.filterProfessionals = publico.filterProfessionals;
+
+// 🔥 Funciones del calendario (para los onclick)
+window.verDetalleCita = calendario.verDetalleCita;
+window.verDetalleSolicitud = calendario.verDetalleSolicitud;
+window.confirmarSolicitud = calendario.confirmarSolicitud;
 
 window.getCurrentPsychFullData = state.getCurrentPsychFullData;
 window.updatePsychData = state.updatePsychData;
@@ -285,6 +293,21 @@ setTimeout(() => {
     }
     if (typeof window.esEmailProfesional !== 'function' && typeof utils?.esEmailProfesional === 'function') {
         window.esEmailProfesional = utils.esEmailProfesional;
+    }
+    // 🔥 Asegurar funciones de especialidades en caso de fallo
+    if (typeof window.showSpecialtiesModal !== 'function' && typeof personalizacion?.showSpecialtiesModal === 'function') {
+        window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
+        window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
+        window.addSpecialty = personalizacion.addSpecialty;
+        window.deleteSpecialty = personalizacion.deleteSpecialty;
+        window.editSpecialty = personalizacion.editSpecialty;
+        window.renderSpecialtiesTable = personalizacion.renderSpecialtiesTable;
+    }
+    // 🔥 Asegurar funciones del calendario en caso de fallo
+    if (typeof window.verDetalleCita !== 'function' && typeof calendario?.verDetalleCita === 'function') {
+        window.verDetalleCita = calendario.verDetalleCita;
+        window.verDetalleSolicitud = calendario.verDetalleSolicitud;
+        window.confirmarSolicitud = calendario.confirmarSolicitud;
     }
 }, 500);
 

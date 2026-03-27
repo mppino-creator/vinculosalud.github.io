@@ -364,6 +364,13 @@ export async function processLogin() {
             localStorage.setItem('vinculo_user', JSON.stringify({ role, data: psychFullData }));
 
             actualizarUIAdmin(psychFullData, role);
+            
+            // 🔥 CARGAR DATOS PRIVADOS DESPUÉS DEL LOGIN
+            if (typeof cargarDatosPrivados === 'function') {
+                cargarDatosPrivados();
+                console.log('📦 Datos privados solicitados después del login');
+            }
+            
             if (role === 'psych') {
                 setTimeout(async () => {
                     await syncProfileFromFirebase();

@@ -718,7 +718,7 @@ export function cargarDatosIniciales() {
 // ============================================
 // CARGA DE DATOS PRIVADOS (SOLO SI HAY USUARIO)
 // ============================================
-function cargarDatosPrivados() {
+export function cargarDatosPrivados() {
     console.log('🔒 Cargando datos privados (requieren autenticación)...');
     
     const promesasPrivadas = [

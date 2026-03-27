@@ -1,4 +1,5 @@
 // js/modules/auth.js
+import { cargarDatosPrivados } from './publico.js';
 import * as state from './state.js';
 import { showToast } from './utils.js';
 import { renderStaffTable } from './profesionales.js';

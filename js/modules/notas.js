@@ -26,7 +26,6 @@ function cargarPacientesParaNotas() {
         onValue(appointmentsRef, (snapshot) => {
             const citas = snapshot.val() || {};
 
-            // Determinar qué citas se toman según el rol
             let citasDelProfesional = Object.values(citas);
             if (currentRole !== 'admin') {
                 citasDelProfesional = citasDelProfesional.filter(cita => cita.psychId === currentUser.uid);
@@ -35,7 +34,6 @@ function cargarPacientesParaNotas() {
                 console.log(`🔍 Citas totales (admin): ${citasDelProfesional.length}`);
             }
 
-            // Extraer IDs únicos de pacientes
             const patientIds = [...new Set(citasDelProfesional.map(cita => cita.patientId).filter(id => id))];
             console.log(`📋 IDs de pacientes únicos:`, patientIds);
 
@@ -46,15 +44,14 @@ function cargarPacientesParaNotas() {
                 return;
             }
 
-            // Obtener datos completos de esos pacientes
             const patientsRef = ref(db, 'patients');
             onValue(patientsRef, (snapshot) => {
                 const allPatientsData = snapshot.val() || {};
                 allPatients = patientIds.map(id => ({
                     id,
                     ...allPatientsData[id],
-                    nombreCompleto: allPatientsData[id]?.name || 
-                                    `${allPatientsData[id]?.firstName} ${allPatientsData[id]?.lastName}` || 
+                    nombreCompleto: allPatientsData[id]?.name ||
+                                    `${allPatientsData[id]?.firstName} ${allPatientsData[id]?.lastName}` ||
                                     'Paciente sin nombre',
                     rut: allPatientsData[id]?.rut || ''
                 })).filter(p => p.id);
@@ -68,7 +65,6 @@ function cargarPacientesParaNotas() {
 }
 
 function actualizarSelects() {
-    // Select del modal
     const selectPaciente = document.getElementById('notaPacienteId');
     if (selectPaciente) {
         selectPaciente.innerHTML = '<option value="">Seleccionar paciente</option>';
@@ -80,7 +76,6 @@ function actualizarSelects() {
         });
     }
 
-    // Filtro de la vista principal
     const filtroPaciente = document.getElementById('filtroNotaPaciente');
     if (filtroPaciente) {
         filtroPaciente.innerHTML = '<option value="">Todos los pacientes</option>';
@@ -94,9 +89,14 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar y renderizar notas
+// 2. Cargar y renderizar notas (usando listener)
 // ---------------------------------------------------------------------
+let notasListenerActive = false;
+
 function cargarNotas() {
+    if (notasListenerActive) return; // Evita múltiples listeners
+    notasListenerActive = true;
+
     const sesionesRef = ref(db, 'sesiones');
     onValue(sesionesRef, (snapshot) => {
         const data = snapshot.val() || {};
@@ -160,7 +160,7 @@ function renderNotasListado() {
 }
 
 // ---------------------------------------------------------------------
-// 3. Funciones del modal (nueva nota, editar, guardar, eliminar)
+// 3. Funciones del modal
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -214,7 +214,7 @@ window.guardarNota = async function() {
             alert('Nota creada');
         }
         cerrarModalNota();
-        cargarNotas();
+        // No llamamos a cargarNotas() aquí; el listener en tiempo real se encarga de actualizar la lista.
     } catch (error) {
         console.error('Error guardando nota:', error);
         alert('Error al guardar nota');
@@ -226,7 +226,7 @@ window.eliminarNota = async function(notaId) {
     try {
         await remove(ref(db, `sesiones/${notaId}`));
         alert('Nota eliminada');
-        cargarNotas();
+        // El listener actualizará automáticamente
     } catch (error) {
         console.error('Error eliminando nota:', error);
         alert('Error al eliminar nota');
@@ -239,14 +239,13 @@ function cerrarModalNota() {
 window.cerrarModalNota = cerrarModalNota;
 
 // ---------------------------------------------------------------------
-// 4. Inicialización: obtener rol directamente desde Firebase
+// 4. Inicialización
 // ---------------------------------------------------------------------
 async function initNotas() {
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
             try {
-                // Obtener rol desde el nodo staff usando el UID
                 const staffRef = ref(db, `staff/${user.uid}`);
                 const snapshot = await get(staffRef);
                 const staffData = snapshot.val();
@@ -258,24 +257,22 @@ async function initNotas() {
                 console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
             } catch (error) {
                 console.error('❌ Error al obtener rol desde staff:', error);
-                currentRole = 'psych'; // fallback
+                currentRole = 'psych';
             }
 
-            // Ahora que ya tenemos el rol correcto, cargamos pacientes y notas
             await cargarPacientesParaNotas();
-            cargarNotas();
+            cargarNotas(); // inicia el listener en tiempo real
         } else {
             currentUser = null;
             currentRole = null;
+            notasListenerActive = false;
             const container = document.getElementById('notasListado');
             if (container) container.innerHTML = '<div style="text-align:center; padding:40px;">🔒 Inicia sesión para ver notas</div>';
         }
     });
 }
 
-// Exponer función para recargar notas manualmente (por si se necesita)
-window.cargarNotas = cargarNotas;
+window.cargarNotas = cargarNotas; // función expuesta por si se necesita forzar recarga
 
-// Arrancar
 initNotas();
 console.log('✅ notas.js cargado correctamente');

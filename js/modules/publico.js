@@ -789,11 +789,17 @@ export function cargarDatosPrivados() {
         
         console.log('✅ Datos privados cargados correctamente');
         
-        // Actualizar vistas si el dashboard está visible
-        if (document.getElementById('dashboard').style.display === 'block') {
-            if (typeof renderAppointments === 'function') renderAppointments();
-            if (typeof renderPendingRequests === 'function') renderPendingRequests();
-            if (typeof renderStaffTable === 'function' && state.currentUser.role === 'admin') renderStaffTable();
+        // 🔥 ACTUALIZAR TABLAS SIEMPRE (independientemente de si el dashboard está visible)
+        // Las funciones internas verifican si el contenedor existe, así que es seguro llamarlas.
+        if (state.currentUser) {
+            if (state.currentUser.role === 'admin') {
+                if (typeof renderStaffTable === 'function') renderStaffTable();
+                if (typeof renderMessagesTable === 'function') renderMessagesTable();
+            } else if (state.currentUser.role === 'psych') {
+                if (typeof renderAppointments === 'function') renderAppointments();
+                if (typeof renderPendingRequests === 'function') renderPendingRequests();
+                if (typeof renderPatients === 'function') renderPatients(); // Renderizar lista de pacientes
+            }
             if (typeof window.updateStats === 'function') window.updateStats();
         }
         

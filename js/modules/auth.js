@@ -1,5 +1,5 @@
 // js/modules/auth.js
-import { cargarDatosPrivados } from './publico.js';
+import { cargarDatosPrivados, limpiarEscuchasPrivadas } from './publico.js';
 import * as state from './state.js';
 import { showToast } from './utils.js';
 import { renderStaffTable } from './profesionales.js';
@@ -410,6 +410,11 @@ export async function logout() {
         console.error('❌ Error al cerrar sesión en Firebase:', error);
     }
 
+    // Limpiar listeners de Firebase en tiempo real
+    if (typeof limpiarEscuchasPrivadas === 'function') {
+        limpiarEscuchasPrivadas();
+    }
+
     state.setCurrentUser(null);
     localStorage.removeItem('vinculoCurrentUser');
     localStorage.removeItem('vinculo_user');
@@ -611,7 +616,6 @@ export function switchTab(tabName) {
             try {
                 if (tabName === 'pacientes' && typeof renderPatients === 'function') renderPatients();
                 else if (tabName === 'citas') {
-                    // Usar la nueva función de renderizado de citas si existe, si no la antigua
                     if (typeof window.renderAppointmentsTable === 'function') window.renderAppointmentsTable();
                     else if (typeof renderAppointments === 'function') renderAppointments();
                 }
@@ -867,4 +871,4 @@ if (typeof window !== 'undefined') {
     }, 1000);
 })();
 
-console.log('✅ auth.js refactorizado: constantes centralizadas, lógica limpia, restablecimiento de contraseña');
+console.log('✅ auth.js refactorizado: constantes centralizadas, lógica limpia, restablecimiento de contraseña y limpieza de listeners al logout');

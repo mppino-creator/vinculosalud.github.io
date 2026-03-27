@@ -22,6 +22,18 @@ import { renderPatients } from './pacientes.js';
 import { renderPendingRequests, renderAppointments } from './citas.js';
 
 // ============================================
+// ALMACENAMIENTO DE LISTENERS PRIVADOS
+// ============================================
+let activeListeners = {
+    patients: null,
+    appointments: null,
+    pendingRequests: null,
+    fichasIngreso: null,
+    sesiones: null,
+    informes: null
+};
+
+// ============================================
 // FUNCIÓN AUXILIAR PARA CALIFICACIONES
 // ============================================
 function getAverageRating(psychId) {
@@ -790,7 +802,6 @@ export function cargarDatosPrivados() {
         console.log('✅ Datos privados cargados correctamente');
         
         // 🔥 ACTUALIZAR TABLAS SIEMPRE (independientemente de si el dashboard está visible)
-        // Las funciones internas verifican si el contenedor existe, así que es seguro llamarlas.
         if (state.currentUser) {
             if (state.currentUser.role === 'admin') {
                 if (typeof renderStaffTable === 'function') renderStaffTable();
@@ -798,9 +809,8 @@ export function cargarDatosPrivados() {
             } else if (state.currentUser.role === 'psych') {
                 if (typeof renderAppointments === 'function') renderAppointments();
                 if (typeof renderPendingRequests === 'function') renderPendingRequests();
-                if (typeof renderPatients === 'function') renderPatients(); // Renderizar lista de pacientes
+                if (typeof renderPatients === 'function') renderPatients();
             }
-            // Llamar al nuevo renderizado de citas si está disponible (actualiza ambas tablas)
             if (typeof window.renderAppointmentsTable === 'function') {
                 window.renderAppointmentsTable();
             }
@@ -815,11 +825,18 @@ export function cargarDatosPrivados() {
     });
 }
 
+// ============================================
+// LISTENERS PRIVADOS CON ALMACENAMIENTO DE REFERENCIAS
+// ============================================
 function iniciarEscuchasPrivadas() {
     // Solo si hay usuario autenticado
     if (!state.currentUser) return;
     
-    db.ref('patients').on('value', (snapshot) => {
+    // Remover listeners anteriores si existen
+    limpiarEscuchasPrivadas();
+
+    // Patients
+    activeListeners.patients = db.ref('patients').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
             state.setPatients(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -831,7 +848,8 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener patients:', error);
     });
     
-    db.ref('appointments').on('value', (snapshot) => {
+    // Appointments
+    activeListeners.appointments = db.ref('appointments').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
             if (data) {
@@ -841,7 +859,6 @@ function iniciarEscuchasPrivadas() {
                     if (typeof window.updateStats === 'function') window.updateStats();
                     renderPendingRequests();
                     renderAppointments();
-                    // También actualizar la nueva tabla de citas si existe
                     if (typeof window.renderAppointmentsTable === 'function') {
                         window.renderAppointmentsTable();
                     }
@@ -856,7 +873,8 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener appointments:', error);
     });
     
-    db.ref('pendingRequests').on('value', (snapshot) => {
+    // PendingRequests
+    activeListeners.pendingRequests = db.ref('pendingRequests').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
             state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -868,7 +886,8 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener pendingRequests:', error);
     });
     
-    db.ref('fichasIngreso').on('value', (snapshot) => {
+    // Fichas de Ingreso
+    activeListeners.fichasIngreso = db.ref('fichasIngreso').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
             state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -879,7 +898,8 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener fichasIngreso:', error);
     });
     
-    db.ref('sesiones').on('value', (snapshot) => {
+    // Sesiones
+    activeListeners.sesiones = db.ref('sesiones').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
             state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -890,7 +910,8 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener sesiones:', error);
     });
     
-    db.ref('informes').on('value', (snapshot) => {
+    // Informes
+    activeListeners.informes = db.ref('informes').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
             state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
@@ -900,6 +921,25 @@ function iniciarEscuchasPrivadas() {
     }, (error) => {
         console.warn('⚠️ Error en listener informes:', error);
     });
+}
+
+export function limpiarEscuchasPrivadas() {
+    console.log('🧹 Limpiando listeners privados...');
+    if (activeListeners.patients) db.ref('patients').off('value', activeListeners.patients);
+    if (activeListeners.appointments) db.ref('appointments').off('value', activeListeners.appointments);
+    if (activeListeners.pendingRequests) db.ref('pendingRequests').off('value', activeListeners.pendingRequests);
+    if (activeListeners.fichasIngreso) db.ref('fichasIngreso').off('value', activeListeners.fichasIngreso);
+    if (activeListeners.sesiones) db.ref('sesiones').off('value', activeListeners.sesiones);
+    if (activeListeners.informes) db.ref('informes').off('value', activeListeners.informes);
+    
+    activeListeners = {
+        patients: null,
+        appointments: null,
+        pendingRequests: null,
+        fichasIngreso: null,
+        sesiones: null,
+        informes: null
+    };
 }
 
 // ============================================
@@ -939,4 +979,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js refactorizado: import estático de renderMessagesTable, mejor manejo de errores en listeners');
+console.log('✅ publico.js refactorizado: import estático de renderMessagesTable, mejor manejo de errores en listeners y limpieza de listeners al logout');

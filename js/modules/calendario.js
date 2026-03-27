@@ -100,7 +100,8 @@ export function renderCalendar() {
             <thead>
                 <tr>
                     <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
-                </thead>
+                </tr>
+            </thead>
             <tbody>
     `;
 
@@ -110,7 +111,7 @@ export function renderCalendar() {
         html += '<tr>';
         for (let j = 0; j < 7; j++) {
             if (i === 0 && j < diaInicioSemana) {
-                html += '<td class="calendar-cell empty">  </td>';
+                html += '<td class="calendar-cell empty">   <\/td>';
             } else if (dia <= diasEnMes) {
                 const fechaStr = `${añoActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
                 const citasDia = citasPorFecha[fechaStr] || [];
@@ -138,50 +139,75 @@ export function renderCalendar() {
                         let title = '';
                         let clase = '';
                         let onClick = '';
+                        let displayText = '';
 
                         if (status === 'available') {
-                            color = '#28a745'; // verde
+                            color = '#28a745';
                             title = 'Disponible';
+                            displayText = hora;
                             if (user.role === 'psych') {
                                 onClick = `onclick="window.calendario.anularHora('${fechaStr}', '${hora}', false)"`;
                             }
                         } else if (status === 'cita') {
-                            color = '#dc3545'; // rojo
+                            color = '#dc3545';
+                            // Construir texto con información detallada
+                            const paciente = state.patients.find(p => p.id == item.patientId);
+                            const pacienteNombre = paciente?.name || item.patient || '?';
+                            const profesional = state.staff.find(p => p.id == item.psychId);
+                            const profesionalNombre = profesional?.name || item.psych || '?';
+                            const tipoIcono = item.type === 'online' ? '🖥️' : '🏢';
+                            const tipoTexto = item.type === 'online' ? 'Online' : 'Presencial';
                             const estadoPago = item.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
-                            title = `Cita con ${item.patient} (${item.type}) - ${estadoPago}`;
-                            if (user.role === 'psych') {
-                                onClick = `onclick="window.calendario.verDetalleCita('${item.id}')"`;
+                            // Para admin, mostrar profesional y paciente; para psicólogo, solo paciente
+                            if (user.role === 'admin') {
+                                displayText = `${hora} ${tipoIcono} ${profesionalNombre} - ${pacienteNombre}`;
+                                title = `${hora} · ${tipoTexto} · ${profesionalNombre} · ${pacienteNombre} · ${estadoPago}`;
+                            } else {
+                                displayText = `${hora} ${tipoIcono} ${pacienteNombre}`;
+                                title = `${hora} · ${tipoTexto} · ${pacienteNombre} · ${estadoPago}`;
                             }
+                            onClick = `onclick="window.calendario.verDetalleCita('${item.id}')"`;
                         } else if (status === 'solicitud') {
-                            color = '#ffc107'; // amarillo
+                            color = '#ffc107';
+                            const paciente = state.patients.find(p => p.id == item.patientId);
+                            const pacienteNombre = paciente?.name || item.patient || '?';
+                            const profesional = state.staff.find(p => p.id == item.psychId);
+                            const profesionalNombre = profesional?.name || item.psych || '?';
+                            const tipoIcono = '🏢'; // presencial
                             const estadoPago = item.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
-                            title = `Solicitud de ${item.patient} (Presencial) - ${estadoPago}`;
-                            if (user.role === 'psych') {
-                                onClick = `onclick="window.calendario.verDetalleSolicitud('${item.id}')"`;
+                            if (user.role === 'admin') {
+                                displayText = `${hora} ${tipoIcono} ${profesionalNombre} - ${pacienteNombre} (pend)`;
+                                title = `Solicitud · ${hora} · Presencial · ${profesionalNombre} · ${pacienteNombre} · ${estadoPago}`;
+                            } else {
+                                displayText = `${hora} ${tipoIcono} ${pacienteNombre} (pend)`;
+                                title = `Solicitud · ${hora} · Presencial · ${pacienteNombre} · ${estadoPago}`;
                             }
+                            onClick = `onclick="window.calendario.verDetalleSolicitud('${item.id}')"`;
                         } else if (status === 'blocked') {
-                            color = '#6c757d'; // gris
+                            color = '#6c757d';
                             title = 'Anulado por el profesional';
+                            displayText = `${hora} (anulado)`;
                             clase = 'blocked-slot';
                             if (user.role === 'psych') {
                                 onClick = `onclick="window.calendario.anularHora('${fechaStr}', '${hora}', false)"`;
                             }
                         } else {
-                            color = '#e9ecef'; // fondo claro
+                            color = '#e9ecef';
                             title = 'No disponible';
+                            displayText = hora;
                         }
 
-                        html += `<div class="time-slot ${clase}" style="background:${color}; margin:2px 0; padding:2px 4px; border-radius:4px; color:${status === 'cita' || status === 'solicitud' || status === 'blocked' ? 'white' : '#333'}; cursor:${user.role === 'psych' ? 'pointer' : 'default'};" title="${title}" ${onClick}>${hora}</div>`;
+                        html += `<div class="time-slot ${clase}" style="background:${color}; margin:2px 0; padding:2px 4px; border-radius:4px; color:${status === 'cita' || status === 'solicitud' || status === 'blocked' ? 'white' : '#333'}; cursor:${user.role === 'psych' && (status === 'available' || status === 'blocked') ? 'pointer' : (status === 'cita' || status === 'solicitud') ? 'pointer' : 'default'};" title="${title}" ${onClick}>${displayText}</div>`;
                     });
                 }
                 html += `</div>
-                        </td>`;
+                         <\/td>`;
                 dia++;
             } else {
-                html += '<td class="calendar-cell empty">  </td>';
+                html += '<td class="calendar-cell empty">   <\/td>';
             }
         }
-        html += '</tr>';
+        html += '<\/tr>';
     }
 
     html += `
@@ -201,8 +227,11 @@ export function verDetalleCita(citaId) {
         showToast('Cita no encontrada', 'error');
         return;
     }
+    const paciente = state.patients.find(p => p.id == cita.patientId);
+    const profesional = state.staff.find(p => p.id == cita.psychId);
     const detalles = `
-        <strong>Paciente:</strong> ${cita.patient}<br>
+        <strong>Paciente:</strong> ${paciente?.name || cita.patient || '?'}<br>
+        <strong>Profesional:</strong> ${profesional?.name || cita.psych || '?'}<br>
         <strong>Fecha:</strong> ${cita.date}<br>
         <strong>Hora:</strong> ${cita.time}<br>
         <strong>Tipo:</strong> ${cita.type === 'online' ? 'Online' : 'Presencial'}<br>
@@ -223,9 +252,13 @@ export function verDetalleSolicitud(solicitudId) {
         showToast('Solicitud no encontrada', 'error');
         return;
     }
+    const paciente = state.patients.find(p => p.id == solicitud.patientId);
+    const profesional = state.staff.find(p => p.id == solicitud.psychId);
     const detalles = `
-        <strong>Paciente:</strong> ${solicitud.patient}<br>
+        <strong>Paciente:</strong> ${paciente?.name || solicitud.patient || '?'}<br>
+        <strong>Profesional:</strong> ${profesional?.name || solicitud.psych || '?'}<br>
         <strong>Fecha:</strong> ${solicitud.date}<br>
+        <strong>Hora:</strong> ${solicitud.time === 'Pendiente' ? 'A confirmar' : solicitud.time}<br>
         <strong>Tipo:</strong> Presencial (por confirmar)<br>
         <strong>Pago:</strong> ${solicitud.paymentStatus === 'pagado' ? '✅ Pagado' : '⏳ Pendiente'}<br>
         <strong>Valor:</strong> $${solicitud.price?.toLocaleString() || 0}<br>
@@ -239,7 +272,6 @@ export function verDetalleSolicitud(solicitudId) {
 // FUNCIÓN PARA CONFIRMAR SOLICITUD (redirige a agendar)
 // ============================================
 export function confirmarSolicitud(solicitudId) {
-    // Redirigir a la pestaña Agendar con la solicitud precargada
     if (typeof window.citas?.showConfirmRequestModal === 'function') {
         window.citas.showConfirmRequestModal(solicitudId);
     } else {
@@ -257,7 +289,6 @@ export async function anularHora(fechaStr, hora, esOcupada = false) {
         return;
     }
 
-    // Confirmar acción
     const accion = esOcupada ? 'desanular' : 'anular';
     if (!confirm(`¿${accion === 'anular' ? 'Anular' : 'Desanular'} la hora ${hora} del día ${fechaStr}?`)) return;
 
@@ -278,21 +309,17 @@ export async function anularHora(fechaStr, hora, esOcupada = false) {
         }
 
         if (slot) {
-            // Si ya existe, marcarlo como bloqueado
             slot.blocked = true;
         } else {
-            // Crear nuevo slot bloqueado
             slots.push({ time: hora, isOvercupo: false, blocked: true });
         }
     } else {
         // Desanular: eliminar el flag blocked
         if (slot) {
             delete slot.blocked;
-            // Si el slot queda sin ningún flag especial, lo dejamos (puede ser útil para saber que existe)
-            // Opcional: eliminar el slot si no tiene isOvercupo ni blocked
+            // Opcional: eliminar el slot si no tiene ningún flag
             if (!slot.isOvercupo && !slot.blocked) {
-                // Podemos dejarlo porque indica disponibilidad normal
-                // Si prefieres eliminarlo para limpiar, descomenta:
+                // Podríamos dejarlo, pero si quieres limpiar descomenta:
                 // slots.splice(slotIndex, 1);
             }
         } else {
@@ -335,15 +362,11 @@ if (typeof window !== 'undefined') {
         verDetalleSolicitud: verDetalleSolicitud,
         confirmarSolicitud: confirmarSolicitud
     };
-    // Hacer accesibles las funciones de citas desde window.citas (si no existe, asignar)
     if (!window.citas) window.citas = {};
     window.citas.showConfirmRequestModal = (id) => {
-        if (typeof import('./citas.js') === 'object') {
-            import('./citas.js').then(module => module.showConfirmRequestModal(id));
-        } else {
-            showToast('Módulo de citas no disponible', 'error');
-        }
+        import('./citas.js').then(module => module.showConfirmRequestModal(id))
+            .catch(() => showToast('Módulo de citas no disponible', 'error'));
     };
 }
 
-console.log('✅ calendario.js cargado con colores, leyenda y gestión de solicitudes');
+console.log('✅ calendario.js cargado con detalles de citas (profesional, paciente, tipo)');

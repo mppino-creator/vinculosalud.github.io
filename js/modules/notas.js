@@ -163,7 +163,7 @@ function renderNotasListado() {
 }
 
 // ---------------------------------------------------------------------
-// 3. Funciones del modal
+// 3. Funciones del modal (versión CORREGIDA para evitar recursión)
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -187,6 +187,7 @@ window.editarNota = function(notaId) {
     document.getElementById('notaModal').style.display = 'flex';
 };
 
+// ✅ GUARDAR NOTA – Versión corregida (objeto plano sin spread recursivo)
 window.guardarNota = async function() {
     const id = document.getElementById('notaId').value;
     const patientId = document.getElementById('notaPacienteId').value;
@@ -196,31 +197,38 @@ window.guardarNota = async function() {
     if (!patientId) { alert('Selecciona un paciente'); return; }
     if (!date) { alert('Selecciona una fecha'); return; }
     if (!content) { alert('El contenido no puede estar vacío'); return; }
+    if (!currentUser || !currentUser.uid) { alert('No hay usuario logueado'); return; }
 
+    // Construir objeto plano (evitando spread que pueda generar referencias circulares)
     const notaData = {
-        patientId,
-        date,
-        content,
+        patientId: patientId,
+        date: date,
+        content: content,
+        createdAt: Date.now(),
         updatedAt: Date.now(),
-        createdBy: currentUser?.uid,
-        professionalId: currentUser?.uid
+        createdBy: currentUser.uid,
+        professionalId: currentUser.uid
     };
+
+    console.log('📝 Guardando nota:', notaData); // Para depuración
 
     const sesionesRef = ref(db, 'sesiones');
     try {
         if (id) {
+            // Actualizar nota existente
             await update(ref(db, `sesiones/${id}`), notaData);
             alert('Nota actualizada');
         } else {
+            // Crear nueva nota
             const newRef = push(sesionesRef);
-            await set(newRef, { ...notaData, createdAt: Date.now() });
+            await set(newRef, notaData);
             alert('Nota creada');
         }
         cerrarModalNota();
-        // ✅ NO llamamos a cargarNotas() manualmente; el listener actualizará.
+        // NO llamar a cargarNotas() manualmente; el listener actualizará.
     } catch (error) {
         console.error('Error guardando nota:', error);
-        alert('Error al guardar nota');
+        alert('Error al guardar nota: ' + error.message);
     }
 };
 
@@ -229,7 +237,7 @@ window.eliminarNota = async function(notaId) {
     try {
         await remove(ref(db, `sesiones/${notaId}`));
         alert('Nota eliminada');
-        // ✅ El listener actualizará.
+        // El listener actualizará
     } catch (error) {
         console.error('Error eliminando nota:', error);
         alert('Error al eliminar nota');
@@ -264,7 +272,6 @@ window.exportarNotasPDF = async function() {
     // Ordenar por fecha descendente
     notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    // Crear contenido HTML para el PDF
     let htmlContent = `
         <html>
         <head>
@@ -291,7 +298,6 @@ window.exportarNotasPDF = async function() {
         </html>
     `;
 
-    // Usar html2pdf para generar PDF
     const element = document.createElement('div');
     element.innerHTML = htmlContent;
     document.body.appendChild(element);
@@ -305,13 +311,14 @@ window.exportarNotasPDF = async function() {
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización
+// 5. Inicialización (con obtención de rol mediante `once` para evitar recursión)
 // ---------------------------------------------------------------------
 async function initNotas() {
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
             try {
+                // Usamos `get` con `once` para evitar escuchas innecesarias que podrían causar recursión
                 const staffRef = ref(db, `staff/${user.uid}`);
                 const snapshot = await get(staffRef);
                 const staffData = snapshot.val();

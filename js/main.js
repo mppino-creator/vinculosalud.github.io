@@ -21,6 +21,8 @@ import * as publico from './modules/publico.js';
 import * as admin from './modules/admin.js';
 import * as fichasClinicas from './modules/fichasClinicas.js';
 import * as permisos from './modules/permisos.js';
+import './js/notas.js';
+
 
 // ============================================
 // VERIFICAR QUE personalizacion CONTIENE loadMyConfig

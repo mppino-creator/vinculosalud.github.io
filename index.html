@@ -1426,6 +1426,7 @@
         <div class="tabs" id="dashboardTabs">
             <div class="tab active" onclick="switchTab('citas')">Citas</div>
             <div class="tab" onclick="switchTab('solicitudes')">Solicitudes</div>
+            <div class="tab" id="adminTabNotas" style="display: none;" onclick="switchTab('notas')"> 📝 Notas de Evolución</div>
             <div class="tab" onclick="switchTab('pacientes')">Pacientes</div>
             <div class="tab" id="adminTabProfesionales" style="display:none;" onclick="switchTab('profesionales')">Profesionales</div>
             <div class="tab" id="adminTabCalendario" style="display:none;" onclick="switchTab('calendario')">📅 Calendario</div>
@@ -1448,10 +1449,10 @@
             <div class="table-container">
                      <table class="admin-table">
                     <thead>
-                         <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Previsión</th><th>Pago</th><th>Estado</th><th>Acciones</th> </tr>
+                          <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Previsión</th><th>Pago</th><th>Estado</th><th>Acciones</th> </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                  </table>
+                   </table>
             </div>
         </div>
 
@@ -1460,10 +1461,10 @@
             <div class="table-container">
                 <table class="admin-table">
                     <thead>
-                         <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Previsión</th><th>Motivo</th><th>Acciones</th> </tr>
+                          <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Previsión</th><th>Motivo</th><th>Acciones</th> </tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                  </table>
+                   </table>
             </div>
         </div>
 
@@ -1492,10 +1493,10 @@
             <div class="table-container">
                 <table class="admin-table">
                     <thead>
-                         <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th> </tr>
+                          <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th> </tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                  </table>
+                   </table>
             </div>
         </div>
 
@@ -1538,7 +1539,7 @@
                 <table class="admin-table">
                     <thead> <tr><th>Nombre</th><th>Acciones</th> </tr> </thead>
                     <tbody id="specialtiesTableBody"></tbody>
-                  </table>
+                   </table>
             </div>
         </div>
 
@@ -1637,10 +1638,10 @@
             <div class="table-container">
                 <table class="admin-table">
                     <thead>
-                         <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th> </tr>
+                          <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th> </tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                  </table>
+                   </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">
@@ -1650,6 +1651,35 @@
                 <button class="btn-staff" style="background:var(--exito);" onclick="restoreSampleMessages()">
                     <i class="fa fa-refresh"></i> Restaurar ejemplos
                 </button>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- NUEVA PESTAÑA: NOTAS DE EVOLUCIÓN -->
+        <!-- ============================================ -->
+        <div id="tabNotas" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>📝 Notas de Evolución</h3>
+                <button class="btn-staff" style="background: var(--verde-exito);" onclick="mostrarModalNuevaNota()">
+                    <i class="fa fa-plus"></i> Nueva Nota
+                </button>
+            </div>
+
+            <!-- Filtros -->
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <select id="filtroNotaPaciente" class="filter-input" style="flex:2;" onchange="cargarNotas()">
+                    <option value="">Todos los pacientes</option>
+                </select>
+                <input type="date" id="filtroNotaFecha" class="filter-input" style="flex:1;" onchange="cargarNotas()">
+                <input type="text" id="filtroNotaBusqueda" class="filter-input" style="flex:2;" placeholder="Buscar en notas..." oninput="cargarNotas()">
+                <button class="btn-staff" onclick="cargarNotas()"><i class="fa fa-search"></i> Filtrar</button>
+            </div>
+
+            <!-- Listado de notas -->
+            <div id="notasListado" style="max-height: 60vh; overflow-y: auto;">
+                <div style="text-align: center; padding: 40px; color: #999;">
+                    <i class="fa fa-spinner fa-spin"></i> Cargando notas...
+                </div>
             </div>
         </div>
 
@@ -2154,10 +2184,13 @@
                     window.fichasClinicas.cargarSelectProfesionales();
                     window.fichasClinicas.renderFichasConFiltros();
                 }
+                if (tabName === 'notas' && typeof window.cargarNotas === 'function') {
+                    window.cargarNotas();
+                }
             }, 300);
         };
         
-        console.log('✅ Fix de pestañas instalado con estadísticas, disponibilidad, calendario, fichas clínicas y PROFESIONALES (con retraso)');
+        console.log('✅ Fix de pestañas instalado con estadísticas, disponibilidad, calendario, fichas clínicas y NOTAS');
     }
     
     instalarFix();
@@ -2430,6 +2463,33 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="display:flex; gap:15px; margin-top:20px;">
             <button class="btn-staff" style="background:var(--exito); flex:1;" id="updateSesionBtn">Actualizar</button>
             <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="closeEditSesionModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL PARA NOTAS DE EVOLUCIÓN (nuevo) -->
+<!-- ============================================ -->
+<div id="notaModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <button class="modal-close" onclick="cerrarModalNota()">&times;</button>
+        <h3 id="notaModalTitulo">Nueva Nota de Evolución</h3>
+        <input type="hidden" id="notaId">
+        <div class="form-group">
+            <label>Paciente *</label>
+            <select id="notaPacienteId" class="filter-input" required></select>
+        </div>
+        <div class="form-group">
+            <label>Fecha *</label>
+            <input type="date" id="notaFecha" class="filter-input" required>
+        </div>
+        <div class="form-group">
+            <label>Contenido *</label>
+            <textarea id="notaContenido" rows="8" class="filter-input" placeholder="Describe la sesión, avances, temas tratados..."></textarea>
+        </div>
+        <div style="display:flex; gap:15px; justify-content:flex-end; margin-top:20px;">
+            <button class="btn-staff" onclick="cerrarModalNota()">Cancelar</button>
+            <button class="btn-staff" style="background:var(--verde-exito);" onclick="guardarNota()">Guardar</button>
         </div>
     </div>
 </div>

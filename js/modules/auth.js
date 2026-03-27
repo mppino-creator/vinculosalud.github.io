@@ -86,6 +86,12 @@ function actualizarUIAdmin(userData, role) {
         if (staffText) staffText.textContent = userData.name || 'Admin';
     }
 
+    // Mostrar pestañas según rol
+if (role === 'admin') {
+    document.getElementById('adminTabNotas').style.display = 'inline-block'; // o 'flex'
+    // ... otras pestañas
+} else if (role === 'psych') {
+    document.getElementById('adminTabNotas').style.display = 'inline-block';
     if (role === 'admin') {
         ADMIN_EDIT_BUTTONS.forEach(id => {
             const btn = document.getElementById(id);

@@ -1,6 +1,6 @@
 // js/modules/notas.js
 import { db, auth } from '../config/firebase.js';
-import { ref, onValue, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+import { ref, onValue, push, set, update, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
 console.log('📦 Cargando módulo notas.js...');
 
@@ -8,7 +8,6 @@ let currentUser = null;
 let currentRole = null;
 let allNotas = [];
 let allPatients = [];
-
 let notasListenerActive = false;
 
 // ---------------------------------------------------------------------
@@ -91,7 +90,7 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar y renderizar notas (usando un único listener en tiempo real)
+// 2. Cargar y renderizar notas (un único listener en tiempo real)
 // ---------------------------------------------------------------------
 function cargarNotas() {
     if (notasListenerActive) {
@@ -163,7 +162,7 @@ function renderNotasListado() {
 }
 
 // ---------------------------------------------------------------------
-// 3. Funciones del modal (versión CORREGIDA para evitar recursión)
+// 3. Funciones del modal
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -187,7 +186,6 @@ window.editarNota = function(notaId) {
     document.getElementById('notaModal').style.display = 'flex';
 };
 
-// ✅ GUARDAR NOTA – Versión corregida (objeto plano sin spread recursivo)
 window.guardarNota = async function() {
     const id = document.getElementById('notaId').value;
     const patientId = document.getElementById('notaPacienteId').value;
@@ -199,7 +197,6 @@ window.guardarNota = async function() {
     if (!content) { alert('El contenido no puede estar vacío'); return; }
     if (!currentUser || !currentUser.uid) { alert('No hay usuario logueado'); return; }
 
-    // Construir objeto plano (evitando spread que pueda generar referencias circulares)
     const notaData = {
         patientId: patientId,
         date: date,
@@ -210,22 +207,19 @@ window.guardarNota = async function() {
         professionalId: currentUser.uid
     };
 
-    console.log('📝 Guardando nota:', notaData); // Para depuración
+    console.log('📝 Guardando nota:', notaData);
 
     const sesionesRef = ref(db, 'sesiones');
     try {
         if (id) {
-            // Actualizar nota existente
             await update(ref(db, `sesiones/${id}`), notaData);
             alert('Nota actualizada');
         } else {
-            // Crear nueva nota
             const newRef = push(sesionesRef);
             await set(newRef, notaData);
             alert('Nota creada');
         }
         cerrarModalNota();
-        // NO llamar a cargarNotas() manualmente; el listener actualizará.
     } catch (error) {
         console.error('Error guardando nota:', error);
         alert('Error al guardar nota: ' + error.message);
@@ -237,7 +231,6 @@ window.eliminarNota = async function(notaId) {
     try {
         await remove(ref(db, `sesiones/${notaId}`));
         alert('Nota eliminada');
-        // El listener actualizará
     } catch (error) {
         console.error('Error eliminando nota:', error);
         alert('Error al eliminar nota');
@@ -257,19 +250,14 @@ window.exportarNotasPDF = async function() {
     const endDate = document.getElementById('fechaFin')?.value;
 
     let notasFiltradas = [...allNotas];
-    if (startDate) {
-        notasFiltradas = notasFiltradas.filter(n => n.date >= startDate);
-    }
-    if (endDate) {
-        notasFiltradas = notasFiltradas.filter(n => n.date <= endDate);
-    }
+    if (startDate) notasFiltradas = notasFiltradas.filter(n => n.date >= startDate);
+    if (endDate) notasFiltradas = notasFiltradas.filter(n => n.date <= endDate);
 
     if (notasFiltradas.length === 0) {
         alert('No hay notas en el rango seleccionado.');
         return;
     }
 
-    // Ordenar por fecha descendente
     notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     let htmlContent = `
@@ -282,7 +270,6 @@ window.exportarNotasPDF = async function() {
                 h1 { text-align: center; color: #2c7da0; }
                 .nota { border: 1px solid #ccc; margin-bottom: 20px; padding: 15px; border-radius: 8px; page-break-inside: avoid; }
                 .header { font-weight: bold; margin-bottom: 10px; }
-                .fecha { color: #666; }
                 .contenido { white-space: pre-line; margin-top: 10px; }
             </style>
         </head>
@@ -291,7 +278,7 @@ window.exportarNotasPDF = async function() {
             ${notasFiltradas.map(nota => `
                 <div class="nota">
                     <div class="header">${nota.pacienteNombre} | ${new Date(nota.date).toLocaleDateString()}</div>
-                    <div class="contenido">${nota.content.replace(/\n/g, '<br>')}</div>
+                    <div class="contenido">${(nota.content || '').replace(/\n/g, '<br>')}</div>
                 </div>
             `).join('')}
         </body>
@@ -311,30 +298,22 @@ window.exportarNotasPDF = async function() {
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización (con obtención de rol mediante `once` para evitar recursión)
+// 5. Inicialización (usa el rol desde state, evita leer staff)
 // ---------------------------------------------------------------------
-async function initNotas() {
-    auth.onAuthStateChanged(async (user) => {
+function initNotas() {
+    auth.onAuthStateChanged((user) => {
         if (user) {
             currentUser = user;
-            try {
-                // Usamos `get` con `once` para evitar escuchas innecesarias que podrían causar recursión
-                const staffRef = ref(db, `staff/${user.uid}`);
-                const snapshot = await get(staffRef);
-                const staffData = snapshot.val();
-                if (staffData && staffData.isAdmin) {
-                    currentRole = 'admin';
-                } else {
-                    currentRole = 'psych';
+            // Esperar a que state tenga el usuario (el rol ya está allí)
+            const checkState = setInterval(() => {
+                if (window.state?.currentUser) {
+                    clearInterval(checkState);
+                    const userState = window.state.currentUser;
+                    currentRole = userState.role; // 'admin' o 'psych'
+                    console.log(`✅ Rol asignado desde state: ${currentRole} para usuario ${user.uid}`);
+                    cargarPacientesParaNotas().then(() => cargarNotas());
                 }
-                console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
-            } catch (error) {
-                console.error('❌ Error al obtener rol desde staff:', error);
-                currentRole = 'psych';
-            }
-
-            await cargarPacientesParaNotas();
-            cargarNotas(); // inicia el listener (solo si no está activo)
+            }, 100);
         } else {
             currentUser = null;
             currentRole = null;

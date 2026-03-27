@@ -1272,11 +1272,30 @@ export async function rejectRequest(requestId) {
 }
 
 export function showPatientAppointmentsByRut() {
-    const rutInput = prompt('Ingresa tu RUT para consultar tus citas (formato 12345678-9):');
+    const rutInput = prompt(
+        '👋 ¡Bienvenido paciente! Ingresa tu RUT para revisar tus reservas o cancelar citas.\n\n' +
+        'No te preocupes por los puntos ni guiones, nosotros lo ajustamos por ti.\n' +
+        'Ejemplo: 12.345.678-9  →  también puedes escribir 123456789 o 12345678-9.'
+    );
     if (!rutInput) return;
     
     const rutNormalizado = normalizarRut(rutInput);
     const patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
+    
+    if (!patient) {
+        showToast('❌ No encontramos citas asociadas a ese RUT. Verifica que esté bien escrito.', 'error');
+        return;
+    }
+    
+    const citasPaciente = [...state.appointments, ...state.pendingRequests]
+        .filter(c => c.patientId == patient.id)
+        .sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
+    
+    if (citasPaciente.length === 0) {
+        showToast('📭 No tienes citas registradas actualmente.', 'info');
+        return;
+    }
+
     
     if (!patient) {
         showToast('No se encontraron citas para ese RUT', 'error');

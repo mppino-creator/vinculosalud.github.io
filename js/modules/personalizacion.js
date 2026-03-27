@@ -585,11 +585,14 @@ export function closeAddSpecialtyModal() {
 
 export async function addSpecialty() {
     const input = document.getElementById('newSpecialtyName');
+    console.log('Input encontrado:', input);
+    console.log('Valor del input:', input?.value);
     const name = input?.value?.trim();
     if (!name) {
         showToast('Ingresa un nombre para la especialidad', 'error');
         return;
     }
+
 
     if (state.specialties.some(s => s.name.toLowerCase() === name.toLowerCase())) {
         showToast('La especialidad ya existe', 'error');

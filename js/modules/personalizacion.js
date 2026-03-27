@@ -504,29 +504,36 @@ export function updatePaymentMethodsInfo() {
 }
 
 // ============================================
-// FUNCIONES DE ESPECIALIDADES
+// FUNCIONES DE ESPECIALIDADES (CRUD COMPLETO)
 // ============================================
 export function cargarEspecialidades() {
     db.ref('specialties').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            state.setSpecialties(Object.keys(data).map(key => ({ id: key, name: data[key].name })));
+            const specialtiesArray = Object.keys(data).map(key => ({ id: key, name: data[key].name }));
+            state.setSpecialties(specialtiesArray);
         } else {
-            state.setSpecialties([
-                { id: 1, name: 'Psicología Clínica' },
-                { id: 2, name: 'Psiquiatría' },
-                { id: 3, name: 'Terapia de Pareja' },
-                { id: 4, name: 'Terapia Familiar' },
-                { id: 5, name: 'Mindfulness' },
-                { id: 6, name: 'Ansiedad' },
-                { id: 7, name: 'Depresión' },
-                { id: 8, name: 'Terapia Infantil' },
-                { id: 9, name: 'Neuropsicología' },
-                { id: 10, name: 'Sexología' }
-            ]);
+            // Especialidades por defecto
+            const defaultSpecialties = [
+                { id: '1', name: 'Psicología Clínica' },
+                { id: '2', name: 'Psiquiatría' },
+                { id: '3', name: 'Terapia de Pareja' },
+                { id: '4', name: 'Terapia Familiar' },
+                { id: '5', name: 'Mindfulness' },
+                { id: '6', name: 'Ansiedad' },
+                { id: '7', name: 'Depresión' },
+                { id: '8', name: 'Terapia Infantil' },
+                { id: '9', name: 'Neuropsicología' },
+                { id: '10', name: 'Sexología' }
+            ];
+            state.setSpecialties(defaultSpecialties);
+            // Guardar en Firebase
+            const specialtiesObj = {};
+            defaultSpecialties.forEach(s => { specialtiesObj[s.id] = { name: s.name }; });
+            db.ref('specialties').set(specialtiesObj);
         }
         actualizarSelectoresEspecialidades();
-        renderAllSpecialties();
+        renderSpecialtiesTable();
     });
 }
 
@@ -538,72 +545,159 @@ function actualizarSelectoresEspecialidades() {
     if (addSpecSelect) addSpecSelect.innerHTML = options;
     if (editSpecSelect) editSpecSelect.innerHTML = options;
     if (specialtyFilter) specialtyFilter.innerHTML = '<option value="">🏷️ Todas las especialidades</option>' + options;
+    // También actualizar el selector de perfil profesional si existe
+    const editMySpec = document.getElementById('editMySpec');
+    if (editMySpec) editMySpec.innerHTML = options;
 }
 
-function renderAllSpecialties() {
-    const container = document.getElementById('allSpecialtiesList');
+export function renderSpecialtiesTable() {
+    const container = document.getElementById('specialtiesTableBody');
     if (!container) return;
-    container.innerHTML = state.specialties.map(s => `
-        <div class="specialty-item">
-            <span>${s.name}</span>
-            <button onclick="deleteSpecialty('${s.id}')"><i class="fa fa-times"></i></button>
-        </div>
+
+    const specialties = state.specialties || [];
+    if (specialties.length === 0) {
+        container.innerHTML = ' <td colspan="3" style="text-align:center;">No hay especialidades registradas<\/td> ';
+        return;
+    }
+
+    container.innerHTML = specialties.map(spec => `
+         <tr id="spec-${spec.id}">
+              <td><strong>${spec.name}</strong></td>
+              <td>
+                 <button onclick="editSpecialty('${spec.id}')" class="btn-editar">✏️ Editar</button>
+                 <button onclick="deleteSpecialty('${spec.id}')" class="btn-eliminar">🗑️ Eliminar</button>
+              </td>
+         <\/tr>
     `).join('');
 }
 
-export function showSpecialtiesModal() {
-    const modal = document.getElementById('specialtiesModal');
-    const input = document.getElementById('newSpecialty');
+export function showAddSpecialtyModal() {
+    const modal = document.getElementById('addSpecialtyModal');
     if (modal) modal.style.display = 'flex';
+    const input = document.getElementById('newSpecialtyName');
     if (input) input.value = '';
-    renderAllSpecialties();
 }
 
-export function closeSpecialtiesModal() {
-    const modal = document.getElementById('specialtiesModal');
+export function closeAddSpecialtyModal() {
+    const modal = document.getElementById('addSpecialtyModal');
     if (modal) modal.style.display = 'none';
 }
 
-export function addSpecialty() {
-    const input = document.getElementById('newSpecialty');
-    if (!input) return;
-    const name = input.value.trim();
+export async function addSpecialty() {
+    const input = document.getElementById('newSpecialtyName');
+    const name = input?.value?.trim();
     if (!name) {
         showToast('Ingresa un nombre para la especialidad', 'error');
         return;
     }
+
     if (state.specialties.some(s => s.name.toLowerCase() === name.toLowerCase())) {
         showToast('La especialidad ya existe', 'error');
         return;
     }
-    const newSpecialty = { id: Date.now(), name };
-    state.setSpecialties([...state.specialties, newSpecialty]);
-    guardarEspecialidades();
-    input.value = '';
-    showToast('Especialidad agregada', 'success');
-}
 
-export function deleteSpecialty(id) {
-    if (confirm('¿Eliminar esta especialidad? Los profesionales que la tengan asignada la perderán.')) {
-        state.setSpecialties(state.specialties.filter(s => s.id != id));
-        state.staff.forEach(prof => {
-            if (prof.spec) {
-                const specArray = Array.isArray(prof.spec) ? prof.spec : [prof.spec];
-                prof.spec = specArray.filter(s => state.specialties.some(sp => sp.name === s));
-            }
-        });
-        guardarEspecialidades();
-        save().catch(console.error);
-        showToast('Especialidad eliminada', 'success');
+    try {
+        const newId = Date.now().toString();
+        await db.ref(`specialties/${newId}`).set({ name });
+        const newSpecialty = { id: newId, name };
+        state.setSpecialties([...state.specialties, newSpecialty]);
+        actualizarSelectoresEspecialidades();
+        renderSpecialtiesTable();
+        closeAddSpecialtyModal();
+        showToast(`✅ Especialidad "${name}" agregada`, 'success');
+    } catch (error) {
+        console.error('Error agregando especialidad:', error);
+        showToast('Error al agregar', 'error');
     }
 }
 
-function guardarEspecialidades() {
-    const specialtiesObj = {};
-    state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
-    db.ref('specialties').set(specialtiesObj);
-    actualizarSelectoresEspecialidades();
-    renderAllSpecialties();
+export function showEditSpecialtyModal(id) {
+    const specialty = state.specialties.find(s => s.id == id);
+    if (!specialty) return;
+
+    const modal = document.getElementById('editSpecialtyModal');
+    if (!modal) {
+        // Crear modal si no existe
+        const modalHTML = `
+        <div id="editSpecialtyModal" class="modal">
+            <div class="modal-content" style="max-width: 400px;">
+                <span class="modal-close" onclick="closeEditSpecialtyModal()">&times;</span>
+                <h3>Editar Especialidad</h3>
+                <input type="text" id="editSpecialtyName" placeholder="Nombre" class="filter-input" style="width:100%; margin:15px 0;">
+                <button id="saveSpecialtyBtn" class="btn-staff">Guardar cambios</button>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    const input = document.getElementById('editSpecialtyName');
+    const saveBtn = document.getElementById('saveSpecialtyBtn');
+
+    if (input) input.value = specialty.name;
+    if (saveBtn) {
+        saveBtn.onclick = () => updateSpecialty(id);
+    }
+    modal.style.display = 'flex';
+}
+
+export function closeEditSpecialtyModal() {
+    const modal = document.getElementById('editSpecialtyModal');
+    if (modal) modal.style.display = 'none';
+}
+
+export async function updateSpecialty(id) {
+    const input = document.getElementById('editSpecialtyName');
+    const newName = input?.value?.trim();
+    if (!newName) {
+        showToast('El nombre no puede estar vacío', 'error');
+        return;
+    }
+
+    if (state.specialties.some(s => s.id != id && s.name.toLowerCase() === newName.toLowerCase())) {
+        showToast('Ya existe otra especialidad con ese nombre', 'error');
+        return;
+    }
+
+    try {
+        await db.ref(`specialties/${id}`).update({ name: newName });
+        const updated = state.specialties.map(s => s.id == id ? { ...s, name: newName } : s);
+        state.setSpecialties(updated);
+        actualizarSelectoresEspecialidades();
+        renderSpecialtiesTable();
+        closeEditSpecialtyModal();
+        showToast('✅ Especialidad actualizada', 'success');
+    } catch (error) {
+        console.error('Error actualizando especialidad:', error);
+        showToast('Error al actualizar', 'error');
+    }
+}
+
+export async function deleteSpecialty(id) {
+    if (!confirm('¿Eliminar esta especialidad? Se eliminará de todos los profesionales que la tengan asignada.')) return;
+
+    try {
+        await db.ref(`specialties/${id}`).remove();
+        const newList = state.specialties.filter(s => s.id != id);
+        state.setSpecialties(newList);
+        // Actualizar los profesionales para eliminar esta especialidad de sus listas
+        state.staff.forEach(prof => {
+            if (prof.spec && Array.isArray(prof.spec)) {
+                const filtered = prof.spec.filter(s => s !== newList.find(sp => sp.id == id)?.name);
+                if (filtered.length !== prof.spec.length) {
+                    prof.spec = filtered;
+                }
+            }
+        });
+        actualizarSelectoresEspecialidades();
+        renderSpecialtiesTable();
+        // Guardar cambios en los profesionales si hubo modificaciones
+        await save();
+        showToast('✅ Especialidad eliminada', 'success');
+    } catch (error) {
+        console.error('Error eliminando especialidad:', error);
+        showToast('Error al eliminar', 'error');
+    }
 }
 
 // ============================================
@@ -1356,7 +1450,8 @@ if (typeof window !== 'undefined') {
         cargarFondo, showBackgroundImageModal, closeBackgroundImageModal, previewBackgroundImage,
         updateBackgroundOpacity, saveBackgroundImage, removeBackgroundImage,
         cargarMetodosPago, showPaymentMethodsModal, closePaymentMethodsModal, saveGlobalPaymentMethods, updatePaymentMethodsInfo,
-        cargarEspecialidades, showSpecialtiesModal, closeSpecialtiesModal, addSpecialty, deleteSpecialty,
+        cargarEspecialidades, renderSpecialtiesTable, showAddSpecialtyModal, closeAddSpecialtyModal, addSpecialty,
+        showEditSpecialtyModal, closeEditSpecialtyModal, updateSpecialty, deleteSpecialty,
         cargarInstagramData, actualizarInstagramData, updateInstagramSection, showInstagramModal, uploadInstagramImage, saveInstagramData,
         cargarAboutTexts, updateAboutSection, showAboutModal, uploadAboutImage, saveAboutTexts,
         cargarAtencionTexts, updateAtencionSection, showAtencionModal,

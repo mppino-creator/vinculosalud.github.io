@@ -444,6 +444,43 @@ export async function logout() {
 }
 
 // ============================================
+// RESTABLECER CONTRASEÑA
+// ============================================
+export function showResetPasswordModal() {
+    const modal = document.getElementById('resetPasswordModal');
+    if (modal) modal.style.display = 'flex';
+    const input = document.getElementById('resetEmail');
+    if (input) input.value = '';
+}
+
+export function closeResetPasswordModal() {
+    const modal = document.getElementById('resetPasswordModal');
+    if (modal) modal.style.display = 'none';
+}
+
+export async function sendPasswordReset() {
+    const email = document.getElementById('resetEmail')?.value.trim();
+    if (!email) {
+        showToast('Ingresa un correo electrónico', 'error');
+        return;
+    }
+    try {
+        await firebase.auth().sendPasswordResetEmail(email);
+        showToast(`✅ Se ha enviado un correo a ${email} con instrucciones para restablecer tu contraseña.`, 'success');
+        closeResetPasswordModal();
+    } catch (error) {
+        console.error('Error al enviar correo de restablecimiento:', error);
+        let mensaje = 'Error al enviar el correo';
+        if (error.code === 'auth/user-not-found') {
+            mensaje = 'No existe una cuenta con ese correo electrónico.';
+        } else if (error.code === 'auth/invalid-email') {
+            mensaje = 'El correo electrónico no es válido.';
+        }
+        showToast(mensaje, 'error');
+    }
+}
+
+// ============================================
 // DASHBOARD INMEDIATO
 // ============================================
 function mostrarDashboardInmediato(role, userData) {
@@ -573,7 +610,11 @@ export function switchTab(tabName) {
         setTimeout(() => {
             try {
                 if (tabName === 'pacientes' && typeof renderPatients === 'function') renderPatients();
-                else if (tabName === 'citas' && typeof renderAppointments === 'function') renderAppointments();
+                else if (tabName === 'citas') {
+                    // Usar la nueva función de renderizado de citas si existe, si no la antigua
+                    if (typeof window.renderAppointmentsTable === 'function') window.renderAppointmentsTable();
+                    else if (typeof renderAppointments === 'function') renderAppointments();
+                }
                 else if (tabName === 'solicitudes' && typeof renderPendingRequests === 'function') renderPendingRequests();
                 else if (tabName === 'profesionales' && isAdmin()) {
                     asegurarTablaProfesionales();
@@ -657,6 +698,8 @@ export async function verificarSesionGuardada() {
             if (userData.role === 'admin') {
                 state.setCurrentUser({ role: 'admin', data: userData.data });
                 actualizarUIAdmin(userData.data, 'admin');
+                // Cargar datos privados después de restaurar admin
+                if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                 return true;
             } else if (userData.role === 'psych') {
                 const exists = state.staff.some(s => s.id === userData.data.id);
@@ -664,6 +707,8 @@ export async function verificarSesionGuardada() {
                     state.setCurrentUser({ role: 'psych', data: userData.data });
                     actualizarUIAdmin(userData.data, 'psych');
                     if (!exists && state.staff.length) state.staff.push(userData.data);
+                    // Cargar datos privados después de restaurar psicólogo
+                    if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                     return true;
                 }
             }
@@ -699,6 +744,8 @@ export async function verificarSesionGuardada() {
         if (userData.role === 'admin') {
             state.setCurrentUser({ role: 'admin', data: userData.data });
             actualizarUIAdmin(userData.data, 'admin');
+            // Cargar datos privados después de restaurar admin
+            if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
             return true;
         } else {
             const psychExists = state.staff.some(s => s.id == userData.data.id);
@@ -707,11 +754,15 @@ export async function verificarSesionGuardada() {
                 state.setCurrentUser({ role: 'psych', data: psychFullData });
                 actualizarUIAdmin(psychFullData, 'psych');
                 localStorage.setItem('vinculo_user', JSON.stringify({ role: 'psych', data: psychFullData }));
+                // Cargar datos privados después de restaurar psicólogo
+                if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                 return true;
             } else {
                 state.setCurrentUser({ role: 'psych', data: userData.data });
                 actualizarUIAdmin(userData.data, 'psych');
                 console.log('⚠️ Profesional no encontrado en staff, usando datos básicos');
+                // Cargar datos privados después de restaurar psicólogo
+                if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                 return true;
             }
         }
@@ -737,6 +788,10 @@ if (typeof window !== 'undefined') {
     window.irADashboard = irADashboard;
     window.volverAVistaPublica = volverAVistaPublica;
     window.abrirGestionDisponibilidad = abrirGestionDisponibilidad;
+    // Funciones para restablecer contraseña
+    window.showResetPasswordModal = showResetPasswordModal;
+    window.closeResetPasswordModal = closeResetPasswordModal;
+    window.sendPasswordReset = sendPasswordReset;
 }
 
 (function initAuth() {
@@ -761,6 +816,8 @@ if (typeof window !== 'undefined') {
                                     actualizarUIAdmin(psychFullData, 'psych');
                                 }
                             }
+                            // Cargar datos privados después de restaurar sesión por Auth
+                            if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                         }
                     }
                 } catch (e) {
@@ -798,6 +855,8 @@ if (typeof window !== 'undefined') {
                         if (textNode) textNode.textContent = adminFullData.name || 'Admin';
                     }
                     console.log('✅ Sesión de admin restaurada automáticamente');
+                    // Cargar datos privados después de restaurar admin
+                    if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                 }
             } catch (e) {
                 console.error('❌ Error restaurando sesión:', e);
@@ -808,4 +867,4 @@ if (typeof window !== 'undefined') {
     }, 1000);
 })();
 
-console.log('✅ auth.js refactorizado: constantes centralizadas, lógica limpia');
+console.log('✅ auth.js refactorizado: constantes centralizadas, lógica limpia, restablecimiento de contraseña');

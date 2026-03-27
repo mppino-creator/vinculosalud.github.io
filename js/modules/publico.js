@@ -800,6 +800,10 @@ export function cargarDatosPrivados() {
                 if (typeof renderPendingRequests === 'function') renderPendingRequests();
                 if (typeof renderPatients === 'function') renderPatients(); // Renderizar lista de pacientes
             }
+            // Llamar al nuevo renderizado de citas si está disponible (actualiza ambas tablas)
+            if (typeof window.renderAppointmentsTable === 'function') {
+                window.renderAppointmentsTable();
+            }
             if (typeof window.updateStats === 'function') window.updateStats();
         }
         
@@ -837,6 +841,10 @@ function iniciarEscuchasPrivadas() {
                     if (typeof window.updateStats === 'function') window.updateStats();
                     renderPendingRequests();
                     renderAppointments();
+                    // También actualizar la nueva tabla de citas si existe
+                    if (typeof window.renderAppointmentsTable === 'function') {
+                        window.renderAppointmentsTable();
+                    }
                 }
             } else {
                 state.setAppointments([]);

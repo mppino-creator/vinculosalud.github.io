@@ -204,7 +204,6 @@ export function openBooking(id) {
     }
     
     state.setSelectedPsych(psych);
-    // NOTA: se elimina la línea state.setSelectedBoxId(null) porque ya no existe
 
     const today = new Date().toISOString().split('T')[0];
     
@@ -822,6 +821,67 @@ export async function executeBooking() {
 }
 
 // ============================================
+// RENDERIZADO DE TABLA DE CITAS (ADMIN y PSYCH)
+// ============================================
+export function renderAppointmentsTable() {
+    // Buscar el contenedor de la tabla (puede tener diferentes IDs según la vista)
+    let container = document.getElementById('appointmentsTableBody');
+    if (!container) container = document.getElementById('tableBody');
+    if (!container) return;
+
+    const userRole = state.currentUser?.role;
+    let citasFiltradas = state.appointments;
+
+    if (userRole === 'psych') {
+        const psychId = state.currentUser.data.id;
+        citasFiltradas = state.appointments.filter(a => a.psychId == psychId);
+    }
+
+    // Ordenar por fecha y hora (más recientes primero)
+    citasFiltradas.sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
+
+    if (citasFiltradas.length === 0) {
+        container.innerHTML = ' <td colspan="9" style="text-align:center;">No hay citas programadas<\/td> ';
+        return;
+    }
+
+    container.innerHTML = citasFiltradas.map(apt => {
+        const patient = state.patients.find(p => p.id == apt.patientId);
+        const psych = state.staff.find(s => s.id == apt.psychId);
+        const fechaHora = new Date(apt.date + 'T' + apt.time);
+        const isPast = fechaHora < new Date();
+        const paymentStatusText = apt.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
+        const statusText = isPast ? 'Completada' : (apt.status === 'confirmada' ? 'Confirmada' : 'Pendiente');
+
+        return `
+             <tr>
+                <td><strong>${patient?.name || apt.patient || '—'}</strong><br><small>${patient?.rut || apt.patientRut || ''}</small><\/td>
+                <td>${psych?.name || apt.psych || '—'}<\/td>
+                <td>${apt.date || '—'} <br><small>${apt.time || '—'}</small><\/td>
+                <td><span style="background:${apt.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${apt.type === 'online' ? 'Online' : 'Presencial'}</span><\/td>
+                <td>${apt.prevision || '—'}<\/td>
+                <td><span>${paymentStatusText}<br><small>$${(apt.price || 0).toLocaleString()}</small><\/span><\/td>
+                <td><span>${statusText}<\/span><\/td>
+                <td>
+                    <div style="display:flex; gap:5px;">
+                        ${apt.paymentStatus !== 'pagado' ? `
+                            <button onclick="confirmPayment('${apt.id}')" class="btn-icon" style="background:var(--exito); color:white; border:none; padding:5px 8px; border-radius:4px;" title="Confirmar pago">
+                                <i class="fa fa-dollar-sign"></i>
+                            </button>
+                        ` : ''}
+                        <button onclick="cancelAppointment('${apt.id}')" class="btn-icon" style="background:var(--peligro); color:white; border:none; padding:5px 8px;" title="Cancelar cita">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    ${apt.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${apt.paymentConfirmedBy}</small>` : ''}
+                    ${apt.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
+                <\/td>
+             <\/tr>
+        `;
+    }).join('');
+}
+
+// ============================================
 // FUNCIONES DE TABLAS (para admin y psicólogo)
 // ============================================
 
@@ -837,7 +897,7 @@ export function renderAppointments() {
     }
 
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = ' <td colspan="9" style="text-align:center; padding:40px;">No hay citas</td> ';
+        tb.innerHTML = ' <td colspan="9" style="text-align:center; padding:40px;">No hay citas<\/td> ';
         return;
     }
 
@@ -850,14 +910,14 @@ export function renderAppointments() {
         const statusText = isPast ? 'Completada' : (a.status === 'confirmada' ? 'Confirmada' : 'Pendiente');
         
         return `
-            <tr>
-                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
-                <td>${a.psych || '—'}</td>
-                <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
-                <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>${a.prevision || '—'}</td>
-                <td><span>${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small></span></td>
-                <td><span>${statusText}</span></td>
+             <tr>
+                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small><\/td>
+                <td>${a.psych || '—'}<\/td>
+                <td>${a.date || '—'} <br><small>${a.time || '—'}</small><\/td>
+                <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span><\/td>
+                <td>${a.prevision || '—'}<\/td>
+                <td><span>${paymentStatusText}<br><small>$${(a.price || 0).toLocaleString()}</small><\/span><\/td>
+                <td><span>${statusText}<\/span><\/td>
                 <td>
                     <div style="display:flex; gap:5px;">
                         ${a.paymentStatus !== 'pagado' ? `
@@ -871,8 +931,8 @@ export function renderAppointments() {
                     </div>
                     ${a.paymentConfirmedBy ? `<br><small style="font-size:0.6rem;">Pagado por: ${a.paymentConfirmedBy}</small>` : ''}
                     ${a.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
-                </td>
-            </tr>
+                <\/td>
+             <\/tr>
         `;
     }).join('');
 }
@@ -889,28 +949,28 @@ export function renderPendingRequests() {
     }
 
     if (requestsToShow.length === 0) {
-        tb.innerHTML = ' <td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td> ';
+        tb.innerHTML = ' <td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes<\/td> ';
         return;
     }
 
     tb.innerHTML = requestsToShow.reverse().map(r => {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         return `
-            <tr>
-                <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
+             <tr>
+                <td>${r.createdAt ? formatDate(r.createdAt) : '—'}<\/td>
                 <td>
                     <strong>${r.patient}</strong><br>
                     <small>${r.patientRut}</small>
                     ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
                     ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
                     ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
-                </td>
-                <td>${r.psych}</td>
-                <td>${r.date}</td>
-                <td>${r.time === 'Pendiente' ? 'A coordinar' : (r.time || 'A coordinar')}</td>
-                <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span></td>
-                <td>${r.prevision || '—'}</td>
-                <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}</td>
+                <\/td>
+                <td>${r.psych}<\/td>
+                <td>${r.date}<\/td>
+                <td>${r.time === 'Pendiente' ? 'A coordinar' : (r.time || 'A coordinar')}<\/td>
+                <td><span class="badge ${r.type}">${r.type === 'online' ? 'Online' : 'Presencial'}</span><\/td>
+                <td>${r.prevision || '—'}<\/td>
+                <td>${r.msg ? r.msg.substring(0, 30) + (r.msg.length > 30 ? '...' : '') : '—'}<\/td>
                 <td>
                     <div style="display:flex; flex-direction:column; gap:5px;">
                         <span style="font-size:0.8rem;">Pago: ${r.paymentStatus === 'pagado' ? '✅' : '⏳'}</span>
@@ -931,8 +991,8 @@ export function renderPendingRequests() {
                         </div>
                         ${r.type === 'presencial' ? `<br><small style="color:var(--primario);">📍 Dirección a coordinar</small>` : ''}
                     </div>
-                </td>
-            </tr>
+                <\/td>
+             <\/tr>
         `;
     }).join('');
 }
@@ -963,6 +1023,7 @@ export async function confirmPayment(appointmentId) {
     if (typeof window.updateStats === 'function') window.updateStats();
     renderPendingRequests();
     renderAppointments();
+    renderAppointmentsTable(); // también actualizar la nueva tabla
 }
 
 export async function confirmPresencialTime(requestId, date, time) {
@@ -1023,6 +1084,7 @@ export async function confirmPresencialTime(requestId, date, time) {
 
     renderAppointments();
     renderPendingRequests();
+    renderAppointmentsTable();
     if (typeof window.renderCalendar === 'function') window.renderCalendar();
 }
 
@@ -1266,6 +1328,7 @@ export async function executeTherapistBooking() {
     
     renderAppointments();
     renderPendingRequests();
+    renderAppointmentsTable();
     if (typeof window.renderCalendar === 'function') window.renderCalendar();
     updateTherapistAvailableSlots();
     
@@ -1296,6 +1359,7 @@ export async function cancelAppointment(id) {
     await save();
     showToast('Cita cancelada', 'success');
     renderAppointments();
+    renderAppointmentsTable();
     if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
 }
 
@@ -1359,7 +1423,7 @@ export function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                             </tr>
+                              </tr>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `
@@ -1447,10 +1511,18 @@ window.searchPatientByRutTherapist = searchPatientByRutTherapist;
 window.updateTherapistBookingDetails = updateTherapistBookingDetails;
 window.executeTherapistBooking = executeTherapistBooking;
 window.renderAppointments = renderAppointments;
+window.renderAppointmentsTable = renderAppointmentsTable; // Nueva función
 window.selectTimeSlot = selectTimeSlot;
 window.selectTimePref = selectTimePref;
 window.showPatientAppointmentsByRut = showPatientAppointmentsByRut;
 window.cancelAppointmentByPatient = cancelAppointmentByPatient;
 window.calcularEdad = window.calcularEdad; // ya existe
+
+// Escuchar el evento global de datos cargados para actualizar la tabla
+document.addEventListener('datosPrivadosCargados', () => {
+    if (document.getElementById('tabCitas')?.classList.contains('active')) {
+        renderAppointmentsTable();
+    }
+});
 
 console.log('✅ citas.js refactorizado: modular, async/await, validación centralizada, sin duplicación');

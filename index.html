@@ -30,6 +30,18 @@
           emailjs.init('_LDTyGJlGKoOIWVJa');
        })();
     </script>
+    
+    <!-- Función formatRut (global) -->
+    <script>
+        window.formatRut = function(input) {
+            let valor = input.value.replace(/\./g, '').replace(/\-/g, '');
+            if (valor.length <= 1) return;
+            let cuerpo = valor.slice(0, -1);
+            let dv = valor.slice(-1);
+            cuerpo = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            input.value = cuerpo + "-" + dv;
+        };
+    </script>
 </head>
 <body>
 
@@ -68,9 +80,29 @@
             <label>Contraseña</label>
             <input type="password" id="loginPass" placeholder="Ingresa tu contraseña">
         </div>
+        <div style="text-align: right; margin-bottom: 15px;">
+            <a href="#" onclick="showResetPasswordModal()" style="font-size: 0.8rem; color: var(--primario);">¿Olvidaste tu contraseña?</a>
+        </div>
         <button class="btn-staff" style="width:100%; justify-content:center;" onclick="processLogin()" id="loginBtn">
             Ingresar al Panel
         </button>
+    </div>
+</div>
+
+<!-- Modal para restablecer contraseña -->
+<div id="resetPasswordModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <button class="modal-close" onclick="closeResetPasswordModal()">&times;</button>
+        <h3>Restablecer contraseña</h3>
+        <p>Ingresa tu correo electrónico y te enviaremos un enlace para crear una nueva contraseña.</p>
+        <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" id="resetEmail" class="filter-input" placeholder="tuemail@ejemplo.com">
+        </div>
+        <div style="display:flex; gap:15px; margin-top:20px;">
+            <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="sendPasswordReset()">Enviar correo</button>
+            <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="closeResetPasswordModal()">Cancelar</button>
+        </div>
     </div>
 </div>
 
@@ -1394,24 +1426,24 @@
         <div id="tabCitas" class="tab-content active">
             <h3>Citas Confirmadas</h3>
             <div class="table-container">
-                  <table>
+                    <table>
                     <thead>
-                      <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Previsión</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
+                        <tr><th>Paciente</th><th>Especialista</th><th>Fecha/Hora</th><th>Tipo</th><th>Previsión</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
-                  </table>
+                </table>
             </div>
         </div>
 
         <div id="tabSolicitudes" class="tab-content">
             <h3>Solicitudes Pendientes</h3>
             <div class="table-container">
-                  <table>
+                <table>
                     <thead>
-                      <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Previsión</th><th>Motivo</th><th>Acciones</th></tr>
+                        <tr><th>Fecha</th><th>Paciente</th><th>Profesional</th><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Previsión</th><th>Motivo</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="pendingRequestsTable"></tbody>
-                  </table>
+                </table>
             </div>
         </div>
 
@@ -1438,12 +1470,12 @@
                 </button>
             </div>
             <div class="table-container">
-                  <table>
+                <table>
                     <thead>
-                      <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
+                        <tr><th>Nombre</th><th>Email</th><th>Especialidades</th><th>Usuario</th><th>Precios</th><th>WhatsApp</th><th>Instagram</th><th>Pagos</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="staffTableBody"></tbody>
-                  </table>
+                </table>
             </div>
         </div>
 
@@ -1578,12 +1610,12 @@
             </div>
             
             <div class="table-container">
-                  <table>
+                <table>
                     <thead>
-                      <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
+                        <tr><th>Fecha</th><th>Nombre</th><th>Profesional</th><th>Calificación</th><th>Mensaje</th><th>Contacto</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="messagesTableBody"></tbody>
-                  </table>
+                </table>
             </div>
             
             <div style="margin-top:30px; display:flex; gap:15px; justify-content:flex-end;">

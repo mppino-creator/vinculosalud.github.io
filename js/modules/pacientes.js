@@ -273,9 +273,15 @@ function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null) {
                         <p style="margin:5px 0 0; color:#666;">${patient.rut} · ${edad} años</p>
                     </div>
                 </div>
-                <button class="btn-icon" onclick="renderPatients()" style="background: var(--text-light); color: white;">
-                    <i class="fa fa-arrow-left"></i> Volver
-                </button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-icon" onclick="exportarHistorialPaciente('${patient.id}')" 
+                            style="background: var(--exito); color: white;" title="Exportar historial completo">
+                        <i class="fa fa-download"></i> Exportar
+                    </button>
+                    <button class="btn-icon" onclick="renderPatients()" style="background: var(--text-light); color: white;">
+                        <i class="fa fa-arrow-left"></i> Volver
+                    </button>
+                </div>
             </div>
             
             <div class="tabs-container" style="display:flex; gap:5px; margin-bottom:20px; background:white; padding:10px; border-radius:12px;">
@@ -462,6 +468,197 @@ function renderSesiones(patient, sesiones) {
 }
 
 // ============================================
+// EXPORTAR HISTORIAL CLÍNICO COMPLETO
+// ============================================
+export function exportarHistorialPaciente(patientId) {
+    const patient = state.patients.find(p => p.id == patientId);
+    if (!patient) {
+        showToast('Paciente no encontrado', 'error');
+        return;
+    }
+
+    // Obtener datos del paciente
+    const fichasIngreso = state.fichasIngreso.filter(f => f.patientId == patientId);
+    const sesiones = state.sesiones.filter(s => s.patientId == patientId).sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion));
+    const citas = state.appointments.filter(a => a.patientId == patientId).sort((a, b) => new Date(b.date) - new Date(a.date));
+    const informes = state.informes.filter(i => i.patientId == patientId).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+    const profesional = state.staff.find(s => s.id == patient.psychId);
+    const edad = calculateAge(patient.birthdate);
+
+    // Construir HTML para impresión
+    const historialHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Historial Clínico - ${patient.name}</title>
+            <style>
+                body {
+                    font-family: 'Arial', sans-serif;
+                    padding: 20px;
+                    margin: 0 auto;
+                    max-width: 1200px;
+                }
+                h1, h2, h3 {
+                    color: #2c3e50;
+                }
+                .header {
+                    margin-bottom: 30px;
+                    padding-bottom: 20px;
+                    border-bottom: 2px solid #3498db;
+                }
+                .patient-info {
+                    background: #f8fafc;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                }
+                .section {
+                    margin-bottom: 30px;
+                    page-break-inside: avoid;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 10px 0;
+                }
+                th, td {
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    text-align: left;
+                }
+                th {
+                    background: #3498db;
+                    color: white;
+                }
+                .sesion-card, .informe-card {
+                    background: white;
+                    border: 1px solid #eee;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin: 15px 0;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                }
+                .sesion-header, .informe-header {
+                    display: flex;
+                    justify-content: space-between;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                    color: #3498db;
+                }
+                .total {
+                    font-size: 1.2em;
+                    font-weight: bold;
+                    margin-top: 20px;
+                    text-align: right;
+                }
+                @media print {
+                    body { margin: 0; padding: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Vínculo Salud</h1>
+                <h2>Historial Clínico del Paciente</h2>
+            </div>
+            
+            <div class="patient-info">
+                <h3>Datos del Paciente</h3>
+                <p><strong>Nombre:</strong> ${patient.name}</p>
+                <p><strong>RUT:</strong> ${patient.rut || '—'}</p>
+                <p><strong>Email:</strong> ${patient.email}</p>
+                <p><strong>Teléfono:</strong> ${patient.phone || '—'}</p>
+                <p><strong>Fecha de Nacimiento:</strong> ${patient.birthdate || '—'} (${edad} años)</p>
+                <p><strong>Previsión:</strong> ${patient.prevision || '—'}</p>
+                <p><strong>Profesional tratante:</strong> ${profesional?.name || 'Sin asignar'}</p>
+                <p><strong>Fecha de registro:</strong> ${patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : '—'}</p>
+                <p><strong>Notas generales:</strong> ${patient.notes || '—'}</p>
+            </div>
+            
+            <div class="section">
+                <h3>📋 Ficha de Ingreso</h3>
+                ${fichasIngreso.length > 0 ? fichasIngreso.map(f => `
+                    <div class="sesion-card">
+                        <div class="sesion-header">
+                            <span>Ficha creada el ${new Date(f.fechaCreacion).toLocaleDateString()}</span>
+                        </div>
+                        <p><strong>Motivo de Consulta:</strong> ${f.motivoConsulta || '—'}</p>
+                        <p><strong>Sintomatología:</strong> Inicio: ${f.sintomatologia?.fechaInicio || '—'}, Progresión: ${f.sintomatologia?.progresion || '—'}</p>
+                        <p><strong>Tratamientos previos:</strong> ${f.sintomatologia?.tratamientosPrevios || '—'}</p>
+                        <p><strong>Medicamentos:</strong> ${f.sintomatologia?.medicamentos || '—'}</p>
+                        <p><strong>Composición Familiar:</strong> ${f.composicionFamiliar || '—'}</p>
+                        <p><strong>Otros Antecedentes:</strong> ${f.otrosAntecedentes || '—'}</p>
+                    </div>
+                `).join('') : '<p>No hay ficha de ingreso registrada.</p>'}
+            </div>
+            
+            <div class="section">
+                <h3>📝 Notas de Evolución (${sesiones.length} sesiones)</h3>
+                ${sesiones.length > 0 ? sesiones.map(s => `
+                    <div class="sesion-card">
+                        <div class="sesion-header">
+                            <span>${formatDate(s.fechaAtencion)}</span>
+                            <span>${s.tipoAtencion || 'Sesión'}</span>
+                        </div>
+                        <p>${s.notas || 'Sin contenido'}</p>
+                    </div>
+                `).join('') : '<p>No hay notas de evolución registradas.</p>'}
+            </div>
+            
+            <div class="section">
+                <h3>📅 Atenciones (${citas.length} citas)</h3>
+                <table>
+                    <thead>
+                        <tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th> </thead>
+                    <tbody>
+                        ${citas.map(c => `
+                            <tr>
+                                <td>${c.date}</td>
+                                <td>${c.time}</td>
+                                <td>${c.psych}</td>
+                                <td>${c.type === 'online' ? 'Online' : 'Presencial'}</td>
+                                <td>$${c.price.toLocaleString()}</td>
+                                <td>${c.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="total">
+                    Total pagado: $${citas.reduce((sum, c) => sum + (c.paymentStatus === 'pagado' ? c.price : 0), 0).toLocaleString()}
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>📄 Informes</h3>
+                ${informes.length > 0 ? informes.map(i => `
+                    <div class="informe-card">
+                        <div class="informe-header">
+                            <span>${i.titulo || 'Informe'}</span>
+                            <span>${formatDate(i.fecha)}</span>
+                        </div>
+                        <p>${i.contenido || 'Sin contenido'}</p>
+                    </div>
+                `).join('') : '<p>No hay informes registrados.</p>'}
+            </div>
+            
+            <div class="no-print" style="margin-top: 40px; text-align: center;">
+                <button onclick="window.print()" style="padding:10px 20px; background:#3498db; color:white; border:none; border-radius:5px; cursor:pointer;">Imprimir</button>
+                <button onclick="window.close()" style="margin-left:10px; padding:10px 20px; background:#95a5a6; color:white; border:none; border-radius:5px; cursor:pointer;">Cerrar</button>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const ventana = window.open('', '_blank');
+    ventana.document.write(historialHTML);
+    ventana.document.close();
+    ventana.focus();
+}
+
+// ============================================
 // FUNCIONES DE NAVEGACIÓN
 // ============================================
 
@@ -602,7 +799,7 @@ export async function savePatient() {
     if (id) {
         const patient = state.patients.find(p => p.id == id);
         if (patient) {
-            patient.rut = rutNormalizado;  // Guardar normalizado
+            patient.rut = rutNormalizado;
             patient.name = name;
             patient.email = email;
             patient.phone = phone;
@@ -611,7 +808,6 @@ export async function savePatient() {
             patient.notes = notes;
         }
     } else {
-        // Buscar por RUT normalizado para evitar duplicados con diferentes formatos
         const existingPatient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
         if (existingPatient) {
             if (confirm('Ya existe un paciente con este RUT. ¿Actualizar sus datos?')) {
@@ -621,14 +817,13 @@ export async function savePatient() {
                 existingPatient.prevision = prevision;
                 existingPatient.birthdate = birthdate;
                 existingPatient.notes = notes;
-                // Si se actualiza, no se agrega nuevo
             } else {
                 return;
             }
         } else {
             state.patients.push({
                 id: Date.now(),
-                rut: rutNormalizado,  // Guardar normalizado
+                rut: rutNormalizado,
                 name,
                 email,
                 phone,
@@ -645,7 +840,6 @@ export async function savePatient() {
     await save();
     closePatientModal();
 
-    // Si estamos en la pestaña de agenda, actualizar el campo de RUT del psicólogo
     if (document.getElementById('tabAgendar')?.classList.contains('active')) {
         document.getElementById('therapistRut').value = rutNormalizado;
         import('./citas.js').then(citas => citas.searchPatientByRutTherapist());
@@ -699,8 +893,7 @@ export function printPatientSummary() {
             
             <table class="table">
                 <thead>
-                    <tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr>
-                </thead>
+                    <tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th> </thead>
                 <tbody>
     `;
 
@@ -715,7 +908,7 @@ export function printPatientSummary() {
                 <td>${a.type === 'online' ? 'Online' : 'Presencial'}</td>
                 <td>$${a.price.toLocaleString()}</td>
                 <td>${a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td>
-            </tr>
+             </tr>
         `;
     });
 
@@ -748,6 +941,7 @@ if (typeof window !== 'undefined') {
     window.cambiarPestana = cambiarPestana;
     window.verFichaCompleta = mostrarDetallePaciente;
     window.volverALista = volverALista;
+    window.exportarHistorialPaciente = exportarHistorialPaciente;
 }
 
 console.log('✅ pacientes.js refactorizado: import save directo, async/await, normalización de RUT');

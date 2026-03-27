@@ -150,7 +150,7 @@ export function renderCalendar() {
                             }
                         } else if (status === 'cita') {
                             color = '#dc3545';
-                            // Construir texto con información detallada
+                            // Buscar nombres del profesional y paciente
                             const paciente = state.patients.find(p => p.id == item.patientId);
                             const pacienteNombre = paciente?.name || item.patient || '?';
                             const profesional = state.staff.find(p => p.id == item.psychId);
@@ -158,11 +158,13 @@ export function renderCalendar() {
                             const tipoIcono = item.type === 'online' ? '🖥️' : '🏢';
                             const tipoTexto = item.type === 'online' ? 'Online' : 'Presencial';
                             const estadoPago = item.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
-                            // Para admin, mostrar profesional y paciente; para psicólogo, solo paciente
+                            
                             if (user.role === 'admin') {
+                                // Admin: muestra hora, ícono, profesional y paciente
                                 displayText = `${hora} ${tipoIcono} ${profesionalNombre} - ${pacienteNombre}`;
                                 title = `${hora} · ${tipoTexto} · ${profesionalNombre} · ${pacienteNombre} · ${estadoPago}`;
                             } else {
+                                // Psicólogo: solo hora, ícono y paciente
                                 displayText = `${hora} ${tipoIcono} ${pacienteNombre}`;
                                 title = `${hora} · ${tipoTexto} · ${pacienteNombre} · ${estadoPago}`;
                             }
@@ -175,6 +177,7 @@ export function renderCalendar() {
                             const profesionalNombre = profesional?.name || item.psych || '?';
                             const tipoIcono = '🏢'; // presencial
                             const estadoPago = item.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
+                            
                             if (user.role === 'admin') {
                                 displayText = `${hora} ${tipoIcono} ${profesionalNombre} - ${pacienteNombre} (pend)`;
                                 title = `Solicitud · ${hora} · Presencial · ${profesionalNombre} · ${pacienteNombre} · ${estadoPago}`;
@@ -369,4 +372,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ calendario.js cargado con detalles de citas (profesional, paciente, tipo)');
+console.log('✅ calendario.js actualizado: muestra detalles de citas (profesional, paciente, tipo)');

@@ -14,12 +14,11 @@ export function showAddStaffModal() {
     
     modal.style.display = 'flex';
     
-    // Limpiar campos
+    // Limpiar campos (eliminado addPass)
     const addName = document.getElementById('addName');
     const addEmail = document.getElementById('addEmail');
     const addSpec = document.getElementById('addSpec');
     const addUser = document.getElementById('addUser');
-    const addPass = document.getElementById('addPass');
     const addWhatsapp = document.getElementById('addWhatsapp');
     const addInstagram = document.getElementById('addInstagram');
     const addAddress = document.getElementById('addAddress');
@@ -41,7 +40,6 @@ export function showAddStaffModal() {
     if (addEmail) addEmail.value = '';
     if (addSpec) addSpec.selectedIndex = -1;
     if (addUser) addUser.value = '';
-    if (addPass) addPass.value = '';
     if (addWhatsapp) addWhatsapp.value = '';
     if (addInstagram) addInstagram.value = '';
     if (addAddress) addAddress.value = '';
@@ -73,7 +71,7 @@ export function closeAddStaffModal() {
 }
 
 // ============================================
-// FUNCIÓN PARA QUE EL PROFESIONAL EDITE SU PERFIL (CORREGIDA)
+// FUNCIÓN PARA QUE EL PROFESIONAL EDITE SU PERFIL
 // ============================================
 
 export async function openMyProfileModal() {
@@ -728,18 +726,18 @@ export function renderStaffTable() {
         
         return `
             <tr>
-                <td><strong>${p.name}</strong> ${generoTexto}</td>
-                <td>${p.email || '—'}</td>
-                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
-                <td>${p.usuario || p.name || '—'}</td>
+                <td><strong>${p.name}</strong> ${generoTexto} \x20
+                <td>${p.email || '—'} \x20
+                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'} \x20
+                <td>${p.usuario || p.name || '—'} \x20
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span>
                         <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
                     </span>
-                </td>
-                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'}</td>
-                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
+                 \x20
+                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'} \x20
+                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'} \x20
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
@@ -749,12 +747,12 @@ export function renderStaffTable() {
                             ${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial
                         </span>
                     </span>
-                </td>
+                 \x20
                 <td>
                     <button onclick="editTherapist('${p.id}')" class="btn-editar">✏️ Editar</button>
                     <button onclick="deleteStaff('${p.id}')" class="btn-eliminar">🗑️ Eliminar</button>
-                </td>
-            </tr>
+                 \x20
+            `
         `;
     }).join('');
 }
@@ -919,12 +917,12 @@ export function editTherapist(id) {
     const editQrOnlinePreview = document.getElementById('editQrOnlinePreview');
     const editQrPresencialPreview = document.getElementById('editQrPresencialPreview');
     const editPhotoPreview = document.getElementById('editPhotoPreview');
-    const editPass = document.getElementById('editPass');
+    const editPass = document.getElementById('editPass'); // se mantiene pero no se usa
     
     if (editTherapistId) editTherapistId.value = therapist.id;
     if (editName) editName.value = therapist.name || '';
     if (editEmail) editEmail.value = therapist.email || '';
-    if (editPass) editPass.value = '';
+    if (editPass) editPass.value = ''; // limpiar campo
     
     const therapistSpecs = Array.isArray(therapist.spec) ? therapist.spec : [therapist.spec];
     if (editSpecSelect) {
@@ -1055,6 +1053,7 @@ export async function updateTherapist() {
         await firebase.database().ref(`staff/${id}`).update(therapist);
         console.log('✅ Profesional actualizado en DB');
         
+        // Si se proporcionó una nueva contraseña (aunque ya no usamos este campo), se envía correo de restablecimiento
         const newPassword = editPass?.value.trim();
         if (newPassword && newPassword !== '') {
             console.log('🔑 Se detectó cambio de contraseña, enviando correo de restablecimiento...');
@@ -1370,28 +1369,6 @@ export function loadSpecialtiesInProfileSelects() {
         Array.from(editMySpec.options).forEach(opt => {
             opt.selected = psychSpecs.includes(opt.value);
         });
-    }
-}
-
-export async function sendPasswordResetEmailForProfessional(email) {
-    if (!state.currentUser || state.currentUser.role !== 'admin') {
-        showToast('Solo administradores pueden hacer esto', 'error');
-        return;
-    }
-    if (!email) {
-        showToast('Email no válido', 'error');
-        return;
-    }
-    try {
-        await firebase.auth().sendPasswordResetEmail(email);
-        showToast(`✅ Correo de restablecimiento enviado a ${email}`, 'success');
-    } catch (error) {
-        console.error('Error enviando correo:', error);
-        let mensaje = 'Error al enviar correo';
-        if (error.code === 'auth/user-not-found') {
-            mensaje = 'El usuario no existe en Authentication. Crea primero su cuenta.';
-        }
-        showToast(mensaje, 'error');
     }
 }
 

@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN SIMPLIFICADA SIN boxes, informes, pdfGenerator, estadisticas
+// js/main.js - VERSIÓN SIMPLIFICADA CON GUARDADO POR ROL (SIN boxes, informes, pdfGenerator, estadisticas)
 import { db } from './config/firebase.js';
 import * as state from './modules/state.js';
 window.state = state;
@@ -289,7 +289,7 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (SIN NODOS NO USADOS)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (SEGÚN ROL DEL USUARIO)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -297,60 +297,150 @@ export function save() {
         utils.showToast('Guardando datos...', 'info');
     }
 
-    const staffObj = {};
-    state.staff.forEach(item => { staffObj[item.id] = item; });
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        console.warn('⚠️ No hay usuario autenticado, no se guardan datos');
+        return;
+    }
 
-    const patientsObj = {};
-    state.patients.forEach(item => { patientsObj[item.id] = item; });
+    const role = state.currentUser?.role;
+    const uid = user.uid;
 
-    const appointmentsObj = {};
-    state.appointments.forEach(item => { appointmentsObj[item.id] = item; });
+    // Nodos que solo puede escribir el administrador
+    const adminOnlyNodes = [
+        'staff', 'messages', 'textosEditables', 'specialties',
+        'paymentMethods', 'backgroundImage', 'logoImage', 'heroTexts',
+        'aboutTexts', 'atencionTexts', 'contactInfo', 'instagramData'
+    ];
 
-    const pendingRequestsObj = {};
-    state.pendingRequests.forEach(item => { pendingRequestsObj[item.id] = item; });
+    // Nodos privados que pueden escribir los psicólogos y el administrador
+    const privateNodes = [
+        'patients', 'appointments', 'pendingRequests',
+        'fichasIngreso', 'sesiones', 'informes'
+    ];
 
-    const messagesObj = {};
-    state.messages.forEach(item => { messagesObj[item.id] = item; });
+    let nodesToSave = [];
 
-    const fichasIngresoObj = {};
-    state.fichasIngreso.forEach(item => { fichasIngresoObj[item.id] = item; });
-
-    const sesionesObj = {};
-    state.sesiones.forEach(item => { sesionesObj[item.id] = item; });
-
-    const textosEditablesObj = {
-        missionText: state.missionText,
-        visionText: state.visionText,
-        aboutTeamText: state.aboutTeamText,
-        aboutImage: state.aboutImage,
-        atencionTexts: state.atencionTexts,
-        contactInfo: state.contactInfo,
-        heroTexts: state.heroTexts,
-        logoImage: state.logoImage,
-        backgroundImage: state.backgroundImage,
-        globalPaymentMethods: state.globalPaymentMethods,
-        instagramData: state.instagramData
-    };
-
-    const specialtiesObj = {};
-    state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
+    if (role === 'admin') {
+        nodesToSave = [...adminOnlyNodes, ...privateNodes];
+    } else if (role === 'psych') {
+        nodesToSave = [...privateNodes];
+    } else {
+        console.warn('⚠️ Usuario sin rol reconocido, no se guardan datos');
+        return;
+    }
 
     const promises = [];
-    promises.push(db.ref('staff').set(staffObj).catch(err => { console.error('❌ Error en staff:', err); return null; }));
-    promises.push(db.ref('patients').set(patientsObj).catch(err => { console.error('❌ Error en patients:', err); return null; }));
-    promises.push(db.ref('appointments').set(appointmentsObj).catch(err => { console.error('❌ Error en appointments:', err); return null; }));
-    promises.push(db.ref('pendingRequests').set(pendingRequestsObj).catch(err => { console.error('❌ Error en pendingRequests:', err); return null; }));
-    promises.push(db.ref('messages').set(messagesObj).catch(err => { console.error('❌ Error en messages:', err); return null; }));
-    promises.push(db.ref('fichasIngreso').set(fichasIngresoObj).catch(err => { console.error('❌ Error en fichasIngreso:', err); return null; }));
-    promises.push(db.ref('sesiones').set(sesionesObj).catch(err => { console.error('❌ Error en sesiones:', err); return null; }));
-    promises.push(db.ref('textosEditables').set(textosEditablesObj).catch(err => { console.error('❌ Error en textosEditables:', err); return null; }));
-    promises.push(db.ref('specialties').set(specialtiesObj).catch(err => { console.error('❌ Error en specialties:', err); return null; }));
+
+    for (const node of nodesToSave) {
+        let data;
+        switch (node) {
+            case 'staff':
+                const staffObj = {};
+                state.staff.forEach(item => { staffObj[item.id] = item; });
+                data = staffObj;
+                break;
+            case 'patients':
+                const patientsObj = {};
+                state.patients.forEach(item => { patientsObj[item.id] = item; });
+                data = patientsObj;
+                break;
+            case 'appointments':
+                const appointmentsObj = {};
+                state.appointments.forEach(item => { appointmentsObj[item.id] = item; });
+                data = appointmentsObj;
+                break;
+            case 'pendingRequests':
+                const pendingRequestsObj = {};
+                state.pendingRequests.forEach(item => { pendingRequestsObj[item.id] = item; });
+                data = pendingRequestsObj;
+                break;
+            case 'messages':
+                const messagesObj = {};
+                state.messages.forEach(item => { messagesObj[item.id] = item; });
+                data = messagesObj;
+                break;
+            case 'specialties':
+                const specialtiesObj = {};
+                state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
+                data = specialtiesObj;
+                break;
+            case 'textosEditables':
+                data = {
+                    missionText: state.missionText,
+                    visionText: state.visionText,
+                    aboutTeamText: state.aboutTeamText,
+                    aboutImage: state.aboutImage,
+                    atencionTexts: state.atencionTexts,
+                    contactInfo: state.contactInfo,
+                    heroTexts: state.heroTexts,
+                    logoImage: state.logoImage,
+                    backgroundImage: state.backgroundImage,
+                    instagramData: state.instagramData
+                };
+                break;
+            case 'paymentMethods':
+                data = state.globalPaymentMethods;
+                break;
+            case 'backgroundImage':
+                data = state.backgroundImage;
+                break;
+            case 'logoImage':
+                data = state.logoImage;
+                break;
+            case 'heroTexts':
+                data = state.heroTexts;
+                break;
+            case 'aboutTexts':
+                data = {
+                    teamText: state.aboutTeamText,
+                    mission: state.missionText,
+                    vision: state.visionText,
+                    image: state.aboutImage
+                };
+                break;
+            case 'atencionTexts':
+                data = state.atencionTexts;
+                break;
+            case 'contactInfo':
+                data = state.contactInfo;
+                break;
+            case 'instagramData':
+                data = state.instagramData;
+                break;
+            case 'fichasIngreso':
+                const fichasObj = {};
+                state.fichasIngreso.forEach(item => { fichasObj[item.id] = item; });
+                data = fichasObj;
+                break;
+            case 'sesiones':
+                const sesionesObj = {};
+                state.sesiones.forEach(item => { sesionesObj[item.id] = item; });
+                data = sesionesObj;
+                break;
+            case 'informes':
+                const informesObj = {};
+                state.informes.forEach(item => { informesObj[item.id] = item; });
+                data = informesObj;
+                break;
+            default:
+                continue;
+        }
+
+        if (data !== undefined) {
+            promises.push(db.ref(node).set(data).catch(err => {
+                console.error(`❌ Error en ${node}:`, err);
+                return null;
+            }));
+        }
+    }
 
     Promise.all(promises)
         .then((results) => {
             const successful = results.filter(r => r !== null).length;
             const total = promises.length;
             console.log(`✅ ${successful}/${total} nodos guardados correctamente en Firebase`);
+
             if (state.currentUser) {
                 if (typeof auth.updateStats === 'function') auth.updateStats();
                 if (typeof citas.renderPendingRequests === 'function') citas.renderPendingRequests();
@@ -370,6 +460,7 @@ export function save() {
             if (typeof personalizacion.updateAtencionSection === 'function') personalizacion.updateAtencionSection();
             if (typeof personalizacion.updateContactSection === 'function') personalizacion.updateContactSection();
             if (typeof personalizacion.updateInstagramSection === 'function') personalizacion.updateInstagramSection();
+
             if (typeof utils.showToast === 'function') {
                 if (successful === total) utils.showToast('✅ Todos los datos guardados', 'success');
                 else utils.showToast(`⚠️ ${successful}/${total} datos guardados`, 'warning');

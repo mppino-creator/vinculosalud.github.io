@@ -562,11 +562,11 @@ export function renderSpecialtiesTable() {
 
     container.innerHTML = specialties.map(spec => `
          <tr id="spec-${spec.id}">
-              <td><strong>${spec.name}</strong></td>
-              <td>
-                 <button onclick="editSpecialty('${spec.id}')" class="btn-editar">✏️ Editar</button>
-                 <button onclick="deleteSpecialty('${spec.id}')" class="btn-eliminar">🗑️ Eliminar</button>
-              </td>
+              <td><strong>${spec.name}</strong><\/td>
+               <td style="text-align:right;">
+                 <button onclick="window.editSpecialty('${spec.id}')" class="btn-editar">✏️ Editar</button>
+                 <button onclick="window.deleteSpecialty('${spec.id}')" class="btn-eliminar">🗑️ Eliminar</button>
+               <\/td>
          <\/tr>
     `).join('');
 }
@@ -621,7 +621,7 @@ export function showEditSpecialtyModal(id) {
         const modalHTML = `
         <div id="editSpecialtyModal" class="modal">
             <div class="modal-content" style="max-width: 400px;">
-                <span class="modal-close" onclick="closeEditSpecialtyModal()">&times;</span>
+                <span class="modal-close" onclick="window.closeEditSpecialtyModal()">&times;</span>
                 <h3>Editar Especialidad</h3>
                 <input type="text" id="editSpecialtyName" placeholder="Nombre" class="filter-input" style="width:100%; margin:15px 0;">
                 <button id="saveSpecialtyBtn" class="btn-staff">Guardar cambios</button>

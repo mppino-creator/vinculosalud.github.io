@@ -1490,6 +1490,195 @@ export async function cancelAppointmentByPatient(appointmentId, patientRut) {
     if (modal) modal.remove();
 }
 
+// Añadir después de las funciones existentes en citas.js
+
+// ============================================
+// GESTIÓN DE ASISTENCIA Y ESTADOS DE CITA
+// ============================================
+
+/**
+ * Marca una cita como asistida o no asistida.
+ * @param {string} citaId - ID de la cita
+ * @param {boolean} asistio - true si asistió, false si no
+ * @param {string} justificacion - motivo de inasistencia (opcional)
+ */
+export async function marcarAsistencia(citaId, asistio, justificacion = '') {
+    const cita = state.appointments.find(a => a.id == citaId);
+    if (!cita) {
+        showToast('Cita no encontrada', 'error');
+        return;
+    }
+
+    // Permiso: admin o psicólogo propietario
+    const isAdmin = state.currentUser?.role === 'admin';
+    const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == cita.psychId;
+    if (!isAdmin && !isOwner) {
+        showToast('No tienes permiso', 'error');
+        return;
+    }
+
+    if (asistio) {
+        cita.asistencia = true;
+        cita.estadoCita = 'atendida';
+        // Si no estaba pagado, puede marcarse como pagado opcionalmente
+        if (cita.paymentStatus !== 'pagado') {
+            cita.paymentStatus = 'pagado';
+            cita.paymentConfirmedBy = state.currentUser?.data?.name || 'Sistema';
+            cita.paymentConfirmedAt = new Date().toISOString();
+        }
+    } else {
+        cita.asistencia = false;
+        cita.estadoCita = 'noAsistio';
+        cita.motivoInasistencia = justificacion || 'No especificado';
+        // No se cobra, así que aseguramos que no esté pagado
+        if (cita.paymentStatus === 'pagado') {
+            // Opcional: revertir pago
+            cita.paymentStatus = 'pendiente';
+            cita.paymentConfirmedBy = null;
+            cita.paymentConfirmedAt = null;
+        }
+    }
+
+    await save();
+    showToast(asistio ? '✅ Cita marcada como atendida' : '⚠️ Cita marcada como no asistida', 'info');
+    renderAppointments();
+    renderAppointmentsTable();
+    if (typeof window.updateStats === 'function') window.updateStats();
+}
+
+/**
+ * Reprograma una cita a nueva fecha/hora.
+ * @param {string} citaId - ID de la cita
+ * @param {string} nuevaFecha - YYYY-MM-DD
+ * @param {string} nuevaHora - HH:MM
+ */
+export async function reprogramarCita(citaId, nuevaFecha, nuevaHora) {
+    const cita = state.appointments.find(a => a.id == citaId);
+    if (!cita) {
+        showToast('Cita no encontrada', 'error');
+        return;
+    }
+
+    const isAdmin = state.currentUser?.role === 'admin';
+    const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == cita.psychId;
+    if (!isAdmin && !isOwner) {
+        showToast('No tienes permiso', 'error');
+        return;
+    }
+
+    if (isTimeSlotOccupied(cita.psychId, nuevaFecha, nuevaHora)) {
+        showToast('⚠️ La nueva hora ya está ocupada', 'error');
+        return;
+    }
+
+    // Guardar información de reprogramación
+    cita.fechaOriginal = cita.date;
+    cita.horaOriginal = cita.time;
+    cita.reprogramado = true;
+    cita.reprogramadoEn = new Date().toISOString();
+    cita.reprogramadoPor = state.currentUser?.data?.name;
+
+    cita.date = nuevaFecha;
+    cita.time = nuevaHora;
+    cita.estadoCita = 'reprogramada';
+
+    await save();
+    showToast('✅ Cita reprogramada', 'success');
+    renderAppointments();
+    renderAppointmentsTable();
+    if (typeof window.renderCalendar === 'function') window.renderCalendar();
+}
+
+/**
+ * Cancela una cita con motivo.
+ * @param {string} citaId - ID de la cita
+ * @param {string} motivo - Motivo de cancelación
+ */
+export async function cancelarCitaConMotivo(citaId, motivo) {
+    if (!confirm('¿Cancelar esta cita?')) return;
+
+    const cita = state.appointments.find(a => a.id == citaId);
+    if (!cita) return;
+
+    const isAdmin = state.currentUser?.role === 'admin';
+    const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == cita.psychId;
+    if (!isAdmin && !isOwner) {
+        showToast('No tienes permiso', 'error');
+        return;
+    }
+
+    cita.estadoCita = 'cancelada';
+    cita.motivoCancelacion = motivo || 'Cancelada por profesional/paciente';
+    cita.canceladaEn = new Date().toISOString();
+    cita.canceladaPor = state.currentUser?.data?.name;
+
+    // Si estaba pagada, revertir pago
+    if (cita.paymentStatus === 'pagado') {
+        cita.paymentStatus = 'pendiente';
+        cita.paymentConfirmedBy = null;
+        cita.paymentConfirmedAt = null;
+    }
+
+    await save();
+    showToast('Cita cancelada', 'success');
+    renderAppointments();
+    renderAppointmentsTable();
+    if (typeof window.renderCalendar === 'function') window.renderCalendar();
+}
+
+/**
+ * Crea una nota de evolución (sesión) a partir de una cita.
+ * @param {string} citaId - ID de la cita
+ * @param {string} contenido - Texto de la nota
+ * @param {boolean} marcarComoAtendida - Si se marca la cita como atendida automáticamente
+ */
+export async function crearNotaDesdeCita(citaId, contenido, marcarComoAtendida = true) {
+    const cita = state.appointments.find(a => a.id == citaId);
+    if (!cita) {
+        showToast('Cita no encontrada', 'error');
+        return;
+    }
+
+    const isAdmin = state.currentUser?.role === 'admin';
+    const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == cita.psychId;
+    if (!isAdmin && !isOwner) {
+        showToast('No tienes permiso', 'error');
+        return;
+    }
+
+    const nuevaSesion = {
+        id: Date.now(),
+        patientId: cita.patientId,
+        pacienteNombre: cita.patient,
+        psychId: cita.psychId,
+        psicologoNombre: cita.psych,
+        fechaAtencion: cita.date,
+        hora: cita.time,
+        citaId: citaId,
+        contenido: contenido,
+        creadoPor: state.currentUser?.data?.name,
+        createdAt: new Date().toISOString()
+    };
+
+    state.sesiones.push(nuevaSesion);
+
+    if (marcarComoAtendida && !cita.asistencia) {
+        cita.asistencia = true;
+        cita.estadoCita = 'atendida';
+        if (cita.paymentStatus !== 'pagado') {
+            cita.paymentStatus = 'pagado';
+            cita.paymentConfirmedBy = state.currentUser?.data?.name || 'Sistema';
+            cita.paymentConfirmedAt = new Date().toISOString();
+        }
+    }
+
+    await save();
+    showToast('✅ Nota de evolución guardada', 'success');
+    renderAppointments();
+    renderAppointmentsTable();
+    if (typeof window.updateStats === 'function') window.updateStats();
+}
+
 // ============================================
 // EXPOSICIÓN AL OBJETO WINDOW
 // ============================================

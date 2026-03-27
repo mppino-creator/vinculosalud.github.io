@@ -1684,6 +1684,20 @@
                 <button class="btn-staff" onclick="cargarNotas()"><i class="fa fa-search"></i> Filtrar</button>
             </div>
 
+            <!-- Filtros de rango de fechas y botón de exportar PDF -->
+<div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end;">
+    <div class="form-group" style="margin-bottom: 0;">
+        <label>Desde</label>
+        <input type="date" id="fechaInicio" class="filter-input">
+    </div>
+    <div class="form-group" style="margin-bottom: 0;">
+        <label>Hasta</label>
+        <input type="date" id="fechaFin" class="filter-input">
+    </div>
+    <button class="btn-staff" style="background: var(--azul-medico);" onclick="exportarNotasPDF()">
+        <i class="fa fa-file-pdf"></i> Exportar a PDF
+    </button>
+</div>
             <!-- Listado de notas -->
             <div id="notasListado" style="max-height: 60vh; overflow-y: auto;">
                 <div style="text-align: center; padding: 40px; color: #999;">

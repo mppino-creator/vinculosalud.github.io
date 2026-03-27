@@ -1,6 +1,6 @@
 // js/modules/notas.js
 import { db, auth } from '../config/firebase.js';
-import { ref, onValue, push, set, update, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+import { ref, onValue, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
 console.log('📦 Cargando módulo notas.js...');
 
@@ -8,7 +8,6 @@ let currentUser = null;
 let currentRole = null;
 let allNotas = [];
 let allPatients = [];
-let notasListenerActive = false;
 
 // ---------------------------------------------------------------------
 // 1. Obtener pacientes a partir de las citas del profesional
@@ -90,17 +89,12 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar y renderizar notas (un único listener en tiempo real)
+// 2. Cargar notas desde Firebase (carga única, sin listener en tiempo real)
 // ---------------------------------------------------------------------
-function cargarNotas() {
-    if (notasListenerActive) {
-        console.log('⚠️ Listener de notas ya activo, no se añade otro');
-        return;
-    }
-    notasListenerActive = true;
-
-    const sesionesRef = ref(db, 'sesiones');
-    onValue(sesionesRef, (snapshot) => {
+async function cargarNotas() {
+    try {
+        const sesionesRef = ref(db, 'sesiones');
+        const snapshot = await get(sesionesRef);
         const data = snapshot.val() || {};
         allNotas = Object.entries(data).map(([id, nota]) => ({
             id,
@@ -112,7 +106,9 @@ function cargarNotas() {
             allNotas = allNotas.filter(nota => allPatients.some(p => p.id === nota.patientId));
         }
         renderNotasListado();
-    });
+    } catch (error) {
+        console.error('Error cargando notas:', error);
+    }
 }
 
 function renderNotasListado() {
@@ -220,6 +216,8 @@ window.guardarNota = async function() {
             alert('Nota creada');
         }
         cerrarModalNota();
+        // Recargar notas manualmente después de guardar
+        await cargarNotas();
     } catch (error) {
         console.error('Error guardando nota:', error);
         alert('Error al guardar nota: ' + error.message);
@@ -231,6 +229,7 @@ window.eliminarNota = async function(notaId) {
     try {
         await remove(ref(db, `sesiones/${notaId}`));
         alert('Nota eliminada');
+        await cargarNotas(); // recargar después de eliminar
     } catch (error) {
         console.error('Error eliminando nota:', error);
         alert('Error al eliminar nota');
@@ -298,7 +297,7 @@ window.exportarNotasPDF = async function() {
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización (usa el rol desde state, evita leer staff)
+// 5. Inicialización
 // ---------------------------------------------------------------------
 function initNotas() {
     auth.onAuthStateChanged((user) => {
@@ -311,13 +310,14 @@ function initNotas() {
                     const userState = window.state.currentUser;
                     currentRole = userState.role; // 'admin' o 'psych'
                     console.log(`✅ Rol asignado desde state: ${currentRole} para usuario ${user.uid}`);
-                    cargarPacientesParaNotas().then(() => cargarNotas());
+                    cargarPacientesParaNotas().then(() => {
+                        cargarNotas(); // carga inicial de notas
+                    });
                 }
             }, 100);
         } else {
             currentUser = null;
             currentRole = null;
-            notasListenerActive = false;
             const container = document.getElementById('notasListado');
             if (container) container.innerHTML = '<div style="text-align:center; padding:40px;">🔒 Inicia sesión para ver notas</div>';
         }

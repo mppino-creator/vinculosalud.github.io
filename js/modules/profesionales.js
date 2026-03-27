@@ -752,8 +752,7 @@ export function renderStaffTable() {
                     <button onclick="editTherapist('${p.id}')" class="btn-editar">✏️ Editar</button>
                     <button onclick="deleteStaff('${p.id}')" class="btn-eliminar">🗑️ Eliminar</button>
                  \x20
-            `
-        `;
+            `;
     }).join('');
 }
 

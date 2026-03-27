@@ -9,6 +9,8 @@ let currentRole = null;
 let allNotas = [];
 let allPatients = [];
 
+let notasListenerActive = false;
+
 // ---------------------------------------------------------------------
 // 1. Obtener pacientes a partir de las citas del profesional
 // ---------------------------------------------------------------------
@@ -89,12 +91,13 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar y renderizar notas (usando listener)
+// 2. Cargar y renderizar notas (usando un único listener en tiempo real)
 // ---------------------------------------------------------------------
-let notasListenerActive = false;
-
 function cargarNotas() {
-    if (notasListenerActive) return; // Evita múltiples listeners
+    if (notasListenerActive) {
+        console.log('⚠️ Listener de notas ya activo, no se añade otro');
+        return;
+    }
     notasListenerActive = true;
 
     const sesionesRef = ref(db, 'sesiones');
@@ -214,7 +217,7 @@ window.guardarNota = async function() {
             alert('Nota creada');
         }
         cerrarModalNota();
-        // No llamamos a cargarNotas() aquí; el listener en tiempo real se encarga de actualizar la lista.
+        // ✅ NO llamamos a cargarNotas() manualmente; el listener actualizará.
     } catch (error) {
         console.error('Error guardando nota:', error);
         alert('Error al guardar nota');
@@ -226,7 +229,7 @@ window.eliminarNota = async function(notaId) {
     try {
         await remove(ref(db, `sesiones/${notaId}`));
         alert('Nota eliminada');
-        // El listener actualizará automáticamente
+        // ✅ El listener actualizará.
     } catch (error) {
         console.error('Error eliminando nota:', error);
         alert('Error al eliminar nota');
@@ -239,7 +242,70 @@ function cerrarModalNota() {
 window.cerrarModalNota = cerrarModalNota;
 
 // ---------------------------------------------------------------------
-// 4. Inicialización
+// 4. Exportar notas a PDF (con rango de fechas)
+// ---------------------------------------------------------------------
+window.exportarNotasPDF = async function() {
+    const startDate = document.getElementById('fechaInicio')?.value;
+    const endDate = document.getElementById('fechaFin')?.value;
+
+    let notasFiltradas = [...allNotas];
+    if (startDate) {
+        notasFiltradas = notasFiltradas.filter(n => n.date >= startDate);
+    }
+    if (endDate) {
+        notasFiltradas = notasFiltradas.filter(n => n.date <= endDate);
+    }
+
+    if (notasFiltradas.length === 0) {
+        alert('No hay notas en el rango seleccionado.');
+        return;
+    }
+
+    // Ordenar por fecha descendente
+    notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Crear contenido HTML para el PDF
+    let htmlContent = `
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Notas de Evolución</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { text-align: center; color: #2c7da0; }
+                .nota { border: 1px solid #ccc; margin-bottom: 20px; padding: 15px; border-radius: 8px; page-break-inside: avoid; }
+                .header { font-weight: bold; margin-bottom: 10px; }
+                .fecha { color: #666; }
+                .contenido { white-space: pre-line; margin-top: 10px; }
+            </style>
+        </head>
+        <body>
+            <h1>Notas de Evolución</h1>
+            ${notasFiltradas.map(nota => `
+                <div class="nota">
+                    <div class="header">${nota.pacienteNombre} | ${new Date(nota.date).toLocaleDateString()}</div>
+                    <div class="contenido">${nota.content.replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('')}
+        </body>
+        </html>
+    `;
+
+    // Usar html2pdf para generar PDF
+    const element = document.createElement('div');
+    element.innerHTML = htmlContent;
+    document.body.appendChild(element);
+    try {
+        await html2pdf().from(element).set({ margin: 0.5, filename: 'notas_evolucion.pdf' }).save();
+    } catch (error) {
+        console.error('Error generando PDF:', error);
+        alert('Error al generar PDF');
+    }
+    document.body.removeChild(element);
+};
+
+// ---------------------------------------------------------------------
+// 5. Inicialización
 // ---------------------------------------------------------------------
 async function initNotas() {
     auth.onAuthStateChanged(async (user) => {
@@ -261,7 +327,7 @@ async function initNotas() {
             }
 
             await cargarPacientesParaNotas();
-            cargarNotas(); // inicia el listener en tiempo real
+            cargarNotas(); // inicia el listener (solo si no está activo)
         } else {
             currentUser = null;
             currentRole = null;
@@ -272,7 +338,8 @@ async function initNotas() {
     });
 }
 
-window.cargarNotas = cargarNotas; // función expuesta por si se necesita forzar recarga
+// Exponer funciones globales
+window.cargarNotas = cargarNotas;
 
 initNotas();
 console.log('✅ notas.js cargado correctamente');

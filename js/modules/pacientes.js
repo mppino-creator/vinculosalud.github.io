@@ -180,6 +180,7 @@ export async function mostrarDetallePaciente(patientId) {
     
     state.ui.fichas.pacienteSeleccionadoId = patientId;
     state.ui.fichas.pestanaActiva = 'perfil';
+    window.currentPatientId = patientId;
     
     const container = document.getElementById('patientsList');
     if (container) {
@@ -451,7 +452,7 @@ function renderSesiones(patient, sesiones) {
         <div class="sesiones-container" style="background:white; padding:20px; border-radius:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="margin:0;">📅 Notas de Evolución</h3>
-                <button class="btn-icon" onclick="window.fichasClinicas?.mostrarFormularioNotaSesion('${patient.id}')" 
+                <button class="btn-icon" onclick="showNewSesionModal('${patient.id}')" 
                         style="background: var(--verde-exito); color: white;">
                     <i class="fa fa-plus"></i> Nueva Nota
                 </button>

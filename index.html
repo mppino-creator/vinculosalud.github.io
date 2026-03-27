@@ -2423,5 +2423,35 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
+<div id="newSesionModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <button class="modal-close" onclick="closeNewSesionModal()">&times;</button>
+        <h3>Nueva Nota de Evolución</h3>
+        <div class="form-group">
+            <label>Contenido de la nota</label>
+            <textarea id="newSesionContent" rows="8" class="filter-input" placeholder="Describe la sesión, avances, temas tratados..."></textarea>
+        </div>
+        <div style="display:flex; gap:15px; margin-top:20px;">
+            <button class="btn-staff" style="background:var(--exito); flex:1;" id="saveSesionBtn">Guardar</button>
+            <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="closeNewSesionModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<div id="editSesionModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <button class="modal-close" onclick="closeEditSesionModal()">&times;</button>
+        <h3>Editar Nota de Evolución</h3>
+        <div class="form-group">
+            <label>Contenido</label>
+            <textarea id="editSesionContent" rows="8" class="filter-input"></textarea>
+        </div>
+        <div style="display:flex; gap:15px; margin-top:20px;">
+            <button class="btn-staff" style="background:var(--exito); flex:1;" id="updateSesionBtn">Actualizar</button>
+            <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="closeEditSesionModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

@@ -20,7 +20,7 @@ const ADMIN_EDIT_BUTTONS = [
 const ADMIN_TABS = [
     'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
     'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
-    'messagesTab', 'adminTabEstadisticas'
+    'messagesTab', 'adminTabEstadisticas', 'adminTabPersonalizacion'  // ← añadir
 ];
 const COMMON_TABS = ['citas', 'solicitudes', 'pacientes'];
 

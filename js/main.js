@@ -76,6 +76,8 @@ window.searchPatientByRut = pacientes.searchPatientByRut;
 window.viewPatientDetails = pacientes.viewPatientDetails;
 window.renderPatients = pacientes.renderPatients;
 window.mostrarDetallePaciente = pacientes.mostrarDetallePaciente;
+window.showNewSesionModal = pacientes.showNewSesionModal;
+window.exportarHistorialPaciente = pacientes.exportarHistorialPaciente;
 window.cambiarPestana = pacientes.cambiarPestana;
 
 window.openBooking = citas.openBooking;

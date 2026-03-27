@@ -1,16 +1,16 @@
-// js/notas.js
-import { db, auth } from './firebase.js';
-import { ref, onValue, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+// js/modules/notas.js
+import { db, auth } from '../config/firebase.js';
+import { ref, onValue, push, set, update, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
-// Variable global para el profesional actual (usuario logueado)
+// Variables globales
 let currentUser = null;
 let currentRole = null;
-let allNotas = [];      // almacena todas las notas cargadas
-let allPatients = [];   // pacientes para el select
+let allNotas = [];
+let allPatients = [];
 
 // Cargar pacientes según rol
 function cargarPacientesParaNotas() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const patientsRef = ref(db, 'patients');
         onValue(patientsRef, (snapshot) => {
             const data = snapshot.val() || {};
@@ -21,11 +21,12 @@ function cargarPacientesParaNotas() {
                 rut: patient.rut,
                 psychId: patient.psychId
             }));
-            // Filtrar según rol
+
             if (currentRole === 'psych') {
                 allPatients = allPatients.filter(p => p.psychId === currentUser.uid);
             }
-            // Llenar el select del modal
+
+            // Llenar select del modal
             const selectPaciente = document.getElementById('notaPacienteId');
             if (selectPaciente) {
                 selectPaciente.innerHTML = '<option value="">Seleccionar paciente</option>';
@@ -36,6 +37,7 @@ function cargarPacientesParaNotas() {
                     selectPaciente.appendChild(option);
                 });
             }
+
             // Llenar filtro de pacientes en la vista principal
             const filtroPaciente = document.getElementById('filtroNotaPaciente');
             if (filtroPaciente) {
@@ -63,11 +65,9 @@ function cargarNotas() {
             pacienteNombre: allPatients.find(p => p.id === nota.patientId)?.nombreCompleto || 'Paciente desconocido'
         }));
 
-        // Filtrar según rol
         if (currentRole === 'psych') {
-            allNotas = allNotas.filter(nota => allPatients.some(p => p.id === nota.patientId && p.psychId === currentUser.uid));
+            allNotas = allNotas.filter(nota => allPatients.some(p => p.id === nota.patientId));
         }
-
         renderNotasListado();
     });
 }
@@ -77,10 +77,9 @@ function renderNotasListado() {
     const container = document.getElementById('notasListado');
     if (!container) return;
 
-    // Obtener filtros
     const pacienteFiltro = document.getElementById('filtroNotaPaciente')?.value;
     const fechaFiltro = document.getElementById('filtroNotaFecha')?.value;
-    const busquedaFiltro = document.getElementById('filtroNotaBusqueda')?.value.toLowerCase();
+    const busquedaFiltro = document.getElementById('filtroNotaBusqueda')?.value?.toLowerCase();
 
     let notasFiltradas = [...allNotas];
     if (pacienteFiltro) notasFiltradas = notasFiltradas.filter(n => n.patientId === pacienteFiltro);
@@ -92,7 +91,6 @@ function renderNotasListado() {
         );
     }
 
-    // Ordenar por fecha descendente
     notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (notasFiltradas.length === 0) {
@@ -116,7 +114,7 @@ function renderNotasListado() {
                     </button>
                 </div>
             </div>
-            <div style="margin-top: 12px; white-space: pre-line;">${nota.content?.replace(/\n/g, '<br>') || 'Sin contenido'}</div>
+            <div style="margin-top: 12px; white-space: pre-line;">${(nota.content || '').replace(/\n/g, '<br>')}</div>
         </div>
     `).join('');
 }
@@ -127,20 +125,19 @@ window.mostrarModalNuevaNota = function() {
     document.getElementById('notaId').value = '';
     document.getElementById('notaFecha').value = new Date().toISOString().slice(0,10);
     document.getElementById('notaContenido').value = '';
-    // Habilitar select paciente
     document.getElementById('notaPacienteId').disabled = false;
     document.getElementById('notaPacienteId').value = '';
     document.getElementById('notaModal').style.display = 'flex';
 };
 
 // Editar nota existente
-window.editarNota = async function(notaId) {
+window.editarNota = function(notaId) {
     const nota = allNotas.find(n => n.id === notaId);
     if (!nota) return;
     document.getElementById('notaModalTitulo').innerText = 'Editar Nota';
     document.getElementById('notaId').value = notaId;
     document.getElementById('notaPacienteId').value = nota.patientId;
-    document.getElementById('notaPacienteId').disabled = true; // No cambiar paciente al editar
+    document.getElementById('notaPacienteId').disabled = true;
     document.getElementById('notaFecha').value = nota.date;
     document.getElementById('notaContenido').value = nota.content;
     document.getElementById('notaModal').style.display = 'flex';
@@ -153,24 +150,15 @@ window.guardarNota = async function() {
     const date = document.getElementById('notaFecha').value;
     const content = document.getElementById('notaContenido').value.trim();
 
-    if (!patientId) {
-        alert('Debes seleccionar un paciente');
-        return;
-    }
-    if (!date) {
-        alert('Debes seleccionar una fecha');
-        return;
-    }
-    if (!content) {
-        alert('El contenido de la nota no puede estar vacío');
-        return;
-    }
+    if (!patientId) { alert('Selecciona un paciente'); return; }
+    if (!date) { alert('Selecciona una fecha'); return; }
+    if (!content) { alert('El contenido no puede estar vacío'); return; }
 
     const notaData = {
         patientId,
         date,
         content,
-        createdAt: Date.now(),
+        updatedAt: Date.now(),
         createdBy: currentUser?.uid,
         professionalId: currentUser?.uid
     };
@@ -178,17 +166,15 @@ window.guardarNota = async function() {
     const sesionesRef = ref(db, 'sesiones');
     try {
         if (id) {
-            // Actualizar
             await update(ref(db, `sesiones/${id}`), notaData);
             alert('Nota actualizada');
         } else {
-            // Crear nueva
             const newRef = push(sesionesRef);
-            await set(newRef, notaData);
+            await set(newRef, { ...notaData, createdAt: Date.now() });
             alert('Nota creada');
         }
         cerrarModalNota();
-        cargarNotas(); // recargar listado
+        cargarNotas();
     } catch (error) {
         console.error('Error guardando nota:', error);
         alert('Error al guardar nota');
@@ -211,30 +197,26 @@ window.eliminarNota = async function(notaId) {
 function cerrarModalNota() {
     document.getElementById('notaModal').style.display = 'none';
 }
+window.cerrarModalNota = cerrarModalNota;
 
-// Inicialización: obtener usuario y cargar datos
+// Inicialización
 function initNotas() {
     auth.onAuthStateChanged(user => {
         if (user) {
             currentUser = user;
-            // Obtener rol desde state o de una consulta a profesionales
             const userState = window.state?.currentUser;
             currentRole = userState?.role || (userState?.data?.role === 'admin' ? 'admin' : 'psych');
-            cargarPacientesParaNotas().then(() => {
-                cargarNotas();
-            });
+            cargarPacientesParaNotas().then(() => cargarNotas());
         } else {
-            // Si no hay usuario, no cargar nada
             currentUser = null;
             currentRole = null;
-            document.getElementById('notasListado').innerHTML = '<div style="text-align:center; padding:40px;">🔒 Inicia sesión para ver notas</div>';
+            const container = document.getElementById('notasListado');
+            if (container) container.innerHTML = '<div style="text-align:center; padding:40px;">🔒 Inicia sesión para ver notas</div>';
         }
     });
 }
 
 // Exponer funciones globales
 window.cargarNotas = cargarNotas;
-window.cerrarModalNota = cerrarModalNota;
 
-// Arrancar
 initNotas();

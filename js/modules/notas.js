@@ -129,6 +129,8 @@ window.mostrarModalNuevaNota = function() {
     document.getElementById('notaPacienteId').value = '';
     document.getElementById('notaModal').style.display = 'flex';
 };
+window.cargarNotas = cargarNotas;
+window.cerrarModalNota = cerrarModalNota;
 
 // Editar nota existente
 window.editarNota = function(notaId) {

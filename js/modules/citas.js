@@ -837,7 +837,7 @@ export function renderAppointments() {
     }
 
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td></tr>';
+        tb.innerHTML = ' <td colspan="9" style="text-align:center; padding:40px;">No hay citas</td> ';
         return;
     }
 
@@ -889,7 +889,7 @@ export function renderPendingRequests() {
     }
 
     if (requestsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
+        tb.innerHTML = ' <td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td> ';
         return;
     }
 
@@ -944,7 +944,10 @@ export async function confirmPayment(appointmentId) {
         showToast('Cita no encontrada', 'error');
         return;
     }
-    if (state.currentUser?.role !== 'admin' && state.currentUser?.data?.id != appointment.psychId) {
+    // Permiso: admin o psicólogo propietario
+    const isAdmin = state.currentUser?.role === 'admin';
+    const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == appointment.psychId;
+    if (!isAdmin && !isOwner) {
         showToast('No tienes permiso', 'error');
         return;
     }
@@ -966,6 +969,14 @@ export async function confirmPresencialTime(requestId, date, time) {
     const request = state.pendingRequests.find(r => r.id == requestId);
     if (!request) {
         showToast('Solicitud no encontrada', 'error');
+        return;
+    }
+
+    // Permiso: admin o psicólogo propietario
+    const isAdmin = state.currentUser?.role === 'admin';
+    const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == request.psychId;
+    if (!isAdmin && !isOwner) {
+        showToast('No tienes permiso para confirmar esta solicitud', 'error');
         return;
     }
 
@@ -1022,6 +1033,20 @@ export function showConfirmRequestModal(requestId) {
         return;
     }
 
+    // Para admin, usar los datos del profesional de la solicitud
+    const isAdmin = state.currentUser?.role === 'admin';
+    let psychData = null;
+    if (isAdmin) {
+        psychData = state.staff.find(s => s.id == request.psychId);
+        if (!psychData) {
+            showToast('Profesional no encontrado', 'error');
+            return;
+        }
+        state.selectedPsychForBooking = psychData;
+    } else {
+        state.selectedPsychForBooking = null;
+    }
+
     const agendarTab = document.getElementById('agendarTab');
     if (!agendarTab) {
         showToast('La pestaña "Agendar" no está disponible. Contacta al administrador.', 'error');
@@ -1068,7 +1093,7 @@ export function showConfirmRequestModal(requestId) {
 }
 
 export function showTherapistBookingModal() {
-    state.setSelectedTherapistBoxId(null);
+    // Eliminamos referencia a boxes
     state.setSelectedPatientForTherapist(null);
     window.currentRequestId = null;
 
@@ -1117,14 +1142,16 @@ export function searchPatientByRutTherapist() {
 }
 
 export function updateTherapistBookingDetails() {
-    if (!state.currentUser?.data) return;
+    // Usar el profesional seleccionado (para admin) o el usuario actual
+    const psych = state.selectedPsychForBooking || state.currentUser?.data;
+    if (!psych) return;
     
     const type = document.getElementById('therapistAppointmentType')?.value;
     let price = 0;
     if (type === 'online') {
-        price = state.currentUser.data.priceOnline || 0;
+        price = psych.priceOnline || 0;
     } else {
-        price = state.currentUser.data.pricePresencial || 0;
+        price = psych.pricePresencial || 0;
     }
     
     const priceElement = document.getElementById('therapistPrice');
@@ -1138,9 +1165,11 @@ export function updateTherapistBookingDetails() {
 export function updateTherapistAvailableSlots() {
     const date = document.getElementById('therapistDate')?.value;
     const timeSelect = document.getElementById('therapistTime');
-    if (!date || !timeSelect || !state.currentUser?.data) return;
+    if (!date || !timeSelect) return;
+    
+    const psych = state.selectedPsychForBooking || state.currentUser?.data;
+    if (!psych) return;
 
-    const psych = state.currentUser.data;
     const availableSlots = getAvailableSlots(psych, date);
 
     timeSelect.innerHTML = '<option value="">Selecciona horario</option>';
@@ -1155,6 +1184,12 @@ export function updateTherapistAvailableSlots() {
 
 export async function executeTherapistBooking() {
     console.log("🟢 executeTherapistBooking llamada");
+
+    const psych = state.selectedPsychForBooking || state.currentUser?.data;
+    if (!psych) {
+        showToast('No se ha seleccionado un profesional', 'error');
+        return;
+    }
 
     if (!state.selectedPatientForTherapist) {
         showToast('Debes seleccionar un paciente', 'error');
@@ -1172,12 +1207,12 @@ export async function executeTherapistBooking() {
         return;
     }
 
-    if (isTimeSlotOccupied(state.currentUser.data.id, date, time)) {
+    if (isTimeSlotOccupied(psych.id, date, time)) {
         showToast('⚠️ La hora seleccionada ya está ocupada. Elige otra.', 'error');
         return;
     }
 
-    const price = type === 'online' ? state.currentUser.data.priceOnline : state.currentUser.data.pricePresencial;
+    const price = type === 'online' ? psych.priceOnline : psych.pricePresencial;
     if (price === 0) console.warn('⚠️ El precio es 0. Verifica la configuración del profesional.');
 
     const appointment = {
@@ -1187,8 +1222,8 @@ export async function executeTherapistBooking() {
         patientRut: state.selectedPatientForTherapist.rut,
         patientEmail: state.selectedPatientForTherapist.email,
         patientPhone: state.selectedPatientForTherapist.phone,
-        psych: state.currentUser.data.name,
-        psychId: state.currentUser.data.id,
+        psych: psych.name,
+        psychId: psych.id,
         date,
         time,
         type,
@@ -1200,7 +1235,7 @@ export async function executeTherapistBooking() {
         msg,
         status: 'confirmada',
         createdAt: new Date().toISOString(),
-        createdBy: state.currentUser.data.name,
+        createdBy: state.currentUser?.data?.name || 'Admin',
         emailEnviado: false,
         prevision: state.selectedPatientForTherapist.prevision || ''
     };
@@ -1234,6 +1269,9 @@ export async function executeTherapistBooking() {
     if (typeof window.renderCalendar === 'function') window.renderCalendar();
     updateTherapistAvailableSlots();
     
+    // Limpiar el profesional seleccionado para admin después de crear la cita
+    state.selectedPsychForBooking = null;
+    
     import('./auth.js').then(auth => auth.switchTab('citas'));
 }
 
@@ -1246,8 +1284,15 @@ export async function cancelAppointment(id) {
         return;
     }
     
-    state.setAppointments(state.appointments.filter(a => a.id != id));
+    // Permiso: admin o psicólogo propietario
+    const isAdmin = state.currentUser?.role === 'admin';
+    const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == appointment.psychId;
+    if (!isAdmin && !isOwner) {
+        showToast('No tienes permiso para cancelar esta cita', 'error');
+        return;
+    }
     
+    state.setAppointments(state.appointments.filter(a => a.id != id));
     await save();
     showToast('Cita cancelada', 'success');
     renderAppointments();
@@ -1260,8 +1305,15 @@ export async function rejectRequest(requestId) {
     const request = state.pendingRequests.find(r => r.id == requestId);
     if (!request) return;
     
-    state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
+    // Permiso: admin o psicólogo propietario
+    const isAdmin = state.currentUser?.role === 'admin';
+    const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == request.psychId;
+    if (!isAdmin && !isOwner) {
+        showToast('No tienes permiso para rechazar esta solicitud', 'error');
+        return;
+    }
     
+    state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
     await save();
     showToast('Solicitud rechazada', 'success');
     renderPendingRequests();
@@ -1293,21 +1345,6 @@ export function showPatientAppointmentsByRut() {
     
     if (citasPaciente.length === 0) {
         showToast('📭 No tienes citas registradas actualmente.', 'info');
-        return;
-    }
-
-    
-    if (!patient) {
-        showToast('No se encontraron citas para ese RUT', 'error');
-        return;
-    }
-    
-    const citasPaciente = [...state.appointments, ...state.pendingRequests]
-        .filter(c => c.patientId == patient.id)
-        .sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
-    
-    if (citasPaciente.length === 0) {
-        showToast('No tienes citas registradas', 'info');
         return;
     }
     

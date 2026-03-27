@@ -2,56 +2,82 @@
 import { db, auth } from '../config/firebase.js';
 import { ref, onValue, push, set, update, remove } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
-// Variables globales
+console.log('📦 Cargando módulo notas.js...');
+
 let currentUser = null;
 let currentRole = null;
 let allNotas = [];
 let allPatients = [];
 
-// Cargar pacientes según rol
+// Función para obtener pacientes asociados al profesional actual (basado en citas)
 function cargarPacientesParaNotas() {
     return new Promise((resolve) => {
-        const patientsRef = ref(db, 'patients');
-        onValue(patientsRef, (snapshot) => {
-            const data = snapshot.val() || {};
-            allPatients = Object.entries(data).map(([id, patient]) => ({
-                id,
-                ...patient,
-                nombreCompleto: patient.name || `${patient.firstName} ${patient.lastName}`,
-                rut: patient.rut,
-                psychId: patient.psychId
-            }));
+        if (!currentUser) {
+            resolve([]);
+            return;
+        }
 
-            if (currentRole === 'psych') {
-                allPatients = allPatients.filter(p => p.psychId === currentUser.uid);
+        // Obtener todas las citas
+        const appointmentsRef = ref(db, 'appointments');
+        onValue(appointmentsRef, (snapshot) => {
+            const citas = snapshot.val() || {};
+            // Filtrar citas del profesional actual (si no es admin)
+            let citasDelProfesional = Object.values(citas);
+            if (currentRole !== 'admin') {
+                citasDelProfesional = citasDelProfesional.filter(cita => cita.psychId === currentUser.uid);
+            }
+            // Obtener IDs únicos de pacientes de esas citas
+            const patientIds = [...new Set(citasDelProfesional.map(cita => cita.patientId).filter(id => id))];
+            
+            if (patientIds.length === 0) {
+                allPatients = [];
+                actualizarSelects();
+                resolve();
+                return;
             }
 
-            // Llenar select del modal
-            const selectPaciente = document.getElementById('notaPacienteId');
-            if (selectPaciente) {
-                selectPaciente.innerHTML = '<option value="">Seleccionar paciente</option>';
-                allPatients.forEach(patient => {
-                    const option = document.createElement('option');
-                    option.value = patient.id;
-                    option.textContent = `${patient.nombreCompleto} (${patient.rut || 'sin RUT'})`;
-                    selectPaciente.appendChild(option);
-                });
-            }
-
-            // Llenar filtro de pacientes en la vista principal
-            const filtroPaciente = document.getElementById('filtroNotaPaciente');
-            if (filtroPaciente) {
-                filtroPaciente.innerHTML = '<option value="">Todos los pacientes</option>';
-                allPatients.forEach(patient => {
-                    const option = document.createElement('option');
-                    option.value = patient.id;
-                    option.textContent = patient.nombreCompleto;
-                    filtroPaciente.appendChild(option);
-                });
-            }
-            resolve();
+            // Obtener los datos completos de esos pacientes
+            const patientsRef = ref(db, 'patients');
+            onValue(patientsRef, (snapshot) => {
+                const allPatientsData = snapshot.val() || {};
+                // Filtrar solo los pacientes que aparecen en las citas del profesional
+                allPatients = patientIds.map(id => ({
+                    id,
+                    ...allPatientsData[id],
+                    nombreCompleto: allPatientsData[id]?.name || `${allPatientsData[id]?.firstName} ${allPatientsData[id]?.lastName}` || 'Paciente sin nombre',
+                    rut: allPatientsData[id]?.rut || ''
+                })).filter(p => p.id); // eliminar posibles undefined
+                actualizarSelects();
+                resolve();
+            }, { onlyOnce: false });
         }, { onlyOnce: false });
     });
+}
+
+function actualizarSelects() {
+    // Llenar select del modal
+    const selectPaciente = document.getElementById('notaPacienteId');
+    if (selectPaciente) {
+        selectPaciente.innerHTML = '<option value="">Seleccionar paciente</option>';
+        allPatients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = `${patient.nombreCompleto} (${patient.rut || 'sin RUT'})`;
+            selectPaciente.appendChild(option);
+        });
+    }
+
+    // Llenar filtro de pacientes en la vista principal
+    const filtroPaciente = document.getElementById('filtroNotaPaciente');
+    if (filtroPaciente) {
+        filtroPaciente.innerHTML = '<option value="">Todos los pacientes</option>';
+        allPatients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = patient.nombreCompleto;
+            filtroPaciente.appendChild(option);
+        });
+    }
 }
 
 // Cargar notas desde Firebase (nodo 'sesiones')
@@ -66,6 +92,7 @@ function cargarNotas() {
         }));
 
         if (currentRole === 'psych') {
+            // Solo mostrar notas de pacientes que están en allPatients (los que tienen citas con él)
             allNotas = allNotas.filter(nota => allPatients.some(p => p.id === nota.patientId));
         }
         renderNotasListado();
@@ -129,8 +156,6 @@ window.mostrarModalNuevaNota = function() {
     document.getElementById('notaPacienteId').value = '';
     document.getElementById('notaModal').style.display = 'flex';
 };
-window.cargarNotas = cargarNotas;
-window.cerrarModalNota = cerrarModalNota;
 
 // Editar nota existente
 window.editarNota = function(notaId) {
@@ -222,3 +247,4 @@ function initNotas() {
 window.cargarNotas = cargarNotas;
 
 initNotas();
+console.log('✅ notas.js cargado correctamente');

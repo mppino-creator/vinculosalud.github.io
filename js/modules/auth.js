@@ -20,9 +20,9 @@ const ADMIN_EDIT_BUTTONS = [
 const ADMIN_TABS = [
     'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
     'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
-    'messagesTab', 'adminTabEstadisticas', 'adminTabPersonalizacion'  // ← añadir
+    'messagesTab', 'adminTabEstadisticas', 'adminTabPersonalizacion'
 ];
-const COMMON_TABS = ['citas', 'solicitudes', 'pacientes'];
+const COMMON_TABS = ['citas', 'solicitudes', 'pacientes', 'adminTabNotas']; // 👈 añadido adminTabNotas
 
 // ============================================
 // FUNCIONES AUXILIARES
@@ -86,12 +86,7 @@ function actualizarUIAdmin(userData, role) {
         if (staffText) staffText.textContent = userData.name || 'Admin';
     }
 
-    // Mostrar pestañas según rol
-if (role === 'admin') {
-    document.getElementById('adminTabNotas').style.display = 'inline-block'; // o 'flex'
-    // ... otras pestañas
-} else if (role === 'psych') {
-    document.getElementById('adminTabNotas').style.display = 'inline-block';
+    // Mostrar botones de edición para admin
     if (role === 'admin') {
         ADMIN_EDIT_BUTTONS.forEach(id => {
             const btn = document.getElementById(id);
@@ -371,7 +366,7 @@ export async function processLogin() {
 
             actualizarUIAdmin(psychFullData, role);
             
-            // 🔥 CARGAR DATOS PRIVADOS DESPUÉS DEL LOGIN
+            // Cargar datos privados después del login
             if (typeof cargarDatosPrivados === 'function') {
                 cargarDatosPrivados();
                 console.log('📦 Datos privados solicitados después del login');
@@ -519,21 +514,24 @@ function mostrarDashboardInmediato(role, userData) {
     if (dashSubtitle && userData) dashSubtitle.innerText = `Bienvenido, ${userData.name} ${userData.genero === 'M' ? '♂️' : userData.genero === 'F' ? '♀️' : ''}`;
 
     console.log('🔧 Forzando visibilidad de pestañas para rol:', role);
+    
+    // Mostrar pestañas de administración solo para admin
     ADMIN_TABS.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.setProperty('display', role === 'admin' ? 'inline-block' : 'none', 'important');
     });
 
-    // Pestañas específicas de psicólogo (solo la que tiene contenido real)
-    const psychTabs = ['psychTab']; // Solo la que existe en HTML
+    // Pestañas comunes para ambos roles (incluyendo Notas)
+    COMMON_TABS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.setProperty('display', 'inline-block', 'important');
+    });
+
+    // Pestañas específicas de psicólogo
+    const psychTabs = ['psychTab'];
     psychTabs.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.setProperty('display', role === 'psych' ? 'inline-block' : 'none', 'important');
-    });
-
-    COMMON_TABS.forEach(tabName => {
-        const tab = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.toLowerCase().includes(tabName));
-        if (tab) tab.style.setProperty('display', 'inline-block', 'important');
     });
 
     const calendarTab = document.getElementById('adminTabCalendario');
@@ -611,7 +609,8 @@ export function switchTab(tabName) {
         'agendar': 'tabAgendar',
         'estadisticas': 'tabEstadisticas',
         'calendario': 'tabCalendario',
-        'fichas': 'tabFichas'
+        'fichas': 'tabFichas',
+        'notas': 'tabNotas'            // 👈 añadido
     };
     const contentId = tabMap[tabName] || `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
     const content = document.getElementById(contentId);
@@ -640,6 +639,9 @@ export function switchTab(tabName) {
                 else if (tabName === 'fichas' && window.fichasClinicas && typeof window.fichasClinicas.renderFichasConFiltros === 'function') {
                     if (window.fichasClinicas.cargarSelectProfesionales) window.fichasClinicas.cargarSelectProfesionales();
                     window.fichasClinicas.renderFichasConFiltros();
+                }
+                else if (tabName === 'notas' && typeof window.cargarNotas === 'function') {
+                    window.cargarNotas();   // 👈 carga de notas
                 }
             } catch (error) {
                 console.error(`❌ Error cargando datos para ${tabName}:`, error);
@@ -708,7 +710,6 @@ export async function verificarSesionGuardada() {
             if (userData.role === 'admin') {
                 state.setCurrentUser({ role: 'admin', data: userData.data });
                 actualizarUIAdmin(userData.data, 'admin');
-                // Cargar datos privados después de restaurar admin
                 if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                 return true;
             } else if (userData.role === 'psych') {
@@ -717,7 +718,6 @@ export async function verificarSesionGuardada() {
                     state.setCurrentUser({ role: 'psych', data: userData.data });
                     actualizarUIAdmin(userData.data, 'psych');
                     if (!exists && state.staff.length) state.staff.push(userData.data);
-                    // Cargar datos privados después de restaurar psicólogo
                     if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                     return true;
                 }
@@ -754,7 +754,6 @@ export async function verificarSesionGuardada() {
         if (userData.role === 'admin') {
             state.setCurrentUser({ role: 'admin', data: userData.data });
             actualizarUIAdmin(userData.data, 'admin');
-            // Cargar datos privados después de restaurar admin
             if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
             return true;
         } else {
@@ -764,14 +763,12 @@ export async function verificarSesionGuardada() {
                 state.setCurrentUser({ role: 'psych', data: psychFullData });
                 actualizarUIAdmin(psychFullData, 'psych');
                 localStorage.setItem('vinculo_user', JSON.stringify({ role: 'psych', data: psychFullData }));
-                // Cargar datos privados después de restaurar psicólogo
                 if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                 return true;
             } else {
                 state.setCurrentUser({ role: 'psych', data: userData.data });
                 actualizarUIAdmin(userData.data, 'psych');
                 console.log('⚠️ Profesional no encontrado en staff, usando datos básicos');
-                // Cargar datos privados después de restaurar psicólogo
                 if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                 return true;
             }
@@ -798,7 +795,6 @@ if (typeof window !== 'undefined') {
     window.irADashboard = irADashboard;
     window.volverAVistaPublica = volverAVistaPublica;
     window.abrirGestionDisponibilidad = abrirGestionDisponibilidad;
-    // Funciones para restablecer contraseña
     window.showResetPasswordModal = showResetPasswordModal;
     window.closeResetPasswordModal = closeResetPasswordModal;
     window.sendPasswordReset = sendPasswordReset;
@@ -826,7 +822,6 @@ if (typeof window !== 'undefined') {
                                     actualizarUIAdmin(psychFullData, 'psych');
                                 }
                             }
-                            // Cargar datos privados después de restaurar sesión por Auth
                             if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                         }
                     }
@@ -865,7 +860,6 @@ if (typeof window !== 'undefined') {
                         if (textNode) textNode.textContent = adminFullData.name || 'Admin';
                     }
                     console.log('✅ Sesión de admin restaurada automáticamente');
-                    // Cargar datos privados después de restaurar admin
                     if (typeof cargarDatosPrivados === 'function') cargarDatosPrivados();
                 }
             } catch (e) {

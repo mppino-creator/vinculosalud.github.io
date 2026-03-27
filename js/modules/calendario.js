@@ -57,9 +57,10 @@ export function renderCalendar() {
         </div>
         <table class="calendar-table" style="width:100%; border-collapse:collapse;">
             <thead>
-                <tr>
+                 <tr>
                     <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
-                </thead>
+                </tr>
+            </thead>
             <tbody>
     `;
 
@@ -310,6 +311,12 @@ export function cambiarMes(delta) {
 // EXPONER FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {
+    // Exponer funciones directamente en window para que los onclick las encuentren
+    window.verDetalleCita = verDetalleCita;
+    window.verDetalleSolicitud = verDetalleSolicitud;
+    window.confirmarSolicitud = confirmarSolicitud;
+
+    // También exponer el objeto calendario para navegación
     window.calendario = {
         cambiarMes: cambiarMes,
         anularHora: anularHora,
@@ -317,6 +324,7 @@ if (typeof window !== 'undefined') {
         verDetalleSolicitud: verDetalleSolicitud,
         confirmarSolicitud: confirmarSolicitud
     };
+
     if (!window.citas) window.citas = {};
     window.citas.showConfirmRequestModal = (id) => {
         import('./citas.js').then(module => module.showConfirmRequestModal(id))

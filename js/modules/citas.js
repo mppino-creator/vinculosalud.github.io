@@ -1042,9 +1042,9 @@ export function showConfirmRequestModal(requestId) {
             showToast('Profesional no encontrado', 'error');
             return;
         }
-        state.selectedPsychForBooking = psychData;
+        state.setSelectedPsychForBooking(psychData);
     } else {
-        state.selectedPsychForBooking = null;
+        state.setSelectedPsychForBooking(null);
     }
 
     const agendarTab = document.getElementById('agendarTab');
@@ -1270,7 +1270,7 @@ export async function executeTherapistBooking() {
     updateTherapistAvailableSlots();
     
     // Limpiar el profesional seleccionado para admin después de crear la cita
-    state.selectedPsychForBooking = null;
+    state.setSelectedPsychForBooking(null);
     
     import('./auth.js').then(auth => auth.switchTab('citas'));
 }
@@ -1359,7 +1359,7 @@ export function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                            </tr>
+                             </tr>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `

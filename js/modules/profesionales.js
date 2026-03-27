@@ -759,6 +759,9 @@ export function renderStaffTable() {
     }).join('');
 }
 
+// ============================================
+// FUNCIÓN PARA AGREGAR PROFESIONAL (SIN GUARDAR CONTRASEÑA)
+// ============================================
 export async function addStaff() {
     const name = document.getElementById('addName')?.value;
     const email = document.getElementById('addEmail')?.value;
@@ -767,9 +770,10 @@ export async function addStaff() {
     const priceOnline = document.getElementById('addPriceOnline')?.value;
     const pricePresencial = document.getElementById('addPricePresencial')?.value;
     const usuario = document.getElementById('addUser')?.value;
-    const pass = document.getElementById('addPass')?.value;
     const advanceNotice = document.getElementById('addAdvanceNotice')?.value;
+    
     const genero = document.getElementById('addGenero')?.value || '';
+    
     const whatsapp = document.getElementById('addWhatsapp')?.value || '';
     const instagram = document.getElementById('addInstagram')?.value || '';
     const address = document.getElementById('addAddress')?.value || '';
@@ -779,19 +783,23 @@ export async function addStaff() {
     const accountNumber = document.getElementById('addAccountNumber')?.value || '';
     const bankRut = document.getElementById('addBankRut')?.value || '';
     const bankEmail = document.getElementById('addBankEmail')?.value || '';
+    
     const paymentLinkOnline = document.getElementById('addPaymentLinkOnline')?.value || '';
     const paymentLinkPresencial = document.getElementById('addPaymentLinkPresencial')?.value || '';
     
-    if (!name || !email || selectedSpecs.length === 0 || !priceOnline || !pricePresencial || !usuario || !pass) {
+    if (!name || !email || selectedSpecs.length === 0 || !priceOnline || !pricePresencial || !usuario) {
         showToast('Completa todos los campos obligatorios', 'error');
         return;
     }
-    
+
     try {
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+        // 1. Crear usuario en Firebase Authentication con una contraseña aleatoria (solo para crear la cuenta)
+        const randomPassword = Math.random().toString(36).slice(-10); // generamos una clave temporal
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, randomPassword);
         const uid = userCredential.user.uid;
         console.log('✅ Usuario creado en Auth con UID:', uid);
         
+        // 2. Construir objeto del profesional (sin password)
         const nuevoProfesional = {
             id: uid,
             uid: uid,
@@ -831,21 +839,54 @@ export async function addStaff() {
             createdAt: new Date().toISOString()
         };
         
+        // 3. Guardar en Realtime Database usando el UID como clave
         await firebase.database().ref(`staff/${uid}`).set(nuevoProfesional);
+        
+        // 4. Enviar correo de restablecimiento para que el profesional cree su contraseña
+        await firebase.auth().sendPasswordResetEmail(email);
+        console.log('📧 Correo de restablecimiento enviado a:', email);
+        
+        // 5. Actualizar estado local
         state.staff.push(nuevoProfesional);
         closeAddStaffModal();
         renderStaffTable();
-        showToast('Profesional añadido correctamente', 'success');
+        
+        showToast(`✅ Profesional añadido correctamente. Se ha enviado un correo a ${email} para que establezca su contraseña.`, 'success');
         
     } catch (error) {
         console.error('❌ Error al crear profesional:', error);
         let mensaje = 'Error al crear profesional';
         if (error.code === 'auth/email-already-in-use') {
-            mensaje = 'El email ya está registrado en el sistema';
-        } else if (error.code === 'auth/weak-password') {
-            mensaje = 'La contraseña es muy débil (mínimo 6 caracteres)';
+            mensaje = 'El email ya está registrado en el sistema. Si el profesional ya existe, usa el botón "Enviar correo de restablecimiento" en su edición.';
+        } else if (error.code === 'auth/invalid-email') {
+            mensaje = 'El email no es válido.';
         } else {
             mensaje = error.message;
+        }
+        showToast(mensaje, 'error');
+    }
+}
+
+// ============================================
+// FUNCIÓN PARA REENVIAR CORREO DE RESTABLECIMIENTO (DESDE EDICIÓN)
+// ============================================
+export async function sendPasswordResetEmailForProfessional(email) {
+    if (!state.currentUser || state.currentUser.role !== 'admin') {
+        showToast('Solo administradores pueden hacer esto', 'error');
+        return;
+    }
+    if (!email) {
+        showToast('Email no válido', 'error');
+        return;
+    }
+    try {
+        await firebase.auth().sendPasswordResetEmail(email);
+        showToast(`✅ Correo de restablecimiento enviado a ${email}`, 'success');
+    } catch (error) {
+        console.error('Error enviando correo:', error);
+        let mensaje = 'Error al enviar correo';
+        if (error.code === 'auth/user-not-found') {
+            mensaje = 'El usuario no existe en Authentication. Crea primero su cuenta.';
         }
         showToast(mensaje, 'error');
     }

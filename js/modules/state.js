@@ -125,6 +125,9 @@ export let selectedPatientForTherapist = null;
 export let dataLoaded = false;
 export const EDIT_HOURS = 24;
 
+// 🔥 NUEVA VARIABLE PARA ADMIN (confirmación de solicitudes)
+export let selectedPsychForBooking = null;
+
 // ============================================
 // VARIABLES PARA FICHAS CLÍNICAS
 // ============================================
@@ -235,6 +238,9 @@ export function setTempQrData(data) {
 }
 export function setSelectedPatientForTherapist(patient) { selectedPatientForTherapist = patient; }
 export function setDataLoaded(loaded) { dataLoaded = loaded; }
+
+// 🔥 SETTER PARA selectedPsychForBooking
+export function setSelectedPsychForBooking(psych) { selectedPsychForBooking = psych; }
 
 // ============================================
 // FUNCIONES PARA FICHAS CLÍNICAS
@@ -434,6 +440,7 @@ export function resetAllState() {
     tempQrPresencialData = null;
     tempQrData = null;
     selectedPatientForTherapist = null;
+    selectedPsychForBooking = null; // 🔥 Reiniciar también
     dataLoaded = false;
 
     fichasIngreso = [];
@@ -525,6 +532,7 @@ const state = {
     tempQrPresencialData,
     tempQrData,
     selectedPatientForTherapist,
+    selectedPsychForBooking, // 🔥 Incluida en el objeto
     dataLoaded,
     EDIT_HOURS,
 
@@ -567,6 +575,7 @@ const state = {
     setTempQrPresencialData,
     setTempQrData,
     setSelectedPatientForTherapist,
+    setSelectedPsychForBooking, // 🔥 Setter para la nueva variable
     setDataLoaded,
 
     // Setters de secciones editables

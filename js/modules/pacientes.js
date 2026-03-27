@@ -6,7 +6,7 @@ import { obtenerSesionesDePaciente, obtenerFichasIngresoDePaciente } from './fic
 import { save } from '../main.js';
 
 // ============================================
-// RENDERIZAR LISTA DE PACIENTES
+// RENDERIZAR LISTA DE PACIENTES (CON PACIENTES DE CITAS)
 // ============================================
 
 export function renderPatients() {
@@ -25,24 +25,39 @@ export function renderPatients() {
         return;
     }
 
-    let filteredPatients = [];
-    if (state.currentUser?.role === 'admin') {
-        filteredPatients = state.patients.filter(p => !p.isHiddenAdmin);
-        console.log('👑 Admin - Total pacientes:', filteredPatients.length);
-    } else if (state.currentUser?.role === 'psych') {
-        filteredPatients = state.patients.filter(p => p.psychId == state.currentUser?.data?.id);
-        console.log('👤 Psicólogo - Mis pacientes:', filteredPatients.length);
+    let pacientesAMostrar = [];
+
+    if (state.currentUser.role === 'admin') {
+        pacientesAMostrar = state.patients.filter(p => !p.isHiddenAdmin);
+        console.log('👑 Admin - Total pacientes:', pacientesAMostrar.length);
+    } else if (state.currentUser.role === 'psych') {
+        const uid = state.currentUser.data.id;
+        // Obtener IDs de pacientes de las citas del profesional
+        const citas = state.appointments || [];
+        const pacientesDeCitas = new Set();
+        citas.forEach(cita => {
+            if (cita.psychId === uid && cita.patientId) {
+                pacientesDeCitas.add(cita.patientId);
+            }
+        });
+        // Filtrar: pacientes con psychId igual o que aparecen en citas
+        pacientesAMostrar = state.patients.filter(patient => {
+            return patient.psychId === uid || pacientesDeCitas.has(patient.id);
+        });
+        console.log('👤 Psicólogo - Pacientes (asignados + citas):', pacientesAMostrar.length);
+    } else {
+        pacientesAMostrar = state.patients || [];
     }
 
     if (searchTerm) {
-        filteredPatients = filteredPatients.filter(p => 
+        pacientesAMostrar = pacientesAMostrar.filter(p => 
             p.name.toLowerCase().includes(searchTerm) || 
             p.email.toLowerCase().includes(searchTerm) ||
             (p.rut && p.rut.includes(searchTerm))
         );
     }
 
-    if (filteredPatients.length === 0) {
+    if (pacientesAMostrar.length === 0) {
         container.innerHTML = `
             <div style="text-align:center; padding:60px; background:white; border-radius:12px;">
                 <i class="fa fa-users" style="font-size:48px; color:#ccc;"></i>
@@ -55,9 +70,9 @@ export function renderPatients() {
         return;
     }
 
-    filteredPatients.sort((a, b) => a.name.localeCompare(b.name));
+    pacientesAMostrar.sort((a, b) => a.name.localeCompare(b.name));
 
-    container.innerHTML = filteredPatients.map(p => {
+    container.innerHTML = pacientesAMostrar.map(p => {
         const patientApps = state.appointments.filter(a => a.patientId == p.id)
             .sort((a, b) => new Date(b.date) - new Date(a.date));
         const nextAppt = patientApps.find(a => new Date(a.date + 'T' + a.time) > new Date());
@@ -142,7 +157,7 @@ export function renderPatients() {
         `;
     }).join('');
     
-    console.log(`✅ Renderizados ${filteredPatients.length} pacientes`);
+    console.log(`✅ Renderizados ${pacientesAMostrar.length} pacientes`);
 }
 
 // ============================================
@@ -673,14 +688,21 @@ export function exportarHistorialPaciente(patientId) {
             
             <div class="section">
                 <h3>📅 Atenciones (${citas.length} citas)</h3>
-                <table>
+                 <table>
                     <thead><tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead>
                     <tbody>
                         ${citas.map(c => `
-                            <tr><td>${c.date}</td><td>${c.time}</td><td>${c.psych}</td><td>${c.type === 'online' ? 'Online' : 'Presencial'}</td><td>$${c.price.toLocaleString()}</td><td>${c.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td></tr>
+                            <tr>
+                                <td>${c.date}</td>
+                                <td>${c.time}</td>
+                                <td>${c.psych}</td>
+                                <td>${c.type === 'online' ? 'Online' : 'Presencial'}</td>
+                                <td>$${c.price.toLocaleString()}</td>
+                                <td>${c.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td>
+                            </tr>
                         `).join('')}
                     </tbody>
-                </table>
+                 </table>
                 <div class="total">Total pagado: $${citas.reduce((sum, c) => sum + (c.paymentStatus === 'pagado' ? c.price : 0), 0).toLocaleString()}</div>
             </div>
             

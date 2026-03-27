@@ -1,6 +1,6 @@
 // js/modules/notas.js
 import { db, auth } from '../config/firebase.js';
-import { ref, onValue, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+import { ref, push, set, update, remove, get, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 
 console.log('📦 Cargando módulo notas.js...');
 
@@ -66,6 +66,8 @@ function cargarPacientesParaNotas() {
 
 function actualizarSelects() {
     const selectPaciente = document.getElementById('notaPacienteId');
+    const filtroPaciente = document.getElementById('filtroNotaPaciente');
+
     if (selectPaciente) {
         selectPaciente.innerHTML = '<option value="">Seleccionar paciente</option>';
         allPatients.forEach(patient => {
@@ -74,9 +76,11 @@ function actualizarSelects() {
             option.textContent = `${patient.nombreCompleto} (${patient.rut || 'sin RUT'})`;
             selectPaciente.appendChild(option);
         });
+        console.log(`✅ Select de pacientes actualizado (${allPatients.length} pacientes)`);
+    } else {
+        console.warn('⚠️ Elemento #notaPacienteId no encontrado en el DOM');
     }
 
-    const filtroPaciente = document.getElementById('filtroNotaPaciente');
     if (filtroPaciente) {
         filtroPaciente.innerHTML = '<option value="">Todos los pacientes</option>';
         allPatients.forEach(patient => {
@@ -106,6 +110,7 @@ async function cargarNotas() {
             allNotas = allNotas.filter(nota => allPatients.some(p => p.id === nota.patientId));
         }
         renderNotasListado();
+        console.log(`✅ Notas cargadas: ${allNotas.length} registros`);
     } catch (error) {
         console.error('Error cargando notas:', error);
     }
@@ -229,7 +234,7 @@ window.eliminarNota = async function(notaId) {
     try {
         await remove(ref(db, `sesiones/${notaId}`));
         alert('Nota eliminada');
-        await cargarNotas(); // recargar después de eliminar
+        await cargarNotas();
     } catch (error) {
         console.error('Error eliminando nota:', error);
         alert('Error al eliminar nota');
@@ -242,7 +247,7 @@ function cerrarModalNota() {
 window.cerrarModalNota = cerrarModalNota;
 
 // ---------------------------------------------------------------------
-// 4. Exportar notas a PDF (con rango de fechas)
+// 4. Exportar notas a PDF
 // ---------------------------------------------------------------------
 window.exportarNotasPDF = async function() {
     const startDate = document.getElementById('fechaInicio')?.value;
@@ -303,15 +308,14 @@ function initNotas() {
     auth.onAuthStateChanged((user) => {
         if (user) {
             currentUser = user;
-            // Esperar a que state tenga el usuario (el rol ya está allí)
             const checkState = setInterval(() => {
                 if (window.state?.currentUser) {
                     clearInterval(checkState);
                     const userState = window.state.currentUser;
-                    currentRole = userState.role; // 'admin' o 'psych'
+                    currentRole = userState.role;
                     console.log(`✅ Rol asignado desde state: ${currentRole} para usuario ${user.uid}`);
                     cargarPacientesParaNotas().then(() => {
-                        cargarNotas(); // carga inicial de notas
+                        cargarNotas();
                     });
                 }
             }, 100);
@@ -324,7 +328,6 @@ function initNotas() {
     });
 }
 
-// Exponer funciones globales
 window.cargarNotas = cargarNotas;
 
 initNotas();

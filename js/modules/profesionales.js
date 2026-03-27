@@ -14,7 +14,7 @@ export function showAddStaffModal() {
     
     modal.style.display = 'flex';
     
-    // Limpiar campos (eliminado addPass)
+    // Limpiar campos (se elimina addPass)
     const addName = document.getElementById('addName');
     const addEmail = document.getElementById('addEmail');
     const addSpec = document.getElementById('addSpec');
@@ -726,18 +726,18 @@ export function renderStaffTable() {
         
         return `
             <tr>
-                <td><strong>${p.name}</strong> ${generoTexto} \x20
-                <td>${p.email || '—'} \x20
-                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'} \x20
-                <td>${p.usuario || p.name || '—'} \x20
+                <td><strong>${p.name}</strong> ${generoTexto}</td>
+                <td>${p.email || '—'}</td>
+                <td>${specs ? specs.substring(0, 30) + (specs.length > 30 ? '...' : '') : '—'}</td>
+                <td>${p.usuario || p.name || '—'}</td>
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:var(--verde-exito);">Online: $${(p.priceOnline || 0).toLocaleString()}</span>
                         <span style="color:var(--azul-medico);">Presencial: $${(p.pricePresencial || 0).toLocaleString()}</span>
                     </span>
-                 \x20
-                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'} \x20
-                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'} \x20
+                </td>
+                <td>${p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank">${p.whatsapp}</a>` : '—'}</td>
+                <td>${p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank">@${p.instagram.replace('@', '')}</a>` : '—'}</td>
                 <td>
                     <span style="display:flex; flex-direction:column; gap:2px;">
                         <span style="color:${p.paymentLinks?.online ? 'var(--verde-exito)' : 'var(--text-light)'}">
@@ -747,12 +747,13 @@ export function renderStaffTable() {
                             ${p.paymentLinks?.presencial ? '✅' : '❌'} Presencial
                         </span>
                     </span>
-                 \x20
+                </td>
                 <td>
                     <button onclick="editTherapist('${p.id}')" class="btn-editar">✏️ Editar</button>
                     <button onclick="deleteStaff('${p.id}')" class="btn-eliminar">🗑️ Eliminar</button>
-                 \x20
-            `;
+                </td>
+            </tr>
+        `;
     }).join('');
 }
 
@@ -916,12 +917,12 @@ export function editTherapist(id) {
     const editQrOnlinePreview = document.getElementById('editQrOnlinePreview');
     const editQrPresencialPreview = document.getElementById('editQrPresencialPreview');
     const editPhotoPreview = document.getElementById('editPhotoPreview');
-    const editPass = document.getElementById('editPass'); // se mantiene pero no se usa
+    const editPass = document.getElementById('editPass');
     
     if (editTherapistId) editTherapistId.value = therapist.id;
     if (editName) editName.value = therapist.name || '';
     if (editEmail) editEmail.value = therapist.email || '';
-    if (editPass) editPass.value = ''; // limpiar campo
+    if (editPass) editPass.value = '';
     
     const therapistSpecs = Array.isArray(therapist.spec) ? therapist.spec : [therapist.spec];
     if (editSpecSelect) {
@@ -1052,7 +1053,6 @@ export async function updateTherapist() {
         await firebase.database().ref(`staff/${id}`).update(therapist);
         console.log('✅ Profesional actualizado en DB');
         
-        // Si se proporcionó una nueva contraseña (aunque ya no usamos este campo), se envía correo de restablecimiento
         const newPassword = editPass?.value.trim();
         if (newPassword && newPassword !== '') {
             console.log('🔑 Se detectó cambio de contraseña, enviando correo de restablecimiento...');

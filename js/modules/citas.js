@@ -1272,7 +1272,7 @@ export async function rejectRequest(requestId) {
 }
 
 export function showPatientAppointmentsByRut() {
-    const rutInput = prompt('Ingresa tu RUT para consultar tus citas (formato 12.345.678-9):');
+    const rutInput = prompt('Ingresa tu RUT para consultar tus citas (formato 12345678-9):');
     if (!rutInput) return;
     
     const rutNormalizado = normalizarRut(rutInput);

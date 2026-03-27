@@ -363,7 +363,7 @@ function crearModalEdicionProfesional() {
                 </div>
                 <div class="form-row" style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div class="form-group" style="flex: 1;"><label>Número de cuenta</label><input type="text" id="editMyAccountNumber" class="filter-input"></div>
-                    <div class="form-group" style="flex: 1;"><label>RUT asociado</label><input type="text" id="editMyBankRut" class="filter-input" placeholder="12.345.678-9"></div>
+                    <div class="form-group" style="flex: 1;"><label>RUT asociado</label><input type="text" id="editMyBankRut" class="filter-input" placeholder="12345678-9"></div>
                 </div>
                 <div class="form-group"><label>Email para notificaciones de pago</label><input type="email" id="editMyBankEmail" class="filter-input"></div>
                 <h4 style="margin: 30px 0 15px;">🔗 Links de pago online</h4>

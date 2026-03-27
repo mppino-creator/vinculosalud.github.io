@@ -1,4 +1,4 @@
-Aquí tienes el **Resumen Ejecutivo Técnico actualizado a v6.5**, que incorpora la **optimización de carga de datos según permisos** (separación de nodos públicos y privados) para eliminar errores de permisos en la consola, además de todas las mejoras anteriores. Copia y pega este contenido donde necesites.
+Aquí tienes el **Resumen Ejecutivo Técnico final** para **Vínculo Salud v6.5**, completamente actualizado con todas las mejoras implementadas, incluyendo el flujo de autenticación sin contraseñas. Copia y pega este contenido donde necesites.
 
 ---
 
@@ -31,10 +31,10 @@ Aquí tienes el **Resumen Ejecutivo Técnico actualizado a v6.5**, que incorpora
          ├── personalizacion.js                  # CMS completo (textos, logo, fondo, Instagram, tipos atención)
          ├── publico.js                          # Vista pública, filtros, grid profesional
          ├── fichasClinicas.js                    # EHR + visor con filtros
-         ├── informes.js                          # informes clínicos con PDF
-         ├── pdfGenerator.js                       # Exportación PDF con fallback
+         ├── informes.js                          # informes clínicos con PDF (opcional)
+         ├── pdfGenerator.js                       # Exportación PDF con fallback (opcional)
          ├── calendario.js                         # Calendario mensual de citas
-         ├── estadisticas.js                       # Analytics con gráficos
+         ├── estadisticas.js                       # Analytics con gráficos (opcional)
          ├── permisos.js                           # ACL con reintentos (25+ funciones)
          └── utils.js                              # Utilidades, validación RUT, email
 ```
@@ -48,8 +48,8 @@ Aquí tienes el **Resumen Ejecutivo Técnico actualizado a v6.5**, que incorpora
 | **Frontend** | HTML5 + CSS3 + JS | ES6+ | UI/UX nativa | ✅ OPTIMIZADO |
 | **Estilos** | CSS Variables + Flex/Grid | - | Diseño responsive | ✅ 2800 líneas modulares |
 | **Backend** | Firebase Realtime Database | 9.17.1 | Almacenamiento NoSQL | ✅ CON ÍNDICES |
-| **Auth** | Firebase Auth + localStorage | 9.17.1 | sesiones persistentes | ✅ LOGIN HÍBRIDO |
-| **Email** | EmailJS | 3.0 | Notificaciones transaccionales | ✅ NOTIFICACIÓN DUAL |
+| **Auth** | Firebase Auth + localStorage | 9.17.1 | sesiones persistentes | ✅ LOGIN HÍBRIDO + SIN CONTRASEÑAS |
+| **Email** | EmailJS (transaccionales) + Firebase Auth (restablecimiento) | 3.0 / 9.17.1 | Notificaciones duales y gestión de contraseñas | ✅ INTEGRADO |
 | **PDF** | jsPDF + html2canvas | 2.5.1 / 1.4.1 | Generación client-side | ✅ CON FALLBACK |
 | **QR y pagos** | Links personalizados + QR en base64 | - | Pagos online/presencial separados | ✅ SEPARADOS |
 | **Calendario** | Tabla HTML dinámica | - | Visualización mensual de citas | ✅ COMPLETO |
@@ -98,6 +98,15 @@ sendEmailNotification(email, ...);
 if (psychEmail && psychEmail !== email && !esEmailProfesional(email)) {
     sendEmailNotification(psychEmail, 'Nueva solicitud de cita', mensajeCompleto, ...);
 }
+```
+
+### **4. Autenticación sin contraseñas (flujo profesional)**
+```javascript
+// Creación de profesional por admin
+const randomPassword = Math.random().toString(36).slice(-10);
+await firebase.auth().createUserWithEmailAndPassword(email, randomPassword);
+await firebase.database().ref(`staff/${uid}`).set(professionalData);
+await firebase.auth().sendPasswordResetEmail(email); // profesional elige su clave
 ```
 
 ---
@@ -202,8 +211,9 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 | **Estilo de precios** | ✅ Consistente | ✅ Consistente | Mejor legibilidad |
 | **Margen de antelación (advanceNotice)** | ✅ Funcional | ✅ Funcional | Evita reservas de último minuto |
 | **Modales actualizados** | ✅ Completos | ✅ Completos | Gestión completa |
-| **Corrección de error en profesionales.js** | ✅ Sintaxis corregida | ✅ Sintaxis corregida | Visualización estable de profesionales |
+| **Corrección de error en profesionales.js** | ❌ Error sintaxis | ✅ Sintaxis corregida | Visualización estable de profesionales |
 | **🆕 Manejo de permisos en carga de datos** | ❌ Errores `permission_denied` en consola | ✅ Separación de nodos públicos/privados | Consola limpia, rendimiento optimizado |
+| **🆕 Autenticación sin contraseñas** | ❌ Contraseñas en texto plano | ✅ Creación por admin + correo de restablecimiento | Seguridad mejorada, usuario elige su clave |
 
 ---
 
@@ -249,6 +259,7 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 | **🆕 Margen de antelación configurable** | ✅ COMPLETO | Admin y profesional pueden definir minutos de bloqueo previo |
 | **🆕 Corrección de error en profesionales.js** | ✅ COMPLETO | Se corrigió sintaxis que impedía visualizar tabla de profesionales |
 | **🆕 Optimización de carga de datos según permisos** | ✅ COMPLETO | Se cargan solo nodos públicos al inicio; los privados se cargan tras login, eliminando errores en consola |
+| **🆕 Autenticación sin contraseñas** | ✅ COMPLETO | Creación de profesionales por admin + envío de correo de restablecimiento; el profesional establece su propia contraseña |
 
 ---
 
@@ -265,6 +276,7 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 - ✅ **UI/UX profesional** con precios legibles y estilos coherentes
 - ✅ **Sistema de citas robusto** con validaciones en tiempo real
 - ✅ **Comunicación integral**: notificaciones duales y gestión completa de citas
+- ✅ **Seguridad mejorada**: creación de profesionales sin manejo de contraseñas, cada profesional establece su propia clave mediante correo de restablecimiento
 - ✅ **Listo para producción** con estabilidad y rendimiento optimizado
 
 ---
@@ -288,6 +300,7 @@ console.log('✅ DISPONIBILIDAD PERSISTENTE Y PRECISA');
 console.log('✅ MARGEN DE ANTELACIÓN CONFIGURABLE (advanceNotice)');
 console.log('✅ CORRECIÓN DE ERROR EN profesionales.js (tabla estable)');
 console.log('✅ CARGA DE DATOS OPTIMIZADA SEGÚN PERMISOS (sin errores en consola)');
+console.log('✅ AUTENTICACIÓN SIN CONTRASEÑAS (correo de restablecimiento)');
 console.log('🚀 LISTO PARA PRODUCCIÓN');
 ```
 

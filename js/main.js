@@ -38,22 +38,13 @@ if (typeof personalizacion.loadMyConfig !== 'function') {
 // ============================================
 function cloneSafe(obj) {
     if (obj === null || typeof obj !== 'object') return obj;
-    if (obj instanceof Array) {
-        return obj.map(item => cloneSafe(item));
+    try {
+        // Serialización completa que rompe cualquier referencia circular
+        return JSON.parse(JSON.stringify(obj));
+    } catch(e) {
+        console.warn('Error clonando objeto:', e);
+        return obj;
     }
-    const newObj = {};
-    for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const val = obj[key];
-            if (typeof val === 'function') continue; // saltar funciones
-            if (val !== null && typeof val === 'object') {
-                newObj[key] = cloneSafe(val);
-            } else {
-                newObj[key] = val;
-            }
-        }
-    }
-    return newObj;
 }
 
 // ============================================
@@ -461,6 +452,8 @@ export function save() {
                 } else {
                     data = [];
                 }
+                // Doble serialización para eliminar cualquier referencia
+                data = JSON.parse(JSON.stringify(data));
                 break;
             case 'contactInfo':
                 if (state.contactInfo && typeof state.contactInfo === 'object') {
@@ -508,7 +501,7 @@ export function save() {
         }
 
         if (data !== undefined) {
-            // Clonado profundo seguro
+            // Clonado profundo seguro (ya se aplicó dentro de cada caso, pero por si acaso)
             const safeData = cloneSafe(data);
             promises.push(db.ref(node).set(safeData).catch(err => {
                 console.error(`❌ Error en ${node}:`, err);

@@ -426,13 +426,46 @@ export function save() {
                 };
                 break;
             case 'atencionTexts':
-                data = state.atencionTexts;
+                // 🔥 LIMPIEZA ESPECÍFICA PARA EVITAR RECURSIONES
+                if (Array.isArray(state.atencionTexts)) {
+                    data = state.atencionTexts.map(item => ({
+                        titulo: item.titulo || '',
+                        icono: item.icono || '',
+                        descripcion: item.descripcion || '',
+                        precio: item.precio || '',
+                        activo: item.activo !== false
+                    }));
+                } else {
+                    data = [];
+                }
                 break;
             case 'contactInfo':
-                data = state.contactInfo;
+                // Limpiar contactInfo para evitar referencias circulares
+                if (state.contactInfo && typeof state.contactInfo === 'object') {
+                    data = {
+                        phone: state.contactInfo.phone || '',
+                        email: state.contactInfo.email || '',
+                        address: state.contactInfo.address || ''
+                    };
+                } else {
+                    data = {};
+                }
                 break;
             case 'instagramData':
-                data = state.instagramData;
+                // Limpiar instagramData para evitar referencias circulares
+                if (state.instagramData && typeof state.instagramData === 'object') {
+                    data = {
+                        title: state.instagramData.title || '',
+                        subtitle: state.instagramData.subtitle || '',
+                        quote: state.instagramData.quote || '',
+                        text: state.instagramData.text || '',
+                        message: state.instagramData.message || '',
+                        link: state.instagramData.link || '',
+                        image: state.instagramData.image || ''
+                    };
+                } else {
+                    data = {};
+                }
                 break;
             case 'fichasIngreso':
                 const fichasObj = {};
@@ -454,8 +487,9 @@ export function save() {
         }
 
         if (data !== undefined) {
+            // Clonado profundo seguro para eliminar cualquier referencia circular residual
             const safeData = JSON.parse(JSON.stringify(data));
-promises.push(db.ref(node).set(safeData).catch(err => {
+            promises.push(db.ref(node).set(safeData).catch(err => {
                 console.error(`❌ Error en ${node}:`, err);
                 return null;
             }));

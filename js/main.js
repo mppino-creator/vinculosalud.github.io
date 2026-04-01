@@ -454,7 +454,8 @@ export function save() {
         }
 
         if (data !== undefined) {
-            promises.push(db.ref(node).set(data).catch(err => {
+            const safeData = JSON.parse(JSON.stringify(data));
+promises.push(db.ref(node).set(safeData).catch(err => {
                 console.error(`❌ Error en ${node}:`, err);
                 return null;
             }));

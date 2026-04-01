@@ -2051,3 +2051,110 @@ div.admin-edit-btn:hover {
 .price-presencial { color: var(--azul-medico); }
 .payment-indicator.active { color: var(--verde-exito); }
 .payment-indicator.inactive { color: var(--text-light); }
+
+/* ============================================
+   MEJORAS EN TARJETAS DE PROFESIONALES
+   ============================================ */
+
+/* Contenedor de especialidades */
+.specialties-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+    justify-content: center;
+}
+.specialty-tag {
+    background: var(--primario-soft);
+    color: var(--texto-principal);
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.specialty-tag:hover {
+    background: var(--primario);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Texto de disponibilidad */
+.availability-text {
+    font-weight: 600;
+}
+.availability-text.available {
+    color: var(--verde-exito);
+}
+.availability-text.unavailable {
+    color: var(--rojo-alerta);
+}
+
+/* Información expandible */
+.card-info {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gris-claro);
+    font-size: 0.85rem;
+}
+.info-section {
+    margin-bottom: 16px;
+}
+.info-section h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--texto-principal);
+}
+.info-section h4 i {
+    color: var(--primario);
+    width: 20px;
+}
+.info-section ul {
+    margin: 0;
+    padding-left: 28px;
+    list-style: disc;
+}
+.info-section li {
+    margin-bottom: 4px;
+    color: var(--texto-secundario);
+}
+.info-section p {
+    margin: 0;
+    color: var(--texto-secundario);
+    line-height: 1.5;
+}
+.whatsapp-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--whatsapp);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.whatsapp-link:hover {
+    transform: translateY(-2px);
+    background: #128C7E;
+    color: white;
+}
+
+/* Ajustes para tarjeta en móvil */
+@media (max-width: 640px) {
+    .professional-card {
+        max-width: 100%;
+    }
+    .specialties-container {
+        justify-content: flex-start;
+    }
+    .card-info {
+        font-size: 0.8rem;
+    }
+}

@@ -45,7 +45,7 @@ function getAverageRating(psychId) {
 }
 
 // ============================================
-// 🔥 FUNCIÓN: Calcular cupos disponibles HOY (con antelación)
+// FUNCIÓN: Calcular cupos disponibles HOY (con antelación)
 // ============================================
 function getAvailableSlotsCountForToday(psych) {
     const today = new Date().toISOString().split('T')[0];
@@ -352,7 +352,6 @@ export function filterProfessionals() {
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
             const slotsManana = p.availability?.[tomorrowStr] || [];
-            // Para mañana, solo contamos slots sin ocupar (sin importar hora, porque aún no ha pasado)
             const bookedTomorrow = (state.appointments || []).filter(a => 
                 a.psychId == p.id && a.date === tomorrowStr && 
                 (a.status === 'confirmada' || a.status === 'pendiente')
@@ -374,7 +373,7 @@ export function filterProfessionals() {
 }
 
 // ============================================
-// RENDERIZADO DE PROFESIONALES
+// RENDERIZADO DE PROFESIONALES (MEJORADO)
 // ============================================
 export function renderProfessionals(professionals) {
     const grid = document.getElementById('equipo');
@@ -406,6 +405,11 @@ export function renderProfessionals(professionals) {
         const img = p.img || p.photoURL || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
         const address = p.address || 'Dirección no especificada';
         
+        // Especialidades en badges
+        const specs = p.spec ? (Array.isArray(p.spec) ? p.spec : [p.spec]) : [];
+        const specialtiesHtml = specs.length ? 
+            `<div class="specialties">${specs.map(s => `<span class="specialty-tag">${s}</span>`).join('')}</div>` : '';
+
         const whatsappBadge = p.whatsapp ? `<a href="https://wa.me/${p.whatsapp.replace(/\+/g, '')}" target="_blank" class="whatsapp-badge"><i class="fab fa-whatsapp"></i></a>` : '';
         const instagramBadge = p.instagram ? `<a href="https://instagram.com/${p.instagram.replace('@', '')}" target="_blank" class="instagram-badge"><i class="fab fa-instagram"></i></a>` : '';
 
@@ -419,6 +423,8 @@ export function renderProfessionals(professionals) {
                 <div class="card-body">
                     <h3>${name}</h3>
                     <p class="card-subtitle">${title}</p>
+                    
+                    ${specialtiesHtml}
                     
                     ${rating > 0 ? `
                     <div class="rating">
@@ -445,7 +451,7 @@ export function renderProfessionals(professionals) {
         `;
     }).join('');
     
-    console.log(`✅ Renderizados ${professionals.length} profesionales con botones optimizados y badges de contacto`);
+    console.log(`✅ Renderizados ${professionals.length} profesionales con estructura mejorada (badges de especialidades)`);
 }
 
 // ============================================

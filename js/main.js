@@ -34,6 +34,29 @@ if (typeof personalizacion.loadMyConfig !== 'function') {
 }
 
 // ============================================
+// FUNCIÓN PARA CLONAR SEGURO (ELIMINA REFERENCIAS CIRCULARES Y FUNCIONES)
+// ============================================
+function cloneSafe(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (obj instanceof Array) {
+        return obj.map(item => cloneSafe(item));
+    }
+    const newObj = {};
+    for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const val = obj[key];
+            if (typeof val === 'function') continue; // saltar funciones
+            if (val !== null && typeof val === 'object') {
+                newObj[key] = cloneSafe(val);
+            } else {
+                newObj[key] = val;
+            }
+        }
+    }
+    return newObj;
+}
+
+// ============================================
 // EXPONER FUNCIONES GLOBALES
 // ============================================
 window.formatRut = utils.formatRut;
@@ -363,27 +386,27 @@ export function save() {
         switch (node) {
             case 'staff':
                 const staffObj = {};
-                state.staff.forEach(item => { staffObj[item.id] = item; });
+                state.staff.forEach(item => { staffObj[item.id] = cloneSafe(item); });
                 data = staffObj;
                 break;
             case 'patients':
                 const patientsObj = {};
-                state.patients.forEach(item => { patientsObj[item.id] = item; });
+                state.patients.forEach(item => { patientsObj[item.id] = cloneSafe(item); });
                 data = patientsObj;
                 break;
             case 'appointments':
                 const appointmentsObj = {};
-                state.appointments.forEach(item => { appointmentsObj[item.id] = item; });
+                state.appointments.forEach(item => { appointmentsObj[item.id] = cloneSafe(item); });
                 data = appointmentsObj;
                 break;
             case 'pendingRequests':
                 const pendingRequestsObj = {};
-                state.pendingRequests.forEach(item => { pendingRequestsObj[item.id] = item; });
+                state.pendingRequests.forEach(item => { pendingRequestsObj[item.id] = cloneSafe(item); });
                 data = pendingRequestsObj;
                 break;
             case 'messages':
                 const messagesObj = {};
-                state.messages.forEach(item => { messagesObj[item.id] = item; });
+                state.messages.forEach(item => { messagesObj[item.id] = cloneSafe(item); });
                 data = messagesObj;
                 break;
             case 'specialties':
@@ -397,25 +420,25 @@ export function save() {
                     visionText: state.visionText,
                     aboutTeamText: state.aboutTeamText,
                     aboutImage: state.aboutImage,
-                    atencionTexts: state.atencionTexts,
-                    contactInfo: state.contactInfo,
-                    heroTexts: state.heroTexts,
+                    atencionTexts: cloneSafe(state.atencionTexts),
+                    contactInfo: cloneSafe(state.contactInfo),
+                    heroTexts: cloneSafe(state.heroTexts),
                     logoImage: state.logoImage,
                     backgroundImage: state.backgroundImage,
-                    instagramData: state.instagramData
+                    instagramData: cloneSafe(state.instagramData)
                 };
                 break;
             case 'paymentMethods':
-                data = state.globalPaymentMethods;
+                data = cloneSafe(state.globalPaymentMethods);
                 break;
             case 'backgroundImage':
-                data = state.backgroundImage;
+                data = cloneSafe(state.backgroundImage);
                 break;
             case 'logoImage':
-                data = state.logoImage;
+                data = cloneSafe(state.logoImage);
                 break;
             case 'heroTexts':
-                data = state.heroTexts;
+                data = cloneSafe(state.heroTexts);
                 break;
             case 'aboutTexts':
                 data = {
@@ -426,13 +449,13 @@ export function save() {
                 };
                 break;
             case 'atencionTexts':
-                // 🔥 LIMPIEZA ESPECÍFICA PARA EVITAR RECURSIONES
+                // 🔥 LIMPIEZA EXTREMA: solo campos planos
                 if (Array.isArray(state.atencionTexts)) {
                     data = state.atencionTexts.map(item => ({
-                        titulo: item.titulo || '',
-                        icono: item.icono || '',
-                        descripcion: item.descripcion || '',
-                        precio: item.precio || '',
+                        titulo: (item.titulo || '').toString(),
+                        icono: (item.icono || '').toString(),
+                        descripcion: (item.descripcion || '').toString(),
+                        precio: (item.precio || '').toString(),
                         activo: item.activo !== false
                     }));
                 } else {
@@ -440,28 +463,26 @@ export function save() {
                 }
                 break;
             case 'contactInfo':
-                // Limpiar contactInfo para evitar referencias circulares
                 if (state.contactInfo && typeof state.contactInfo === 'object') {
                     data = {
-                        phone: state.contactInfo.phone || '',
-                        email: state.contactInfo.email || '',
-                        address: state.contactInfo.address || ''
+                        phone: (state.contactInfo.phone || '').toString(),
+                        email: (state.contactInfo.email || '').toString(),
+                        address: (state.contactInfo.address || '').toString()
                     };
                 } else {
                     data = {};
                 }
                 break;
             case 'instagramData':
-                // Limpiar instagramData para evitar referencias circulares
                 if (state.instagramData && typeof state.instagramData === 'object') {
                     data = {
-                        title: state.instagramData.title || '',
-                        subtitle: state.instagramData.subtitle || '',
-                        quote: state.instagramData.quote || '',
-                        text: state.instagramData.text || '',
-                        message: state.instagramData.message || '',
-                        link: state.instagramData.link || '',
-                        image: state.instagramData.image || ''
+                        title: (state.instagramData.title || '').toString(),
+                        subtitle: (state.instagramData.subtitle || '').toString(),
+                        quote: (state.instagramData.quote || '').toString(),
+                        text: (state.instagramData.text || '').toString(),
+                        message: (state.instagramData.message || '').toString(),
+                        link: (state.instagramData.link || '').toString(),
+                        image: (state.instagramData.image || '').toString()
                     };
                 } else {
                     data = {};
@@ -469,17 +490,17 @@ export function save() {
                 break;
             case 'fichasIngreso':
                 const fichasObj = {};
-                state.fichasIngreso.forEach(item => { fichasObj[item.id] = item; });
+                state.fichasIngreso.forEach(item => { fichasObj[item.id] = cloneSafe(item); });
                 data = fichasObj;
                 break;
             case 'sesiones':
                 const sesionesObj = {};
-                state.sesiones.forEach(item => { sesionesObj[item.id] = item; });
+                state.sesiones.forEach(item => { sesionesObj[item.id] = cloneSafe(item); });
                 data = sesionesObj;
                 break;
             case 'informes':
                 const informesObj = {};
-                state.informes.forEach(item => { informesObj[item.id] = item; });
+                state.informes.forEach(item => { informesObj[item.id] = cloneSafe(item); });
                 data = informesObj;
                 break;
             default:
@@ -487,8 +508,8 @@ export function save() {
         }
 
         if (data !== undefined) {
-            // Clonado profundo seguro para eliminar cualquier referencia circular residual
-            const safeData = JSON.parse(JSON.stringify(data));
+            // Clonado profundo seguro
+            const safeData = cloneSafe(data);
             promises.push(db.ref(node).set(safeData).catch(err => {
                 console.error(`❌ Error en ${node}:`, err);
                 return null;

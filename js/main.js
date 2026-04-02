@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN SIMPLIFICADA CON GUARDADO POR ROL (SIN boxes, informes, pdfGenerator, estadisticas)
+// js/main.js - VERSIÓN SIMPLIFICADA CON GUARDADO POR ROL Y LIMPIEZA EXTREMA DE DATOS
 import { db } from './config/firebase.js';
 import * as state from './modules/state.js';
 window.state = state;
@@ -34,16 +34,16 @@ if (typeof personalizacion.loadMyConfig !== 'function') {
 }
 
 // ============================================
-// FUNCIÓN PARA CLONAR SEGURO (ELIMINA REFERENCIAS CIRCULARES Y FUNCIONES)
+// FUNCIÓN PARA LIMPIAR OBJETOS (ELIMINA REFERENCIAS CIRCULARES)
 // ============================================
-function cloneSafe(obj) {
+function safeClean(obj, fallback = null) {
     if (obj === null || typeof obj !== 'object') return obj;
     try {
-        // Serialización completa que rompe cualquier referencia circular
+        // Intenta serializar/deserializar para romper cualquier referencia circular
         return JSON.parse(JSON.stringify(obj));
     } catch(e) {
-        console.warn('Error clonando objeto:', e);
-        return obj;
+        console.warn('Error al limpiar objeto, usando fallback:', e.message);
+        return fallback;
     }
 }
 
@@ -311,7 +311,6 @@ setTimeout(() => {
     if (typeof window.esEmailProfesional !== 'function' && typeof utils?.esEmailProfesional === 'function') {
         window.esEmailProfesional = utils.esEmailProfesional;
     }
-    // 🔥 Asegurar funciones de especialidades en caso de fallo
     if (typeof window.showSpecialtiesModal !== 'function' && typeof personalizacion?.showSpecialtiesModal === 'function') {
         window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
         window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
@@ -320,7 +319,6 @@ setTimeout(() => {
         window.editSpecialty = personalizacion.editSpecialty;
         window.renderSpecialtiesTable = personalizacion.renderSpecialtiesTable;
     }
-    // 🔥 Asegurar funciones del calendario en caso de fallo
     if (typeof window.verDetalleCita !== 'function' && typeof calendario?.verDetalleCita === 'function') {
         window.verDetalleCita = calendario.verDetalleCita;
         window.verDetalleSolicitud = calendario.verDetalleSolicitud;
@@ -329,7 +327,7 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (SEGÚN ROL DEL USUARIO)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (LIMPIEZA EXTREMA)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
@@ -374,139 +372,180 @@ export function save() {
 
     for (const node of nodesToSave) {
         let data;
-        switch (node) {
-            case 'staff':
-                const staffObj = {};
-                state.staff.forEach(item => { staffObj[item.id] = cloneSafe(item); });
-                data = staffObj;
-                break;
-            case 'patients':
-                const patientsObj = {};
-                state.patients.forEach(item => { patientsObj[item.id] = cloneSafe(item); });
-                data = patientsObj;
-                break;
-            case 'appointments':
-                const appointmentsObj = {};
-                state.appointments.forEach(item => { appointmentsObj[item.id] = cloneSafe(item); });
-                data = appointmentsObj;
-                break;
-            case 'pendingRequests':
-                const pendingRequestsObj = {};
-                state.pendingRequests.forEach(item => { pendingRequestsObj[item.id] = cloneSafe(item); });
-                data = pendingRequestsObj;
-                break;
-            case 'messages':
-                const messagesObj = {};
-                state.messages.forEach(item => { messagesObj[item.id] = cloneSafe(item); });
-                data = messagesObj;
-                break;
-            case 'specialties':
-                const specialtiesObj = {};
-                state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
-                data = specialtiesObj;
-                break;
-            case 'textosEditables':
-                data = {
-                    missionText: state.missionText,
-                    visionText: state.visionText,
-                    aboutTeamText: state.aboutTeamText,
-                    aboutImage: state.aboutImage,
-                    atencionTexts: cloneSafe(state.atencionTexts),
-                    contactInfo: cloneSafe(state.contactInfo),
-                    heroTexts: cloneSafe(state.heroTexts),
-                    logoImage: state.logoImage,
-                    backgroundImage: state.backgroundImage,
-                    instagramData: cloneSafe(state.instagramData)
-                };
-                break;
-            case 'paymentMethods':
-                data = cloneSafe(state.globalPaymentMethods);
-                break;
-            case 'backgroundImage':
-                data = cloneSafe(state.backgroundImage);
-                break;
-            case 'logoImage':
-                data = cloneSafe(state.logoImage);
-                break;
-            case 'heroTexts':
-                data = cloneSafe(state.heroTexts);
-                break;
-            case 'aboutTexts':
-                data = {
-                    teamText: state.aboutTeamText,
-                    mission: state.missionText,
-                    vision: state.visionText,
-                    image: state.aboutImage
-                };
-                break;
-            case 'atencionTexts':
-                // 🔥 LIMPIEZA EXTREMA: solo campos planos
-                if (Array.isArray(state.atencionTexts)) {
-                    data = state.atencionTexts.map(item => ({
-                        titulo: (item.titulo || '').toString(),
-                        icono: (item.icono || '').toString(),
-                        descripcion: (item.descripcion || '').toString(),
-                        precio: (item.precio || '').toString(),
-                        activo: item.activo !== false
-                    }));
-                } else {
-                    data = [];
-                }
-                // Doble serialización para eliminar cualquier referencia
-                data = JSON.parse(JSON.stringify(data));
-                break;
-            case 'contactInfo':
-                if (state.contactInfo && typeof state.contactInfo === 'object') {
+        try {
+            switch (node) {
+                case 'staff':
+                    const staffObj = {};
+                    state.staff.forEach(item => {
+                        staffObj[item.id] = safeClean(item, {});
+                    });
+                    data = staffObj;
+                    break;
+                case 'patients':
+                    const patientsObj = {};
+                    state.patients.forEach(item => { patientsObj[item.id] = safeClean(item, {}); });
+                    data = patientsObj;
+                    break;
+                case 'appointments':
+                    const appointmentsObj = {};
+                    state.appointments.forEach(item => { appointmentsObj[item.id] = safeClean(item, {}); });
+                    data = appointmentsObj;
+                    break;
+                case 'pendingRequests':
+                    const pendingRequestsObj = {};
+                    state.pendingRequests.forEach(item => { pendingRequestsObj[item.id] = safeClean(item, {}); });
+                    data = pendingRequestsObj;
+                    break;
+                case 'messages':
+                    const messagesObj = {};
+                    state.messages.forEach(item => { messagesObj[item.id] = safeClean(item, {}); });
+                    data = messagesObj;
+                    break;
+                case 'specialties':
+                    const specialtiesObj = {};
+                    state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
+                    data = specialtiesObj;
+                    break;
+                case 'textosEditables':
                     data = {
-                        phone: (state.contactInfo.phone || '').toString(),
-                        email: (state.contactInfo.email || '').toString(),
-                        address: (state.contactInfo.address || '').toString()
+                        missionText: state.missionText,
+                        visionText: state.visionText,
+                        aboutTeamText: state.aboutTeamText,
+                        aboutImage: state.aboutImage,
+                        atencionTexts: [],
+                        contactInfo: {},
+                        heroTexts: safeClean(state.heroTexts, {}),
+                        logoImage: state.logoImage,
+                        backgroundImage: state.backgroundImage,
+                        instagramData: {}
                     };
-                } else {
-                    data = {};
-                }
-                break;
-            case 'instagramData':
-                if (state.instagramData && typeof state.instagramData === 'object') {
+                    // Reconstruir atencionTexts manualmente
+                    if (Array.isArray(state.atencionTexts)) {
+                        data.atencionTexts = state.atencionTexts.map(item => ({
+                            titulo: (item.titulo || '').toString(),
+                            icono: (item.icono || '').toString(),
+                            descripcion: (item.descripcion || '').toString(),
+                            precio: (item.precio || '').toString(),
+                            activo: item.activo !== false
+                        }));
+                    }
+                    // Reconstruir contactInfo
+                    if (state.contactInfo && typeof state.contactInfo === 'object') {
+                        data.contactInfo = {
+                            phone: (state.contactInfo.phone || '').toString(),
+                            email: (state.contactInfo.email || '').toString(),
+                            address: (state.contactInfo.address || '').toString()
+                        };
+                    }
+                    // Reconstruir instagramData
+                    if (state.instagramData && typeof state.instagramData === 'object') {
+                        data.instagramData = {
+                            title: (state.instagramData.title || '').toString(),
+                            subtitle: (state.instagramData.subtitle || '').toString(),
+                            quote: (state.instagramData.quote || '').toString(),
+                            text: (state.instagramData.text || '').toString(),
+                            message: (state.instagramData.message || '').toString(),
+                            link: (state.instagramData.link || '').toString(),
+                            image: (state.instagramData.image || '').toString()
+                        };
+                    }
+                    break;
+                case 'paymentMethods':
+                    data = safeClean(state.globalPaymentMethods, {});
+                    break;
+                case 'backgroundImage':
+                    data = safeClean(state.backgroundImage, '');
+                    break;
+                case 'logoImage':
+                    data = safeClean(state.logoImage, '');
+                    break;
+                case 'heroTexts':
+                    data = safeClean(state.heroTexts, {});
+                    break;
+                case 'aboutTexts':
                     data = {
-                        title: (state.instagramData.title || '').toString(),
-                        subtitle: (state.instagramData.subtitle || '').toString(),
-                        quote: (state.instagramData.quote || '').toString(),
-                        text: (state.instagramData.text || '').toString(),
-                        message: (state.instagramData.message || '').toString(),
-                        link: (state.instagramData.link || '').toString(),
-                        image: (state.instagramData.image || '').toString()
+                        teamText: state.aboutTeamText,
+                        mission: state.missionText,
+                        vision: state.visionText,
+                        image: state.aboutImage
                     };
-                } else {
-                    data = {};
-                }
-                break;
-            case 'fichasIngreso':
-                const fichasObj = {};
-                state.fichasIngreso.forEach(item => { fichasObj[item.id] = cloneSafe(item); });
-                data = fichasObj;
-                break;
-            case 'sesiones':
-                const sesionesObj = {};
-                state.sesiones.forEach(item => { sesionesObj[item.id] = cloneSafe(item); });
-                data = sesionesObj;
-                break;
-            case 'informes':
-                const informesObj = {};
-                state.informes.forEach(item => { informesObj[item.id] = cloneSafe(item); });
-                data = informesObj;
-                break;
-            default:
-                continue;
+                    break;
+                case 'atencionTexts':
+                    // Ya se reconstruyó en textosEditables, pero si se guarda solo este nodo, repetir limpieza
+                    if (Array.isArray(state.atencionTexts)) {
+                        data = state.atencionTexts.map(item => ({
+                            titulo: (item.titulo || '').toString(),
+                            icono: (item.icono || '').toString(),
+                            descripcion: (item.descripcion || '').toString(),
+                            precio: (item.precio || '').toString(),
+                            activo: item.activo !== false
+                        }));
+                    } else {
+                        data = [];
+                    }
+                    // Doble serialización para eliminar cualquier referencia
+                    data = JSON.parse(JSON.stringify(data));
+                    break;
+                case 'contactInfo':
+                    if (state.contactInfo && typeof state.contactInfo === 'object') {
+                        data = {
+                            phone: (state.contactInfo.phone || '').toString(),
+                            email: (state.contactInfo.email || '').toString(),
+                            address: (state.contactInfo.address || '').toString()
+                        };
+                    } else {
+                        data = {};
+                    }
+                    break;
+                case 'instagramData':
+                    if (state.instagramData && typeof state.instagramData === 'object') {
+                        data = {
+                            title: (state.instagramData.title || '').toString(),
+                            subtitle: (state.instagramData.subtitle || '').toString(),
+                            quote: (state.instagramData.quote || '').toString(),
+                            text: (state.instagramData.text || '').toString(),
+                            message: (state.instagramData.message || '').toString(),
+                            link: (state.instagramData.link || '').toString(),
+                            image: (state.instagramData.image || '').toString()
+                        };
+                    } else {
+                        data = {};
+                    }
+                    break;
+                case 'fichasIngreso':
+                    const fichasObj = {};
+                    state.fichasIngreso.forEach(item => { fichasObj[item.id] = safeClean(item, {}); });
+                    data = fichasObj;
+                    break;
+                case 'sesiones':
+                    const sesionesObj = {};
+                    state.sesiones.forEach(item => { sesionesObj[item.id] = safeClean(item, {}); });
+                    data = sesionesObj;
+                    break;
+                case 'informes':
+                    const informesObj = {};
+                    state.informes.forEach(item => { informesObj[item.id] = safeClean(item, {}); });
+                    data = informesObj;
+                    break;
+                default:
+                    continue;
+            }
+        } catch(e) {
+            console.error(`❌ Error preparando datos para nodo ${node}:`, e);
+            continue;
         }
 
         if (data !== undefined) {
-            // Clonado profundo seguro (ya se aplicó dentro de cada caso, pero por si acaso)
-            const safeData = cloneSafe(data);
-            promises.push(db.ref(node).set(safeData).catch(err => {
-                console.error(`❌ Error en ${node}:`, err);
-                return null;
-            }));
+            // Aplicar limpieza final con JSON (garantiza que no queden referencias)
+            const finalData = safeClean(data, null);
+            if (finalData !== null) {
+                promises.push(db.ref(node).set(finalData).catch(err => {
+                    console.error(`❌ Error en ${node}:`, err);
+                    return null;
+                }));
+            } else {
+                console.warn(`⚠️ Nodo ${node} no pudo ser limpiado, se omite`);
+            }
         }
     }
 

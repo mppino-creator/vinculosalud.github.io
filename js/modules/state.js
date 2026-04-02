@@ -51,22 +51,42 @@ const DEFAULT_VISION_TEXT = 'Ser un referente en salud mental en la región, rec
 const DEFAULT_ABOUT_TEAM_TEXT = 'Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.';
 
 const DEFAULT_ATENCION_TEXTS = {
-    online: {
-        title: 'Online',
-        description: 'sesiones por videollamada desde la comodidad de tu hogar'
-    },
-    presencial: {
-        title: 'Presencial',
-        description: 'Atención en nuestro consultorio con todos los protocolos'
-    },
-    pareja: {
-        title: 'Pareja',
-        description: 'Terapia para fortalecer vínculos y mejorar la comunicación'
-    },
-    familiar: {
-        title: 'Familiar',
-        description: 'Espacio de diálogo y crecimiento para toda la familia'
-    }
+    adultos: {
+    title: 'Atención Adultos',
+    description: 'Espacio terapéutico para adultos enfocado en ansiedad, depresión, estrés y desarrollo personal. Modalidad online y presencial.'
+},
+infantil: {
+    title: 'Atención Infantil',
+    description: 'Acompañamiento emocional y conductual para niños, incluyendo orientación a padres. Modalidad online y presencial.'
+},
+adolescente: {
+    title: 'Atención Adolescente',
+    description: 'Apoyo psicológico en etapa adolescente: emociones, identidad, relaciones sociales y dificultades escolares. Modalidad online y presencial.'
+},
+pareja: {
+    title: 'Terapia de Pareja',
+    description: 'Intervención enfocada en mejorar la comunicación, resolver conflictos y fortalecer la relación. Modalidad online y presencial.'
+},
+familiar: {
+    title: 'Terapia Familiar',
+    description: 'Espacio terapéutico para mejorar la dinámica familiar y resolver conflictos. Modalidad online y presencial.'
+},
+evaluacion: {
+    title: 'Evaluación Psicológica',
+    description: 'Proceso de evaluación mediante entrevistas y test psicológicos para diagnóstico y orientación profesional.'
+},
+informes: {
+    title: 'Informes Psicológicos',
+    description: 'Elaboración de informes y certificados psicológicos para fines clínicos, escolares o laborales.'
+},
+primera_consulta: {
+    title: 'Primera Consulta',
+    description: 'Sesión inicial para evaluar el motivo de consulta y definir objetivos terapéuticos.'
+},
+empresas: {
+    title: 'Servicios para Empresas',
+    description: 'Charlas, talleres y programas de bienestar laboral, manejo del estrés y clima organizacional para equipos de trabajo.'
+}
 };
 
 const DEFAULT_CONTACT_INFO = {

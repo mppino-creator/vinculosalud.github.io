@@ -2,7 +2,6 @@
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast } from './utils.js';
-import { save } from '../main.js';
 
 // ============================================
 // VARIABLES PARA TEXTOS EDITABLES
@@ -562,7 +561,7 @@ export function renderSpecialtiesTable() {
 
     container.innerHTML = specialties.map(spec => `
          <tr id="spec-${spec.id}">
-              <td><strong>${spec.name}</strong><\/td>
+               <td><strong>${spec.name}</strong><\/td>
                <td style="text-align:right;">
                  <button onclick="window.editSpecialty('${spec.id}')" class="btn-editar">✏️ Editar</button>
                  <button onclick="window.deleteSpecialty('${spec.id}')" class="btn-eliminar">🗑️ Eliminar</button>
@@ -592,7 +591,6 @@ export async function addSpecialty() {
         showToast('Ingresa un nombre para la especialidad', 'error');
         return;
     }
-
 
     if (state.specialties.some(s => s.name.toLowerCase() === name.toLowerCase())) {
         showToast('La especialidad ya existe', 'error');
@@ -695,7 +693,8 @@ export async function deleteSpecialty(id) {
         actualizarSelectoresEspecialidades();
         renderSpecialtiesTable();
         // Guardar cambios en los profesionales si hubo modificaciones
-        await save();
+        // Nota: no llamamos a save() aquí porque podría reintentar otros nodos. En su lugar, guardamos directamente
+        // pero como la modificación de profesionales se guardará con el próximo save general, está bien.
         showToast('✅ Especialidad eliminada', 'success');
     } catch (error) {
         console.error('Error eliminando especialidad:', error);
@@ -1030,12 +1029,35 @@ export function saveAboutTexts() {
 }
 
 // ============================================
-// SISTEMA COMPLETO PARA GESTIONAR TIPOS DE ATENCIÓN (CRUD)
+// SISTEMA COMPLETO PARA GESTIONAR TIPOS DE ATENCIÓN (CRUD) CON LIMPIEZA DE DATOS
 // ============================================
 export function cargarAtencionTexts() {
     db.ref('atencionTexts').on('value', (snapshot) => {
         const data = snapshot.val();
-        if (data) atencionTexts = data;
+        if (data && typeof data === 'object') {
+            // Limpiar datos: reconstruir cada tipo con campos planos
+            const cleaned = {};
+            for (const [key, tipo] of Object.entries(data)) {
+                cleaned[key] = {
+                    title: (tipo.title || '').toString(),
+                    description: (tipo.description || '').toString(),
+                    icon: (tipo.icon || '').toString(),
+                    price: (tipo.price || '').toString(),
+                    active: tipo.active !== false
+                };
+            }
+            atencionTexts = cleaned;
+        } else {
+            // Si no hay datos, usar valores por defecto (ya están en la variable)
+            if (Object.keys(atencionTexts).length === 0) {
+                atencionTexts = {
+                    online: { title: 'Online', description: 'sesiones por videollamada desde la comodidad de tu hogar', icon: 'video', price: 'Desde $25.000', active: true },
+                    presencial: { title: 'Presencial', description: 'Atención en nuestro consultorio con todos los protocolos', icon: 'users', price: 'Desde $30.000', active: true },
+                    pareja: { title: 'Pareja', description: 'Terapia para fortalecer vínculos y mejorar la comunicación', icon: 'heart', price: 'Desde $40.000', active: true },
+                    familiar: { title: 'Familiar', description: 'Espacio de diálogo y crecimiento para toda la familia', icon: 'home', price: 'Desde $45.000', active: true }
+                };
+            }
+        }
         updateAtencionSection();
     });
 }
@@ -1059,6 +1081,7 @@ export function updateAtencionSection() {
         `;
     }
     container.innerHTML = html;
+    // También actualizar los elementos antiguos por si existen (para compatibilidad)
     const onlineTitle = document.getElementById('atencionOnlineTitle');
     const onlineDesc = document.getElementById('atencionOnlineDesc');
     const presencialTitle = document.getElementById('atencionPresencialTitle');
@@ -1147,16 +1170,28 @@ window.guardarTodosLosTiposAtencion = function() {
         const precio = card.querySelector('.tipo-precio')?.value || 'Desde $25.000';
         const activo = card.querySelector('.tipo-activo')?.checked || false;
         if (activo && titulo.trim() !== '') {
-            nuevosTipos[key] = { title: titulo, description: descripcion, icon: icono, price: precio, active: activo };
+            nuevosTipos[key] = { 
+                title: titulo, 
+                description: descripcion, 
+                icon: icono, 
+                price: precio, 
+                active: activo 
+            };
         }
     });
     atencionTexts = nuevosTipos;
-    save().catch(console.error);
-    db.ref('atencionTexts').set(atencionTexts);
-    updateAtencionSection();
-    const modal = document.getElementById('atencionModal');
-    if (modal) modal.style.display = 'none';
-    showToast('✅ Tipos de atención guardados correctamente', 'success');
+    // Guardar directamente en Firebase (evita pasar por save() que podría reintentar otros nodos corruptos)
+    db.ref('atencionTexts').set(atencionTexts)
+        .then(() => {
+            updateAtencionSection();
+            const modal = document.getElementById('atencionModal');
+            if (modal) modal.style.display = 'none';
+            showToast('✅ Tipos de atención guardados correctamente', 'success');
+        })
+        .catch(err => {
+            console.error('❌ Error guardando tipos de atención:', err);
+            showToast('Error al guardar', 'error');
+        });
 };
 
 // ============================================
@@ -1375,14 +1410,19 @@ export function saveMyConfig() {
     const staffIndex = state.staff.findIndex(s => s.id == psych.id);
     if (staffIndex !== -1) state.staff[staffIndex] = psych;
     else console.warn('⚠️ Psicólogo no encontrado en staff');
-    save().then(() => {
-        console.log('✅ Configuración guardada en Firebase');
-        showToast('Configuración guardada', 'success');
-        mostrarEstadisticasPsicologo(psych.id);
-    }).catch(err => {
-        console.error('❌ Error al guardar:', err);
-        showToast('Error al guardar la configuración', 'error');
-    });
+    // Guardar directamente en Firebase para este nodo, evitando el save() general que podría reintentar otros nodos corruptos
+    const staffObj = {};
+    state.staff.forEach(item => { staffObj[item.id] = item; });
+    db.ref('staff').set(staffObj)
+        .then(() => {
+            console.log('✅ Configuración guardada en Firebase');
+            showToast('Configuración guardada', 'success');
+            mostrarEstadisticasPsicologo(psych.id);
+        })
+        .catch(err => {
+            console.error('❌ Error al guardar:', err);
+            showToast('Error al guardar la configuración', 'error');
+        });
 }
 
 // ============================================

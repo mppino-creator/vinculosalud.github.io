@@ -12,34 +12,69 @@ export let aboutTeamText = 'Nuestro equipo está formado por profesionales de la
 export let aboutImage = '';
 
 export let atencionTexts = {
-    online: {
-        title: 'Online',
-        description: 'sesiones por videollamada desde la comodidad de tu hogar',
-        icon: 'video',
-        price: 'Desde $25.000',
-        active: true
-    },
-    presencial: {
-        title: 'Presencial',
-        description: 'Atención en nuestro consultorio con todos los protocolos',
-        icon: 'users',
-        price: 'Desde $30.000',
-        active: true
-    },
-    pareja: {
-        title: 'Pareja',
-        description: 'Terapia para fortalecer vínculos y mejorar la comunicación',
-        icon: 'heart',
-        price: 'Desde $40.000',
-        active: true
-    },
-    familiar: {
-        title: 'Familiar',
-        description: 'Espacio de diálogo y crecimiento para toda la familia',
-        icon: 'home',
-        price: 'Desde $45.000',
-        active: true
-    }
+    adultos: {
+    title: 'Atención Adultos',
+    description: 'Espacio terapéutico para adultos enfocado en ansiedad, depresión, estrés y desarrollo personal. Modalidad online y presencial.',
+    icon: 'user',
+    price: 'Desde $25.000',
+    active: true
+},
+infantil: {
+    title: 'Atención Infantil',
+    description: 'Acompañamiento emocional y conductual para niños, incluyendo orientación a padres. Modalidad online y presencial.',
+    icon: 'child',
+    price: 'Desde $25.000',
+    active: true
+},
+adolescente: {
+    title: 'Atención Adolescente',
+    description: 'Apoyo psicológico en etapa adolescente: emociones, identidad, relaciones sociales y dificultades escolares. Modalidad online y presencial.',
+    icon: 'user-graduate',
+    price: 'Desde $25.000',
+    active: true
+},
+pareja: {
+    title: 'Terapia de Pareja',
+    description: 'Intervención enfocada en mejorar la comunicación, resolver conflictos y fortalecer la relación. Modalidad online y presencial.',
+    icon: 'heart',
+    price: 'Desde $35.000',
+    active: true
+},
+familiar: {
+    title: 'Terapia Familiar',
+    description: 'Espacio terapéutico para mejorar la dinámica familiar y resolver conflictos. Modalidad online y presencial.',
+    icon: 'users',
+    price: 'Desde $40.000',
+    active: true
+},
+evaluacion: {
+    title: 'Evaluación Psicológica',
+    description: 'Proceso de evaluación mediante entrevistas y test psicológicos para diagnóstico y orientación profesional.',
+    icon: 'clipboard-check',
+    price: 'Desde $60.000',
+    active: true
+},
+informes: {
+    title: 'Informes Psicológicos',
+    description: 'Elaboración de informes y certificados psicológicos para fines clínicos, escolares o laborales.',
+    icon: 'file-alt',
+    price: 'Desde $35.000',
+    active: true
+},
+primera_consulta: {
+    title: 'Primera Consulta',
+    description: 'Sesión inicial para evaluar el motivo de consulta y definir objetivos terapéuticos.',
+    icon: 'star',
+    price: '$20.000 - $25.000',
+    active: true
+},
+empresas: {
+    title: 'Servicios para Empresas',
+    description: 'Charlas, talleres y programas de bienestar laboral, manejo del estrés y clima organizacional para equipos de trabajo.',
+    icon: 'briefcase',
+    price: 'Desde $120.000',
+    active: true
+}
 };
 
 export let contactInfo = {

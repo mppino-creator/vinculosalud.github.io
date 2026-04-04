@@ -375,12 +375,14 @@ export function save() {
         try {
             switch (node) {
                 case 'staff':
-                    const staffObj = {};
-                    state.staff.forEach(item => {
-                        staffObj[item.id] = safeClean(item, {});
-                    });
-                    data = staffObj;
-                    break;
+    const staffObj = {};
+    state.staff.forEach(item => { 
+        // Limpiar cada profesional individualmente
+        const cleanItem = JSON.parse(JSON.stringify(item));
+        staffObj[cleanItem.id] = cleanItem;
+    });
+    data = staffObj;
+    break;
                 case 'patients':
                     const patientsObj = {};
                     state.patients.forEach(item => { patientsObj[item.id] = safeClean(item, {}); });

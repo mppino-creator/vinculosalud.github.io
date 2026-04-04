@@ -1,7 +1,7 @@
 // js/modules/disponibilidad.js
 import * as state from './state.js';
 import { showToast } from './utils.js';
-import { save } from '../main.js';
+import { db } from '../config/firebase.js';
 
 // ============================================
 // FUNCIONES DE MODAL
@@ -164,7 +164,7 @@ export function blockTimeRange() {
 }
 
 // ============================================
-// APLICAR HORARIOS GENERADOS (con zona horaria UTC)
+// APLICAR HORARIOS GENERADOS (CORREGIDO - EVITA RECURSIÓN)
 // ============================================
 
 export async function applyGeneratedSlots() {
@@ -223,8 +223,22 @@ export async function applyGeneratedSlots() {
         console.warn('⚠️ No se encontró al profesional en state.staff, se actualizará solo state.currentUser');
     }
 
+    // 🔥 LIMPIEZA EXTREMA: serializar para eliminar referencias circulares
+    const cleanStaff = JSON.parse(JSON.stringify(state.staff));
+    state.staff = cleanStaff;
+    
+    // Actualizar también el currentUser con datos limpios
+    const currentUserIndex = cleanStaff.findIndex(s => s.id == state.currentUser.data.id);
+    if (currentUserIndex !== -1) {
+        state.currentUser.data = cleanStaff[currentUserIndex];
+    }
+
     try {
-        await save();
+        // Guardar directamente en Firebase (evita pasar por save() que podría reintentar otros nodos)
+        const staffObj = {};
+        state.staff.forEach(item => { staffObj[item.id] = item; });
+        await db.ref('staff').set(staffObj);
+        
         console.log('✅ Disponibilidad guardada en Firebase');
         closeAvailabilityModal();
         // Recargar la vista de disponibilidad con la fecha actual
@@ -265,8 +279,14 @@ export async function excludeSpecificDates() {
     if (modified) {
         const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
         if (staffIndex !== -1) state.staff[staffIndex].availability = state.currentUser.data.availability;
+        
+        // Limpiar datos antes de guardar
+        const cleanStaff = JSON.parse(JSON.stringify(state.staff));
+        const staffObj = {};
+        cleanStaff.forEach(item => { staffObj[item.id] = item; });
+        
         try {
-            await save();
+            await db.ref('staff').set(staffObj);
             showToast(`Se eliminó la disponibilidad en ${validDates.length} fecha(s)`, 'success');
             loadTimeSlots();
         } catch (error) {
@@ -287,8 +307,14 @@ export async function clearAllSlots() {
         state.currentUser.data.availability = {};
         const staffIndex = state.staff.findIndex(s => s.id == state.currentUser.data.id);
         if (staffIndex !== -1) state.staff[staffIndex].availability = {};
+        
+        // Limpiar datos antes de guardar
+        const cleanStaff = JSON.parse(JSON.stringify(state.staff));
+        const staffObj = {};
+        cleanStaff.forEach(item => { staffObj[item.id] = item; });
+        
         try {
-            await save();
+            await db.ref('staff').set(staffObj);
             closeAvailabilityModal();
             loadTimeSlots();
             showToast('Disponibilidad eliminada', 'success');
@@ -422,12 +448,16 @@ export function addOvercupo() {
 }
 
 // ============================================
-// GUARDADO MANUAL
+// GUARDADO MANUAL (CORREGIDO)
 // ============================================
 
 export async function saveAvailability() {
     try {
-        await save();
+        // Limpiar datos antes de guardar
+        const cleanStaff = JSON.parse(JSON.stringify(state.staff));
+        const staffObj = {};
+        cleanStaff.forEach(item => { staffObj[item.id] = item; });
+        await db.ref('staff').set(staffObj);
         showToast('Disponibilidad guardada', 'success');
     } catch (error) {
         console.error('❌ Error al guardar disponibilidad:', error);

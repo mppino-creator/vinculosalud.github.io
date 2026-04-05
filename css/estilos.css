@@ -2621,3 +2621,16 @@ div.admin-edit-btn:hover {
         font-size: 16px !important;
     }
 }
+
+/* Ajustes para el embed de Instagram */
+.instagram-media {
+    margin: 0 auto !important;
+    max-width: 100% !important;
+}
+
+@media (max-width: 768px) {
+    .instagram-media {
+        min-width: auto !important;
+        width: 100% !important;
+    }
+}

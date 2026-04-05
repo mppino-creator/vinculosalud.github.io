@@ -2158,3 +2158,105 @@ div.admin-edit-btn:hover {
         font-size: 0.8rem;
     }
 }
+
+/* ============================================
+   BOTÓN FLOTANTE CTA - AGENDAR HORA (estilo Vínculo Salud)
+   ============================================ */
+.floating-cta {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    background: linear-gradient(135deg, var(--atencion) 0%, var(--primario) 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 60px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-decoration: none;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(60, 60, 59, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(4px);
+}
+
+.floating-cta:hover {
+    transform: translateY(-4px);
+    background: linear-gradient(135deg, var(--primario) 0%, var(--primario-hover) 100%);
+    box-shadow: 0 8px 25px rgba(60, 60, 59, 0.4);
+}
+
+.floating-cta-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.floating-cta:hover .floating-cta-icon {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.05);
+}
+
+.floating-cta-content {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.floating-cta-title {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.floating-cta-subtitle {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+/* Ajustes para móviles */
+@media (max-width: 768px) {
+    .floating-cta {
+        bottom: 20px;
+        left: 20px;
+        padding: 10px 18px;
+    }
+    
+    .floating-cta-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+    
+    .floating-cta-title {
+        font-size: 0.85rem;
+    }
+    
+    .floating-cta-subtitle {
+        font-size: 0.6rem;
+    }
+}
+
+/* Si ya tienes WhatsApp float a la derecha, ajustamos para que no se solapen */
+.whatsapp-float {
+    right: 30px;
+    left: auto;
+}
+
+@media (max-width: 768px) {
+    .whatsapp-float {
+        right: 20px;
+        bottom: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.6rem;
+    }
+}

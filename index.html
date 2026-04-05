@@ -2517,7 +2517,61 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+<!-- BOTÓN FLOTANTE CTA - AGENDAR HORA (aparece al hacer scroll) -->
+<a class="floating-cta" href="#" onclick="abrirAgenda(); return false;">
+    <div class="floating-cta-icon">
+        <i class="fa fa-calendar-check"></i>
+    </div>
+    <div class="floating-cta-content">
+        <span class="floating-cta-title">Agendar Hora</span>
+        <span class="floating-cta-subtitle">Consulta online o presencial</span>
+    </div>
+</a>
 
+<!-- SCRIPT PARA QUE APAREZCA AL HACER SCROLL -->
+<script>
+(function() {
+    const boton = document.querySelector('.floating-cta');
+    if (!boton) return;
+    
+    // Ocultar al inicio
+    boton.style.display = 'none';
+    let visible = false;
+    
+    window.addEventListener('scroll', function() {
+        if (window.scrollY > 300 && !visible) {
+            boton.style.display = 'flex';
+            boton.style.opacity = '0';
+            boton.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                boton.style.transition = 'all 0.3s ease';
+                boton.style.opacity = '1';
+                boton.style.transform = 'translateY(0)';
+            }, 50);
+            visible = true;
+        } else if (window.scrollY <= 300 && visible) {
+            boton.style.opacity = '0';
+            boton.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                if (window.scrollY <= 300) {
+                    boton.style.display = 'none';
+                    visible = false;
+                }
+            }, 300);
+        }
+    });
+})();
+
+// Función para agendar
+window.abrirAgenda = function() {
+    if (typeof showSection === 'function') {
+        showSection('equipo');
+    } else {
+        const equipo = document.getElementById('equipo');
+        if (equipo) equipo.scrollIntoView({ behavior: 'smooth' });
+    }
+};
+</script>
 
 </body>
 </html>

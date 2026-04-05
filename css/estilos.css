@@ -2634,3 +2634,13 @@ div.admin-edit-btn:hover {
         width: 100% !important;
     }
 }
+
+/* Forzar ocultar botones de edición para no admins */
+.admin-edit-btn {
+    display: none !important;
+}
+
+/* Solo mostrar cuando el body tiene clase admin-mode */
+body.admin-mode .admin-edit-btn {
+    display: inline-flex !important;
+}

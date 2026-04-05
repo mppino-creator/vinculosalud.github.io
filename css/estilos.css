@@ -2635,12 +2635,15 @@ div.admin-edit-btn:hover {
     }
 }
 
-/* Forzar ocultar botones de edición para no admins */
+/* FORZAR OCULTAR BOTONES - VERSIÓN MÁS ESPECÍFICA */
+#adminInstagramEditBtn.admin-edit-btn,
+div.admin-edit-btn,
 .admin-edit-btn {
     display: none !important;
 }
 
-/* Solo mostrar cuando el body tiene clase admin-mode */
+body.admin-mode #adminInstagramEditBtn.admin-edit-btn,
+body.admin-mode div.admin-edit-btn,
 body.admin-mode .admin-edit-btn {
     display: inline-flex !important;
 }

@@ -22,7 +22,7 @@ const ADMIN_TABS = [
     'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
     'messagesTab', 'adminTabEstadisticas', 'adminTabPersonalizacion'
 ];
-const COMMON_TABS = ['citas', 'solicitudes', 'pacientes', 'adminTabNotas']; // 👈 añadido adminTabNotas
+const COMMON_TABS = ['citas', 'solicitudes', 'pacientes', 'adminTabNotas'];
 
 // ============================================
 // FUNCIONES AUXILIARES
@@ -42,6 +42,27 @@ function getEmailFromUsername(username) {
         (p.name && p.name.toLowerCase() === username.toLowerCase())
     );
     return found?.email || null;
+}
+
+// ============================================
+// FUNCIÓN PARA ACTUALIZAR VISIBILIDAD DE BOTONES DE EDICIÓN
+// ============================================
+function actualizarBotonesEdicion() {
+    const esAdmin = state.currentUser?.role === 'admin';
+    console.log('🔧 Actualizando botones de edición, esAdmin:', esAdmin);
+    
+    ADMIN_EDIT_BUTTONS.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            if (esAdmin) {
+                btn.style.setProperty('display', 'flex', 'important');
+                console.log(`✅ Mostrando botón: ${id}`);
+            } else {
+                btn.style.setProperty('display', 'none', 'important');
+                console.log(`❌ Ocultando botón: ${id}`);
+            }
+        }
+    });
 }
 
 // ============================================
@@ -86,13 +107,15 @@ function actualizarUIAdmin(userData, role) {
         if (staffText) staffText.textContent = userData.name || 'Admin';
     }
 
-    // Mostrar botones de edición para admin
+    // Actualizar botones de edición según rol
+    actualizarBotonesEdicion();
+
+    // Agregar clase admin-mode al body si es admin
     if (role === 'admin') {
-        ADMIN_EDIT_BUTTONS.forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.style.display = 'flex';
-        });
+        document.body.classList.add('admin-mode');
         if (window.mostrarTabsAdmin) window.mostrarTabsAdmin();
+    } else {
+        document.body.classList.remove('admin-mode');
     }
 
     if (role === 'psych') {
@@ -419,6 +442,9 @@ export async function logout() {
     state.setCurrentUser(null);
     localStorage.removeItem('vinculoCurrentUser');
     localStorage.removeItem('vinculo_user');
+    
+    // Remover clase admin-mode del body
+    document.body.classList.remove('admin-mode');
 
     const staffLink = document.querySelector('a[onclick*="mostrarMenuStaff"]');
     if (staffLink) {
@@ -433,10 +459,8 @@ export async function logout() {
         if (staffText) staffText.textContent = ' staff';
     }
 
-    ADMIN_EDIT_BUTTONS.forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.style.display = 'none';
-    });
+    // Ocultar botones de edición al cerrar sesión
+    actualizarBotonesEdicion();
 
     ADMIN_TABS.forEach(id => {
         const tab = document.getElementById(id);
@@ -610,7 +634,7 @@ export function switchTab(tabName) {
         'estadisticas': 'tabEstadisticas',
         'calendario': 'tabCalendario',
         'fichas': 'tabFichas',
-        'notas': 'tabNotas'            // 👈 añadido
+        'notas': 'tabNotas'
     };
     const contentId = tabMap[tabName] || `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
     const content = document.getElementById(contentId);
@@ -641,7 +665,7 @@ export function switchTab(tabName) {
                     window.fichasClinicas.renderFichasConFiltros();
                 }
                 else if (tabName === 'notas' && typeof window.cargarNotas === 'function') {
-                    window.cargarNotas();   // 👈 carga de notas
+                    window.cargarNotas();
                 }
             } catch (error) {
                 console.error(`❌ Error cargando datos para ${tabName}:`, error);

@@ -164,7 +164,7 @@ export function blockTimeRange() {
 }
 
 // ============================================
-// APLICAR HORARIOS GENERADOS (CORREGIDO - EVITA RECURSIÓN)
+// APLICAR HORARIOS GENERADOS (CORREGIDO - EVITA RECURSIÓN Y PERMISOS)
 // ============================================
 
 export async function applyGeneratedSlots() {
@@ -225,7 +225,7 @@ export async function applyGeneratedSlots() {
 
     // 🔥 LIMPIEZA EXTREMA: serializar para eliminar referencias circulares
     const cleanStaff = JSON.parse(JSON.stringify(state.staff));
-    state.staff = cleanStaff;
+    state.setStaff(cleanStaff);
     
     // Actualizar también el currentUser con datos limpios
     const currentUserIndex = cleanStaff.findIndex(s => s.id == state.currentUser.data.id);
@@ -234,10 +234,13 @@ export async function applyGeneratedSlots() {
     }
 
     try {
-        // Guardar directamente en Firebase (evita pasar por save() que podría reintentar otros nodos)
-        const staffObj = {};
-        state.staff.forEach(item => { staffObj[item.id] = item; });
-        await db.ref('staff').set(staffObj);
+        // Guardar SOLO el nodo del profesional (no todo staff)
+        const currentUserId = state.currentUser.data.id;
+        const professionalData = {
+            availability: JSON.parse(JSON.stringify(newAvailability)),
+            updatedAt: Date.now()
+        };
+        await db.ref(`staff/${currentUserId}`).update(professionalData);
         
         console.log('✅ Disponibilidad guardada en Firebase');
         closeAvailabilityModal();
@@ -282,11 +285,21 @@ export async function excludeSpecificDates() {
         
         // Limpiar datos antes de guardar
         const cleanStaff = JSON.parse(JSON.stringify(state.staff));
-        const staffObj = {};
-        cleanStaff.forEach(item => { staffObj[item.id] = item; });
+        state.setStaff(cleanStaff);
+        
+        // Actualizar currentUser
+        const currentUserIndex = cleanStaff.findIndex(s => s.id == state.currentUser.data.id);
+        if (currentUserIndex !== -1) {
+            state.currentUser.data = cleanStaff[currentUserIndex];
+        }
         
         try {
-            await db.ref('staff').set(staffObj);
+            // Guardar SOLO el nodo del profesional
+            const currentUserId = state.currentUser.data.id;
+            await db.ref(`staff/${currentUserId}`).update({
+                availability: JSON.parse(JSON.stringify(state.currentUser.data.availability)),
+                updatedAt: Date.now()
+            });
             showToast(`Se eliminó la disponibilidad en ${validDates.length} fecha(s)`, 'success');
             loadTimeSlots();
         } catch (error) {
@@ -310,11 +323,21 @@ export async function clearAllSlots() {
         
         // Limpiar datos antes de guardar
         const cleanStaff = JSON.parse(JSON.stringify(state.staff));
-        const staffObj = {};
-        cleanStaff.forEach(item => { staffObj[item.id] = item; });
+        state.setStaff(cleanStaff);
+        
+        // Actualizar currentUser
+        const currentUserIndex = cleanStaff.findIndex(s => s.id == state.currentUser.data.id);
+        if (currentUserIndex !== -1) {
+            state.currentUser.data = cleanStaff[currentUserIndex];
+        }
         
         try {
-            await db.ref('staff').set(staffObj);
+            // Guardar SOLO el nodo del profesional
+            const currentUserId = state.currentUser.data.id;
+            await db.ref(`staff/${currentUserId}`).update({
+                availability: {},
+                updatedAt: Date.now()
+            });
             closeAvailabilityModal();
             loadTimeSlots();
             showToast('Disponibilidad eliminada', 'success');
@@ -452,13 +475,21 @@ export function addOvercupo() {
 // ============================================
 
 export async function saveAvailability() {
+    const currentUserId = state.currentUser?.data?.id;
+    if (!currentUserId) {
+        showToast('No se encontró el usuario', 'error');
+        return;
+    }
+    
+    const currentAvailability = state.currentUser.data.availability || {};
+    
     try {
-        // Limpiar datos antes de guardar
-        const cleanStaff = JSON.parse(JSON.stringify(state.staff));
-        const staffObj = {};
-        cleanStaff.forEach(item => { staffObj[item.id] = item; });
-        await db.ref('staff').set(staffObj);
+        await db.ref(`staff/${currentUserId}`).update({
+            availability: JSON.parse(JSON.stringify(currentAvailability)),
+            updatedAt: Date.now()
+        });
         showToast('Disponibilidad guardada', 'success');
+        loadTimeSlots();
     } catch (error) {
         console.error('❌ Error al guardar disponibilidad:', error);
         showToast('Error al guardar', 'error');

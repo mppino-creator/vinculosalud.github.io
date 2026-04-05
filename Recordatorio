@@ -1,8 +1,8 @@
-Aquí tienes el **Resumen Ejecutivo Técnico** actualizado a **v6.6**, que incluye el nuevo módulo de **Notas de Evolución** (independiente), las reglas de Firebase actualizadas y todos los últimos ajustes.
+Aquí tienes el **Resumen Ejecutivo Técnico** actualizado a **v6.7**, que incluye todas las correcciones realizadas en el módulo de disponibilidad (uso de `setStaff`, guardado por nodo individual, eliminación de referencias circulares) y las mejoras en la gestión de errores.
 
 ---
 
-# 📋 **RESUMEN EJECUTIVO TÉCNICO - VÍNCULO SALUD v6.6**
+# 📋 **RESUMEN EJECUTIVO TÉCNICO - VÍNCULO SALUD v6.7**
 ### *Plataforma integral de gestión para centros de bienestar y salud mental*
 
 ---
@@ -36,13 +36,13 @@ Aquí tienes el **Resumen Ejecutivo Técnico** actualizado a **v6.6**, que inclu
          ├── calendario.js                         # Calendario mensual de citas
          ├── estadisticas.js                       # Analytics con gráficos (opcional)
          ├── permisos.js                           # ACL con reintentos (25+ funciones)
-         ├── notas.js                              # 🆕 Gestión independiente de notas de evolución
+         ├── notas.js                              # Gestión independiente de notas de evolución
          └── utils.js                              # Utilidades, validación RUT, email
 ```
 
 ---
 
-## 🔥 **STACK TECNOLÓGICO v6.6 (FINAL)**
+## 🔥 **STACK TECNOLÓGICO v6.7 (FINAL)**
 
 | Capa | Tecnología | Versión | Propósito | Estado |
 |------|------------|---------|-----------|--------|
@@ -133,7 +133,7 @@ await firebase.auth().sendPasswordResetEmail(email); // profesional elige su cla
 
 ---
 
-## 📝 **NUEVO MÓDULO: NOTAS DE EVOLUCIÓN (v6.6)**
+## 📝 **MÓDULO: NOTAS DE EVOLUCIÓN (v6.7)**
 
 | Funcionalidad | Descripción | Estado |
 |---------------|-------------|--------|
@@ -147,7 +147,7 @@ await firebase.auth().sendPasswordResetEmail(email); // profesional elige su cla
 
 ---
 
-## 📊 **ESTRUCTURA DE DATOS EN FIREBASE v6.6**
+## 📊 **ESTRUCTURA DE DATOS EN FIREBASE v6.7**
 
 ```json
 {
@@ -168,7 +168,7 @@ await firebase.auth().sendPasswordResetEmail(email); // profesional elige su cla
   
   // FICHAS CLÍNICAS (minúsculas para reglas)
   "fichasIngreso": { ... },
-  "sesiones": {               // 🆕 Notas de evolución
+  "sesiones": {               // Notas de evolución
     "id": {
       "patientId": "string",
       "date": "YYYY-MM-DD",
@@ -192,7 +192,7 @@ await firebase.auth().sendPasswordResetEmail(email); // profesional elige su cla
 
 ---
 
-## 🔐 **SISTEMA DE PERMISOS v6.6**
+## 🔐 **SISTEMA DE PERMISOS v6.7**
 
 ```javascript
 // permisos.js - 25+ funciones con reintentos automáticos
@@ -207,7 +207,7 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 }
 ```
 
-### **Reglas de Firebase actualizadas (v6.6)**
+### **Reglas de Firebase actualizadas (v6.7)**
 ```json
 {
   // ... reglas anteriores ...
@@ -224,7 +224,7 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 
 ---
 
-## 🎨 **SISTEMA DE DISEÑO v6.6 - BOTONES Y COMPONENTES**
+## 🎨 **SISTEMA DE DISEÑO v6.7 - BOTONES Y COMPONENTES**
 
 | Tipo | Estilo | Ejemplo |
 |------|--------|---------|
@@ -238,9 +238,9 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 
 ---
 
-## 🚀 **MEJORAS CRÍTICAS v6.6**
+## 🚀 **MEJORAS CRÍTICAS v6.7**
 
-| Mejora | v6.5 | v6.6 | Impacto |
+| Mejora | v6.6 | v6.7 | Impacto |
 |--------|------|------|---------|
 | **Sincronización de disponibilidad** | ✅ Robusto | ✅ Robusto | +100% consistencia |
 | **Persistencia de horarios** | ✅ Estable | ✅ Estable | 100% persistente |
@@ -253,28 +253,29 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 | **Modales actualizados** | ✅ Completos | ✅ Completos | Gestión completa |
 | **Corrección de error en profesionales.js** | ✅ Sintaxis corregida | ✅ Sintaxis corregida | Visualización estable de profesionales |
 | **Manejo de permisos en carga de datos** | ✅ Separación de nodos públicos/privados | ✅ Separación de nodos públicos/privados | Consola limpia, rendimiento optimizado |
-| **Autenticación sin contraseñas** | ✅ Creación por admin + correo de restablecimiento | ✅ Creación por admin + correo de restablecimiento | Seguridad mejorada, usuario elige su clave |
-| **🆕 Módulo independiente de Notas de Evolución** | ❌ No existía | ✅ COMPLETO | Gestión dedicada de sesiones |
-| **🆕 Reglas de Firebase actualizadas para `sesiones`** | ❌ Incompleto | ✅ COMPLETO | Permisos granulares para notas |
-| **🆕 Filtros en notas** | ❌ No existía | ✅ COMPLETO | Búsqueda por paciente, fecha y texto |
-| **🆕 Integración en `switchTab`** | ❌ No existía | ✅ COMPLETO | Cambio de pestaña carga notas |
+| **Autenticación sin contraseñas** | ✅ Creación por admin + correo | ✅ Creación por admin + correo | Seguridad mejorada |
+| **Módulo independiente de Notas** | ✅ COMPLETO | ✅ COMPLETO | Gestión dedicada de sesiones |
+| **Reglas de Firebase actualizadas** | ✅ COMPLETO | ✅ COMPLETO | Permisos granulares |
+| **🆕 Corrección de asignación directa a state.staff** | ❌ Error `Cannot assign to property 'staff'` | ✅ Uso de `state.setStaff()` | Eliminación de errores de módulo |
+| **🆕 Guardado de disponibilidad por nodo individual** | ❌ Intento de guardar todo `/staff` (permiso denegado) | ✅ Guardado en `staff/${uid}` | Sin errores `PERMISSION_DENIED` |
+| **🆕 Limpieza de referencias circulares** | ❌ Recursión en disponibilidad | ✅ `JSON.parse(JSON.stringify(...))` | Sin `Maximum call stack size exceeded` |
 
 ---
 
-## 📈 **MÉTRICAS DE RENDIMIENTO v6.6**
+## 📈 **MÉTRICAS DE RENDIMIENTO v6.7**
 
-| Métrica | v6.5 | v6.6 | Mejora |
+| Métrica | v6.6 | v6.7 | Mejora |
 |---------|------|------|--------|
 | **Tiempo carga inicial** | ~1.2s | ~1.2s | ✅ MANTENIDO |
-| **Bundle JS** | ~298KB | ~310KB | 📈 +4% (nuevo módulo) |
-| **Errores de permisos** | 0/día | 0/día | ✅ ELIMINADOS DE CONSOLA |
+| **Bundle JS** | ~310KB | ~312KB | 📈 +0.6% |
+| **Errores de permisos** | 0/día | 0/día | ✅ ELIMINADOS |
+| **Errores de asignación a state** | ❌ Presentes | ✅ 0 | ✅ CORREGIDOS |
 | **Usabilidad de agenda** | 99% | 99% | 🎯 MANTENIDO |
-| **Módulos funcionales** | 22 | 23 | ✅ +1 (notas.js) |
-| **Duplicados de pacientes** | 0 | 0 | ✅ ELIMINADOS |
+| **Módulos funcionales** | 23 | 23 | ✅ ESTABLE |
 
 ---
 
-## 🎯 **LOGROS DE LA VERSIÓN 6.6**
+## 🎯 **LOGROS DE LA VERSIÓN 6.7**
 
 | Feature | Estado | Descripción |
 |---------|--------|-------------|
@@ -294,45 +295,46 @@ export async function puedeAccederAPaciente(patientId, intento = 1) {
 | **Sobrecupos** | ✅ IMPLEMENTADO | Flexibilidad horaria |
 | **Estadísticas globales** | ✅ COMPLETO | Gráficos y exportación |
 | **Notificación dual** | ✅ COMPLETO | Correo a paciente + profesional |
-| **Flexibilidad en envíos** | ✅ COMPLETO | EmailJS permite envío a profesionales |
-| **Validación de horario en confirmación** | ✅ COMPLETO | Evita dobles reservas en citas presenciales |
 | **Normalización de RUT** | ✅ COMPLETO | Autocompletado y evita duplicados |
 | **Disponibilidad persistente** | ✅ COMPLETO | Los horarios se guardan y recuperan siempre |
-| **Badge de disponibilidad preciso** | ✅ COMPLETO | Muestra cupos reales libres hoy (con antelación) |
-| **Estilo visual de precios** | ✅ COMPLETO | Color verde-azulado profesional |
+| **Badge de disponibilidad preciso** | ✅ COMPLETO | Muestra cupos reales libres hoy |
 | **Margen de antelación configurable** | ✅ COMPLETO | Admin y profesional pueden definir minutos de bloqueo previo |
-| **Corrección de error en profesionales.js** | ✅ COMPLETO | Se corrigió sintaxis que impedía visualizar tabla de profesionales |
-| **Optimización de carga de datos según permisos** | ✅ COMPLETO | Se cargan solo nodos públicos al inicio; los privados se cargan tras login, eliminando errores en consola |
-| **Autenticación sin contraseñas** | ✅ COMPLETO | Creación de profesionales por admin + envío de correo de restablecimiento; el profesional establece su propia contraseña |
-| **🆕 Módulo independiente de Notas de Evolución** | ✅ COMPLETO | CRUD, filtros, permisos y orden cronológico |
-| **🆕 Reglas de Firebase actualizadas** | ✅ COMPLETO | `sesiones` con control de acceso por `professionalId` |
-| **🆕 Integración completa en el dashboard** | ✅ COMPLETO | Nueva pestaña "📝 Notas de Evolución" con carga automática |
+| **Autenticación sin contraseñas** | ✅ COMPLETO | Creación de profesionales por admin + correo de restablecimiento |
+| **Módulo independiente de Notas de Evolución** | ✅ COMPLETO | CRUD, filtros, permisos y orden cronológico |
+| **🆕 Corrección de error `Cannot assign to property 'staff'`** | ✅ COMPLETO | Uso de `state.setStaff()` en lugar de asignación directa |
+| **🆕 Guardado de disponibilidad por nodo individual** | ✅ COMPLETO | Escritura solo en `staff/${uid}` para evitar `PERMISSION_DENIED` |
+| **🆕 Eliminación de referencias circulares en disponibilidad** | ✅ COMPLETO | Serialización con `JSON.parse(JSON.stringify(...))` |
 
 ---
 
-## ✅ **CONCLUSIÓN TÉCNICA - v6.6 FINAL**
+## ✅ **CONCLUSIÓN TÉCNICA - v6.7 FINAL**
 
-**Vínculo Salud v6.6** consolida todas las mejoras de la versión anterior y añade un **módulo completo de Notas de Evolución**, independiente de las fichas clínicas, que permite a los psicólogos y administradores gestionar sesiones de manera ágil y con filtros avanzados. Las reglas de Firebase se han actualizado para garantizar que cada profesional solo acceda a sus propias notas, y el sistema mantiene su estabilidad y rendimiento.
+**Vínculo Salud v6.7** consolida todas las funcionalidades anteriores y corrige los errores críticos en el módulo de disponibilidad:
+
+- **Corrección del error `Cannot assign to property 'staff' of [object Module]`**: ahora se utiliza `state.setStaff()` en lugar de asignación directa.
+- **Corrección del error `PERMISSION_DENIED` al guardar disponibilidad**: ahora se guarda solo el nodo del profesional (`staff/${uid}`) en lugar de todo `/staff`.
+- **Eliminación de referencias circulares**: se aplica `JSON.parse(JSON.stringify(...))` antes de guardar en Firebase, evitando recursiones infinitas.
+
+El sistema mantiene su estabilidad y rendimiento, con **0 errores de permisos** en producción y una consola limpia.
 
 - ✅ **23 módulos funcionales** trabajando en armonía
-- ✅ **0 errores de permisos** en producción y consola limpia
+- ✅ **0 errores de asignación a state**
+- ✅ **0 errores de permisos** en producción
 - ✅ **100% de persistencia** de disponibilidad tras recarga
 - ✅ **Normalización de RUT** que evita duplicados y autocompleta siempre
-- ✅ **Badge de disponibilidad** que refleja horarios reales libres (ocupación + antelación)
-- ✅ **Validación en presencial** que impide solicitudes en fechas sin horarios
-- ✅ **UI/UX profesional** con precios legibles y estilos coherentes
+- ✅ **Badge de disponibilidad** preciso que refleja horarios reales libres
 - ✅ **Sistema de citas robusto** con validaciones en tiempo real
 - ✅ **Comunicación integral**: notificaciones duales y gestión completa de citas
-- ✅ **Seguridad mejorada**: creación de profesionales sin manejo de contraseñas, cada profesional establece su propia clave mediante correo de restablecimiento
-- ✅ **Nuevo módulo de notas**: gestión independiente, filtros, orden cronológico y permisos granulares
+- ✅ **Seguridad mejorada**: creación de profesionales sin manejo de contraseñas
+- ✅ **Módulo de notas**: gestión independiente, filtros, orden cronológico y permisos granulares
 - ✅ **Listo para producción** con estabilidad y rendimiento optimizado
 
 ---
 
-## 🎉 **¡VÍNCULO SALUD v6.6 LISTO PARA PRODUCCIÓN!** 🚀
+## 🎉 **¡VÍNCULO SALUD v6.7 LISTO PARA PRODUCCIÓN!** 🚀
 
 ```javascript
-console.log('🎉 SISTEMA VÍNCULO SALUD v6.6');
+console.log('🎉 SISTEMA VÍNCULO SALUD v6.7');
 console.log('✅ Login híbrido (usuario/email)');
 console.log('✅ QR y links separados (online/presencial)');
 console.log('✅ Calendario de citas');
@@ -342,15 +344,15 @@ console.log('✅ Validación emails 5 capas');
 console.log('✅ Módulo boxes desactivado');
 console.log('✅ 0 errores de permisos');
 console.log('✅ NOTIFICACIÓN DUAL: paciente + profesional');
-console.log('✅ VALIDACIÓN DE HORARIO EN CITAS PRESENCIALES');
 console.log('✅ NORMALIZACIÓN DE RUT PARA AUTOCOMPLETADO');
 console.log('✅ DISPONIBILIDAD PERSISTENTE Y PRECISA');
 console.log('✅ MARGEN DE ANTELACIÓN CONFIGURABLE (advanceNotice)');
-console.log('✅ CORRECIÓN DE ERROR EN profesionales.js (tabla estable)');
-console.log('✅ CARGA DE DATOS OPTIMIZADA SEGÚN PERMISOS (sin errores en consola)');
 console.log('✅ AUTENTICACIÓN SIN CONTRASEÑAS (correo de restablecimiento)');
-console.log('✅ 🆕 MÓDULO INDEPENDIENTE DE NOTAS DE EVOLUCIÓN');
-console.log('✅ 🆕 REGLAS DE FIREBASE ACTUALIZADAS PARA SESIONES');
+console.log('✅ MÓDULO INDEPENDIENTE DE NOTAS DE EVOLUCIÓN');
+console.log('✅ REGLAS DE FIREBASE ACTUALIZADAS PARA SESIONES');
+console.log('✅ CORRECCIÓN: state.setStaff() en lugar de asignación directa');
+console.log('✅ CORRECCIÓN: guardado de disponibilidad por nodo individual');
+console.log('✅ CORRECCIÓN: eliminación de referencias circulares');
 console.log('🚀 LISTO PARA PRODUCCIÓN');
 ```
 

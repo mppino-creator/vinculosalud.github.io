@@ -2622,5 +2622,40 @@ window.abrirAgenda = function() {
 };
 </script>
 
+
+
+<script>
+(function() {
+    // Forzar ocultar botones de edición al cargar
+    function ocultarBotonesEdicion() {
+        const botones = document.querySelectorAll('.admin-edit-btn');
+        botones.forEach(btn => {
+            btn.style.display = 'none';
+        });
+    }
+    
+    // Ejecutar inmediatamente
+    ocultarBotonesEdicion();
+    
+    // También cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', ocultarBotonesEdicion);
+    
+    // Observar cambios en el DOM por si alguien los muestra
+    const observer = new MutationObserver(function() {
+        const botones = document.querySelectorAll('.admin-edit-btn');
+        botones.forEach(btn => {
+            if (btn.style.display !== 'none' && window.getComputedStyle(btn).display !== 'none') {
+                // Verificar si es admin
+                const isAdmin = window.state?.currentUser?.role === 'admin';
+                if (!isAdmin) {
+                    btn.style.display = 'none';
+                }
+            }
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+})();
+</script>
+
 </body>
 </html>

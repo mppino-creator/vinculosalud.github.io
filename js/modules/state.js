@@ -148,6 +148,9 @@ export const EDIT_HOURS = 24;
 // 🔥 NUEVA VARIABLE PARA ADMIN (confirmación de solicitudes)
 export let selectedPsychForBooking = null;
 
+// 🔥 NUEVA VARIABLE PARA BOOKING (profesional actual)
+export let currentPsychId = null;
+
 // ============================================
 // VARIABLES PARA FICHAS CLÍNICAS
 // ============================================
@@ -200,6 +203,9 @@ export function setInstagramData(data) { instagramData = { ...instagramData, ...
 export function setFichasIngreso(newFichas) { fichasIngreso = newFichas; }
 export function setSesiones(newSesiones) { sesiones = newSesiones; }
 export function setInformes(newInformes) { informes = newInformes; }
+
+// 🔥 Setter para currentPsychId
+export function setCurrentPsychId(id) { currentPsychId = id; }
 
 // ============================================
 // FUNCIÓN setCurrentUser (con manejo de errores)
@@ -460,7 +466,8 @@ export function resetAllState() {
     tempQrPresencialData = null;
     tempQrData = null;
     selectedPatientForTherapist = null;
-    selectedPsychForBooking = null; // 🔥 Reiniciar también
+    selectedPsychForBooking = null;
+    currentPsychId = null; // 🔥 Reiniciar también
     dataLoaded = false;
 
     fichasIngreso = [];
@@ -505,7 +512,8 @@ export function getStateSummary() {
         instagramConfigurado: instagramData.image ? '✅' : '❌',
         instagramData: instagramData,
         currentUser: currentUser ? `${currentUser.data?.name} (${currentUser.role})` : 'No logueado',
-        dataLoaded
+        dataLoaded,
+        currentPsychId
     };
 }
 
@@ -552,7 +560,8 @@ const state = {
     tempQrPresencialData,
     tempQrData,
     selectedPatientForTherapist,
-    selectedPsychForBooking, // 🔥 Incluida en el objeto
+    selectedPsychForBooking,
+    currentPsychId, // 🔥 Incluida en el objeto
     dataLoaded,
     EDIT_HOURS,
 
@@ -595,7 +604,8 @@ const state = {
     setTempQrPresencialData,
     setTempQrData,
     setSelectedPatientForTherapist,
-    setSelectedPsychForBooking, // 🔥 Setter para la nueva variable
+    setSelectedPsychForBooking,
+    setCurrentPsychId, // 🔥 Setter para la nueva variable
     setDataLoaded,
 
     // Setters de secciones editables

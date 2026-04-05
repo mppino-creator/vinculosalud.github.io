@@ -13,68 +13,68 @@ export let aboutImage = '';
 
 export let atencionTexts = {
     adultos: {
-    title: 'Atención Adultos',
-    description: 'Espacio terapéutico para adultos enfocado en ansiedad, depresión, estrés y desarrollo personal. Modalidad online y presencial.',
-    icon: 'user',
-    price: 'Desde $25.000',
-    active: true
-},
-infantil: {
-    title: 'Atención Infantil',
-    description: 'Acompañamiento emocional y conductual para niños, incluyendo orientación a padres. Modalidad online y presencial.',
-    icon: 'child',
-    price: 'Desde $25.000',
-    active: true
-},
-adolescente: {
-    title: 'Atención Adolescente',
-    description: 'Apoyo psicológico en etapa adolescente: emociones, identidad, relaciones sociales y dificultades escolares. Modalidad online y presencial.',
-    icon: 'user-graduate',
-    price: 'Desde $25.000',
-    active: true
-},
-pareja: {
-    title: 'Terapia de Pareja',
-    description: 'Intervención enfocada en mejorar la comunicación, resolver conflictos y fortalecer la relación. Modalidad online y presencial.',
-    icon: 'heart',
-    price: 'Desde $35.000',
-    active: true
-},
-familiar: {
-    title: 'Terapia Familiar',
-    description: 'Espacio terapéutico para mejorar la dinámica familiar y resolver conflictos. Modalidad online y presencial.',
-    icon: 'users',
-    price: 'Desde $40.000',
-    active: true
-},
-evaluacion: {
-    title: 'Evaluación Psicológica',
-    description: 'Proceso de evaluación mediante entrevistas y test psicológicos para diagnóstico y orientación profesional.',
-    icon: 'clipboard-check',
-    price: 'Desde $60.000',
-    active: true
-},
-informes: {
-    title: 'Informes Psicológicos',
-    description: 'Elaboración de informes y certificados psicológicos para fines clínicos, escolares o laborales.',
-    icon: 'file-alt',
-    price: 'Desde $35.000',
-    active: true
-},
-primera_consulta: {
-    title: 'Primera Consulta',
-    description: 'Sesión inicial para evaluar el motivo de consulta y definir objetivos terapéuticos.',
-    icon: 'star',
-    price: '$20.000 - $25.000',
-    active: true
-},
-empresas: {
-    title: 'Servicios para Empresas',
-    description: 'Charlas, talleres y programas de bienestar laboral, manejo del estrés y clima organizacional para equipos de trabajo.',
-    icon: 'briefcase',
-    price: 'Desde $120.000',
-    active: true
-}
+        title: 'Atención Adultos',
+        description: 'Espacio terapéutico para adultos enfocado en ansiedad, depresión, estrés y desarrollo personal. Modalidad online y presencial.',
+        icon: 'user',
+        price: 'Desde $25.000',
+        active: true
+    },
+    infantil: {
+        title: 'Atención Infantil',
+        description: 'Acompañamiento emocional y conductual para niños, incluyendo orientación a padres. Modalidad online y presencial.',
+        icon: 'child',
+        price: 'Desde $25.000',
+        active: true
+    },
+    adolescente: {
+        title: 'Atención Adolescente',
+        description: 'Apoyo psicológico en etapa adolescente: emociones, identidad, relaciones sociales y dificultades escolares. Modalidad online y presencial.',
+        icon: 'user-graduate',
+        price: 'Desde $25.000',
+        active: true
+    },
+    pareja: {
+        title: 'Terapia de Pareja',
+        description: 'Intervención enfocada en mejorar la comunicación, resolver conflictos y fortalecer la relación. Modalidad online y presencial.',
+        icon: 'heart',
+        price: 'Desde $35.000',
+        active: true
+    },
+    familiar: {
+        title: 'Terapia Familiar',
+        description: 'Espacio terapéutico para mejorar la dinámica familiar y resolver conflictos. Modalidad online y presencial.',
+        icon: 'users',
+        price: 'Desde $40.000',
+        active: true
+    },
+    evaluacion: {
+        title: 'Evaluación Psicológica',
+        description: 'Proceso de evaluación mediante entrevistas y test psicológicos para diagnóstico y orientación profesional.',
+        icon: 'clipboard-check',
+        price: 'Desde $60.000',
+        active: true
+    },
+    informes: {
+        title: 'Informes Psicológicos',
+        description: 'Elaboración de informes y certificados psicológicos para fines clínicos, escolares o laborales.',
+        icon: 'file-alt',
+        price: 'Desde $35.000',
+        active: true
+    },
+    primera_consulta: {
+        title: 'Primera Consulta',
+        description: 'Sesión inicial para evaluar el motivo de consulta y definir objetivos terapéuticos.',
+        icon: 'star',
+        price: '$20.000 - $25.000',
+        active: true
+    },
+    empresas: {
+        title: 'Servicios para Empresas',
+        description: 'Charlas, talleres y programas de bienestar laboral, manejo del estrés y clima organizacional para equipos de trabajo.',
+        icon: 'briefcase',
+        price: 'Desde $120.000',
+        active: true
+    }
 };
 
 export let contactInfo = {
@@ -83,14 +83,12 @@ export let contactInfo = {
     address: 'Ohiggins 263, Concepción'
 };
 
+// DATOS DE INSTAGRAM - MODIFICADO PARA EMBED
 export let instagramData = {
     title: 'Sigue Nuestro Instagram',
-    subtitle: 'VÍNCULO',
-    quote: '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.',
-    text: 'Detente aquí un segundo',
-    message: 'Esto también se aprende.',
+    subtitle: '@vinculo.salud',
     link: 'https://instagram.com/vinculo.salud',
-    image: ''
+    embed_code: ''  // Aquí se guardará el código HTML de inserción
 };
 
 // ============================================
@@ -590,18 +588,18 @@ export function renderSpecialtiesTable() {
 
     const specialties = state.specialties || [];
     if (specialties.length === 0) {
-        container.innerHTML = ' <td colspan="3" style="text-align:center;">No hay especialidades registradas<\/td> ';
+        container.innerHTML = '<tr><td colspan="3" style="text-align:center;">No hay especialidades registradas</td></tr>';
         return;
     }
 
     container.innerHTML = specialties.map(spec => `
-         <tr id="spec-${spec.id}">
-               <td><strong>${spec.name}</strong><\/td>
-               <td style="text-align:right;">
-                 <button onclick="window.editSpecialty('${spec.id}')" class="btn-editar">✏️ Editar</button>
-                 <button onclick="window.deleteSpecialty('${spec.id}')" class="btn-eliminar">🗑️ Eliminar</button>
-               <\/td>
-         <\/tr>
+        <tr id="spec-${spec.id}">
+            <td><strong>${spec.name}</strong></td>
+            <td style="text-align:right;">
+                <button onclick="window.editSpecialty('${spec.id}')" class="btn-editar">✏️ Editar</button>
+                <button onclick="window.deleteSpecialty('${spec.id}')" class="btn-eliminar">🗑️ Eliminar</button>
+            </td>
+        </tr>
     `).join('');
 }
 
@@ -619,8 +617,6 @@ export function closeAddSpecialtyModal() {
 
 export async function addSpecialty() {
     const input = document.getElementById('newSpecialtyName');
-    console.log('Input encontrado:', input);
-    console.log('Valor del input:', input?.value);
     const name = input?.value?.trim();
     if (!name) {
         showToast('Ingresa un nombre para la especialidad', 'error');
@@ -653,7 +649,6 @@ export function showEditSpecialtyModal(id) {
 
     const modal = document.getElementById('editSpecialtyModal');
     if (!modal) {
-        // Crear modal si no existe
         const modalHTML = `
         <div id="editSpecialtyModal" class="modal">
             <div class="modal-content" style="max-width: 400px;">
@@ -716,20 +711,8 @@ export async function deleteSpecialty(id) {
         await db.ref(`specialties/${id}`).remove();
         const newList = state.specialties.filter(s => s.id != id);
         state.setSpecialties(newList);
-        // Actualizar los profesionales para eliminar esta especialidad de sus listas
-        state.staff.forEach(prof => {
-            if (prof.spec && Array.isArray(prof.spec)) {
-                const filtered = prof.spec.filter(s => s !== newList.find(sp => sp.id == id)?.name);
-                if (filtered.length !== prof.spec.length) {
-                    prof.spec = filtered;
-                }
-            }
-        });
         actualizarSelectoresEspecialidades();
         renderSpecialtiesTable();
-        // Guardar cambios en los profesionales si hubo modificaciones
-        // Nota: no llamamos a save() aquí porque podría reintentar otros nodos. En su lugar, guardamos directamente
-        // pero como la modificación de profesionales se guardará con el próximo save general, está bien.
         showToast('✅ Especialidad eliminada', 'success');
     } catch (error) {
         console.error('Error eliminando especialidad:', error);
@@ -738,7 +721,7 @@ export async function deleteSpecialty(id) {
 }
 
 // ============================================
-// FUNCIONES PARA SECCIÓN INSTAGRAM
+// FUNCIONES PARA SECCIÓN INSTAGRAM CON EMBED
 // ============================================
 export function cargarInstagramData() {
     db.ref('instagramData').once('value', (snapshot) => {
@@ -747,11 +730,8 @@ export function cargarInstagramData() {
         if (data) {
             instagramData.title = data.title || instagramData.title;
             instagramData.subtitle = data.subtitle || instagramData.subtitle;
-            instagramData.quote = data.quote || instagramData.quote;
-            instagramData.text = data.text || instagramData.text;
-            instagramData.message = data.message || instagramData.message;
             instagramData.link = data.link || instagramData.link;
-            instagramData.image = data.image || instagramData.image;
+            instagramData.embed_code = data.embed_code || '';
         }
         updateInstagramSection();
     }).then(() => {
@@ -761,11 +741,8 @@ export function cargarInstagramData() {
             if (data) {
                 instagramData.title = data.title || instagramData.title;
                 instagramData.subtitle = data.subtitle || instagramData.subtitle;
-                instagramData.quote = data.quote || instagramData.quote;
-                instagramData.text = data.text || instagramData.text;
-                instagramData.message = data.message || instagramData.message;
                 instagramData.link = data.link || instagramData.link;
-                instagramData.image = data.image || instagramData.image;
+                instagramData.embed_code = data.embed_code || '';
             }
             updateInstagramSection();
         });
@@ -777,168 +754,141 @@ export function actualizarInstagramData(nuevosDatos) {
     if (nuevosDatos) {
         instagramData.title = nuevosDatos.title || instagramData.title;
         instagramData.subtitle = nuevosDatos.subtitle || instagramData.subtitle;
-        instagramData.quote = nuevosDatos.quote || instagramData.quote;
-        instagramData.text = nuevosDatos.text || instagramData.text;
-        instagramData.message = nuevosDatos.message || instagramData.message;
         instagramData.link = nuevosDatos.link || instagramData.link;
-        instagramData.image = nuevosDatos.image || instagramData.image;
+        instagramData.embed_code = nuevosDatos.embed_code || instagramData.embed_code;
     }
 }
 
 export function updateInstagramSection() {
-    console.log('📸 Actualizando sección Instagram...');
+    console.log('📸 Actualizando sección Instagram con embed real...');
+    
     const titleEl = document.getElementById('instagramTitle');
     const subtitleEl = document.getElementById('instagramSubtitle');
-    const quoteEl = document.getElementById('instagramQuote');
-    const textEl = document.getElementById('instagramText');
-    const messageEl = document.getElementById('instagramMessage');
     const linkEl = document.getElementById('instagramLink');
-    const imageEl = document.getElementById('instagramImage');
-    console.log('🎯 Elementos encontrados:', { titleEl: !!titleEl, subtitleEl: !!subtitleEl, quoteEl: !!quoteEl, textEl: !!textEl, messageEl: !!messageEl, linkEl: !!linkEl, imageEl: !!imageEl });
+    const feedContainer = document.querySelector('.instagram-feed');
+    const contentContainer = document.querySelector('.instagram-content');
+    
     if (titleEl) titleEl.innerText = instagramData.title;
     if (subtitleEl) subtitleEl.innerText = instagramData.subtitle;
-    if (quoteEl) {
-        if (instagramData.quote && instagramData.quote.includes('<strong>')) {
-            quoteEl.innerHTML = instagramData.quote;
-        } else {
-            const lines = instagramData.quote ? instagramData.quote.split('\n') : [];
-            if (lines.length === 0 || (lines.length === 1 && lines[0] === '')) {
-                quoteEl.innerHTML = '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
-            } else if (lines.length === 1) {
-                quoteEl.innerHTML = `<strong>"${lines[0]}"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.`;
-            } else if (lines.length === 2) {
-                quoteEl.innerHTML = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>pero no tiene con quién celebrarlo.`;
-            } else {
-                quoteEl.innerHTML = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>${lines.slice(2).join(' ')}`;
-            }
-        }
+    
+    // Ocultar el contenido de texto que ya no usaremos
+    if (contentContainer) {
+        contentContainer.style.display = 'none';
     }
-    if (textEl) textEl.innerText = instagramData.text;
-    if (messageEl) messageEl.innerText = instagramData.message;
+    
+    // Mostrar el embed de Instagram
+    if (feedContainer && instagramData.embed_code) {
+        feedContainer.innerHTML = `
+            <div style="display: flex; justify-content: center; margin: 20px 0;">
+                ${instagramData.embed_code}
+            </div>
+            <script async src="//www.instagram.com/embed.js"><\/script>
+        `;
+    } else if (feedContainer) {
+        feedContainer.innerHTML = `
+            <div style="display: flex; justify-content: center; margin: 20px 0; padding: 40px; background: #f5f5f5; border-radius: 20px; text-align: center;">
+                <p style="color: #999;">No hay publicación de Instagram configurada.</p>
+                <p style="color: #999; font-size: 0.8rem;">Ve al panel de administrador y pega el código de inserción.</p>
+            </div>
+        `;
+    }
+    
     if (linkEl) {
         linkEl.href = instagramData.link || 'https://instagram.com/vinculo.salud';
-        linkEl.target = '_blank';
-        linkEl.rel = 'noopener noreferrer';
+        linkEl.style.display = 'inline-flex';
     }
-    if (imageEl) {
-        if (instagramData.image) {
-            imageEl.src = instagramData.image;
-            imageEl.style.display = 'block';
-        } else {
-            imageEl.src = 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500';
-            imageEl.style.display = 'block';
-        }
-    }
-    console.log('✅ Sección Instagram actualizada');
+    
+    console.log('✅ Sección Instagram actualizada con embed real');
 }
 
 export function showInstagramModal() {
     if (!document.getElementById('instagramModal')) {
         const modalHTML = `
         <div id="instagramModal" class="modal">
-            <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-content" style="max-width: 700px;">
                 <span class="modal-close" onclick="document.getElementById('instagramModal').style.display='none'">&times;</span>
-                <h2 style="margin-bottom: 25px;">📸 Editar Sección Instagram</h2>
-                <div class="form-group"><label>Título (arriba)</label><input type="text" id="instagramTitleInput" class="filter-input" placeholder="Sigue Nuestro Instagram"></div>
-                <div class="form-group"><label>Subtítulo (VINCULO)</label><input type="text" id="instagramSubtitleInput" class="filter-input" placeholder="VÍNCULO"></div>
-                <div class="form-group"><label>Cita (escribe una línea por cada texto, sin HTML)</label><textarea id="instagramQuoteInput" rows="4" class="filter-input" placeholder="SOLO HABLAMOS&#10;JAVIERA TIENE EL ÉXITO,&#10;pero no tiene con quién celebrarlo."></textarea><small>Escribe una línea por cada parte. La primera línea aparecerá en negritas.</small></div>
-                <div class="form-group"><label>Texto secundario</label><input type="text" id="instagramTextInput" class="filter-input" placeholder="Detente aquí un segundo"></div>
-                <div class="form-group"><label>Mensaje final</label><input type="text" id="instagramMessageInput" class="filter-input" placeholder="Esto también se aprende."></div>
-                <div class="form-group"><label>Enlace a Instagram</label><input type="url" id="instagramLinkInput" class="filter-input" placeholder="https://instagram.com/vinculo.salud"></div>
-                <div class="form-group"><label>Imagen destacada</label><div class="file-upload" onclick="document.getElementById('instagramImageInput').click()"><i class="fa fa-cloud-upload-alt"></i> Seleccionar imagen</div><input type="file" id="instagramImageInput" accept="image/*" style="display:none;" onchange="uploadInstagramImage()"><img id="instagramImagePreview" src="" style="max-width:100%; max-height:200px; margin-top:15px; border-radius:12px; display:none;"></div>
-                <div style="display:flex; gap:15px;"><button class="btn-staff" style="background:var(--exito); flex:1;" onclick="saveInstagramData()">Guardar</button><button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('instagramModal').style.display='none'">Cancelar</button></div>
+                <h2 style="margin-bottom: 25px;">📸 Configurar Instagram</h2>
+                
+                <div class="form-group">
+                    <label>🔗 URL del perfil de Instagram</label>
+                    <input type="url" id="instagramLinkInput" class="filter-input" placeholder="https://www.instagram.com/vinculo.salud/">
+                    <small>Enlace a tu perfil (para el botón "Ver en Instagram")</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>📷 Código de inserción (Embed) de Instagram</label>
+                    <textarea id="instagramEmbedInput" rows="12" class="filter-input" placeholder='Pega aquí el código completo que te da Instagram al hacer clic en "Insertar"...'></textarea>
+                    <small>Copia el código desde Instagram: ve a tu publicación → ⋮ → Insertar → Copiar código</small>
+                </div>
+                
+                <div style="background:#f0f7f0; padding:15px; border-radius:12px; margin:15px 0;">
+                    <p style="margin:0 0 10px 0;"><strong>💡 ¿Cómo obtener el código?</strong></p>
+                    <ol style="margin:0; padding-left:20px;">
+                        <li>Ve a <strong>instagram.com</strong> desde tu computador</li>
+                        <li>Abre la publicación que quieres mostrar</li>
+                        <li>Haz clic en los <strong>3 puntos (⋯)</strong></li>
+                        <li>Selecciona <strong>"Insertar"</strong></li>
+                        <li>Copia TODO el código y pégalo arriba</li>
+                    </ol>
+                </div>
+                
+                <div style="display:flex; gap:15px; margin-top:20px;">
+                    <button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="window.personalizacion.guardarInstagramEmbed()">Guardar</button>
+                    <button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('instagramModal').style.display='none'">Cancelar</button>
+                </div>
             </div>
         </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
-    const titleInput = document.getElementById('instagramTitleInput');
-    const subtitleInput = document.getElementById('instagramSubtitleInput');
-    const quoteInput = document.getElementById('instagramQuoteInput');
-    const textInput = document.getElementById('instagramTextInput');
-    const messageInput = document.getElementById('instagramMessageInput');
+    
     const linkInput = document.getElementById('instagramLinkInput');
-    const preview = document.getElementById('instagramImagePreview');
-    if (titleInput) titleInput.value = instagramData.title;
-    if (subtitleInput) subtitleInput.value = instagramData.subtitle;
-    if (quoteInput) {
-        if (instagramData.quote.includes('<strong>')) {
-            const textOnly = instagramData.quote.replace(/<strong>/g, '').replace(/<\/strong>/g, '').replace(/<br>/g, '\n');
-            quoteInput.value = textOnly;
-        } else {
-            quoteInput.value = instagramData.quote;
-        }
-    }
-    if (textInput) textInput.value = instagramData.text;
-    if (messageInput) messageInput.value = instagramData.message;
-    if (linkInput) linkInput.value = instagramData.link;
-    if (instagramData.image && preview) {
-        preview.src = instagramData.image;
-        preview.style.display = 'block';
-    } else if (preview) preview.style.display = 'none';
+    const embedInput = document.getElementById('instagramEmbedInput');
+    
+    if (linkInput) linkInput.value = instagramData.link || 'https://instagram.com/vinculo.salud';
+    if (embedInput) embedInput.value = instagramData.embed_code || '';
+    
     const modal = document.getElementById('instagramModal');
     if (modal) modal.style.display = 'flex';
 }
 
+export function guardarInstagramEmbed() {
+    const linkInput = document.getElementById('instagramLinkInput');
+    const embedInput = document.getElementById('instagramEmbedInput');
+    
+    if (linkInput) instagramData.link = linkInput.value;
+    if (embedInput) instagramData.embed_code = embedInput.value;
+    
+    console.log('💾 Guardando embed de Instagram:', { link: instagramData.link, hasEmbed: !!instagramData.embed_code });
+    
+    db.ref('instagramData').set({
+        title: instagramData.title,
+        subtitle: instagramData.subtitle,
+        link: instagramData.link,
+        embed_code: instagramData.embed_code
+    })
+    .then(() => {
+        console.log('✅ Embed guardado en Firebase');
+        updateInstagramSection();
+        showToast('Instagram actualizado correctamente', 'success');
+    })
+    .catch((error) => {
+        console.error('❌ Error guardando:', error);
+        showToast('Error al guardar', 'error');
+    });
+    
+    const modal = document.getElementById('instagramModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Función antigua de subir imagen (ya no se usa, pero la mantengo por compatibilidad)
 export function uploadInstagramImage() {
-    const input = document.getElementById('instagramImageInput');
-    if (!input || !input.files || !input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        instagramData.image = e.target.result;
-        const preview = document.getElementById('instagramImagePreview');
-        if (preview) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        }
-        showToast('✅ Imagen cargada, guarda los cambios', 'success');
-    };
-    reader.readAsDataURL(input.files[0]);
+    showToast('Esta función ha sido reemplazada. Usa el código de inserción de Instagram.', 'info');
 }
 
 export function saveInstagramData() {
-    const titleInput = document.getElementById('instagramTitleInput');
-    const subtitleInput = document.getElementById('instagramSubtitleInput');
-    const quoteInput = document.getElementById('instagramQuoteInput');
-    const textInput = document.getElementById('instagramTextInput');
-    const messageInput = document.getElementById('instagramMessageInput');
-    const linkInput = document.getElementById('instagramLinkInput');
-    let quoteValue = quoteInput?.value || '';
-    if (quoteValue) {
-        const lines = quoteValue.split('\n').filter(l => l.trim());
-        if (lines.length === 1) {
-            quoteValue = `<strong>"${lines[0]}"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.`;
-        } else if (lines.length === 2) {
-            quoteValue = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>pero no tiene con quién celebrarlo.`;
-        } else if (lines.length >= 3) {
-            quoteValue = `<strong>"${lines[0]}"</strong><br>${lines[1]}<br>${lines.slice(2).join(' ')}`;
-        } else {
-            quoteValue = '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
-        }
-    } else {
-        quoteValue = '<strong>"SOLO HABLAMOS"</strong><br>JAVIERA TIENE EL ÉXITO,<br>pero no tiene con quién celebrarlo.';
-    }
-    instagramData.title = titleInput?.value || instagramData.title;
-    instagramData.subtitle = subtitleInput?.value || instagramData.subtitle;
-    instagramData.quote = quoteValue;
-    instagramData.text = textInput?.value || instagramData.text;
-    instagramData.message = messageInput?.value || instagramData.message;
-    instagramData.link = linkInput?.value || instagramData.link;
-    console.log('💾 Guardando InstagramData:', instagramData);
-    db.ref('instagramData').set(instagramData)
-        .then(() => {
-            console.log('✅ InstagramData guardado en Firebase');
-            if (window.state && typeof window.state.setInstagramData === 'function') window.state.setInstagramData(instagramData);
-            updateInstagramSection();
-            if (typeof window.refrescarVistaPublica === 'function') window.refrescarVistaPublica();
-            showToast('Sección Instagram actualizada', 'success');
-        })
-        .catch((error) => {
-            console.error('❌ Error guardando InstagramData:', error);
-            showToast('Error al guardar', 'error');
-        });
-    const modal = document.getElementById('instagramModal');
-    if (modal) modal.style.display = 'none';
+    // Redirigir a la nueva función
+    guardarInstagramEmbed();
 }
 
 // ============================================
@@ -1070,7 +1020,6 @@ export function cargarAtencionTexts() {
     db.ref('atencionTexts').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data && typeof data === 'object') {
-            // Limpiar datos: reconstruir cada tipo con campos planos
             const cleaned = {};
             for (const [key, tipo] of Object.entries(data)) {
                 cleaned[key] = {
@@ -1083,7 +1032,6 @@ export function cargarAtencionTexts() {
             }
             atencionTexts = cleaned;
         } else {
-            // Si no hay datos, usar valores por defecto (ya están en la variable)
             if (Object.keys(atencionTexts).length === 0) {
                 atencionTexts = {
                     online: { title: 'Online', description: 'sesiones por videollamada desde la comodidad de tu hogar', icon: 'video', price: 'Desde $25.000', active: true },
@@ -1116,23 +1064,6 @@ export function updateAtencionSection() {
         `;
     }
     container.innerHTML = html;
-    // También actualizar los elementos antiguos por si existen (para compatibilidad)
-    const onlineTitle = document.getElementById('atencionOnlineTitle');
-    const onlineDesc = document.getElementById('atencionOnlineDesc');
-    const presencialTitle = document.getElementById('atencionPresencialTitle');
-    const presencialDesc = document.getElementById('atencionPresencialDesc');
-    const parejaTitle = document.getElementById('atencionParejaTitle');
-    const parejaDesc = document.getElementById('atencionParejaDesc');
-    const familiarTitle = document.getElementById('atencionFamiliarTitle');
-    const familiarDesc = document.getElementById('atencionFamiliarDesc');
-    if (onlineTitle && atencionTexts.online) onlineTitle.innerText = atencionTexts.online.title;
-    if (onlineDesc && atencionTexts.online) onlineDesc.innerText = atencionTexts.online.description;
-    if (presencialTitle && atencionTexts.presencial) presencialTitle.innerText = atencionTexts.presencial.title;
-    if (presencialDesc && atencionTexts.presencial) presencialDesc.innerText = atencionTexts.presencial.description;
-    if (parejaTitle && atencionTexts.pareja) parejaTitle.innerText = atencionTexts.pareja.title;
-    if (parejaDesc && atencionTexts.pareja) parejaDesc.innerText = atencionTexts.pareja.description;
-    if (familiarTitle && atencionTexts.familiar) familiarTitle.innerText = atencionTexts.familiar.title;
-    if (familiarDesc && atencionTexts.familiar) familiarDesc.innerText = atencionTexts.familiar.description;
 }
 
 export function showAtencionModal() {
@@ -1215,7 +1146,6 @@ window.guardarTodosLosTiposAtencion = function() {
         }
     });
     atencionTexts = nuevosTipos;
-    // Guardar directamente en Firebase (evita pasar por save() que podría reintentar otros nodos corruptos)
     db.ref('atencionTexts').set(atencionTexts)
         .then(() => {
             updateAtencionSection();
@@ -1445,7 +1375,6 @@ export function saveMyConfig() {
     const staffIndex = state.staff.findIndex(s => s.id == psych.id);
     if (staffIndex !== -1) state.staff[staffIndex] = psych;
     else console.warn('⚠️ Psicólogo no encontrado en staff');
-    // Guardar directamente en Firebase para este nodo, evitando el save() general que podría reintentar otros nodos corruptos
     const staffObj = {};
     state.staff.forEach(item => { staffObj[item.id] = item; });
     db.ref('staff').set(staffObj)
@@ -1531,6 +1460,7 @@ if (typeof window !== 'undefined') {
         cargarEspecialidades, renderSpecialtiesTable, showAddSpecialtyModal, closeAddSpecialtyModal, addSpecialty,
         showEditSpecialtyModal, closeEditSpecialtyModal, updateSpecialty, deleteSpecialty,
         cargarInstagramData, actualizarInstagramData, updateInstagramSection, showInstagramModal, uploadInstagramImage, saveInstagramData,
+        guardarInstagramEmbed,
         cargarAboutTexts, updateAboutSection, showAboutModal, uploadAboutImage, saveAboutTexts,
         cargarAtencionTexts, updateAtencionSection, showAtencionModal,
         cargarContactInfo, updateContactSection, showContactModal, saveContactInfo,

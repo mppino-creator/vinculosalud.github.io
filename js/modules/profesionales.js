@@ -468,7 +468,7 @@ window.previewMyPhoto = function(input) {
                 canvas.height = img.height * scale;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const reducedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                const reducedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
                 document.getElementById('editMyPhotoPreview').src = reducedDataUrl;
                 state.setTempImageData(reducedDataUrl);
                 showToast('✅ Foto optimizada', 'success');

@@ -34,6 +34,25 @@ let activeListeners = {
 };
 
 // ============================================
+// REGISTRAR VISITA A PROFESIONAL (NUEVO)
+// ============================================
+export async function registrarVisitaProfesional(psychId) {
+    if (!psychId) return;
+    try {
+        const visitaRef = firebase.database().ref(`analytics/profesionales/${psychId}/visitas`);
+        await visitaRef.transaction((current) => (current || 0) + 1);
+        
+        const hoy = new Date().toISOString().split('T')[0];
+        const diarioRef = firebase.database().ref(`analytics/profesionales/${psychId}/visitas_diarias/${hoy}`);
+        await diarioRef.transaction((current) => (current || 0) + 1);
+        
+        console.log(`✅ Visita registrada para profesional ${psychId}`);
+    } catch (error) {
+        console.error('Error registrando visita:', error);
+    }
+}
+
+// ============================================
 // FUNCIÓN AUXILIAR PARA CALIFICACIONES
 // ============================================
 function getAverageRating(psychId) {
@@ -65,7 +84,6 @@ function getAvailableSlotsCountForToday(psych) {
     
     const bookedTimes = [...new Set([...bookedAppointments, ...bookedRequests])];
     
-    // Antelación configurada (por defecto 60 minutos)
     const advanceMinutes = psych.advanceNotice ?? 60;
     const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
     
@@ -317,6 +335,265 @@ export function showTherapistInfo(psychId) {
 }
 
 // ============================================
+// ABRIR BOOKING (CON REGISTRO DE VISITA)
+// ============================================
+export async function openBooking(psychId) {
+    console.log('📅 Abriendo booking para profesional:', psychId);
+    
+    // Registrar la visita
+    await registrarVisitaProfesional(psychId);
+    
+    const psych = state.staff.find(p => p.id == psychId);
+    if (!psych) {
+        showToast('Profesional no encontrado', 'error');
+        return;
+    }
+    
+    state.setCurrentPsychId(psychId);
+    
+    const psychNameSpan = document.getElementById('psychName');
+    const psychSelectedName = document.getElementById('psychSelectedName');
+    const psychSelectedSpec = document.getElementById('psychSelectedSpec');
+    
+    if (psychNameSpan) psychNameSpan.innerText = psych.name;
+    if (psychSelectedName) psychSelectedName.innerText = psych.name;
+    if (psychSelectedSpec) {
+        const specs = Array.isArray(psych.spec) ? psych.spec : [psych.spec];
+        psychSelectedSpec.innerText = specs[0] || 'Profesional';
+    }
+    
+    const clientView = document.getElementById('clientView');
+    const bookingPanel = document.getElementById('bookingPanel');
+    if (clientView) clientView.style.display = 'none';
+    if (bookingPanel) bookingPanel.style.display = 'block';
+    
+    // Resetear formulario
+    const custDate = document.getElementById('custDate');
+    if (custDate) custDate.value = '';
+    
+    const custTime = document.getElementById('custTime');
+    if (custTime) custTime.innerHTML = '<option value="">Selecciona un horario</option>';
+    
+    updateBookingDetails();
+}
+
+window.openBooking = openBooking;
+
+// ============================================
+// ACTUALIZAR DETALLES DE RESERVA
+// ============================================
+export function updateBookingDetails() {
+    const psychId = state.currentPsychId;
+    const psych = state.staff.find(p => p.id == psychId);
+    if (!psych) return;
+    
+    const appointmentType = document.getElementById('appointmentType')?.value;
+    const bookingPrice = document.getElementById('bookingPrice');
+    const bookingType = document.getElementById('bookingType');
+    const presencialWarning = document.getElementById('presencialWarning');
+    const onlineAvailabilityMsg = document.getElementById('onlineAvailabilityMsg');
+    
+    if (appointmentType === 'online') {
+        if (bookingPrice) bookingPrice.innerText = `$${(psych.priceOnline || 0).toLocaleString()}`;
+        if (bookingType) bookingType.innerText = 'Online';
+        if (presencialWarning) presencialWarning.style.display = 'none';
+        if (onlineAvailabilityMsg) onlineAvailabilityMsg.style.display = 'block';
+    } else {
+        if (bookingPrice) bookingPrice.innerText = `$${(psych.pricePresencial || 0).toLocaleString()}`;
+        if (bookingType) bookingType.innerText = 'Presencial';
+        if (presencialWarning) presencialWarning.style.display = 'block';
+        if (onlineAvailabilityMsg) onlineAvailabilityMsg.style.display = 'none';
+    }
+}
+
+// ============================================
+// ACTUALIZAR HORARIOS DISPONIBLES
+// ============================================
+export async function updateAvailableTimes() {
+    const date = document.getElementById('custDate')?.value;
+    const appointmentType = document.getElementById('appointmentType')?.value;
+    const timeSelect = document.getElementById('custTime');
+    const psychId = state.currentPsychId;
+    
+    if (!date || !psychId || !timeSelect) return;
+    
+    timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
+    
+    try {
+        const psych = state.staff.find(p => p.id == psychId);
+        if (!psych) throw new Error('Profesional no encontrado');
+        
+        const slots = psych.availability?.[date] || [];
+        
+        const citasSnapshot = await firebase.database().ref('appointments').once('value');
+        const citas = citasSnapshot.val() || {};
+        
+        const horariosOcupados = Object.values(citas)
+            .filter(c => c.psychId == psychId && c.date === date)
+            .map(c => c.time);
+        
+        const now = new Date();
+        const advanceMinutes = psych.advanceNotice ?? 60;
+        const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+        
+        const availableSlots = slots
+            .filter(slot => {
+                if (horariosOcupados.includes(slot.time)) return false;
+                if (appointmentType === 'presencial' && slot.isOvercupo) return false;
+                if (new Date(date + 'T' + slot.time) <= cutoffTime) return false;
+                return true;
+            })
+            .sort();
+        
+        if (availableSlots.length === 0) {
+            timeSelect.innerHTML = '<option value="">No hay horarios disponibles para esta fecha</option>';
+        } else {
+            timeSelect.innerHTML = '<option value="">Selecciona un horario</option>' +
+                availableSlots.map(time => `<option value="${time}">${time}</option>`).join('');
+        }
+    } catch (error) {
+        console.error('Error cargando horarios:', error);
+        timeSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
+    }
+}
+
+// ============================================
+// BUSCAR PACIENTE POR RUT
+// ============================================
+export function searchPatientByRutBooking() {
+    const rutInput = document.getElementById('custRut');
+    if (!rutInput) return;
+    
+    let rut = rutInput.value.replace(/\./g, '').replace(/\-/g, '');
+    if (!rut) return;
+    
+    const patient = state.patients.find(p => {
+        const pRut = p.rut ? p.rut.replace(/\./g, '').replace(/\-/g, '') : '';
+        return pRut === rut;
+    });
+    
+    if (!patient) return;
+    
+    const custName = document.getElementById('custName');
+    const custEmail = document.getElementById('custEmail');
+    const custPhone = document.getElementById('custPhone');
+    const custPrevision = document.getElementById('custPrevision');
+    const custBirthdate = document.getElementById('custBirthdate');
+    
+    if (custName) custName.value = patient.name || '';
+    if (custEmail) custEmail.value = patient.email || '';
+    if (custPhone) custPhone.value = patient.phone || '';
+    if (custPrevision) custPrevision.value = patient.prevision || '';
+    if (custBirthdate) custBirthdate.value = patient.birthdate || '';
+    
+    if (window.calcularEdad) window.calcularEdad();
+    showToast('Datos del paciente cargados', 'success');
+}
+
+// ============================================
+// EJECUTAR RESERVA (CON REGISTRO DE CONVERSIÓN)
+// ============================================
+export async function executeBooking() {
+    const psychId = state.currentPsychId;
+    if (!psychId) {
+        showToast('Selecciona un profesional', 'error');
+        return;
+    }
+    
+    const custName = document.getElementById('custName')?.value;
+    const custEmail = document.getElementById('custEmail')?.value;
+    const custRut = document.getElementById('custRut')?.value;
+    const custPhone = document.getElementById('custPhone')?.value;
+    const countryCode = document.getElementById('countryCode')?.value || '+56';
+    const phoneNine = document.getElementById('phoneNine')?.value || '9';
+    const custDate = document.getElementById('custDate')?.value;
+    const custTime = document.getElementById('custTime')?.value;
+    const appointmentType = document.getElementById('appointmentType')?.value;
+    const custMsg = document.getElementById('custMsg')?.value;
+    const paymentMethod = document.getElementById('paymentMethod')?.value;
+    const acceptPolicy = document.getElementById('acceptPolicy')?.checked;
+    
+    if (!custName || !custEmail || !custRut || !custDate || !custTime || !appointmentType || !paymentMethod) {
+        showToast('Completa todos los campos obligatorios', 'error');
+        return;
+    }
+    
+    if (!acceptPolicy) {
+        showToast('Debes aceptar la política de cancelación', 'error');
+        return;
+    }
+    
+    const phoneFull = `${countryCode} ${phoneNine} ${custPhone}`;
+    const psych = state.staff.find(p => p.id == psychId);
+    const price = appointmentType === 'online' ? psych.priceOnline : psych.pricePresencial;
+    
+    const appointment = {
+        id: Date.now().toString(),
+        patientName: custName,
+        patientEmail: custEmail,
+        patientRut: custRut,
+        patientPhone: phoneFull,
+        psychId: psychId,
+        psychName: psych.name,
+        date: custDate,
+        time: custTime,
+        type: appointmentType,
+        notes: custMsg,
+        paymentMethod: paymentMethod,
+        paymentStatus: 'pendiente',
+        price: price,
+        status: 'pendiente',
+        createdAt: new Date().toISOString()
+    };
+    
+    try {
+        await firebase.database().ref(`appointments/${appointment.id}`).set(appointment);
+        showToast('✅ Cita solicitada exitosamente', 'success');
+        
+        // Registrar conversión
+        await registrarConversion(psychId);
+        
+        // Cerrar panel y volver
+        const clientView = document.getElementById('clientView');
+        const bookingPanel = document.getElementById('bookingPanel');
+        if (clientView) clientView.style.display = 'block';
+        if (bookingPanel) bookingPanel.style.display = 'none';
+        
+        // Limpiar formulario
+        document.getElementById('custName').value = '';
+        document.getElementById('custEmail').value = '';
+        document.getElementById('custRut').value = '';
+        document.getElementById('custPhone').value = '';
+        document.getElementById('custDate').value = '';
+        document.getElementById('custMsg').value = '';
+        document.getElementById('acceptPolicy').checked = false;
+        
+    } catch (error) {
+        console.error('Error al guardar cita:', error);
+        showToast('Error al solicitar cita', 'error');
+    }
+}
+
+// ============================================
+// REGISTRAR CONVERSIÓN (NUEVO)
+// ============================================
+async function registrarConversion(psychId) {
+    if (!psychId) return;
+    try {
+        const conversionRef = firebase.database().ref(`analytics/profesionales/${psychId}/conversiones`);
+        await conversionRef.transaction((current) => (current || 0) + 1);
+        
+        const hoy = new Date().toISOString().split('T')[0];
+        const diarioRef = firebase.database().ref(`analytics/profesionales/${psychId}/conversiones_diarias/${hoy}`);
+        await diarioRef.transaction((current) => (current || 0) + 1);
+        
+        console.log(`✅ Conversión registrada para profesional ${psychId}`);
+    } catch (error) {
+        console.error('Error registrando conversión:', error);
+    }
+}
+
+// ============================================
 // FILTRO DE PROFESIONALES
 // ============================================
 export function filterProfessionals() {
@@ -405,7 +682,6 @@ export function renderProfessionals(professionals) {
         const img = p.img || p.photoURL || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500';
         const address = p.address || 'Dirección no especificada';
         
-        // Especialidades en badges
         const specs = p.spec ? (Array.isArray(p.spec) ? p.spec : [p.spec]) : [];
         const specialtiesHtml = specs.length ? 
             `<div class="specialties">${specs.map(s => `<span class="specialty-tag">${s}</span>`).join('')}</div>` : '';
@@ -807,7 +1083,7 @@ export function cargarDatosPrivados() {
         
         console.log('✅ Datos privados cargados correctamente');
         
-        // 🔥 ACTUALIZAR TABLAS SIEMPRE (independientemente de si el dashboard está visible)
+        // 🔥 ACTUALIZAR TABLAS SIEMPRE
         if (state.currentUser) {
             if (state.currentUser.role === 'admin') {
                 if (typeof renderStaffTable === 'function') renderStaffTable();
@@ -835,13 +1111,10 @@ export function cargarDatosPrivados() {
 // LISTENERS PRIVADOS CON ALMACENAMIENTO DE REFERENCIAS
 // ============================================
 function iniciarEscuchasPrivadas() {
-    // Solo si hay usuario autenticado
     if (!state.currentUser) return;
     
-    // Remover listeners anteriores si existen
     limpiarEscuchasPrivadas();
 
-    // Patients
     activeListeners.patients = db.ref('patients').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
@@ -854,7 +1127,6 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener patients:', error);
     });
     
-    // Appointments
     activeListeners.appointments = db.ref('appointments').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
@@ -879,7 +1151,6 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener appointments:', error);
     });
     
-    // PendingRequests
     activeListeners.pendingRequests = db.ref('pendingRequests').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
@@ -892,7 +1163,6 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener pendingRequests:', error);
     });
     
-    // Fichas de Ingreso
     activeListeners.fichasIngreso = db.ref('fichasIngreso').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
@@ -904,7 +1174,6 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener fichasIngreso:', error);
     });
     
-    // Sesiones
     activeListeners.sesiones = db.ref('sesiones').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
@@ -916,7 +1185,6 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener sesiones:', error);
     });
     
-    // Informes
     activeListeners.informes = db.ref('informes').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
@@ -981,6 +1249,8 @@ if (typeof window !== 'undefined') {
     window.forzarCargaDatos = forzarCargaDatos;
     window.forceRenderProfessionals = () => filterProfessionals();
     window.actualizarTodasLasSecciones = actualizarTodasLasSecciones;
+    window.openBooking = openBooking;
+    window.registrarVisitaProfesional = registrarVisitaProfesional;
     
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }

@@ -462,16 +462,18 @@ window.previewMyPhoto = function(input) {
             const img = new Image();
             img.onload = function() {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 400;
+                // Aumentar tamaño máximo de 400px a 800px para mejor calidad
+                const MAX_WIDTH = 800;
                 const scale = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scale;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const reducedDataUrl = canvas.toDataURL('image/jpeg', 0.95); // CAMBIAR CALIDAD IMAGEN
+                // Cambiar calidad de 0.7 a 0.95 para mejor definición
+                const reducedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
                 document.getElementById('editMyPhotoPreview').src = reducedDataUrl;
                 state.setTempImageData(reducedDataUrl);
-                showToast('✅ Foto optimizada', 'success');
+                showToast('✅ Foto optimizada (alta calidad)', 'success');
             };
             img.src = e.target.result;
         };

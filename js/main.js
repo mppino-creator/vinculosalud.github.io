@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN SIMPLIFICADA CON GUARDADO POR ROL Y LIMPIEZA EXTREMA DE DATOS
+// js/main.js - VERSIÓN ACTUALIZADA CON GUARDADO SIN AUTENTICACIÓN PARA PACIENTES
 import { db } from './config/firebase.js';
 import * as state from './modules/state.js';
 window.state = state;
@@ -39,7 +39,6 @@ if (typeof personalizacion.loadMyConfig !== 'function') {
 function safeClean(obj, fallback = null) {
     if (obj === null || typeof obj !== 'object') return obj;
     try {
-        // Intenta serializar/deserializar para romper cualquier referencia circular
         return JSON.parse(JSON.stringify(obj));
     } catch(e) {
         console.warn('Error al limpiar objeto, usando fallback:', e.message);
@@ -94,6 +93,7 @@ window.mostrarDetallePaciente = pacientes.mostrarDetallePaciente;
 window.showNewSesionModal = pacientes.showNewSesionModal;
 window.exportarHistorialPaciente = pacientes.exportarHistorialPaciente;
 window.cambiarPestana = pacientes.cambiarPestana;
+window.copiarLinkConsentimiento = pacientes.copiarLinkConsentimiento;
 
 window.openBooking = citas.openBooking;
 window.executeBooking = citas.executeBooking;
@@ -150,7 +150,6 @@ window.closePaymentMethodsModal = personalizacion.closePaymentMethodsModal;
 window.saveGlobalPaymentMethods = personalizacion.saveGlobalPaymentMethods;
 window.updatePaymentMethodsInfo = personalizacion.updatePaymentMethodsInfo;
 
-// 🔥 Funciones de especialidades (CRUD completo)
 window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
 window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
 window.addSpecialty = personalizacion.addSpecialty;
@@ -189,6 +188,7 @@ window.refrescarVistaPublica = admin.refrescarVistaPublica;
 window.mostrarTabsAdmin = admin.mostrarTabsAdmin;
 window.addEditButtonsToAdmin = admin.addEditButtonsToAdmin;
 window.asegurarTablaProfesionales = admin.asegurarTablaProfesionales;
+window.mostrarTabConsentimientos = admin.mostrarTabConsentimientos;
 
 window.fichasClinicas = fichasClinicas;
 window.permisos = permisos;
@@ -206,7 +206,6 @@ window.copiarAlPortapapeles = publico.copiarAlPortapapeles;
 window.showTherapistInfo = publico.showTherapistInfo;
 window.filterProfessionals = publico.filterProfessionals;
 
-// 🔥 Funciones del calendario (para los onclick)
 window.verDetalleCita = calendario.verDetalleCita;
 window.verDetalleSolicitud = calendario.verDetalleSolicitud;
 window.confirmarSolicitud = calendario.confirmarSolicitud;
@@ -327,207 +326,88 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (LIMPIEZA EXTREMA)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA - PERMITE GUARDAR SIN LOGIN)
 // ============================================
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
-    if (typeof utils.showToast === 'function') {
-        utils.showToast('Guardando datos...', 'info');
-    }
-
-    const user = firebase.auth().currentUser;
-    if (!user) {
-        console.warn('⚠️ No hay usuario autenticado, no se guardan datos');
-        return;
-    }
-
-    const role = state.currentUser?.role;
-    const uid = user.uid;
-
-    // Nodos que solo puede escribir el administrador
-    const adminOnlyNodes = [
-        'staff', 'messages', 'textosEditables', 'specialties',
-        'paymentMethods', 'backgroundImage', 'logoImage', 'heroTexts',
-        'aboutTexts', 'atencionTexts', 'contactInfo', 'instagramData'
+    
+    // Nodos que pueden guardarse SIN autenticación (para pacientes que reservan citas)
+    const nodosPublicos = [
+        'appointments', 'pendingRequests', 'patients', 'messages',
+        'fichasIngreso', 'sesiones', 'informes', 'consentimientos'
     ];
-
-    // Nodos privados que pueden escribir los psicólogos y el administrador
-    const privateNodes = [
-        'patients', 'appointments', 'pendingRequests',
-        'fichasIngreso', 'sesiones', 'informes'
+    
+    // Nodos que requieren autenticación (admin o psicólogo)
+    const nodosPrivados = [
+        'staff', 'specialties', 'textosEditables', 'paymentMethods',
+        'backgroundImage', 'logoImage', 'heroTexts', 'aboutTexts',
+        'atencionTexts', 'contactInfo', 'instagramData'
     ];
-
-    let nodesToSave = [];
-
-    if (role === 'admin') {
-        nodesToSave = [...adminOnlyNodes, ...privateNodes];
-    } else if (role === 'psych') {
-        nodesToSave = [...privateNodes];
-    } else {
-        console.warn('⚠️ Usuario sin rol reconocido, no se guardan datos');
-        return;
-    }
-
+    
     const promises = [];
-
-    for (const node of nodesToSave) {
+    const user = firebase.auth().currentUser;
+    const role = state.currentUser?.role;
+    
+    // 1. Guardar nodos públicos (SIEMPRE, sin importar autenticación)
+    for (const node of nodosPublicos) {
         let data;
         try {
             switch (node) {
-                case 'staff':
-    const staffObj = {};
-    state.staff.forEach(item => { 
-        // Limpiar cada profesional individualmente
-        const cleanItem = JSON.parse(JSON.stringify(item));
-        staffObj[cleanItem.id] = cleanItem;
-    });
-    data = staffObj;
-    break;
-                case 'patients':
-                    const patientsObj = {};
-                    state.patients.forEach(item => { patientsObj[item.id] = safeClean(item, {}); });
-                    data = patientsObj;
-                    break;
                 case 'appointments':
                     const appointmentsObj = {};
-                    state.appointments.forEach(item => { appointmentsObj[item.id] = safeClean(item, {}); });
+                    (state.appointments || []).forEach(item => { 
+                        if (item && item.id) appointmentsObj[item.id] = safeClean(item, {}); 
+                    });
                     data = appointmentsObj;
                     break;
                 case 'pendingRequests':
                     const pendingRequestsObj = {};
-                    state.pendingRequests.forEach(item => { pendingRequestsObj[item.id] = safeClean(item, {}); });
+                    (state.pendingRequests || []).forEach(item => { 
+                        if (item && item.id) pendingRequestsObj[item.id] = safeClean(item, {}); 
+                    });
                     data = pendingRequestsObj;
+                    break;
+                case 'patients':
+                    const patientsObj = {};
+                    (state.patients || []).forEach(item => { 
+                        if (item && item.id) patientsObj[item.id] = safeClean(item, {}); 
+                    });
+                    data = patientsObj;
                     break;
                 case 'messages':
                     const messagesObj = {};
-                    state.messages.forEach(item => { messagesObj[item.id] = safeClean(item, {}); });
+                    (state.messages || []).forEach(item => { 
+                        if (item && item.id) messagesObj[item.id] = safeClean(item, {}); 
+                    });
                     data = messagesObj;
-                    break;
-                case 'specialties':
-                    const specialtiesObj = {};
-                    state.specialties.forEach(item => { specialtiesObj[item.id] = { name: item.name }; });
-                    data = specialtiesObj;
-                    break;
-                case 'textosEditables':
-                    data = {
-                        missionText: state.missionText,
-                        visionText: state.visionText,
-                        aboutTeamText: state.aboutTeamText,
-                        aboutImage: state.aboutImage,
-                        atencionTexts: [],
-                        contactInfo: {},
-                        heroTexts: safeClean(state.heroTexts, {}),
-                        logoImage: state.logoImage,
-                        backgroundImage: state.backgroundImage,
-                        instagramData: {}
-                    };
-                    // Reconstruir atencionTexts manualmente
-                    if (Array.isArray(state.atencionTexts)) {
-                        data.atencionTexts = state.atencionTexts.map(item => ({
-                            titulo: (item.titulo || '').toString(),
-                            icono: (item.icono || '').toString(),
-                            descripcion: (item.descripcion || '').toString(),
-                            precio: (item.precio || '').toString(),
-                            activo: item.activo !== false
-                        }));
-                    }
-                    // Reconstruir contactInfo
-                    if (state.contactInfo && typeof state.contactInfo === 'object') {
-                        data.contactInfo = {
-                            phone: (state.contactInfo.phone || '').toString(),
-                            email: (state.contactInfo.email || '').toString(),
-                            address: (state.contactInfo.address || '').toString()
-                        };
-                    }
-                    // Reconstruir instagramData
-                    if (state.instagramData && typeof state.instagramData === 'object') {
-                        data.instagramData = {
-                            title: (state.instagramData.title || '').toString(),
-                            subtitle: (state.instagramData.subtitle || '').toString(),
-                            quote: (state.instagramData.quote || '').toString(),
-                            text: (state.instagramData.text || '').toString(),
-                            message: (state.instagramData.message || '').toString(),
-                            link: (state.instagramData.link || '').toString(),
-                            image: (state.instagramData.image || '').toString()
-                        };
-                    }
-                    break;
-                case 'paymentMethods':
-                    data = safeClean(state.globalPaymentMethods, {});
-                    break;
-                case 'backgroundImage':
-                    data = safeClean(state.backgroundImage, '');
-                    break;
-                case 'logoImage':
-                    data = safeClean(state.logoImage, '');
-                    break;
-                case 'heroTexts':
-                    data = safeClean(state.heroTexts, {});
-                    break;
-                case 'aboutTexts':
-                    data = {
-                        teamText: state.aboutTeamText,
-                        mission: state.missionText,
-                        vision: state.visionText,
-                        image: state.aboutImage
-                    };
-                    break;
-                case 'atencionTexts':
-                    // Ya se reconstruyó en textosEditables, pero si se guarda solo este nodo, repetir limpieza
-                    if (Array.isArray(state.atencionTexts)) {
-                        data = state.atencionTexts.map(item => ({
-                            titulo: (item.titulo || '').toString(),
-                            icono: (item.icono || '').toString(),
-                            descripcion: (item.descripcion || '').toString(),
-                            precio: (item.precio || '').toString(),
-                            activo: item.activo !== false
-                        }));
-                    } else {
-                        data = [];
-                    }
-                    // Doble serialización para eliminar cualquier referencia
-                    data = JSON.parse(JSON.stringify(data));
-                    break;
-                case 'contactInfo':
-                    if (state.contactInfo && typeof state.contactInfo === 'object') {
-                        data = {
-                            phone: (state.contactInfo.phone || '').toString(),
-                            email: (state.contactInfo.email || '').toString(),
-                            address: (state.contactInfo.address || '').toString()
-                        };
-                    } else {
-                        data = {};
-                    }
-                    break;
-                case 'instagramData':
-                    if (state.instagramData && typeof state.instagramData === 'object') {
-                        data = {
-                            title: (state.instagramData.title || '').toString(),
-                            subtitle: (state.instagramData.subtitle || '').toString(),
-                            quote: (state.instagramData.quote || '').toString(),
-                            text: (state.instagramData.text || '').toString(),
-                            message: (state.instagramData.message || '').toString(),
-                            link: (state.instagramData.link || '').toString(),
-                            image: (state.instagramData.image || '').toString()
-                        };
-                    } else {
-                        data = {};
-                    }
                     break;
                 case 'fichasIngreso':
                     const fichasObj = {};
-                    state.fichasIngreso.forEach(item => { fichasObj[item.id] = safeClean(item, {}); });
+                    (state.fichasIngreso || []).forEach(item => { 
+                        if (item && item.id) fichasObj[item.id] = safeClean(item, {}); 
+                    });
                     data = fichasObj;
                     break;
                 case 'sesiones':
                     const sesionesObj = {};
-                    state.sesiones.forEach(item => { sesionesObj[item.id] = safeClean(item, {}); });
+                    (state.sesiones || []).forEach(item => { 
+                        if (item && item.id) sesionesObj[item.id] = safeClean(item, {}); 
+                    });
                     data = sesionesObj;
                     break;
                 case 'informes':
                     const informesObj = {};
-                    state.informes.forEach(item => { informesObj[item.id] = safeClean(item, {}); });
+                    (state.informes || []).forEach(item => { 
+                        if (item && item.id) informesObj[item.id] = safeClean(item, {}); 
+                    });
                     data = informesObj;
+                    break;
+                case 'consentimientos':
+                    const consentimientosObj = {};
+                    (state.consentimientos || []).forEach(item => { 
+                        if (item && item.id) consentimientosObj[item.id] = safeClean(item, {}); 
+                    });
+                    data = consentimientosObj;
                     break;
                 default:
                     continue;
@@ -536,27 +416,147 @@ export function save() {
             console.error(`❌ Error preparando datos para nodo ${node}:`, e);
             continue;
         }
-
+        
         if (data !== undefined) {
-            // Aplicar limpieza final con JSON (garantiza que no queden referencias)
             const finalData = safeClean(data, null);
             if (finalData !== null) {
                 promises.push(db.ref(node).set(finalData).catch(err => {
                     console.error(`❌ Error en ${node}:`, err);
                     return null;
                 }));
-            } else {
-                console.warn(`⚠️ Nodo ${node} no pudo ser limpiado, se omite`);
             }
         }
     }
-
+    
+    // 2. Guardar nodos privados (solo si hay usuario autenticado)
+    if (user && (role === 'admin' || role === 'psych')) {
+        for (const node of nodosPrivados) {
+            let data;
+            try {
+                switch (node) {
+                    case 'staff':
+                        const staffObj = {};
+                        (state.staff || []).forEach(item => { 
+                            if (item && item.id) staffObj[item.id] = safeClean(item, {}); 
+                        });
+                        data = staffObj;
+                        break;
+                    case 'specialties':
+                        const specialtiesObj = {};
+                        (state.specialties || []).forEach(item => { 
+                            if (item && item.id) specialtiesObj[item.id] = { name: item.name }; 
+                        });
+                        data = specialtiesObj;
+                        break;
+                    case 'textosEditables':
+                        data = {
+                            missionText: state.missionText || '',
+                            visionText: state.visionText || '',
+                            aboutTeamText: state.aboutTeamText || '',
+                            aboutImage: state.aboutImage || '',
+                            atencionTexts: Array.isArray(state.atencionTexts) ? state.atencionTexts.map(item => ({
+                                titulo: (item.titulo || '').toString(),
+                                icono: (item.icono || '').toString(),
+                                descripcion: (item.descripcion || '').toString(),
+                                precio: (item.precio || '').toString(),
+                                activo: item.activo !== false
+                            })) : [],
+                            contactInfo: {
+                                phone: (state.contactInfo?.phone || '').toString(),
+                                email: (state.contactInfo?.email || '').toString(),
+                                address: (state.contactInfo?.address || '').toString()
+                            },
+                            heroTexts: safeClean(state.heroTexts, {}),
+                            logoImage: state.logoImage || '',
+                            backgroundImage: state.backgroundImage || '',
+                            instagramData: {
+                                title: (state.instagramData?.title || '').toString(),
+                                subtitle: (state.instagramData?.subtitle || '').toString(),
+                                quote: (state.instagramData?.quote || '').toString(),
+                                text: (state.instagramData?.text || '').toString(),
+                                message: (state.instagramData?.message || '').toString(),
+                                link: (state.instagramData?.link || '').toString(),
+                                image: (state.instagramData?.image || '').toString()
+                            }
+                        };
+                        break;
+                    case 'paymentMethods':
+                        data = safeClean(state.globalPaymentMethods, {});
+                        break;
+                    case 'backgroundImage':
+                        data = state.backgroundImage || '';
+                        break;
+                    case 'logoImage':
+                        data = state.logoImage || '';
+                        break;
+                    case 'heroTexts':
+                        data = safeClean(state.heroTexts, {});
+                        break;
+                    case 'aboutTexts':
+                        data = {
+                            teamText: state.aboutTeamText || '',
+                            mission: state.missionText || '',
+                            vision: state.visionText || '',
+                            image: state.aboutImage || ''
+                        };
+                        break;
+                    case 'atencionTexts':
+                        data = Array.isArray(state.atencionTexts) ? state.atencionTexts.map(item => ({
+                            titulo: (item.titulo || '').toString(),
+                            icono: (item.icono || '').toString(),
+                            descripcion: (item.descripcion || '').toString(),
+                            precio: (item.precio || '').toString(),
+                            activo: item.activo !== false
+                        })) : [];
+                        data = JSON.parse(JSON.stringify(data));
+                        break;
+                    case 'contactInfo':
+                        data = {
+                            phone: (state.contactInfo?.phone || '').toString(),
+                            email: (state.contactInfo?.email || '').toString(),
+                            address: (state.contactInfo?.address || '').toString()
+                        };
+                        break;
+                    case 'instagramData':
+                        data = {
+                            title: (state.instagramData?.title || '').toString(),
+                            subtitle: (state.instagramData?.subtitle || '').toString(),
+                            quote: (state.instagramData?.quote || '').toString(),
+                            text: (state.instagramData?.text || '').toString(),
+                            message: (state.instagramData?.message || '').toString(),
+                            link: (state.instagramData?.link || '').toString(),
+                            image: (state.instagramData?.image || '').toString()
+                        };
+                        break;
+                    default:
+                        continue;
+                }
+            } catch(e) {
+                console.error(`❌ Error preparando datos para nodo ${node}:`, e);
+                continue;
+            }
+            
+            if (data !== undefined) {
+                const finalData = safeClean(data, null);
+                if (finalData !== null) {
+                    promises.push(db.ref(node).set(finalData).catch(err => {
+                        console.error(`❌ Error en ${node}:`, err);
+                        return null;
+                    }));
+                }
+            }
+        }
+    } else {
+        console.log('ℹ️ Usuario no autenticado o sin rol - solo se guardan nodos públicos');
+    }
+    
     Promise.all(promises)
         .then((results) => {
             const successful = results.filter(r => r !== null).length;
             const total = promises.length;
             console.log(`✅ ${successful}/${total} nodos guardados correctamente en Firebase`);
-
+            
+            // Actualizar UI si hay usuario logueado
             if (state.currentUser) {
                 if (typeof auth.updateStats === 'function') auth.updateStats();
                 if (typeof citas.renderPendingRequests === 'function') citas.renderPendingRequests();
@@ -569,6 +569,8 @@ export function save() {
                     if (typeof pacientes.renderPatients === 'function') pacientes.renderPatients();
                 }
             }
+            
+            // Actualizar vista pública siempre
             if (typeof publico.filterProfessionals === 'function') publico.filterProfessionals();
             if (typeof mensajes.renderMessages === 'function') mensajes.renderMessages();
             if (typeof mensajes.updateMarquee === 'function') mensajes.updateMarquee();
@@ -576,10 +578,10 @@ export function save() {
             if (typeof personalizacion.updateAtencionSection === 'function') personalizacion.updateAtencionSection();
             if (typeof personalizacion.updateContactSection === 'function') personalizacion.updateContactSection();
             if (typeof personalizacion.updateInstagramSection === 'function') personalizacion.updateInstagramSection();
-
+            
             if (typeof utils.showToast === 'function') {
-                if (successful === total) utils.showToast('✅ Todos los datos guardados', 'success');
-                else utils.showToast(`⚠️ ${successful}/${total} datos guardados`, 'warning');
+                if (successful === total && total > 0) utils.showToast('✅ Todos los datos guardados', 'success');
+                else if (total > 0) utils.showToast(`⚠️ ${successful}/${total} datos guardados`, 'warning');
             }
         })
         .catch(err => {
@@ -640,6 +642,6 @@ window.addEventListener('load', function() {
 });
 
 window.save = save;
-console.log('✅ main.js cargado (versión simplificada sin boxes, informes, pdfGenerator, estadisticas)');
+console.log('✅ main.js cargado (versión actualizada con guardado SIN autenticación para pacientes)');
 console.log('✅ Nodos de Firebase en minúsculas consistentes');
 console.log('✅ esEmailProfesional expuesto globalmente');

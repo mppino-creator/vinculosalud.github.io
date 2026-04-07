@@ -6,6 +6,31 @@ import { obtenerSesionesDePaciente, obtenerFichasIngresoDePaciente } from './fic
 import { save } from '../main.js';
 
 // ============================================
+// FUNCIÓN PARA GENERAR LINK DE CONSENTIMIENTO
+// ============================================
+
+export function generarLinkConsentimiento(rutPaciente, nombrePaciente) {
+    if (!rutPaciente || !nombrePaciente) {
+        showToast('❌ RUT y nombre son requeridos', 'error');
+        return null;
+    }
+    const rutLimpio = rutPaciente.replace(/\./g, '').replace(/\-/g, '');
+    const token = btoa(rutLimpio);
+    const baseUrl = window.location.origin;
+    const link = `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente)}`;
+    return link;
+}
+
+export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
+    const link = generarLinkConsentimiento(rutPaciente, nombrePaciente);
+    if (link) {
+        navigator.clipboard.writeText(link);
+        showToast(`✅ Link de consentimiento copiado para ${nombrePaciente}`, 'success');
+        console.log('📋 Link copiado:', link);
+    }
+}
+
+// ============================================
 // RENDERIZAR LISTA DE PACIENTES (CON PACIENTES DE CITAS)
 // ============================================
 
@@ -32,7 +57,6 @@ export function renderPatients() {
         console.log('👑 Admin - Total pacientes:', pacientesAMostrar.length);
     } else if (state.currentUser.role === 'psych') {
         const uid = state.currentUser.data.id;
-        // Obtener IDs de pacientes de las citas del profesional
         const citas = state.appointments || [];
         const pacientesDeCitas = new Set();
         citas.forEach(cita => {
@@ -40,7 +64,6 @@ export function renderPatients() {
                 pacientesDeCitas.add(cita.patientId);
             }
         });
-        // Filtrar: pacientes con psychId igual o que aparecen en citas
         pacientesAMostrar = state.patients.filter(patient => {
             return patient.psychId === uid || pacientesDeCitas.has(patient.id);
         });
@@ -88,6 +111,9 @@ export function renderPatients() {
             .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion))[0];
 
         const profesional = state.staff.find(s => s.id == p.psychId);
+        
+        // Verificar si ya firmó consentimiento (opcional)
+        const tieneConsentimiento = false; // Esto se puede cargar async, por ahora false
 
         return `
             <div class="patient-card" data-id="${p.id}" style="cursor:pointer;" onclick="verFichaCompleta('${p.id}')">
@@ -96,6 +122,7 @@ export function renderPatients() {
                     <div style="display:flex; gap:5px;">
                         ${tieneFichaIngreso ? '<span class="badge" style="background:var(--verde-exito);">📋 Ficha</span>' : ''}
                         <span class="badge" style="background:var(--azul-medico);">${totalSessions} citas</span>
+                        ${tieneConsentimiento ? '<span class="badge" style="background:var(--accent);">✅ Consentimiento</span>' : ''}
                     </div>
                 </div>
                 
@@ -143,7 +170,7 @@ export function renderPatients() {
                     </div>
                 ` : ''}
                 
-                <div style="margin-top:15px; display:flex; gap:10px;">
+                <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
                     <button class="btn-icon" onclick="event.stopPropagation(); verFichaCompleta('${p.id}')" 
                             style="background: var(--azul-apple); color: white; flex:1;">
                         <i class="fa fa-folder-medical"></i> Ver Ficha
@@ -151,6 +178,10 @@ export function renderPatients() {
                     <button class="btn-icon" onclick="event.stopPropagation(); viewPatientDetails('${p.id}')" 
                             style="background: var(--text-light); color: white;">
                         <i class="fa fa-edit"></i>
+                    </button>
+                    <button class="btn-icon" onclick="event.stopPropagation(); copiarLinkConsentimiento('${p.rut || ''}', '${p.name.replace(/'/g, "\\'")}')" 
+                            style="background: #B8860B; color: white;">
+                        <i class="fa fa-file-signature"></i> Link Consentimiento
                     </button>
                 </div>
             </div>
@@ -195,7 +226,7 @@ export async function mostrarDetallePaciente(patientId) {
     
     state.ui.fichas.pacienteSeleccionadoId = patientId;
     state.ui.fichas.pestanaActiva = 'perfil';
-    window.currentPatientId = patientId; // 🔥 IMPORTANTE: guardar ID global
+    window.currentPatientId = patientId;
     
     const container = document.getElementById('patientsList');
     if (container) {
@@ -239,9 +270,15 @@ function mostrarOpcionCrearFicha(patient, sesiones = []) {
                         <p style="margin:5px 0 0; color:#666;">${patient.rut} · ${edad} años</p>
                     </div>
                 </div>
-                <button class="btn-icon" onclick="renderPatients()" style="background: var(--text-light); color: white;">
-                    <i class="fa fa-arrow-left"></i> Volver
-                </button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${patient.name.replace(/'/g, "\\'")}')" 
+                            style="background: #B8860B; color: white;">
+                        <i class="fa fa-file-signature"></i> Link Consentimiento
+                    </button>
+                    <button class="btn-icon" onclick="renderPatients()" style="background: var(--text-light); color: white;">
+                        <i class="fa fa-arrow-left"></i> Volver
+                    </button>
+                </div>
             </div>
             
             <div style="background: white; border-radius:12px; padding:40px; text-align:center; margin-bottom:20px;">
@@ -290,6 +327,10 @@ function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null) {
                     </div>
                 </div>
                 <div style="display:flex; gap:10px;">
+                    <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${patient.name.replace(/'/g, "\\'")}')" 
+                            style="background: #B8860B; color: white;">
+                        <i class="fa fa-file-signature"></i> Link Consentimiento
+                    </button>
                     <button class="btn-icon" onclick="exportarHistorialPaciente('${patient.id}')" 
                             style="background: var(--exito); color: white;" title="Exportar historial completo">
                         <i class="fa fa-download"></i> Exportar
@@ -348,7 +389,13 @@ function renderPerfil(patient, sesiones = []) {
     
     return `
         <div class="perfil-paciente" style="background:white; padding:20px; border-radius:12px;">
-            <h3>📋 Datos Personales</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">📋 Datos Personales</h3>
+                <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${patient.name.replace(/'/g, "\\'")}')" 
+                        style="background: #B8860B; color: white;">
+                    <i class="fa fa-file-signature"></i> Link Consentimiento
+                </button>
+            </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:15px;">
                 <div><strong>RUT:</strong> ${patient.rut || '—'}</div>
                 <div><strong>Email:</strong> ${patient.email}</div>
@@ -507,7 +554,7 @@ export async function guardarNuevaSesion(patientId) {
     state.sesiones.push(nuevaSesion);
     await save();
     closeNewSesionModal();
-    mostrarDetallePaciente(patientId); // recargar la ficha
+    mostrarDetallePaciente(patientId);
     showToast('✅ Nota guardada', 'success');
 }
 
@@ -587,10 +634,16 @@ function renderSesiones(patient, sesiones) {
         <div class="sesiones-container" style="background:white; padding:20px; border-radius:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="margin:0;">📅 Notas de Evolución</h3>
-                <button class="btn-icon" onclick="showNewSesionModal('${patient.id}')" 
-                        style="background: var(--verde-exito); color: white;">
-                    <i class="fa fa-plus"></i> Nueva Nota
-                </button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${patient.name.replace(/'/g, "\\'")}')" 
+                            style="background: #B8860B; color: white;">
+                        <i class="fa fa-file-signature"></i> Link Consentimiento
+                    </button>
+                    <button class="btn-icon" onclick="showNewSesionModal('${patient.id}')" 
+                            style="background: var(--verde-exito); color: white;">
+                        <i class="fa fa-plus"></i> Nueva Nota
+                    </button>
+                </div>
             </div>
             
             ${sesiones.length > 0 ? sesionesHtml : `
@@ -997,6 +1050,8 @@ if (typeof window !== 'undefined') {
     window.editarSesion = editarSesion;
     window.closeEditSesionModal = closeEditSesionModal;
     window.eliminarSesion = eliminarSesion;
+    window.copiarLinkConsentimiento = copiarLinkConsentimiento;
+    window.generarLinkConsentimiento = generarLinkConsentimiento;
 }
 
-console.log('✅ pacientes.js refactorizado: import save directo, async/await, normalización de RUT');
+console.log('✅ pacientes.js actualizado con botón de Link de Consentimiento');

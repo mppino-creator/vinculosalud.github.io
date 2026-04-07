@@ -93,21 +93,29 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar notas desde Firebase (carga única, sin listener en tiempo real)
+// 2. Cargar notas desde Firebase (carga única, con limpieza de datos)
 // ---------------------------------------------------------------------
 async function cargarNotas() {
     try {
         const sesionesRef = ref(db, 'sesiones');
         const snapshot = await get(sesionesRef);
         const data = snapshot.val() || {};
+        
+        // 🔥 Limpiar datos al cargar para evitar referencias circulares
         allNotas = Object.entries(data).map(([id, nota]) => ({
-            id,
-            ...nota,
-            pacienteNombre: allPatients.find(p => p.id === nota.patientId)?.nombreCompleto || 'Paciente desconocido'
+            id: String(id),
+            patientId: String(nota.patientId || ''),
+            date: String(nota.date || ''),
+            content: String(nota.content || ''),
+            createdAt: nota.createdAt || Date.now(),
+            updatedAt: nota.updatedAt || Date.now(),
+            createdBy: String(nota.createdBy || ''),
+            professionalId: String(nota.professionalId || ''),
+            pacienteNombre: allPatients.find(p => p.id == nota.patientId)?.nombreCompleto || 'Paciente desconocido'
         }));
 
         if (currentRole === 'psych') {
-            allNotas = allNotas.filter(nota => allPatients.some(p => p.id === nota.patientId));
+            allNotas = allNotas.filter(nota => allPatients.some(p => p.id == nota.patientId));
         }
         renderNotasListado();
         console.log(`✅ Notas cargadas: ${allNotas.length} registros`);
@@ -163,7 +171,7 @@ function renderNotasListado() {
 }
 
 // ---------------------------------------------------------------------
-// 3. Funciones del modal
+// 3. Funciones del modal (CON LIMPIEZA DE DATOS)
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -187,6 +195,7 @@ window.editarNota = function(notaId) {
     document.getElementById('notaModal').style.display = 'flex';
 };
 
+// 🔥 GUARDAR NOTA - Versión corregida con limpieza de datos
 window.guardarNota = async function() {
     const id = document.getElementById('notaId').value;
     const patientId = document.getElementById('notaPacienteId').value;
@@ -198,26 +207,30 @@ window.guardarNota = async function() {
     if (!content) { alert('El contenido no puede estar vacío'); return; }
     if (!currentUser || !currentUser.uid) { alert('No hay usuario logueado'); return; }
 
+    // Crear objeto plano con valores convertidos a string para evitar referencias
     const notaData = {
-        patientId: patientId,
-        date: date,
-        content: content,
+        patientId: String(patientId),
+        date: String(date),
+        content: String(content),
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        createdBy: currentUser.uid,
-        professionalId: currentUser.uid
+        createdBy: String(currentUser.uid),
+        professionalId: String(currentUser.uid)
     };
 
-    console.log('📝 Guardando nota:', notaData);
+    // 🔥 LIMPIEZA EXTREMA: serializar para eliminar cualquier referencia circular
+    const cleanData = JSON.parse(JSON.stringify(notaData));
+
+    console.log('📝 Guardando nota (datos limpios):', cleanData);
 
     const sesionesRef = ref(db, 'sesiones');
     try {
         if (id) {
-            await update(ref(db, `sesiones/${id}`), notaData);
+            await update(ref(db, `sesiones/${id}`), cleanData);
             alert('Nota actualizada');
         } else {
             const newRef = push(sesionesRef);
-            await set(newRef, notaData);
+            await set(newRef, cleanData);
             alert('Nota creada');
         }
         cerrarModalNota();

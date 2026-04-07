@@ -176,6 +176,11 @@
                     <li>Acceder a sus datos personales</li>
                 </ul>
             </div>
+            
+            <div class="section">
+                <div class="section-title">5. Registro clínico</div>
+                <p>El profesional mantendrá registros clínicos confidenciales del proceso terapéutico por al menos 5 años. No se realizarán grabaciones sin consentimiento explícito.</p>
+            </div>
         </div>
 
         <div class="signature-form">
@@ -199,6 +204,9 @@
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="checkPago"> <label>Acepto condiciones de <strong>pago y cancelación</strong></label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkRegistro"> <label>Autorizo el <strong>registro clínico</strong> de mi proceso</label>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="checkFinal"> <label>Acepto <strong>VOLUNTARIAMENTE</strong> todas las condiciones</label>
@@ -234,17 +242,20 @@
 <div id="toast" class="toast"></div>
 
 <script>
-    // 🔥 REEMPLAZA CON TU CONFIGURACIÓN DE FIREBASE
+    // ============================================
+    // CONFIGURACIÓN DE FIREBASE - ¡REEMPLAZA CON TUS DATOS!
+    // ============================================
     const firebaseConfig = {
-        apiKey: "TU_API_KEY",
-        authDomain: "TU_AUTH_DOMAIN",
-        databaseURL: "TU_DATABASE_URL",
-        projectId: "TU_PROJECT_ID",
-        storageBucket: "TU_STORAGE_BUCKET",
-        messagingSenderId: "TU_MESSAGING_SENDER_ID",
-        appId: "TU_APP_ID"
+        apiKey: "AIzaSyCj5jZcXZQZQZQZQZQZQZQZQZQZQZQZQ",
+        authDomain: "vinculosaludapp.firebaseapp.com",
+        databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
+        projectId: "vinculosaludapp",
+        storageBucket: "vinculosaludapp.firebasestorage.app",
+        messagingSenderId: "123456789012",
+        appId: "1:123456789012:web:abcdef1234567890"
     };
     
+    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
@@ -291,6 +302,7 @@
             if (!data) return false;
             return Object.values(data).some(c => c.paciente?.rut === rut);
         } catch (error) {
+            console.error('Error verificando firma:', error);
             return false;
         }
     }
@@ -321,6 +333,7 @@
         
         const checkConf = document.getElementById('checkConf').checked;
         const checkPago = document.getElementById('checkPago').checked;
+        const checkRegistro = document.getElementById('checkRegistro').checked;
         const checkFinal = document.getElementById('checkFinal').checked;
         
         if (!nombre) {
@@ -328,7 +341,7 @@
             return;
         }
         
-        if (!checkConf || !checkPago || !checkFinal) {
+        if (!checkConf || !checkPago || !checkRegistro || !checkFinal) {
             showToast('❌ Debes aceptar TODAS las condiciones', true);
             return;
         }
@@ -354,7 +367,7 @@
                 aceptaciones: {
                     confidencialidad: checkConf,
                     honorarios: checkPago,
-                    registroClinico: true,
+                    registroClinico: checkRegistro,
                     derechos: true,
                     final: checkFinal
                 }
@@ -375,7 +388,7 @@
             
         } catch (error) {
             console.error('Error:', error);
-            showToast('❌ Error al procesar la firma', true);
+            showToast('❌ Error al procesar la firma: ' + error.message, true);
         }
     };
     

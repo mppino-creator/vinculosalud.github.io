@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
+    <!-- 🔥 FIREBASE SDK - Carga directa (sin módulo) -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+    
     <style>
         :root {
             --primary: #1A3C34;
@@ -253,9 +258,25 @@
 
 <div id="toast" class="toast"></div>
 
-<script type="module">
-    import { db } from './js/config/firebase.js';
-    import { ref, push, set, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+<script>
+    // ============================================
+    // CONFIGURACIÓN DE FIREBASE (MISMA QUE TU firebase.js)
+    // ============================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCj5jZcXZQZQZQZQZQZQZQZQZQZQZQZQ",
+        authDomain: "vinculosaludapp.firebaseapp.com",
+        databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
+        projectId: "vinculosaludapp",
+        storageBucket: "vinculosaludapp.firebasestorage.app",
+        messagingSenderId: "123456789012",
+        appId: "1:123456789012:web:abcdef1234567890"
+    };
+    
+    // Inicializar Firebase (si no está ya inicializado)
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
     
     let ultimoPDF = null;
     let datosPacienteActual = {};
@@ -277,6 +298,7 @@
                 const rut = atob(token);
                 return { rut, nombre: nombre || '' };
             } catch(e) {
+                console.error('Error decodificando token:', e);
                 return null;
             }
         }
@@ -295,7 +317,7 @@
     
     async function pacienteYaFirmo(rut) {
         try {
-            const snapshot = await get(ref(db, 'consentimientos'));
+            const snapshot = await db.ref('consentimientos').once('value');
             const data = snapshot.val();
             if (!data) return false;
             return Object.values(data).some(c => c.paciente?.rut === rut);
@@ -310,7 +332,6 @@
         const doc = new jsPDF('p', 'mm', 'a4');
         let y = 20;
         
-        // ENCABEZADO
         doc.setFontSize(18);
         doc.setTextColor(26, 60, 52);
         doc.text('CONSENTIMIENTO INFORMADO', 105, y, { align: 'center' });
@@ -321,7 +342,6 @@
         doc.text('Vínculo Salud SpA - Atención Psicológica', 105, y, { align: 'center' });
         y += 15;
         
-        // DATOS DE LA FIRMA
         doc.setFontSize(11);
         doc.setTextColor(0, 0, 0);
         doc.text(`Fecha de firma: ${new Date().toLocaleString('es-CL')}`, 20, y);
@@ -335,7 +355,6 @@
         doc.text(`IP desde donde firmó: ${datos.ip || 'No disponible'}`, 20, y);
         y += 15;
         
-        // CONTENIDO DEL CONSENTIMIENTO
         doc.setFontSize(12);
         doc.setTextColor(26, 60, 52);
         doc.text('📋 Términos y condiciones aceptados:', 20, y);
@@ -406,7 +425,6 @@
         doc.text('No se realizarán grabaciones sin consentimiento explícito.', 25, y);
         y += 12;
         
-        // FIRMA DIGITAL
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
         doc.text('_________________________________________', 70, y);
@@ -420,7 +438,6 @@
         doc.text('(Nombre + RUT tiene el mismo valor que firma manuscrita según Ley 20.584)', 70, y);
         y += 10;
         
-        // PIE DE PÁGINA
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
         doc.text('Documento generado electrónicamente. Válido como consentimiento informado.', 105, 280, { align: 'center' });
@@ -476,11 +493,11 @@
                 }
             };
             
-            const newRef = push(ref(db, 'consentimientos'));
-            await set(newRef, datosConsentimiento);
+            const newRef = db.ref('consentimientos').push();
+            await newRef.set(datosConsentimiento);
             
             const pdfData = await generarPDF({ nombre, rut, email, ip });
-            await set(ref(db, `consentimientos/${newRef.key}/pdfBase64`), pdfData);
+            await db.ref(`consentimientos/${newRef.key}/pdfBase64`).set(pdfData);
             
             ultimoPDF = pdfData;
             datosPacienteActual = { nombre, rut, email, ip };
@@ -489,7 +506,6 @@
             document.getElementById('successScreen').style.display = 'block';
             showToast('✅ Consentimiento firmado correctamente');
             
-            // Descargar automáticamente
             setTimeout(() => descargarPDF(), 1000);
             
         } catch (error) {
@@ -501,8 +517,8 @@
     window.descargarPDF = function() {
         if (ultimoPDF) {
             const link = document.createElement('a');
-            const rut = datosPacienteActual.rut || document.getElementById('rut').value;
-            link.download = `consentimiento_${rut.replace(/[^0-9kK]/g, '')}.pdf`;
+            const rut = datosPacienteActual.rut || document.getElementById('rut')?.value;
+            link.download = `consentimiento_${rut?.replace(/[^0-9kK]/g, '') || 'paciente'}.pdf`;
             link.href = ultimoPDF;
             link.click();
             showToast('📄 Descargando PDF...');

@@ -1487,6 +1487,7 @@
             <div class="tab" id="adminTabLogo" style="display:none;" onclick="switchTab('logo')">Logo</div>
             <div class="tab" id="adminTabEstadisticas" style="display:none;" onclick="switchTab('estadisticas')">📊 Estadísticas</div>
             <div class="tab" id="adminTabReinicio" style="display:none;" onclick="switchTab('reinicio')">🔄 Reinicio</div>
+            <div class="tab" id="adminTabConsentimientos" style="display:none;" onclick="switchTab('consentimientos')">📋 Consentimientos</div>
             <div class="tab" id="psychTab" style="display:none;" onclick="switchTab('disponibilidad')">Disponibilidad</div>
             <div class="tab" id="configTab" style="display:none;" onclick="switchTab('configuracion')">Mi Config</div>
             <div class="tab" id="messagesTab" style="display:none;" onclick="switchTab('mensajes')">Mensajes</div>
@@ -1898,6 +1899,17 @@
                 </div>
             </div>
         </div>
+        
+        <!-- ============================================ -->
+        <!-- NUEVA PESTAÑA: CONSENTIMIENTOS -->
+        <!-- ============================================ -->
+        <div id="tabConsentimientos" class="tab-content" style="display: none;">
+            <div id="consentimientosTab">
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fa fa-spinner fa-spin"></i> Cargando consentimientos...
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -2259,10 +2271,13 @@
                 if (tabName === 'notas' && typeof window.cargarNotas === 'function') {
                     window.cargarNotas();
                 }
+                if (tabName === 'consentimientos' && typeof window.mostrarTabConsentimientos === 'function') {
+                    window.mostrarTabConsentimientos();
+                }
             }, 300);
         };
         
-        console.log('✅ Fix de pestañas instalado con estadísticas, disponibilidad, calendario, fichas clínicas y NOTAS');
+        console.log('✅ Fix de pestañas instalado con estadísticas, disponibilidad, calendario, fichas clínicas, NOTAS y CONSENTIMIENTOS');
     }
     
     instalarFix();
@@ -2621,8 +2636,6 @@ window.abrirAgenda = function() {
     }
 };
 </script>
-
-
 
 <script>
 (function() {

@@ -233,7 +233,8 @@ export function mostrarTabsAdmin() {
     const tabsAdmin = [
         'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
         'adminTabFondo', 'adminTabTextos', 'adminTabLogo',
-        'adminTabEstadisticas', 'adminTabReinicio', 'messagesTab'
+        'adminTabEstadisticas', 'adminTabReinicio', 'messagesTab',
+        'adminTabConsentimientos'
     ];
     tabsAdmin.forEach(id => {
         const tab = document.getElementById(id);
@@ -584,6 +585,214 @@ export function verificarPermisosFirebase() {
 }
 
 // ============================================
+// CONSENTIMIENTOS INFORMADOS - NUEVO MÓDULO
+// ============================================
+
+let consentimientosData = [];
+
+async function cargarConsentimientosFirebase() {
+    try {
+        const snapshot = await db.ref('consentimientos').once('value');
+        const data = snapshot.val();
+        consentimientosData = [];
+        if (data) {
+            Object.keys(data).forEach(key => {
+                consentimientosData.push({ id: key, ...data[key] });
+            });
+            consentimientosData.sort((a, b) => new Date(b.fechaFirma) - new Date(a.fechaFirma));
+        }
+        return consentimientosData;
+    } catch (error) {
+        console.error('Error cargando consentimientos:', error);
+        return [];
+    }
+}
+
+function generarLinkConsentimiento(rutPaciente, nombrePaciente) {
+    const token = btoa(rutPaciente);
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente)}`;
+}
+
+export async function mostrarTabConsentimientos() {
+    const container = document.getElementById('consentimientosTab');
+    if (!container) {
+        console.warn('No se encontró el contenedor consentimientosTab');
+        return;
+    }
+    
+    await cargarConsentimientosFirebase();
+    const total = consentimientosData.length;
+    const hoy = new Date().toISOString().split('T')[0];
+    const hoyCount = consentimientosData.filter(c => c.fechaFirma?.startsWith(hoy)).length;
+    
+    container.innerHTML = `
+        <h2>📋 Consentimientos Informados Firmados</h2>
+        <div style="display: flex; gap: 20px; margin: 20px 0;">
+            <div style="flex:1; background: #f0fdf4; padding: 20px; border-radius: 16px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: 800; color: #1A3C34;">${total}</div>
+                <div>Total Firmas</div>
+            </div>
+            <div style="flex:1; background: #fef3c7; padding: 20px; border-radius: 16px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: 800; color: #B8860B;">${hoyCount}</div>
+                <div>Firmas Hoy</div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+            <input type="text" id="consentSearchInput" placeholder="🔍 Buscar por nombre o RUT..." 
+                   style="flex:1; padding: 10px; border-radius: 40px; border: 1px solid #ddd;">
+            <input type="date" id="consentDateFilter" 
+                   style="padding: 10px; border-radius: 40px; border: 1px solid #ddd;">
+            <button id="consentRefreshBtn" class="btn-staff" style="padding: 10px 20px; border-radius: 40px;">
+                <i class="fa fa-refresh"></i> Actualizar
+            </button>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table class="admin-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Paciente</th>
+                        <th>RUT</th>
+                        <th>Email</th>
+                        <th>IP</th>
+                        <th>Link</th>
+                        <th>PDF</th>
+                    </tr>
+                </thead>
+                <tbody id="consentTableBody">
+                    ${renderFilasConsentimientos(consentimientosData)}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    document.getElementById('consentSearchInput')?.addEventListener('keyup', () => filtrarConsentimientosTabla());
+    document.getElementById('consentDateFilter')?.addEventListener('change', () => filtrarConsentimientosTabla());
+    document.getElementById('consentRefreshBtn')?.addEventListener('click', async () => {
+        await cargarConsentimientosFirebase();
+        mostrarTabConsentimientos();
+        showToast('✅ Lista actualizada', 'success');
+    });
+}
+
+function renderFilasConsentimientos(consentimientos) {
+    if (!consentimientos.length) {
+        return `<tr><td colspan="7" style="text-align:center;">No hay consentimientos firmados</td></tr>`;
+    }
+    
+    return consentimientos.map(c => {
+        const fecha = new Date(c.fechaFirma).toLocaleString('es-CL');
+        const rut = c.paciente?.rut || '';
+        const nombre = c.paciente?.nombre || '';
+        const link = generarLinkConsentimiento(rut, nombre);
+        
+        return `
+            <tr>
+                <td>${fecha}</td>
+                <td>${c.paciente?.nombre || 'N/A'}</td>
+                <td>${rut}</td>
+                <td>${c.paciente?.email || 'N/A'}</td>
+                <td>${c.ip || 'N/A'}</td>
+                <td>
+                    <button class="btn-small" onclick="window.copiarLinkConsentimiento('${rut.replace(/'/g, "\\'")}', '${nombre.replace(/'/g, "\\'")}')">
+                        <i class="fa fa-link"></i> Copiar Link
+                    </button>
+                </td>
+                <td>
+                    <button class="btn-small" onclick="window.descargarPDFConsentimientoAdmin('${c.id}')">
+                        <i class="fa fa-file-pdf"></i> PDF
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filtrarConsentimientosTabla() {
+    const searchTerm = document.getElementById('consentSearchInput')?.value.toLowerCase() || '';
+    const dateFilter = document.getElementById('consentDateFilter')?.value || '';
+    
+    const filtrados = consentimientosData.filter(c => {
+        let match = true;
+        if (searchTerm) {
+            const nombre = (c.paciente?.nombre || '').toLowerCase();
+            const rut = (c.paciente?.rut || '').toLowerCase();
+            match = match && (nombre.includes(searchTerm) || rut.includes(searchTerm));
+        }
+        if (dateFilter) {
+            match = match && (c.fechaFirma?.startsWith(dateFilter));
+        }
+        return match;
+    });
+    
+    const tbody = document.getElementById('consentTableBody');
+    if (tbody) {
+        tbody.innerHTML = renderFilasConsentimientos(filtrados);
+    }
+}
+
+// Funciones expuestas al window para consentimientos
+window.copiarLinkConsentimiento = function(rut, nombre) {
+    const link = generarLinkConsentimiento(rut, nombre);
+    navigator.clipboard.writeText(link);
+    showToast('✅ Link copiado al portapapeles', 'success');
+};
+
+window.descargarPDFConsentimientoAdmin = async function(consentimientoId) {
+    try {
+        showToast('📄 Generando PDF...', 'info');
+        const snapshot = await db.ref(`consentimientos/${consentimientoId}`).once('value');
+        const data = snapshot.val();
+        if (!data) {
+            showToast('No se encontró el consentimiento', 'error');
+            return;
+        }
+        
+        if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            script.onload = () => generarPDFConsentimientoDescarga(data);
+            document.head.appendChild(script);
+        } else {
+            generarPDFConsentimientoDescarga(data);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('❌ Error al generar PDF', 'error');
+    }
+};
+
+function generarPDFConsentimientoDescarga(data) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    doc.setFontSize(18);
+    doc.setTextColor(26, 60, 52);
+    doc.text('CONSENTIMIENTO INFORMADO', 105, 20, { align: 'center' });
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Fecha firma: ${new Date(data.fechaFirma).toLocaleString('es-CL')}`, 20, 45);
+    doc.text(`Paciente: ${data.paciente?.nombre || 'N/A'}`, 20, 60);
+    doc.text(`RUT: ${data.paciente?.rut || 'N/A'}`, 20, 70);
+    doc.text(`Email: ${data.paciente?.email || 'N/A'}`, 20, 80);
+    doc.text(`IP: ${data.ip || 'N/A'}`, 20, 90);
+    doc.text(`Profesional: ${data.profesionalAsignado || 'Equipo Vínculo Salud'}`, 20, 105);
+    
+    doc.text('___________________________________', 70, 170);
+    doc.text(data.paciente?.nombre || 'Firma digital', 70, 180);
+    doc.text('Firma digital del paciente', 70, 190);
+    doc.text('(Nombre + RUT tiene valor de firma manuscrita según Ley 20.584)', 70, 200);
+    
+    doc.save(`consentimiento_${data.paciente?.rut?.replace(/[^0-9kK]/g, '') || 'paciente'}.pdf`);
+    showToast('✅ PDF descargado', 'success');
+}
+
+window.mostrarTabConsentimientos = mostrarTabConsentimientos;
+
+// ============================================
 // EXPOSICIÓN AL OBJETO WINDOW (para compatibilidad con HTML)
 // ============================================
 
@@ -681,4 +890,4 @@ if (typeof window !== 'undefined') {
     }, 2000);
 }
 
-console.log('✅ admin.js refactorizado: modular, async, sin duplicación, compatible con estructura actual');
+console.log('✅ admin.js actualizado con módulo de consentimientos');

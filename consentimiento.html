@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consentimiento Informado | Vínculo Salud</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #1A3C34;
+            --accent: #B8860B;
+            --soft-gray: #F4F7F6;
+            --white: #FFFFFF;
+            --success: #059669;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #e2e8f0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 1.6rem; margin-bottom: 8px; }
+        .consent-content {
+            padding: 30px;
+            max-height: 500px;
+            overflow-y: auto;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            font-weight: 700;
+        }
+        .section p, .section li {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #334155;
+        }
+        .section ul { padding-left: 25px; margin: 8px 0; }
+        .signature-form {
+            padding: 30px;
+            background: var(--soft-gray);
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--primary);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 12px 0;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 12px;
+        }
+        .btn-firmar {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn-firmar:hover { background: var(--accent); }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #059669;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            display: none;
+            z-index: 1000;
+        }
+        .toast.error { background: #dc2626; }
+        .success-screen {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+        .success-screen i {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: 20px;
+        }
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.75rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <div id="loadingScreen" class="loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <p>Cargando...</p>
+    </div>
+    
+    <div id="consentScreen" style="display: none;">
+        <div class="header">
+            <h1>📋 Consentimiento Informado</h1>
+            <p>Vínculo Salud SpA - Atención Psicológica</p>
+        </div>
+
+        <div class="consent-content">
+            <div class="section">
+                <div class="section-title">1. Descripción del servicio</div>
+                <p>La atención psicológica es un proceso profesional orientado a la evaluación, acompañamiento y tratamiento de dificultades emocionales, conductuales y/o relacionales. Las sesiones tienen una duración aproximada de 50 minutos en modalidad presencial u online. La participación es voluntaria.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">2. Confidencialidad</div>
+                <p>Toda la información compartida es confidencial. Excepciones: riesgo de daño grave para sí mismo o terceros, vulneración de derechos de NNA, requerimiento judicial. Datos tratados según Ley 19.628 y Ley 21.331.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">3. Honorarios</div>
+                <p><strong>Sesión online:</strong> $25.000 | <strong>Sesión presencial:</strong> $30.000<br>
+                Cancelación con 12 horas de anticipación. Inasistencia sin aviso será cobrada.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">4. Derechos del paciente</div>
+                <ul>
+                    <li>Terminar el tratamiento en cualquier momento</li>
+                    <li>Revocar este consentimiento por escrito</li>
+                    <li>Acceder a sus datos personales</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="signature-form">
+            <h3 style="margin-bottom: 20px;">✍️ Firma digital</h3>
+            
+            <div class="form-group">
+                <label>Nombre completo *</label>
+                <input type="text" id="fullName" placeholder="Ej: María José Pérez González">
+            </div>
+            <div class="form-group">
+                <label>RUT *</label>
+                <input type="text" id="rut" placeholder="12.345.678-9" readonly style="background:#f0f0f0;">
+            </div>
+            <div class="form-group">
+                <label>Correo electrónico (opcional)</label>
+                <input type="email" id="email" placeholder="paciente@correo.cl">
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkConf"> <label>Acepto condiciones de <strong>confidencialidad</strong></label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkPago"> <label>Acepto condiciones de <strong>pago y cancelación</strong></label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkFinal"> <label>Acepto <strong>VOLUNTARIAMENTE</strong> todas las condiciones</label>
+            </div>
+
+            <button class="btn-firmar" onclick="procesarFirma()">
+                <i class="fa-solid fa-pen-to-square"></i> Firmar Consentimiento
+            </button>
+        </div>
+    </div>
+
+    <div id="successScreen" class="success-screen">
+        <i class="fa-solid fa-circle-check"></i>
+        <h2>¡Consentimiento Firmado!</h2>
+        <p>Su firma ha sido registrada correctamente.</p>
+        <button class="btn-firmar" onclick="irAPaginaPrincipal()" style="margin-top: 15px; background: var(--primary);">
+            <i class="fa-solid fa-house"></i> Ir a Vínculo Salud
+        </button>
+    </div>
+
+    <div id="errorScreen" class="success-screen" style="display: none;">
+        <i class="fa-solid fa-circle-exclamation" style="color: #dc2626;"></i>
+        <h2>Error</h2>
+        <p id="errorMessage"></p>
+        <button class="btn-firmar" onclick="irAPaginaPrincipal()">Volver a Vínculo Salud</button>
+    </div>
+
+    <footer>
+        <p>Vínculo Salud SpA | O'Higgins 263, Concepción | +56 9 3870 6152</p>
+    </footer>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    // 🔥 REEMPLAZA CON TU CONFIGURACIÓN DE FIREBASE
+    const firebaseConfig = {
+        apiKey: "TU_API_KEY",
+        authDomain: "TU_AUTH_DOMAIN",
+        databaseURL: "TU_DATABASE_URL",
+        projectId: "TU_PROJECT_ID",
+        storageBucket: "TU_STORAGE_BUCKET",
+        messagingSenderId: "TU_MESSAGING_SENDER_ID",
+        appId: "TU_APP_ID"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    let ultimoPDF = null;
+    let datosPacienteActual = {};
+    
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${isError ? 'error' : ''}`;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+    
+    function leerTokenURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const nombre = urlParams.get('nombre');
+        if (token) {
+            try {
+                const rut = atob(token);
+                return { rut, nombre: nombre || '' };
+            } catch(e) {
+                return null;
+            }
+        }
+        return null;
+    }
+    
+    async function getUserIP() {
+        try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            return data.ip;
+        } catch (error) {
+            return 'No disponible';
+        }
+    }
+    
+    async function pacienteYaFirmo(rut) {
+        try {
+            const snapshot = await db.ref('consentimientos').once('value');
+            const data = snapshot.val();
+            if (!data) return false;
+            return Object.values(data).some(c => c.paciente?.rut === rut);
+        } catch (error) {
+            return false;
+        }
+    }
+    
+    async function generarPDF(datos) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        doc.setFontSize(18);
+        doc.setTextColor(26, 60, 52);
+        doc.text('CONSENTIMIENTO INFORMADO', 105, 20, { align: 'center' });
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Fecha: ${new Date().toLocaleString('es-CL')}`, 20, 45);
+        doc.text(`Paciente: ${datos.nombre}`, 20, 60);
+        doc.text(`RUT: ${datos.rut}`, 20, 70);
+        doc.text(`Email: ${datos.email || 'No registrado'}`, 20, 80);
+        doc.text(`Profesional: Equipo Vínculo Salud`, 20, 95);
+        doc.text('_________________________', 70, 170);
+        doc.text(datos.nombre, 70, 180);
+        doc.text('Firma digital del paciente', 70, 190);
+        return doc.output('dataurlstring');
+    }
+    
+    window.procesarFirma = async function() {
+        const nombre = document.getElementById('fullName').value.trim();
+        const rut = document.getElementById('rut').value;
+        const email = document.getElementById('email').value.trim();
+        
+        const checkConf = document.getElementById('checkConf').checked;
+        const checkPago = document.getElementById('checkPago').checked;
+        const checkFinal = document.getElementById('checkFinal').checked;
+        
+        if (!nombre) {
+            showToast('❌ Completa tu nombre completo', true);
+            return;
+        }
+        
+        if (!checkConf || !checkPago || !checkFinal) {
+            showToast('❌ Debes aceptar TODAS las condiciones', true);
+            return;
+        }
+        
+        showToast('📝 Procesando firma...');
+        
+        try {
+            const yaFirmo = await pacienteYaFirmo(rut);
+            if (yaFirmo) {
+                showToast('❌ Este RUT ya ha firmado anteriormente', true);
+                return;
+            }
+            
+            const ip = await getUserIP();
+            const fechaFirma = new Date().toISOString();
+            
+            const datosConsentimiento = {
+                paciente: { nombre, rut, email: email || 'No proporcionado' },
+                profesionalAsignado: 'Equipo Vínculo Salud',
+                fechaFirma: fechaFirma,
+                ip: ip,
+                userAgent: navigator.userAgent,
+                aceptaciones: {
+                    confidencialidad: checkConf,
+                    honorarios: checkPago,
+                    registroClinico: true,
+                    derechos: true,
+                    final: checkFinal
+                }
+            };
+            
+            const newRef = db.ref('consentimientos').push();
+            await newRef.set(datosConsentimiento);
+            
+            const pdfData = await generarPDF({ nombre, rut, email });
+            await db.ref(`consentimientos/${newRef.key}/pdfBase64`).set(pdfData);
+            
+            ultimoPDF = pdfData;
+            datosPacienteActual = { nombre, rut, email };
+            
+            document.getElementById('consentScreen').style.display = 'none';
+            document.getElementById('successScreen').style.display = 'block';
+            showToast('✅ Consentimiento firmado correctamente');
+            
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('❌ Error al procesar la firma', true);
+        }
+    };
+    
+    window.irAPaginaPrincipal = function() {
+        window.location.href = '/';
+    };
+    
+    async function init() {
+        const tokenData = leerTokenURL();
+        if (!tokenData || !tokenData.rut) {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('errorScreen').style.display = 'block';
+            document.getElementById('errorMessage').textContent = 'Link inválido. Solicita un nuevo link a tu psicólogo.';
+            return;
+        }
+        
+        const yaFirmo = await pacienteYaFirmo(tokenData.rut);
+        if (yaFirmo) {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('errorScreen').style.display = 'block';
+            document.getElementById('errorMessage').textContent = 'Este RUT ya ha firmado el consentimiento anteriormente.';
+            return;
+        }
+        
+        document.getElementById('rut').value = tokenData.rut;
+        if (tokenData.nombre) {
+            document.getElementById('fullName').value = tokenData.nombre;
+        }
+        
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('consentScreen').style.display = 'block';
+    }
+    
+    init();
+</script>
+</body>
+</html>

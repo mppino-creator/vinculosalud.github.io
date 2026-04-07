@@ -304,7 +304,7 @@ export function addEditButtonsToAdmin() {
 // ============================================
 
 export async function eliminarTodasLasFichasIngreso() {
-    if (!state.currentUser?.role === 'admin') return showToast('Solo administradores', 'error');
+    if (state.currentUser?.role !== 'admin') return showToast('Solo administradores', 'error');
     if (!await confirmAction('⚠️ ¿Eliminar TODAS las fichas de ingreso?')) return;
     const cantidad = state.fichasIngreso.length;
     state.setFichasIngreso([]);
@@ -314,7 +314,7 @@ export async function eliminarTodasLasFichasIngreso() {
 }
 
 export async function eliminarTodasLasSesiones() {
-    if (!state.currentUser?.role === 'admin') return showToast('Solo administradores', 'error');
+    if (state.currentUser?.role !== 'admin') return showToast('Solo administradores', 'error');
     if (!await confirmAction('⚠️ ¿Eliminar TODAS las sesiones/notas de evolución?')) return;
     const cantidad = state.sesiones.length;
     state.setSesiones([]);
@@ -324,7 +324,7 @@ export async function eliminarTodasLasSesiones() {
 }
 
 export async function eliminarTodosLosInformes() {
-    if (!state.currentUser?.role === 'admin') return showToast('Solo administradores', 'error');
+    if (state.currentUser?.role !== 'admin') return showToast('Solo administradores', 'error');
     if (!await confirmAction('⚠️ ¿Eliminar TODOS los informes?')) return;
     const cantidad = state.informes.length;
     state.setInformes([]);
@@ -334,7 +334,7 @@ export async function eliminarTodosLosInformes() {
 }
 
 export async function eliminarFichasDePaciente(patientId) {
-    if (!state.currentUser?.role === 'admin') return showToast('Solo administradores', 'error');
+    if (state.currentUser?.role !== 'admin') return showToast('Solo administradores', 'error');
     const patient = state.patients.find(p => p.id == patientId);
     if (!patient) return;
     if (!await confirmAction(`⚠️ ¿Eliminar TODAS las fichas clínicas de ${patient.name}?`)) return;
@@ -347,7 +347,7 @@ export async function eliminarFichasDePaciente(patientId) {
 }
 
 export async function limpiarFichasHuerfanas() {
-    if (!state.currentUser?.role === 'admin') return showToast('Solo administradores', 'error');
+    if (state.currentUser?.role !== 'admin') return showToast('Solo administradores', 'error');
     const patientIds = new Set(state.patients.map(p => p.id));
     const fichasHuerfanas = state.fichasIngreso.filter(f => !patientIds.has(f.patientId));
     const sesionesHuerfanas = state.sesiones.filter(s => !patientIds.has(s.patientId));
@@ -370,7 +370,7 @@ export async function limpiarFichasHuerfanas() {
 // ============================================
 
 export function exportarTodasLasFichas() {
-    if (!state.currentUser?.role === 'admin') return showToast('Solo administradores', 'error');
+    if (state.currentUser?.role !== 'admin') return showToast('Solo administradores', 'error');
     const backup = {
         fecha: new Date().toISOString(),
         version: '3.0',
@@ -410,7 +410,7 @@ export function exportarTodasLasFichas() {
 }
 
 export async function importarFichas() {
-    if (!state.currentUser?.role === 'admin') return showToast('Solo administradores', 'error');
+    if (state.currentUser?.role !== 'admin') return showToast('Solo administradores', 'error');
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -475,7 +475,7 @@ function descargarCSV(csv, nombreArchivo) {
 }
 
 export function exportarDatosExcel(tipo) {
-    if (!state.currentUser?.role === 'admin') {
+    if (state.currentUser?.role !== 'admin') {
         showToast('Solo administradores pueden exportar datos', 'error');
         return;
     }
@@ -541,32 +541,56 @@ export function exportarDatosExcel(tipo) {
 // ============================================
 
 export async function reinicioCompleto() {
-    if (!state.currentUser?.role === 'admin') return showToast('Solo administradores', 'error');
-    if (!await confirmAction('🔥 ¿REINICIO COMPLETO? Esto eliminará TODOS los pacientes, mensajes, citas, solicitudes, FICHAS CLÍNICAS Y TEXTOS EDITABLES. Los profesionales se mantienen. ¿Continuar?')) return;
-    if (!await confirmAction('ÚLTIMA CONFIRMACIÓN: ¿Estás ABSOLUTAMENTE SEGURO?')) return;
-    state.setPatients([]);
-    state.setMessages([]);
-    state.setAppointments([]);
-    state.setPendingRequests([]);
-    state.setFichasIngreso([]);
-    state.setSesiones([]);
-    state.setInformes([]);
-    state.missionText = 'Acompañar a las personas en su proceso de sanación emocional...';
-    state.visionText = 'Ser un referente en salud mental en la región...';
-    state.aboutTeamText = 'Nuestro equipo está formado por profesionales...';
-    state.aboutImage = '';
-    state.atencionTexts = {
-        online: { title: 'Online', description: 'sesiones por videollamada' },
-        presencial: { title: 'Presencial', description: 'Atención en consultorio' },
-        pareja: { title: 'Pareja', description: 'Terapia de pareja' },
-        familiar: { title: 'Familiar', description: 'Terapia familiar' }
-    };
-    state.contactInfo = { email: 'vinculosalid@gmail.com', phone: '+56 9 1234 5678', address: 'Ohiggins 263, Concepción' };
-    await save();
-    showToast('✅ Sistema reiniciado completamente', 'success');
-    actualizarContadoresReinicio();
-    const refreshFns = ['updateAboutSection', 'updateAtencionSection', 'updateContactSection', 'updateInstagramSection'];
-    refreshFns.forEach(fn => { if (typeof window[fn] === 'function') window[fn](); });
+    if (state.currentUser?.role !== 'admin') {
+        showToast('Solo administradores pueden reiniciar el sistema', 'error');
+        return;
+    }
+    
+    const confirm1 = confirm('🔥 ¿REINICIO COMPLETO? Esto eliminará TODOS los pacientes, citas, mensajes, fichas clínicas, consentimientos y textos editables.\n\nLos profesionales se mantienen.\n\n¿Continuar?');
+    if (!confirm1) return;
+    
+    const confirm2 = confirm('⚠️ ÚLTIMA CONFIRMACIÓN: ¿Estás ABSOLUTAMENTE SEGURO? Esta acción NO se puede deshacer.');
+    if (!confirm2) return;
+    
+    try {
+        // Limpiar todos los datos
+        state.setPatients([]);
+        state.setMessages([]);
+        state.setAppointments([]);
+        state.setPendingRequests([]);
+        state.setFichasIngreso([]);
+        state.setSesiones([]);
+        state.setInformes([]);
+        state.setConsentimientos([]);
+        
+        // Restaurar textos por defecto
+        state.missionText = 'Acompañar a las personas en su proceso de sanación emocional, proporcionando herramientas para el crecimiento personal y la mejora de la calidad de vida.';
+        state.visionText = 'Ser un referente en salud mental en la región, reconocido por nuestra calidad profesional, calidez humana y compromiso con la comunidad.';
+        state.aboutTeamText = 'Nuestro equipo está formado por profesionales de la salud mental con amplia formación y experiencia en terapia individual, familiar y de pareja. Todos compartimos una mirada humana, ética y especializada.';
+        state.aboutImage = '';
+        state.atencionTexts = {
+            online: { title: 'Online', description: 'Sesiones por videollamada desde la comodidad de tu hogar', icono: 'fa-video', activo: true },
+            presencial: { title: 'Presencial', description: 'Atención en consultorio en Concepción', icono: 'fa-building', activo: true },
+            pareja: { title: 'Pareja', description: 'Terapia de pareja para fortalecer la relación', icono: 'fa-heart', activo: true },
+            familiar: { title: 'Familiar', description: 'Terapia familiar para mejorar la dinámica del hogar', icono: 'fa-users', activo: true }
+        };
+        state.contactInfo = { email: 'vinculosalud@hotmail.com', phone: '+56 9 3870 6152', address: 'Ohiggins 263, Concepción' };
+        
+        // Guardar en Firebase
+        await save();
+        
+        showToast('✅ Sistema reiniciado completamente', 'success');
+        actualizarContadoresReinicio();
+        
+        // Recargar la página para refrescar todo
+        setTimeout(() => {
+            location.reload();
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error en reinicio completo:', error);
+        showToast('❌ Error al reiniciar el sistema: ' + error.message, 'error');
+    }
 }
 
 export function verificarPermisosFirebase() {
@@ -627,7 +651,9 @@ function generarLinkConsentimiento(rutPaciente, nombrePaciente) {
     const rutLimpio = rutPaciente.replace(/\./g, '').replace(/\-/g, '');
     const token = btoa(rutLimpio);
     const baseUrl = window.location.origin;
-    return `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente || '')}`;
+    // Obtener el nombre del profesional actualmente logueado
+    const profesional = state.currentUser?.data?.name || 'Equipo Vínculo Salud';
+    return `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente || '')}&profesional=${encodeURIComponent(profesional)}`;
 }
 
 export async function mostrarTabConsentimientos() {
@@ -725,12 +751,12 @@ function renderFilasConsentimientos(consentimientos, isAdmin = false) {
                     </button>
                 </td>
                 ${isAdmin ? `
-                    <td>
-                        <button class="btn-small btn-danger" onclick="window.eliminarConsentimiento('${c.id}', '${rut.replace(/'/g, "\\'")}')" 
-                                style="background: #dc2626; color: white; border: none; padding: 5px 10px; border-radius: 20px; cursor: pointer;">
-                            <i class="fa fa-trash"></i> Eliminar
-                        </button>
-                    </td>
+                <td>
+                    <button class="btn-small btn-danger" onclick="window.eliminarConsentimiento('${c.id}', '${rut.replace(/'/g, "\\'")}')" 
+                            style="background: #dc2626; color: white; border: none; padding: 5px 10px; border-radius: 20px; cursor: pointer;">
+                        <i class="fa fa-trash"></i> Eliminar
+                    </button>
+                </td>
                 ` : ''}
             </tr>
         `;
@@ -844,6 +870,90 @@ window.eliminarConsentimiento = async function(consentimientoId, rutPaciente) {
 window.mostrarTabConsentimientos = mostrarTabConsentimientos;
 
 // ============================================
+// ELIMINAR TODOS LOS PACIENTES (CORREGIDO)
+// ============================================
+
+window.eliminarTodosLosPacientes = async () => {
+    if (state.currentUser?.role !== 'admin') {
+        showToast('Solo administradores pueden eliminar pacientes', 'error');
+        return;
+    }
+    
+    const pacientesAEliminar = state.patients.filter(p => !p.isHiddenAdmin);
+    if (pacientesAEliminar.length === 0) {
+        showToast('No hay pacientes para eliminar', 'info');
+        return;
+    }
+    
+    const confirmar = confirm(`⚠️ ¿Eliminar TODOS los ${pacientesAEliminar.length} pacientes?\n\nEsto también eliminará TODAS sus fichas clínicas, sesiones e informes.`);
+    if (!confirmar) return;
+    
+    try {
+        const patientIds = new Set(pacientesAEliminar.map(p => p.id));
+        
+        // Eliminar pacientes
+        state.setPatients(state.patients.filter(p => p.isHiddenAdmin));
+        
+        // Eliminar fichas relacionadas
+        state.setFichasIngreso(state.fichasIngreso.filter(f => !patientIds.has(f.patientId)));
+        state.setSesiones(state.sesiones.filter(s => !patientIds.has(s.patientId)));
+        state.setInformes(state.informes.filter(i => !patientIds.has(i.patientId)));
+        
+        // Guardar en Firebase
+        await save();
+        
+        showToast(`✅ ${pacientesAEliminar.length} pacientes eliminados`, 'success');
+        actualizarContadoresReinicio();
+        
+        if (typeof window.renderPatients === 'function') {
+            window.renderPatients();
+        }
+    } catch (error) {
+        console.error('Error eliminando pacientes:', error);
+        showToast('❌ Error al eliminar pacientes', 'error');
+    }
+};
+
+// ============================================
+// ELIMINAR TODAS LAS CITAS (CORREGIDO)
+// ============================================
+
+window.eliminarTodasLasCitas = async () => {
+    if (state.currentUser?.role !== 'admin') {
+        showToast('Solo administradores', 'error');
+        return;
+    }
+    
+    if (!confirmAction('⚠️ ¿Eliminar TODAS las citas?')) return;
+    
+    const cantidad = state.appointments.length;
+    state.setAppointments([]);
+    state.setPendingRequests([]);
+    await save();
+    showToast(`✅ ${cantidad} citas eliminadas`, 'success');
+    actualizarContadoresReinicio();
+};
+
+// ============================================
+// ELIMINAR TODOS LOS MENSAJES (CORREGIDO)
+// ============================================
+
+window.eliminarTodosLosMensajes = async () => {
+    if (state.currentUser?.role !== 'admin') {
+        showToast('Solo administradores', 'error');
+        return;
+    }
+    
+    if (!confirmAction('⚠️ ¿Eliminar TODOS los mensajes?')) return;
+    
+    const cantidad = state.messages.length;
+    state.setMessages([]);
+    await save();
+    showToast(`✅ ${cantidad} mensajes eliminados`, 'success');
+    actualizarContadoresReinicio();
+};
+
+// ============================================
 // EXPOSICIÓN AL OBJETO WINDOW (para compatibilidad con HTML)
 // ============================================
 
@@ -863,75 +973,6 @@ if (typeof window !== 'undefined') {
     window.refrescarVistaPublica = refrescarVistaPublica;
     window.verificarPermisosFirebase = verificarPermisosFirebase;
     window.asegurarTablaProfesionales = asegurarTablaProfesionales;
-    window.eliminarTodosLosPacientes = async () => {
-        if (!state.currentUser?.role === 'admin') return showToast('Solo administradores', 'error');
-        const pacientesAEliminar = state.patients.filter(p => !p.isHiddenAdmin);
-        if (pacientesAEliminar.length === 0) return showToast('No hay pacientes para eliminar', 'info');
-        if (!await confirmAction('⚠️ ¿Estás SEGURO de eliminar TODOS los pacientes? Esto también eliminará TODAS sus fichas clínicas.')) return;
-        const patientIds = new Set(pacientesAEliminar.map(p => p.id));
-        state.setPatients(state.patients.filter(p => p.isHiddenAdmin));
-        state.setFichasIngreso(state.fichasIngreso.filter(f => !patientIds.has(f.patientId)));
-        state.setSesiones(state.sesiones.filter(s => !patientIds.has(s.patientId)));
-        state.setInformes(state.informes.filter(i => !patientIds.has(i.patientId)));
-        await save();
-        showToast(`✅ ${pacientesAEliminar.length} pacientes y sus fichas eliminados`, 'success');
-        actualizarContadoresReinicio();
-    };
-    window.eliminarPacientesPrueba = async () => {
-        if (!state.currentUser?.role === 'admin') return;
-        if (!await confirmAction('¿Eliminar pacientes de prueba?')) return;
-        const pacientesPrueba = state.patients.filter(p => p.email?.includes('test') || p.email?.includes('prueba') || p.name?.includes('Test') || p.name?.includes('Prueba') || p.rut === '11111111-1');
-        const patientIds = new Set(pacientesPrueba.map(p => p.id));
-        state.setPatients(state.patients.filter(p => !pacientesPrueba.includes(p)));
-        state.setFichasIngreso(state.fichasIngreso.filter(f => !patientIds.has(f.patientId)));
-        state.setSesiones(state.sesiones.filter(s => !patientIds.has(s.patientId)));
-        state.setInformes(state.informes.filter(i => !patientIds.has(i.patientId)));
-        await save();
-        showToast(`✅ ${pacientesPrueba.length} pacientes de prueba y sus fichas eliminados`, 'success');
-        actualizarContadoresReinicio();
-    };
-    window.eliminarTodosLosMensajes = async () => {
-        if (!state.currentUser?.role === 'admin') return;
-        if (!await confirmAction('⚠️ ¿Eliminar TODOS los mensajes?')) return;
-        const cantidad = state.messages.length;
-        state.setMessages([]);
-        await save();
-        showToast(`✅ ${cantidad} mensajes eliminados`, 'success');
-        actualizarContadoresReinicio();
-    };
-    window.restaurarMensajesIniciales = async () => {
-        if (!state.currentUser?.role === 'admin') return;
-        const mensajesIniciales = [
-            { id: Date.now() + 1, name: 'Carolina Méndez', rating: 5, text: 'Excelente profesional, me ayudó mucho con mi ansiedad. Muy recomendada.', date: new Date().toISOString().split('T')[0] },
-            { id: Date.now() + 2, name: 'Roberto Campos', rating: 5, text: 'Muy buena página, encontré al especialista que necesitaba rápidamente.', date: new Date().toISOString().split('T')[0] },
-            { id: Date.now() + 3, name: 'María José', rating: 4, text: 'Muy profesional, aunque los tiempos de espera a veces son largos.', date: new Date().toISOString().split('T')[0] }
-        ];
-        state.setMessages(mensajesIniciales);
-        await save();
-        showToast('✅ Mensajes iniciales restaurados', 'success');
-        actualizarContadoresReinicio();
-    };
-    window.eliminarTodasLasCitas = async () => {
-        if (!state.currentUser?.role === 'admin') return;
-        if (!await confirmAction('⚠️ ¿Eliminar TODAS las citas?')) return;
-        const cantidad = state.appointments.length;
-        state.setAppointments([]);
-        state.setPendingRequests([]);
-        await save();
-        showToast(`✅ ${cantidad} citas eliminadas`, 'success');
-        actualizarContadoresReinicio();
-    };
-    window.eliminarCitasPrueba = async () => {
-        if (!state.currentUser?.role === 'admin') return;
-        if (!await confirmAction('¿Eliminar citas de prueba?')) return;
-        const fechaLimite = new Date();
-        fechaLimite.setDate(fechaLimite.getDate() - 30);
-        const citasPrueba = state.appointments.filter(a => new Date(a.date) < fechaLimite || a.patient?.includes('Test') || a.patient?.includes('Prueba'));
-        state.setAppointments(state.appointments.filter(a => !citasPrueba.includes(a)));
-        await save();
-        showToast(`✅ ${citasPrueba.length} citas de prueba eliminadas`, 'success');
-        actualizarContadoresReinicio();
-    };
     window.reinicioCompleto = reinicioCompleto;
 
     setTimeout(() => {
@@ -941,4 +982,4 @@ if (typeof window !== 'undefined') {
     }, 2000);
 }
 
-console.log('✅ admin.js actualizado con módulo de consentimientos (psicólogos ven solo sus pacientes, admin puede eliminar)');
+console.log('✅ admin.js actualizado con módulo de consentimientos y funciones de reinicio corregidas');

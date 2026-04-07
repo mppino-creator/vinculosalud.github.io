@@ -121,6 +121,17 @@
             margin-top: 10px;
             width: 100%;
         }
+        .btn-cerrar {
+            background: #64748b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
         .toast {
             position: fixed;
             bottom: 30px;
@@ -182,7 +193,7 @@
             </div>
 
             <div class="section">
-                <div class="section-title">3. Honorarios y cancelación</p>
+                <div class="section-title">3. Honorarios y cancelación</div>
                 <p><strong>Sesión online:</strong> $25.000 | <strong>Sesión presencial:</strong> $30.000<br>
                 Cancelación o reagendamiento con al menos 12 horas de anticipación. Inasistencia sin aviso será cobrada. Si el profesional cancela, se reprograma sin costo o se reembolsa el valor.</p>
             </div>
@@ -258,12 +269,12 @@
     <div id="successScreen" class="success-screen">
         <i class="fa-solid fa-circle-check"></i>
         <h2>¡Consentimiento Firmado!</h2>
-        <p>Su firma ha sido registrada correctamente. Se descargará automáticamente una copia del documento.</p>
+        <p>Su firma ha sido registrada correctamente.</p>
         <button class="btn-descargar" onclick="descargarPDF()">
             <i class="fa-solid fa-download"></i> Descargar mi copia PDF
         </button>
-        <button class="btn-firmar" onclick="irAPaginaPrincipal()" style="margin-top: 15px; background: var(--primary);">
-            <i class="fa-solid fa-house"></i> Ir a Vínculo Salud
+        <button class="btn-cerrar" onclick="cerrarVentana()">
+            <i class="fa-solid fa-times"></i> Cerrar
         </button>
     </div>
 
@@ -355,6 +366,7 @@
         const doc = new jsPDF('p', 'mm', 'a4');
         let y = 20;
         
+        // TÍTULO
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(20);
         doc.setTextColor(26, 60, 52);
@@ -367,11 +379,13 @@
         doc.text('Vínculo Salud SpA - Atención Psicológica', 105, y, { align: 'center' });
         y += 15;
         
+        // LÍNEA SEPARADORA
         doc.setDrawColor(184, 134, 11);
         doc.setLineWidth(0.5);
         doc.line(20, y, 190, y);
         y += 10;
         
+        // INFORMACIÓN DE LA FIRMA
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(26, 60, 52);
@@ -395,10 +409,12 @@
         doc.text(`Profesional tratante: ${datos.profesional || 'Equipo Vínculo Salud'}`, 25, y);
         y += 12;
         
+        // LÍNEA SEPARADORA
         doc.setDrawColor(184, 134, 11);
         doc.line(20, y, 190, y);
         y += 10;
         
+        // TÉRMINOS Y CONDICIONES
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(26, 60, 52);
@@ -500,10 +516,20 @@
         doc.text('• El paciente se compromete a respetar horarios y cancelar con anticipación.', 25, y);
         y += 12;
         
+        // LÍNEA SEPARADORA
         doc.setDrawColor(184, 134, 11);
         doc.line(20, y, 190, y);
         y += 10;
         
+        // PIE DE PÁGINA (AHORA VA ANTES DE LA FIRMA)
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Documento generado electrónicamente. Válido como consentimiento informado.', 105, y, { align: 'center' });
+        y += 6;
+        doc.text(`ID de documento: ${Date.now()}`, 105, y, { align: 'center' });
+        y += 12;
+        
+        // FIRMA DIGITAL
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
         doc.setTextColor(26, 60, 52);
@@ -522,12 +548,6 @@
         doc.text('Firma digital del paciente', 70, y);
         y += 6;
         doc.text('(Nombre + RUT tiene el mismo valor que firma manuscrita según Ley 20.584)', 70, y);
-        y += 10;
-        
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text('Documento generado electrónicamente. Válido como consentimiento informado.', 105, 280, { align: 'center' });
-        doc.text(`ID de documento: ${Date.now()}`, 105, 287, { align: 'center' });
         
         return doc.output('dataurlstring');
     }
@@ -595,7 +615,10 @@
             document.getElementById('successScreen').style.display = 'block';
             showToast('✅ Consentimiento firmado correctamente');
             
-            setTimeout(() => descargarPDF(), 1000);
+            // Descarga automática después de 1 segundo
+            setTimeout(() => {
+                descargarPDF();
+            }, 1000);
             
         } catch (error) {
             console.error('Error:', error);
@@ -614,6 +637,14 @@
         } else {
             showToast('❌ No hay PDF disponible', true);
         }
+    };
+    
+    window.cerrarVentana = function() {
+        window.close();
+        // Si no se puede cerrar (por políticas del navegador), redirigir
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 500);
     };
     
     window.irAPaginaPrincipal = function() {

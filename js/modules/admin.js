@@ -585,7 +585,7 @@ export function verificarPermisosFirebase() {
 }
 
 // ============================================
-// CONSENTIMIENTOS INFORMADOS - NUEVO MÓDULO
+// CONSENTIMIENTOS INFORMADOS - CON PERMISOS POR ROL
 // ============================================
 
 let consentimientosData = [];
@@ -595,9 +595,23 @@ async function cargarConsentimientosFirebase() {
         const snapshot = await db.ref('consentimientos').once('value');
         const data = snapshot.val();
         consentimientosData = [];
+        
         if (data) {
             Object.keys(data).forEach(key => {
-                consentimientosData.push({ id: key, ...data[key] });
+                const consentimiento = { id: key, ...data[key] };
+                
+                // Si es psicólogo, solo ver consentimientos de sus pacientes
+                if (state.currentUser?.role === 'psych') {
+                    const rutPaciente = consentimiento.paciente?.rut;
+                    // Buscar si este paciente está asociado al psicólogo
+                    const pacienteAsignado = state.patients.find(p => 
+                        p.rut === rutPaciente && p.psychId === state.currentUser.data.id
+                    );
+                    // Si no es su paciente, no lo incluye
+                    if (!pacienteAsignado) return;
+                }
+                
+                consentimientosData.push(consentimiento);
             });
             consentimientosData.sort((a, b) => new Date(b.fechaFirma) - new Date(a.fechaFirma));
         }
@@ -609,9 +623,11 @@ async function cargarConsentimientosFirebase() {
 }
 
 function generarLinkConsentimiento(rutPaciente, nombrePaciente) {
-    const token = btoa(rutPaciente);
+    if (!rutPaciente) return '#';
+    const rutLimpio = rutPaciente.replace(/\./g, '').replace(/\-/g, '');
+    const token = btoa(rutLimpio);
     const baseUrl = window.location.origin;
-    return `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente)}`;
+    return `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente || '')}`;
 }
 
 export async function mostrarTabConsentimientos() {
@@ -622,6 +638,7 @@ export async function mostrarTabConsentimientos() {
     }
     
     await cargarConsentimientosFirebase();
+    const isAdmin = state.currentUser?.role === 'admin';
     const total = consentimientosData.length;
     const hoy = new Date().toISOString().split('T')[0];
     const hoyCount = consentimientosData.filter(c => c.fechaFirma?.startsWith(hoy)).length;
@@ -660,10 +677,11 @@ export async function mostrarTabConsentimientos() {
                         <th>IP</th>
                         <th>Link</th>
                         <th>PDF</th>
+                        ${isAdmin ? '<th>Acciones</th>' : ''}
                     </tr>
                 </thead>
                 <tbody id="consentTableBody">
-                    ${renderFilasConsentimientos(consentimientosData)}
+                    ${renderFilasConsentimientos(consentimientosData, isAdmin)}
                 </tbody>
             </table>
         </div>
@@ -678,16 +696,16 @@ export async function mostrarTabConsentimientos() {
     });
 }
 
-function renderFilasConsentimientos(consentimientos) {
+function renderFilasConsentimientos(consentimientos, isAdmin = false) {
     if (!consentimientos.length) {
-        return `<tr><td colspan="7" style="text-align:center;">No hay consentimientos firmados</td></tr>`;
+        const colSpan = isAdmin ? 8 : 7;
+        return `<tr><td colspan="${colSpan}" style="text-align:center;">No hay consentimientos firmados</td></tr>`;
     }
     
     return consentimientos.map(c => {
         const fecha = new Date(c.fechaFirma).toLocaleString('es-CL');
         const rut = c.paciente?.rut || '';
         const nombre = c.paciente?.nombre || '';
-        const link = generarLinkConsentimiento(rut, nombre);
         
         return `
             <tr>
@@ -706,6 +724,14 @@ function renderFilasConsentimientos(consentimientos) {
                         <i class="fa fa-file-pdf"></i> PDF
                     </button>
                 </td>
+                ${isAdmin ? `
+                    <td>
+                        <button class="btn-small btn-danger" onclick="window.eliminarConsentimiento('${c.id}', '${rut.replace(/'/g, "\\'")}')" 
+                                style="background: #dc2626; color: white; border: none; padding: 5px 10px; border-radius: 20px; cursor: pointer;">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                ` : ''}
             </tr>
         `;
     }).join('');
@@ -730,7 +756,8 @@ function filtrarConsentimientosTabla() {
     
     const tbody = document.getElementById('consentTableBody');
     if (tbody) {
-        tbody.innerHTML = renderFilasConsentimientos(filtrados);
+        const isAdmin = state.currentUser?.role === 'admin';
+        tbody.innerHTML = renderFilasConsentimientos(filtrados, isAdmin);
     }
 }
 
@@ -789,6 +816,30 @@ function generarPDFConsentimientoDescarga(data) {
     doc.save(`consentimiento_${data.paciente?.rut?.replace(/[^0-9kK]/g, '') || 'paciente'}.pdf`);
     showToast('✅ PDF descargado', 'success');
 }
+
+// Función para eliminar consentimiento (SOLO ADMIN)
+window.eliminarConsentimiento = async function(consentimientoId, rutPaciente) {
+    // Solo admin puede eliminar
+    if (state.currentUser?.role !== 'admin') {
+        showToast('❌ Solo administradores pueden eliminar consentimientos', 'error');
+        return;
+    }
+    
+    const confirmar = confirm(`⚠️ ¿Eliminar consentimiento de ${rutPaciente}?\n\nEl paciente deberá firmar nuevamente.`);
+    if (!confirmar) return;
+    
+    try {
+        await db.ref(`consentimientos/${consentimientoId}`).remove();
+        showToast(`✅ Consentimiento de ${rutPaciente} eliminado`, 'success');
+        
+        // Recargar la tabla
+        await cargarConsentimientosFirebase();
+        mostrarTabConsentimientos();
+    } catch (error) {
+        console.error('Error eliminando:', error);
+        showToast('❌ Error al eliminar', 'error');
+    }
+};
 
 window.mostrarTabConsentimientos = mostrarTabConsentimientos;
 
@@ -890,4 +941,4 @@ if (typeof window !== 'undefined') {
     }, 2000);
 }
 
-console.log('✅ admin.js actualizado con módulo de consentimientos');
+console.log('✅ admin.js actualizado con módulo de consentimientos (psicólogos ven solo sus pacientes, admin puede eliminar)');

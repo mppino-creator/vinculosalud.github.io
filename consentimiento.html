@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- 🔥 FIREBASE SDK - Carga directa (sin módulo) -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -59,12 +58,18 @@
             padding-left: 12px;
             font-weight: 700;
         }
-        .section p, .section li {
+        .section p {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+        .section ul { padding-left: 25px; margin: 8px 0; }
+        .section li {
             font-size: 0.85rem;
             line-height: 1.5;
             color: #334155;
         }
-        .section ul { padding-left: 25px; margin: 8px 0; }
         .signature-form {
             padding: 30px;
             background: var(--soft-gray);
@@ -168,32 +173,44 @@
         <div class="consent-content">
             <div class="section">
                 <div class="section-title">1. Descripción del servicio</div>
-                <p>La atención psicológica es un proceso profesional orientado a la evaluación, acompañamiento y tratamiento de dificultades emocionales, conductuales y/o relacionales. Las sesiones tienen una duración aproximada de 50 minutos en modalidad presencial u online. La participación es voluntaria.</p>
+                <p>La atención psicológica es un proceso profesional orientado a la evaluación, acompañamiento y tratamiento de dificultades emocionales, conductuales y/o relacionales. La participación es voluntaria y requiere compromiso activo del paciente.</p>
             </div>
 
             <div class="section">
                 <div class="section-title">2. Confidencialidad</div>
-                <p>Toda la información compartida es confidencial. Excepciones: riesgo de daño grave para sí mismo o terceros, vulneración de derechos de NNA, requerimiento judicial. Datos tratados según Ley 19.628 y Ley 21.331.</p>
+                <p>Toda la información compartida es estrictamente confidencial. Excepciones legales: riesgo de daño grave para sí mismo o terceros, vulneración de derechos de niños, niñas o adolescentes, requerimiento judicial formal. Datos tratados según Ley 19.628 y Ley 21.331 de Salud Mental.</p>
             </div>
 
             <div class="section">
-                <div class="section-title">3. Honorarios</div>
+                <div class="section-title">3. Honorarios y cancelación</p>
                 <p><strong>Sesión online:</strong> $25.000 | <strong>Sesión presencial:</strong> $30.000<br>
-                Cancelación con 12 horas de anticipación. Inasistencia sin aviso será cobrada.</p>
+                Cancelación o reagendamiento con al menos 12 horas de anticipación. Inasistencia sin aviso será cobrada. Si el profesional cancela, se reprograma sin costo o se reembolsa el valor.</p>
             </div>
 
             <div class="section">
-                <div class="section-title">4. Derechos del paciente</div>
+                <div class="section-title">4. Derechos del paciente (Ley 20.584)</div>
                 <ul>
-                    <li>Terminar el tratamiento en cualquier momento</li>
-                    <li>Revocar este consentimiento por escrito</li>
-                    <li>Acceder a sus datos personales</li>
+                    <li>Terminar el tratamiento en cualquier momento, sin expresión de causa</li>
+                    <li>Revocar este consentimiento por escrito en cualquier momento</li>
+                    <li>Acceder a sus datos personales almacenados</li>
+                    <li>Recibir información clara y oportuna sobre su proceso</li>
                 </ul>
             </div>
-            
+
             <div class="section">
                 <div class="section-title">5. Registro clínico</div>
-                <p>El profesional mantendrá registros clínicos confidenciales del proceso terapéutico por al menos 5 años. No se realizarán grabaciones sin consentimiento explícito.</p>
+                <p>El profesional mantendrá registros clínicos confidenciales del proceso terapéutico por al menos 5 años. No se realizarán grabaciones de sesiones sin consentimiento explícito y por escrito.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">6. Encuadre terapéutico</div>
+                <p><strong>🕐 Duración de las sesiones:</strong> Cada sesión tiene una duración de 50 minutos, tanto en modalidad online como presencial. El tiempo de atraso no extiende la sesión.</p>
+                <p><strong>📍 Modalidad presencial:</strong> Se solicita llegar con 5 minutos de anticipación para comenzar puntualmente. La dirección será proporcionada al confirmar la cita.</p>
+                <p><strong>💻 Modalidad online:</strong> El enlace de la videollamada se enviará con 30 minutos de anticipación. El paciente debe conectarse a la hora acordada; la sesión comenzará puntualmente.</p>
+                <p><strong>🔒 Espacio seguro:</strong> Este es un espacio confidencial y libre de juicios. El paciente puede hablar libremente sobre los temas que desee abordar, sin presión ni obligación.</p>
+                <p><strong>📄 Emisión de boletas:</strong> Por cada atención se emitirá una boleta de honorarios electrónica, válida para reembolsos ante Isapres y seguros de salud (según cobertura del plan).</p>
+                <p><strong>📱 Contacto entre sesiones:</strong> Ante dudas administrativas (citas, pagos, boletas), el paciente puede contactar vía WhatsApp o email. Para emergencias o crisis, se debe acudir a servicios de urgencia (Salud Responde 600 360 7777 o fono *4141). El profesional no ofrece atención 24/7.</p>
+                <p><strong>📝 Compromiso del paciente:</strong> El paciente se compromete a asistir a las sesiones programadas, respetar los horarios y comunicar cualquier cancelación con la anticipación requerida.</p>
             </div>
         </div>
 
@@ -214,28 +231,34 @@
             </div>
 
             <div class="checkbox-group">
-                <input type="checkbox" id="checkConf"> <label>Acepto condiciones de <strong>confidencialidad</strong></label>
+                <input type="checkbox" id="checkConf"> <label>Acepto las condiciones de <strong>confidencialidad</strong> y sus límites legales.</label>
             </div>
             <div class="checkbox-group">
-                <input type="checkbox" id="checkPago"> <label>Acepto condiciones de <strong>pago y cancelación</strong></label>
+                <input type="checkbox" id="checkPago"> <label>Acepto las condiciones de <strong>pago, cancelación y reprogramación</strong>.</label>
             </div>
             <div class="checkbox-group">
-                <input type="checkbox" id="checkRegistro"> <label>Autorizo el <strong>registro clínico</strong> de mi proceso</label>
+                <input type="checkbox" id="checkRegistro"> <label>Autorizo el <strong>registro clínico</strong> de mi proceso terapéutico.</label>
             </div>
             <div class="checkbox-group">
-                <input type="checkbox" id="checkFinal"> <label>Acepto <strong>VOLUNTARIAMENTE</strong> todas las condiciones</label>
+                <input type="checkbox" id="checkEncuadre"> <label>Acepto el <strong>encuadre terapéutico</strong> (duración, puntualidad, modalidades, contacto entre sesiones).</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkFinal"> <label>Acepto <strong>VOLUNTARIAMENTE</strong> todas las condiciones y participo en el proceso psicológico.</label>
             </div>
 
             <button class="btn-firmar" onclick="procesarFirma()">
                 <i class="fa-solid fa-pen-to-square"></i> Firmar Consentimiento
             </button>
+            <p style="font-size: 0.7rem; text-align: center; margin-top: 15px; color: #64748b;">
+                Al hacer clic en "Firmar", usted manifiesta su voluntad libre e informada. El nombre+RUT tiene el mismo valor que una firma manuscrita.
+            </p>
         </div>
     </div>
 
     <div id="successScreen" class="success-screen">
         <i class="fa-solid fa-circle-check"></i>
         <h2>¡Consentimiento Firmado!</h2>
-        <p>Su firma ha sido registrada correctamente.</p>
+        <p>Su firma ha sido registrada correctamente. Se descargará automáticamente una copia del documento.</p>
         <button class="btn-descargar" onclick="descargarPDF()">
             <i class="fa-solid fa-download"></i> Descargar mi copia PDF
         </button>
@@ -252,7 +275,7 @@
     </div>
 
     <footer>
-        <p>Vínculo Salud SpA | O'Higgins 263, Concepción | +56 9 3870 6152</p>
+        <p>Vínculo Salud SpA | O'Higgins 263, Concepción | +56 9 3870 6152 | vinculosalud@hotmail.com</p>
     </footer>
 </div>
 
@@ -260,19 +283,18 @@
 
 <script>
     // ============================================
-    // CONFIGURACIÓN DE FIREBASE (MISMA QUE TU firebase.js)
+    // CONFIGURACIÓN DE FIREBASE - ¡REEMPLAZA CON TUS DATOS REALES!
     // ============================================
     const firebaseConfig = {
-        apiKey: "AIzaSyCj5jZcXZQZQZQZQZQZQZQZQZQZQZQZQ",
-        authDomain: "vinculosaludapp.firebaseapp.com",
+        apiKey: "TU_API_KEY_AQUI",
+        authDomain: "TU_AUTH_DOMAIN_AQUI",
         databaseURL: "https://vinculosaludapp-default-rtdb.firebaseio.com",
-        projectId: "vinculosaludapp",
-        storageBucket: "vinculosaludapp.firebasestorage.app",
-        messagingSenderId: "123456789012",
-        appId: "1:123456789012:web:abcdef1234567890"
+        projectId: "TU_PROJECT_ID_AQUI",
+        storageBucket: "TU_STORAGE_BUCKET_AQUI",
+        messagingSenderId: "TU_MESSAGING_SENDER_ID_AQUI",
+        appId: "TU_APP_ID_AQUI"
     };
     
-    // Inicializar Firebase (si no está ya inicializado)
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
@@ -280,6 +302,7 @@
     
     let ultimoPDF = null;
     let datosPacienteActual = {};
+    let profesionalAsignado = null;
     
     function showToast(message, isError = false) {
         const toast = document.getElementById('toast');
@@ -293,12 +316,13 @@
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const nombre = urlParams.get('nombre');
+        const profesional = urlParams.get('profesional');
+        
         if (token) {
             try {
                 const rut = atob(token);
-                return { rut, nombre: nombre || '' };
+                return { rut, nombre: nombre || '', profesional: profesional || '' };
             } catch(e) {
-                console.error('Error decodificando token:', e);
                 return null;
             }
         }
@@ -322,7 +346,6 @@
             if (!data) return false;
             return Object.values(data).some(c => c.paciente?.rut === rut);
         } catch (error) {
-            console.error('Error verificando firma:', error);
             return false;
         }
     }
@@ -332,51 +355,77 @@
         const doc = new jsPDF('p', 'mm', 'a4');
         let y = 20;
         
-        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(20);
         doc.setTextColor(26, 60, 52);
         doc.text('CONSENTIMIENTO INFORMADO', 105, y, { align: 'center' });
         y += 10;
         
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         doc.setTextColor(100, 100, 100);
         doc.text('Vínculo Salud SpA - Atención Psicológica', 105, y, { align: 'center' });
         y += 15;
         
+        doc.setDrawColor(184, 134, 11);
+        doc.setLineWidth(0.5);
+        doc.line(20, y, 190, y);
+        y += 10;
+        
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Fecha de firma: ${new Date().toLocaleString('es-CL')}`, 20, y);
-        y += 8;
-        doc.text(`Paciente: ${datos.nombre}`, 20, y);
-        y += 8;
-        doc.text(`RUT: ${datos.rut}`, 20, y);
-        y += 8;
-        doc.text(`Email: ${datos.email || 'No registrado'}`, 20, y);
-        y += 8;
-        doc.text(`IP desde donde firmó: ${datos.ip || 'No disponible'}`, 20, y);
-        y += 15;
-        
-        doc.setFontSize(12);
         doc.setTextColor(26, 60, 52);
-        doc.text('📋 Términos y condiciones aceptados:', 20, y);
-        y += 8;
+        doc.text('INFORMACIÓN DE LA FIRMA', 20, y);
+        y += 7;
         
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
         
+        doc.text(`Fecha de firma: ${new Date().toLocaleString('es-CL')}`, 25, y);
+        y += 6;
+        doc.text(`Paciente: ${datos.nombre}`, 25, y);
+        y += 6;
+        doc.text(`RUT: ${datos.rut}`, 25, y);
+        y += 6;
+        doc.text(`Email: ${datos.email || 'No registrado'}`, 25, y);
+        y += 6;
+        doc.text(`IP desde donde firmó: ${datos.ip || 'No disponible'}`, 25, y);
+        y += 6;
+        doc.text(`Profesional tratante: ${datos.profesional || 'Equipo Vínculo Salud'}`, 25, y);
+        y += 12;
+        
+        doc.setDrawColor(184, 134, 11);
+        doc.line(20, y, 190, y);
+        y += 10;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(26, 60, 52);
+        doc.text('TÉRMINOS Y CONDICIONES ACEPTADOS', 20, y);
+        y += 8;
+        
+        // Sección 1
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
         doc.text('1. DESCRIPCIÓN DEL SERVICIO', 20, y);
         y += 5;
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text('La atención psicológica es un proceso profesional orientado a la evaluación, acompañamiento', 25, y);
         y += 4;
-        doc.text('y tratamiento de dificultades emocionales, conductuales y/o relacionales. Las sesiones', 25, y);
+        doc.text('y tratamiento de dificultades emocionales, conductuales y/o relacionales.', 25, y);
         y += 4;
-        doc.text('tienen una duración aproximada de 50 minutos en modalidad presencial u online.', 25, y);
+        doc.text('La participación es voluntaria y requiere compromiso activo del paciente.', 25, y);
         y += 8;
         
+        // Sección 2
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
         doc.text('2. CONFIDENCIALIDAD', 20, y);
         y += 5;
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text('Toda la información compartida es estrictamente confidencial. Excepciones legales:', 25, y);
         y += 4;
@@ -389,42 +438,79 @@
         doc.text('Datos tratados según Ley 19.628 y Ley 21.331 de Salud Mental.', 25, y);
         y += 8;
         
+        // Sección 3
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
         doc.text('3. HONORARIOS Y CANCELACIÓN', 20, y);
         y += 5;
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text('• Sesión online: $25.000', 25, y);
+        doc.text('• Sesión online: $25.000 | Sesión presencial: $30.000', 25, y);
         y += 4;
-        doc.text('• Sesión presencial: $30.000', 25, y);
-        y += 4;
-        doc.text('• Cancelación con 12 horas de anticipación', 25, y);
+        doc.text('• Cancelación o reagendamiento con al menos 12 horas de anticipación', 25, y);
         y += 4;
         doc.text('• Inasistencia sin aviso será cobrada', 25, y);
+        y += 4;
+        doc.text('• Si el profesional cancela, se reprograma sin costo o se reembolsa el valor', 25, y);
         y += 8;
         
+        // Sección 4
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
         doc.text('4. DERECHOS DEL PACIENTE (Ley 20.584)', 20, y);
         y += 5;
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text('• Terminar el tratamiento en cualquier momento', 25, y);
+        doc.text('• Terminar el tratamiento en cualquier momento, sin expresión de causa', 25, y);
         y += 4;
-        doc.text('• Revocar este consentimiento por escrito', 25, y);
+        doc.text('• Revocar este consentimiento por escrito en cualquier momento', 25, y);
         y += 4;
         doc.text('• Acceder a sus datos personales almacenados', 25, y);
         y += 8;
         
+        // Sección 5
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
         doc.text('5. REGISTRO CLÍNICO', 20, y);
         y += 5;
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text('El profesional mantendrá registros clínicos confidenciales por al menos 5 años.', 25, y);
         y += 4;
         doc.text('No se realizarán grabaciones sin consentimiento explícito.', 25, y);
+        y += 8;
+        
+        // Sección 6 - Encuadre
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('6. ENCUADRE TERAPÉUTICO', 20, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text('• Duración: 50 minutos por sesión. El atraso no extiende la sesión.', 25, y);
+        y += 4;
+        doc.text('• Presencial: llegar 5 minutos antes. Online: enlace enviado 30 minutos antes.', 25, y);
+        y += 4;
+        doc.text('• Espacio seguro y libre de juicios. El paciente elige los temas a tratar.', 25, y);
+        y += 4;
+        doc.text('• Se emite boleta electrónica por cada atención, válida para reembolsos.', 25, y);
+        y += 4;
+        doc.text('• Contacto administrativo vía WhatsApp/email. Emergencias: *4141 o 600 360 7777', 25, y);
+        y += 4;
+        doc.text('• El paciente se compromete a respetar horarios y cancelar con anticipación.', 25, y);
         y += 12;
         
+        doc.setDrawColor(184, 134, 11);
+        doc.line(20, y, 190, y);
+        y += 10;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(26, 60, 52);
+        doc.text('FIRMA DIGITAL', 20, y);
+        y += 8;
+        
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
         doc.text('_________________________________________', 70, y);
@@ -454,6 +540,7 @@
         const checkConf = document.getElementById('checkConf').checked;
         const checkPago = document.getElementById('checkPago').checked;
         const checkRegistro = document.getElementById('checkRegistro').checked;
+        const checkEncuadre = document.getElementById('checkEncuadre').checked;
         const checkFinal = document.getElementById('checkFinal').checked;
         
         if (!nombre) {
@@ -461,7 +548,7 @@
             return;
         }
         
-        if (!checkConf || !checkPago || !checkRegistro || !checkFinal) {
+        if (!checkConf || !checkPago || !checkRegistro || !checkEncuadre || !checkFinal) {
             showToast('❌ Debes aceptar TODAS las condiciones', true);
             return;
         }
@@ -476,19 +563,18 @@
             }
             
             const ip = await getUserIP();
-            const fechaFirma = new Date().toISOString();
             
             const datosConsentimiento = {
                 paciente: { nombre, rut, email: email || 'No proporcionado' },
-                profesionalAsignado: 'Equipo Vínculo Salud',
-                fechaFirma: fechaFirma,
+                profesionalAsignado: profesionalAsignado || 'Equipo Vínculo Salud',
+                fechaFirma: new Date().toISOString(),
                 ip: ip,
                 userAgent: navigator.userAgent,
                 aceptaciones: {
                     confidencialidad: checkConf,
                     honorarios: checkPago,
                     registroClinico: checkRegistro,
-                    derechos: true,
+                    encuadre: checkEncuadre,
                     final: checkFinal
                 }
             };
@@ -496,11 +582,14 @@
             const newRef = db.ref('consentimientos').push();
             await newRef.set(datosConsentimiento);
             
-            const pdfData = await generarPDF({ nombre, rut, email, ip });
+            const pdfData = await generarPDF({ 
+                nombre, rut, email, ip, 
+                profesional: profesionalAsignado || 'Equipo Vínculo Salud'
+            });
             await db.ref(`consentimientos/${newRef.key}/pdfBase64`).set(pdfData);
             
             ultimoPDF = pdfData;
-            datosPacienteActual = { nombre, rut, email, ip };
+            datosPacienteActual = { nombre, rut, email, ip, profesional: profesionalAsignado };
             
             document.getElementById('consentScreen').style.display = 'none';
             document.getElementById('successScreen').style.display = 'block';
@@ -540,11 +629,13 @@
             return;
         }
         
+        profesionalAsignado = tokenData.profesional || 'Equipo Vínculo Salud';
+        
         const yaFirmo = await pacienteYaFirmo(tokenData.rut);
         if (yaFirmo) {
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('errorScreen').style.display = 'block';
-            document.getElementById('errorMessage').textContent = 'Este RUT ya ha firmado el consentimiento anteriormente.';
+            document.getElementById('errorMessage').textContent = 'Este RUT ya ha firmado el consentimiento anteriormente. Si necesitas volver a firmar, contacta a tu psicólogo.';
             return;
         }
         

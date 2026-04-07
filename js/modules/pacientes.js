@@ -22,12 +22,14 @@ export function generarLinkConsentimiento(rutPaciente, nombrePaciente) {
 }
 
 export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
-    const link = generarLinkConsentimiento(rutPaciente, nombrePaciente);
-    if (link) {
-        navigator.clipboard.writeText(link);
-        showToast(`✅ Link de consentimiento copiado para ${nombrePaciente}`, 'success');
-        console.log('📋 Link copiado:', link);
-    }
+    const profesional = state.currentUser?.data?.name || 'Equipo Vínculo Salud';
+    const rutLimpio = rutPaciente.replace(/\./g, '').replace(/\-/g, '');
+    const token = btoa(rutLimpio);
+    const baseUrl = window.location.origin;
+    const link = `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente)}&profesional=${encodeURIComponent(profesional)}`;
+    navigator.clipboard.writeText(link);
+    showToast(`✅ Link de consentimiento copiado para ${nombrePaciente}`, 'success');
+    console.log('📋 Link copiado:', link);
 }
 
 // ============================================

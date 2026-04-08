@@ -79,7 +79,7 @@ export let atencionTexts = {
 
 export let contactInfo = {
     email: 'vinculosalud@hotmail.com',
-    phone: '+56',
+    phone: '+56 9 1234 5678',
     address: 'Ohiggins 263, Concepción'
 };
 
@@ -1166,7 +1166,7 @@ function updateFooterFromContactInfo() {
     const footerPhone = document.getElementById('footerPhone');
     const footerEmail = document.getElementById('footerEmail');
     const footerAddress = document.getElementById('footerAddress');
-    if (footerPhone) footerPhone.innerText = contactInfo.phone || '+56';
+    if (footerPhone) footerPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
     if (footerEmail) footerEmail.innerText = contactInfo.email || 'vinculosalud@hotmail.com';
     if (footerAddress) footerAddress.innerText = contactInfo.address || 'Ohiggins 263, Concepción';
     console.log('📞 Footer actualizado con:', { phone: contactInfo.phone, email: contactInfo.email, address: contactInfo.address });
@@ -1186,7 +1186,7 @@ export function updateContactSection() {
     const contactPhone = document.getElementById('contactPhoneDisplay');
     const contactAddress = document.getElementById('contactAddressDisplay');
     if (contactEmail) contactEmail.innerText = contactInfo.email || 'vinculosalud@hotmail.com';
-    if (contactPhone) contactPhone.innerText = contactInfo.phone || '+56';
+    if (contactPhone) contactPhone.innerText = contactInfo.phone || '+56 9 1234 5678';
     if (contactAddress) contactAddress.innerText = contactInfo.address || 'Ohiggins 263, Concepción';
     updateFooterFromContactInfo();
 }
@@ -1199,7 +1199,7 @@ export function showContactModal() {
                 <span class="modal-close" onclick="document.getElementById('contactModal').style.display='none'">&times;</span>
                 <h2 style="margin-bottom: 25px;">📝 Editar Información de Contacto</h2>
                 <div class="form-group"><label>Email</label><input type="email" id="contactEmailInput" class="filter-input" placeholder="vinculosalud@hotmail.com"></div>
-                <div class="form-group"><label>Teléfono</label><input type="text" id="contactPhoneInput" class="filter-input" placeholder="+56"></div>
+                <div class="form-group"><label>Teléfono</label><input type="text" id="contactPhoneInput" class="filter-input" placeholder="+56 9 1234 5678"></div>
                 <div class="form-group"><label>Dirección</label><input type="text" id="contactAddressInput" class="filter-input" placeholder="Av. Principal 123, Santiago"></div>
                 <div style="display:flex; gap:15px;"><button class="btn-staff" style="background:var(--verde-exito); flex:1;" onclick="saveContactInfo()">Guardar</button><button class="btn-staff" style="background:var(--gris-oscuro); flex:0.5;" onclick="document.getElementById('contactModal').style.display='none'">Cancelar</button></div>
             </div>

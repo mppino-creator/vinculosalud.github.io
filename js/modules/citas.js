@@ -491,13 +491,34 @@ export function updateAvailableTimes() {
     }
 }
 
-export function searchPatientByRutBooking() {
+// ============================================
+// 🔥 FUNCIÓN BUSCAR PACIENTE POR RUT (CORREGIDA - BUSCA EN FIREBASE SI NO ESTÁ EN STATE)
+// ============================================
+export async function searchPatientByRutBooking() {
     const rutInput = document.getElementById('custRut').value;
     if (!rutInput) return;
 
     const rutNormalizado = normalizarRut(rutInput);
-    const patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
+    console.log('🔍 Buscando paciente con RUT normalizado:', rutNormalizado);
+    
+    let patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
+    
+    // Si no está en el estado local, buscarlo directamente en Firebase
+    if (!patient) {
+        console.log('⚠️ Paciente no encontrado en state, consultando Firebase...');
+        const db = window.db;
+        const snapshot = await db.ref('patients').once('value');
+        const pacientesFirebase = snapshot.val() || {};
+        patient = Object.values(pacientesFirebase).find(p => normalizarRut(p.rut) === rutNormalizado);
+        if (patient) {
+            // Agregar al estado local para futuras búsquedas
+            state.patients.push(patient);
+            console.log('✅ Paciente encontrado en Firebase y agregado al estado');
+        }
+    }
+    
     if (patient) {
+        console.log('✅ Paciente encontrado:', patient);
         document.getElementById('custName').value = patient.name || '';
         document.getElementById('custEmail').value = patient.email || '';
         const birthdate = document.getElementById('custBirthdate');
@@ -525,6 +546,7 @@ export function searchPatientByRutBooking() {
         showToast('Datos cargados', 'success');
         showPaymentDetails();
     } else {
+        console.warn('⚠️ Paciente no encontrado en Firebase con RUT:', rutNormalizado);
         showToast('Paciente no registrado. Completa los datos.', 'info', 3000);
     }
 }
@@ -794,7 +816,6 @@ export async function executeBooking() {
             if (time) mensaje += ` (Preferencia: ${time})`;
             if (preferenciaAMPM) mensaje += ` ${preferenciaAMPM}`;
             showToast(mensaje, 'success');
-            // Para presencial también se puede refrescar la vista de disponibilidad (aunque no afecta horarios)
             if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
         }
 
@@ -843,7 +864,7 @@ export function renderAppointmentsTable() {
     citasFiltradas.sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
 
     if (citasFiltradas.length === 0) {
-        container.innerHTML = '<td><td colspan="9" style="text-align:center;">No hay citas programadas</td></tr>';
+        container.innerHTML = '<tr><td colspan="9" style="text-align:center;">No hay citas programadas</td></tr>';
         return;
     }
 
@@ -1394,7 +1415,10 @@ export async function rejectRequest(requestId) {
     }
 }
 
-export function showPatientAppointmentsByRut() {
+// ============================================
+// MOSTRAR CITAS DEL PACIENTE POR RUT (CON BÚSQUEDA EN FIREBASE)
+// ============================================
+export async function showPatientAppointmentsByRut() {
     const rutInput = prompt(
         '👋 ¡Bienvenido paciente! Ingresa tu RUT para revisar tus reservas o cancelar citas.\n\n' +
         'No te preocupes por los puntos ni guiones, nosotros lo ajustamos por ti.\n' +
@@ -1403,7 +1427,17 @@ export function showPatientAppointmentsByRut() {
     if (!rutInput) return;
     
     const rutNormalizado = normalizarRut(rutInput);
-    const patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
+    let patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
+    
+    if (!patient) {
+        const db = window.db;
+        const snapshot = await db.ref('patients').once('value');
+        const pacientesFirebase = snapshot.val() || {};
+        patient = Object.values(pacientesFirebase).find(p => normalizarRut(p.rut) === rutNormalizado);
+        if (patient) {
+            state.patients.push(patient);
+        }
+    }
     
     if (!patient) {
         showToast('❌ No encontramos citas asociadas a ese RUT. Verifica que esté bien escrito.', 'error');
@@ -1430,7 +1464,7 @@ export function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                              </table>
+                              </tr>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `
@@ -1443,7 +1477,7 @@ export function showPatientAppointmentsByRut() {
                                         ${cita.status === 'confirmada' ? 'Confirmada' : 
                                           cita.status === 'pendiente' ? 'Pendiente' : 
                                           cita.status === 'cancelada' ? 'Cancelada' : '—'}
-                                    </td>
+                                     </td>
                                     <td>
                                         ${cita.status !== 'cancelada' && new Date(cita.date + 'T' + (cita.time || '00:00')) > new Date() ? `
                                             <button onclick="cancelAppointmentByPatient('${cita.id}', '${patient.rut}')" 
@@ -1451,7 +1485,7 @@ export function showPatientAppointmentsByRut() {
                                                 Cancelar
                                             </button>
                                         ` : '—'}
-                                    </td>
+                                     </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -1585,4 +1619,4 @@ document.addEventListener('datosPrivadosCargados', () => {
     }
 });
 
-console.log('✅ citas.js actualizado: guardado con window.db, ocupación de horarios y actualización en tiempo real');
+console.log('✅ citas.js actualizado: guardado con window.db, ocupación de horarios, búsqueda en Firebase y actualización en tiempo real');

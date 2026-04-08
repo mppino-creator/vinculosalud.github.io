@@ -54,6 +54,10 @@ export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
 // FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (CORREGIDA)
 // ============================================
 
+// ============================================
+// FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (CORREGIDA - SIN IMPORT DINÁMICO)
+// ============================================
+
 export async function savePatient() {
     console.log('🔍 Ejecutando savePatient...');
     
@@ -90,6 +94,14 @@ export async function savePatient() {
     }
 
     try {
+        // Obtener Firebase de la configuración global (window.db ya está disponible)
+        const database = window.db;
+        if (!database) {
+            throw new Error('Firebase no está inicializado. Espera a que cargue la página.');
+        }
+        
+        const { ref, set } = await import('firebase/database');
+        
         // Buscar si el paciente ya existe
         const pacienteExistente = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
         
@@ -116,10 +128,7 @@ export async function savePatient() {
 
         console.log('💾 Guardando paciente en Firebase:', patientData);
 
-        // Guardar en Firebase
-        const { db, ref, set } = await import('firebase/database');
-        const firebaseApp = (await import('../config/firebase.js')).default;
-        const database = firebaseApp.db || db;
+        // Guardar en Firebase usando window.db
         const patientRef = ref(database, `patients/${rutNormalizado}`);
         await set(patientRef, patientData);
 
@@ -165,7 +174,6 @@ export async function savePatient() {
         return false;
     }
 }
-
 // ============================================
 // RENDERIZAR LISTA DE PACIENTES
 // ============================================

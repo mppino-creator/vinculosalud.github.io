@@ -6,21 +6,15 @@ import {
 } from './utils.js';
 
 // ============================================
-// VARIABLE GLOBAL PARA HORA SELECCIONADA
+// VARIABLES GLOBALES DEL MÓDULO
 // ============================================
 window.horaSeleccionada = null;
+let currentRequestId = null;          // ID de la solicitud presencial a confirmar
 
 // ============================================
 // FUNCIONES AUXILIARES INTERNAS
 // ============================================
 
-/**
- * Verifica si un horario está ocupado para un profesional en una fecha específica.
- * @param {string} psychId - ID del profesional
- * @param {string} date - Fecha en formato YYYY-MM-DD
- * @param {string} time - Hora (HH:MM)
- * @returns {boolean}
- */
 function isTimeSlotOccupied(psychId, date, time) {
     if (!time) return false;
     const occupiedAppointments = state.appointments.some(a => 
@@ -33,16 +27,9 @@ function isTimeSlotOccupied(psychId, date, time) {
     return occupiedAppointments || occupiedRequests;
 }
 
-/**
- * Obtiene los horarios disponibles para un profesional en una fecha.
- * @param {object} psych - Objeto del profesional
- * @param {string} date - Fecha YYYY-MM-DD
- * @returns {Array} Lista de slots disponibles (objetos con time y isOvercupo)
- */
 function getAvailableSlots(psych, date) {
     const availableSlots = psych.availability?.[date] || [];
     if (!availableSlots.length) return [];
-
     const now = new Date();
     return availableSlots
         .filter(slot => !isTimeSlotOccupied(psych.id, date, slot.time))
@@ -50,18 +37,13 @@ function getAvailableSlots(psych, date) {
         .sort((a, b) => a.time.localeCompare(b.time));
 }
 
-/**
- * Configura la sección de tutor según edad.
- */
 function configurarTutorSegunEdad(edad) {
     const tutorSection = document.getElementById('tutorSection');
     const tutorName = document.getElementById('tutorName');
     const tutorRut = document.getElementById('tutorRut');
     const tutorRelationship = document.getElementById('tutorRelationship');
     const tutorHelpText = document.getElementById('tutorHelpText');
-    
     if (!tutorSection) return;
-    
     if (edad !== null && edad < 18) {
         tutorSection.style.borderLeft = '3px solid #ff9500';
         tutorSection.style.backgroundColor = '#fff9f0';
@@ -79,9 +61,6 @@ function configurarTutorSegunEdad(edad) {
     }
 }
 
-/**
- * Limpia el formulario de reserva.
- */
 function limpiarFormularioReserva() {
     const campos = ['custRut', 'custName', 'custEmail', 'custPhone', 'custBirthdate', 'custMsg'];
     campos.forEach(id => {
@@ -112,9 +91,6 @@ function limpiarFormularioReserva() {
     document.querySelectorAll('.time-slot-btn').forEach(btn => btn.classList.remove('selected'));
 }
 
-/**
- * Muestra resumen de cita después de reservar.
- */
 function mostrarResumenYAcciones(datos) {
     const modalHtml = `
         <div id="modalResumenCita" class="modal" style="display:flex; z-index:10000;">
@@ -142,11 +118,9 @@ function mostrarResumenYAcciones(datos) {
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
     const modal = document.getElementById('modalResumenCita');
     const btnNueva = document.getElementById('btnNuevaReserva');
     const btnVolver = document.getElementById('btnVolverInicio');
-    
     btnNueva.onclick = () => {
         modal.remove();
         document.getElementById('bookingPanel').style.display = 'block';
@@ -154,7 +128,6 @@ function mostrarResumenYAcciones(datos) {
         if (custDate) custDate.value = new Date().toISOString().split('T')[0];
         if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
     };
-    
     btnVolver.onclick = () => {
         modal.remove();
         document.getElementById('bookingPanel').style.display = 'none';
@@ -164,23 +137,20 @@ function mostrarResumenYAcciones(datos) {
 }
 
 // ============================================
-// FUNCIONES EXPORTADAS (Principales)
+// FUNCIONES PÚBLICAS PRINCIPALES
 // ============================================
 
 export function selectTimeSlot(time) {
     console.log('🎯 [SELECT] Seleccionando horario:', time);
     window.horaSeleccionada = time;
-    
     document.querySelectorAll('.time-slot-btn').forEach(btn => btn.classList.remove('selected'));
     const btn = document.querySelector(`.time-slot-btn[data-time="${time}"]`);
     if (btn) btn.classList.add('selected');
-    
     const select = document.getElementById('custTime');
     if (select) {
         select.value = time;
         select.dispatchEvent(new Event('change', { bubbles: true }));
     }
-    
     if (typeof window.updateBookingDetails === 'function') window.updateBookingDetails();
     return true;
 }
@@ -194,32 +164,25 @@ export function selectTimePref(pref) {
 
 export function openBooking(id) {
     console.log("🔍 Abriendo reserva para ID:", id);
-    
     const psych = state.staff.find(p => p.id == id);
     if (!psych) {
         showToast('Profesional no encontrado', 'error');
         return;
     }
-    
     state.setSelectedPsych(psych);
-
     const today = new Date().toISOString().split('T')[0];
-    
     document.getElementById('clientView').style.display = 'none';
     document.getElementById('bookingPanel').style.display = 'block';
-    
     document.getElementById('psychName').innerText = psych.name;
     document.getElementById('psychSelectedName').innerText = psych.name;
     document.getElementById('psychSelectedSpec').innerText = Array.isArray(psych.spec) ? psych.spec.join(' · ') : psych.spec;
     document.getElementById('custDate').min = today;
     document.getElementById('custDate').value = today;
     document.getElementById('bookingDuration').innerText = (psych.sessionDuration || 45) + ' minutos';
-    
     const birthdate = document.getElementById('custBirthdate');
     if (birthdate) birthdate.value = '';
     const edadDisplay = document.getElementById('edadDisplay');
     if (edadDisplay) edadDisplay.innerHTML = '';
-    
     const tutorName = document.getElementById('tutorName');
     const tutorRut = document.getElementById('tutorRut');
     const tutorRelationship = document.getElementById('tutorRelationship');
@@ -227,7 +190,6 @@ export function openBooking(id) {
     if (tutorRut) tutorRut.value = '';
     if (tutorRelationship) tutorRelationship.value = '';
     configurarTutorSegunEdad(null);
-    
     const birthdateInput = document.getElementById('custBirthdate');
     if (birthdateInput) {
         birthdateInput.removeEventListener('change', window.calcularEdad);
@@ -236,7 +198,6 @@ export function openBooking(id) {
         birthdateInput.addEventListener('input', window.calcularEdad);
         console.log('Eventos de fecha añadidos');
     }
-    
     loadPaymentMethods();
     document.getElementById('paymentDetails').style.display = 'none';
     document.getElementById('paymentLinkContainer').style.display = 'none';
@@ -248,14 +209,10 @@ export function openBooking(id) {
 function loadPaymentMethods() {
     const select = document.getElementById('paymentMethod');
     if (!select) return;
-    
     const type = document.getElementById('appointmentType').value;
     const methods = state.selectedPsych.paymentMethods || state.globalPaymentMethods;
-
     select.innerHTML = '<option value="">Selecciona método de pago</option>';
-    
     if (methods.transfer) select.innerHTML += '<option value="transfer">Transferencia Bancaria</option>';
-    
     if (type === 'online') {
         if (methods.cardOnline) select.innerHTML += '<option value="card-online">Tarjeta Online</option>';
         if (methods.mercadopago) select.innerHTML += '<option value="mercadopago">Mercado Pago</option>';
@@ -272,14 +229,11 @@ export function showPaymentDetails() {
     const type = document.getElementById('appointmentType').value;
     const detailsDiv = document.getElementById('paymentDetails');
     const linkContainer = document.getElementById('paymentLinkContainer');
-    
     if (detailsDiv) detailsDiv.style.display = 'none';
     if (linkContainer) linkContainer.style.display = 'none';
     if (!method) return;
-    
     const paymentLinks = state.selectedPsych.paymentLinks || {};
     const bank = state.selectedPsych.bankDetails;
-    
     if (method === 'transfer' && bank) {
         detailsDiv.style.display = 'block';
         detailsDiv.innerHTML = `
@@ -292,9 +246,7 @@ export function showPaymentDetails() {
                 💡 Realiza la transferencia. El profesional confirmará el pago.
             </p>
         `;
-    }
-    
-    if (method === 'card-presencial' || method === 'cash') {
+    } else if (method === 'card-presencial' || method === 'cash') {
         detailsDiv.style.display = 'block';
         const qr = paymentLinks.qrPresencial;
         detailsDiv.innerHTML = `
@@ -304,14 +256,11 @@ export function showPaymentDetails() {
                 <p style="font-size:0.9rem; margin-top:10px;"><strong>Importante:</strong> La dirección exacta se coordinará directamente con el psicólogo.</p>
             </div>
         `;
-    }
-    
-    if (method === 'card-online' || method === 'mercadopago' || method === 'webpay') {
+    } else if (method === 'card-online' || method === 'mercadopago' || method === 'webpay') {
         const link = method === 'card-online' ? paymentLinks.online : 
                     method === 'mercadopago' ? paymentLinks.mercadopago || paymentLinks.online :
                     paymentLinks.webpay || paymentLinks.online;
         const qr = paymentLinks.qrOnline;
-        
         if (link) {
             linkContainer.style.display = 'block';
             linkContainer.innerHTML = `
@@ -328,12 +277,9 @@ export function showPaymentDetails() {
             linkContainer.style.display = 'block';
             linkContainer.innerHTML = '<p style="color:var(--texto-secundario);">No hay link de pago configurado para este método.</p>';
         }
-    }
-    
-    if (method === 'card-online-presencial') {
+    } else if (method === 'card-online-presencial') {
         const link = paymentLinks.presencial || paymentLinks.online;
         const qr = paymentLinks.qrPresencial;
-        
         if (link) {
             linkContainer.style.display = 'block';
             linkContainer.innerHTML = `
@@ -356,13 +302,10 @@ export function showPaymentDetails() {
 export function updateBookingDetails() {
     const type = document.getElementById('appointmentType').value;
     const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
-
     document.getElementById('bookingPrice').innerText = `$${price.toLocaleString()}`;
     document.getElementById('bookingType').innerText = type === 'online' ? 'Online' : 'Presencial';
-    
     document.getElementById('paymentDetails').style.display = 'none';
     document.getElementById('paymentLinkContainer').style.display = 'none';
-    
     loadPaymentMethods();
     updateAvailableTimes();
 }
@@ -379,18 +322,14 @@ export function updateAvailableTimes() {
     const presencialWarning = document.getElementById('presencialWarning');
     const noSlotsMessage = document.getElementById('noSlotsMessage');
     const bookBtn = document.getElementById('bookBtn');
-
     if (!date || !state.selectedPsych) return;
-
     if (amContainer) amContainer.style.display = 'none';
     if (pmContainer) pmContainer.style.display = 'none';
     if (timeSelect) timeSelect.style.display = 'none';
     if (noSlotsMessage) noSlotsMessage.style.display = 'none';
-
     if (type === 'presencial') {
         const availableSlots = state.selectedPsych.availability?.[date] || [];
         const hasAvailability = availableSlots.length > 0;
-        
         if (presencialWarning) {
             presencialWarning.style.display = 'block';
             if (!hasAvailability) {
@@ -433,11 +372,8 @@ export function updateAvailableTimes() {
         if (onlineMsg) onlineMsg.style.display = 'none';
         return;
     }
-
     if (presencialWarning) presencialWarning.style.display = 'none';
-    
     const availableSlots = getAvailableSlots(state.selectedPsych, date);
-
     if (availableSlots.length === 0) {
         if (noSlotsMessage) {
             noSlotsMessage.style.display = 'block';
@@ -449,10 +385,8 @@ export function updateAvailableTimes() {
     } else {
         if (bookBtn) bookBtn.disabled = false;
     }
-
     const amTimes = availableSlots.filter(slot => getTimePeriod(slot.time) === 'AM');
     const pmTimes = availableSlots.filter(slot => getTimePeriod(slot.time) === 'PM');
-
     if (amTimes.length > 0 && amSlotsContainer) {
         amSlotsContainer.innerHTML = amTimes.map(slot => `
             <div class="time-slot-btn ${slot.isOvercupo ? 'overcupo' : ''}" 
@@ -463,7 +397,6 @@ export function updateAvailableTimes() {
         `).join('');
         amContainer.style.display = 'block';
     }
-
     if (pmTimes.length > 0 && pmSlotsContainer) {
         pmSlotsContainer.innerHTML = pmTimes.map(slot => `
             <div class="time-slot-btn ${slot.isOvercupo ? 'overcupo' : ''}" 
@@ -474,12 +407,10 @@ export function updateAvailableTimes() {
         `).join('');
         pmContainer.style.display = 'block';
     }
-
     if (onlineMsg) {
         onlineMsg.style.display = 'block';
         onlineMsg.innerHTML = '<i class="fa fa-check-circle"></i> Horarios disponibles';
     }
-
     const currentSelectedTime = timeSelect ? timeSelect.value : '';
     if (!currentSelectedTime && window.horaSeleccionada) {
         const horaValida = availableSlots.some(slot => slot.time === window.horaSeleccionada);
@@ -491,19 +422,12 @@ export function updateAvailableTimes() {
     }
 }
 
-// ============================================
-// 🔥 FUNCIÓN BUSCAR PACIENTE POR RUT (CORREGIDA - BUSCA EN FIREBASE SI NO ESTÁ EN STATE)
-// ============================================
 export async function searchPatientByRutBooking() {
     const rutInput = document.getElementById('custRut').value;
     if (!rutInput) return;
-
     const rutNormalizado = normalizarRut(rutInput);
     console.log('🔍 Buscando paciente con RUT normalizado:', rutNormalizado);
-    
     let patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
-    
-    // Si no está en el estado local, buscarlo directamente en Firebase
     if (!patient) {
         console.log('⚠️ Paciente no encontrado en state, consultando Firebase...');
         const db = window.db;
@@ -511,12 +435,10 @@ export async function searchPatientByRutBooking() {
         const pacientesFirebase = snapshot.val() || {};
         patient = Object.values(pacientesFirebase).find(p => normalizarRut(p.rut) === rutNormalizado);
         if (patient) {
-            // Agregar al estado local para futuras búsquedas
             state.patients.push(patient);
             console.log('✅ Paciente encontrado en Firebase y agregado al estado');
         }
     }
-    
     if (patient) {
         console.log('✅ Paciente encontrado:', patient);
         document.getElementById('custName').value = patient.name || '';
@@ -561,9 +483,6 @@ export function checkOnlineAvailability() {
 
 let bookingEnProceso = false;
 
-// ============================================
-// FUNCIÓN EXECUTE BOOKING CORREGIDA (USA window.db)
-// ============================================
 export async function executeBooking() {
     console.log("🟢 executeBooking llamada");
     if (bookingEnProceso) {
@@ -571,26 +490,22 @@ export async function executeBooking() {
         return;
     }
     bookingEnProceso = true;
-
     const rutInput = document.getElementById('custRut').value;
     const rutNormalizado = normalizarRut(rutInput);
     const name = document.getElementById('custName').value;
     const email = document.getElementById('custEmail').value;
     const birthdate = document.getElementById('custBirthdate')?.value || '';
     const prevision = document.getElementById('custPrevision')?.value || '';
-    
     if (!email || !email.includes('@')) {
         showToast('Ingresa un email válido', 'error');
         bookingEnProceso = false;
         return;
     }
-    
     if (state.selectedPsych && email === state.selectedPsych.email) {
         showToast('❌ ERROR: No puedes usar el email del profesional. Usa el email del paciente.', 'error');
         bookingEnProceso = false;
         return;
     }
-    
     let tutorData = null;
     const tutorName = document.getElementById('tutorName')?.value;
     const tutorRutRaw = document.getElementById('tutorRut')?.value;
@@ -602,18 +517,15 @@ export async function executeBooking() {
             parentesco: tutorRelationship
         };
     }
-    
     const countryCode = document.getElementById('countryCode')?.value || '+56';
     const phoneNine = document.getElementById('phoneNine')?.value || '9';
     const phoneNumber = document.getElementById('custPhone')?.value || '';
     const phone = countryCode + ' ' + phoneNine + ' ' + phoneNumber;
-    
     const date = document.getElementById('custDate').value;
     const type = document.getElementById('appointmentType').value;
     const paymentMethod = document.getElementById('paymentMethod')?.value;
     const msg = document.getElementById('custMsg').value;
     const acceptPolicy = document.getElementById('acceptPolicy').checked;
-
     if (!rutInput || !name || !email || !date) {
         showToast('Completa todos los campos', 'error');
         bookingEnProceso = false;
@@ -634,7 +546,6 @@ export async function executeBooking() {
         bookingEnProceso = false;
         return;
     }
-
     let edad = 0;
     if (birthdate) {
         const fechaNormalizada = normalizarFecha(birthdate);
@@ -650,7 +561,6 @@ export async function executeBooking() {
             return;
         }
     }
-
     let time = '';
     if (window.horaSeleccionada) time = window.horaSeleccionada;
     if (!time) {
@@ -666,13 +576,11 @@ export async function executeBooking() {
             window.horaSeleccionada = time;
         }
     }
-
     if (type === 'online' && !time) {
         showToast('Selecciona un horario', 'error');
         bookingEnProceso = false;
         return;
     }
-
     if (type === 'presencial') {
         const availableSlots = state.selectedPsych.availability?.[date] || [];
         if (availableSlots.length === 0) {
@@ -681,7 +589,6 @@ export async function executeBooking() {
             return;
         }
     }
-
     let horaFinal = time || 'Pendiente';
     let preferenciaAMPM = null;
     if (type === 'presencial') {
@@ -693,7 +600,6 @@ export async function executeBooking() {
             }
         }
     }
-
     if (type === 'online' && time) {
         if (isTimeSlotOccupied(state.selectedPsych.id, date, time)) {
             showToast('⚠️ Este horario ya está ocupado. Por favor selecciona otro.', 'error');
@@ -701,17 +607,14 @@ export async function executeBooking() {
             return;
         }
     }
-
     const bookBtn = document.getElementById('bookBtn');
     const originalText = bookBtn.innerHTML;
     bookBtn.innerHTML = '<span class="spinner"></span> Procesando...';
     bookBtn.disabled = true;
-
     try {
-        const db = window.db;  // Usar la referencia global
+        const db = window.db;
         let patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
         let patientId = null;
-        
         if (!patient) {
             patientId = Date.now().toString();
             patient = {
@@ -764,7 +667,6 @@ export async function executeBooking() {
                 console.log('✅ Paciente actualizado en Firebase');
             }
         }
-
         const price = type === 'online' ? state.selectedPsych.priceOnline : state.selectedPsych.pricePresencial;
         const appointmentId = Date.now().toString();
         const appointment = {
@@ -800,13 +702,11 @@ export async function executeBooking() {
             patientTutor: patient.tutor || null,
             prevision: prevision
         };
-
         if (type === 'online') {
             state.appointments.push(appointment);
             await db.ref(`appointments/${appointmentId}`).set(appointment);
             console.log('✅ Cita online guardada en Firebase');
             showToast('✅ Solicitud creada', 'success');
-            // Actualizar horarios disponibles inmediatamente
             updateAvailableTimes();
         } else {
             state.pendingRequests.push(appointment);
@@ -818,12 +718,10 @@ export async function executeBooking() {
             showToast(mensaje, 'success');
             if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
         }
-
         if (state.currentUser && document.getElementById('dashboard').style.display === 'block') {
             if (typeof renderAppointments === 'function') renderAppointments();
             if (typeof renderPendingRequests === 'function') renderPendingRequests();
         }
-        
         window.horaSeleccionada = null;
         limpiarFormularioReserva();
         mostrarResumenYAcciones({
@@ -834,7 +732,6 @@ export async function executeBooking() {
             tipo: type === 'online' ? 'Online' : 'Presencial',
             valor: price
         });
-
     } catch (error) {
         console.error('❌ Error en executeBooking:', error);
         showToast('Error al procesar: ' + error.message, 'error');
@@ -845,29 +742,21 @@ export async function executeBooking() {
     }
 }
 
-// ============================================
-// RENDERIZADO DE TABLA DE CITAS (ADMIN y PSYCH)
-// ============================================
 export function renderAppointmentsTable() {
     let container = document.getElementById('appointmentsTableBody');
     if (!container) container = document.getElementById('tableBody');
     if (!container) return;
-
     const userRole = state.currentUser?.role;
     let citasFiltradas = state.appointments;
-
     if (userRole === 'psych') {
         const psychId = state.currentUser.data.id;
         citasFiltradas = state.appointments.filter(a => a.psychId == psychId);
     }
-
     citasFiltradas.sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
-
     if (citasFiltradas.length === 0) {
         container.innerHTML = '<tr><td colspan="9" style="text-align:center;">No hay citas programadas</td></tr>';
         return;
     }
-
     container.innerHTML = citasFiltradas.map(apt => {
         const patient = state.patients.find(p => p.id == apt.patientId);
         const psych = state.staff.find(s => s.id == apt.psychId);
@@ -875,7 +764,6 @@ export function renderAppointmentsTable() {
         const isPast = fechaHora < new Date();
         const paymentStatusText = apt.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
         const statusText = isPast ? 'Completada' : (apt.status === 'confirmada' ? 'Confirmada' : 'Pendiente');
-
         return `
             <tr>
                 <td><strong>${patient?.name || apt.patient || '—'}</strong><br><small>${patient?.rut || apt.patientRut || ''}</small></td>
@@ -904,34 +792,25 @@ export function renderAppointmentsTable() {
     }).join('');
 }
 
-// ============================================
-// FUNCIONES DE TABLAS (para admin y psicólogo)
-// ============================================
-
 export function renderAppointments() {
     const tb = document.getElementById('tableBody');
     if (!tb) return;
-
     let appointmentsToShow = [];
     if (state.currentUser?.role === 'admin') {
         appointmentsToShow = state.appointments;
     } else if (state.currentUser?.role === 'psych') {
         appointmentsToShow = state.appointments.filter(a => a.psychId == state.currentUser.data.id);
     }
-
     if (appointmentsToShow.length === 0) {
         tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td></tr>';
         return;
     }
-
     const sortedApps = [...appointmentsToShow].sort((a, b) => new Date(b.date) - new Date(a.date));
-
     tb.innerHTML = sortedApps.map(a => {
         const fechaHora = new Date(a.date + 'T' + a.time);
         const isPast = fechaHora < new Date();
         const paymentStatusText = a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente';
         const statusText = isPast ? 'Completada' : (a.status === 'confirmada' ? 'Confirmada' : 'Pendiente');
-        
         return `
             <tr>
                 <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
@@ -963,19 +842,16 @@ export function renderAppointments() {
 export function renderPendingRequests() {
     const tb = document.getElementById('pendingRequestsTable');
     if (!tb) return;
-
     let requestsToShow = [];
     if (state.currentUser?.role === 'admin') {
         requestsToShow = state.pendingRequests;
     } else if (state.currentUser?.role === 'psych') {
         requestsToShow = state.pendingRequests.filter(r => r.psychId == state.currentUser.data.id);
     }
-
     if (requestsToShow.length === 0) {
         tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
         return;
     }
-
     tb.innerHTML = requestsToShow.reverse().map(r => {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         return `
@@ -1033,13 +909,11 @@ export async function confirmPayment(appointmentId) {
         showToast('No tienes permiso', 'error');
         return;
     }
-    
     appointment.paymentStatus = 'pagado';
     appointment.paymentConfirmedBy = state.currentUser?.data?.name || 'Admin';
     if (appointment.status === 'pendiente' && appointment.type === 'online') {
         appointment.status = 'confirmada';
     }
-    
     const refPath = state.appointments.find(a => a.id == appointmentId) ? 
                     `appointments/${appointmentId}` : `pendingRequests/${appointmentId}`;
     await window.db.ref(refPath).update({
@@ -1047,7 +921,6 @@ export async function confirmPayment(appointmentId) {
         paymentConfirmedBy: appointment.paymentConfirmedBy,
         status: appointment.status
     });
-    
     showToast('✅ Pago confirmado', 'success');
     if (typeof window.updateStats === 'function') window.updateStats();
     renderPendingRequests();
@@ -1055,30 +928,96 @@ export async function confirmPayment(appointmentId) {
     renderAppointmentsTable();
 }
 
-export async function confirmPresencialTime(requestId, date, time) {
+// ============================================
+// FUNCIONES PARA CONFIRMAR SOLICITUDES PRESENCIALES (CORREGIDAS)
+// ============================================
+
+export function showConfirmRequestModal(requestId) {
     const request = state.pendingRequests.find(r => r.id == requestId);
     if (!request) {
         showToast('Solicitud no encontrada', 'error');
         return;
     }
+    // Buscar el paciente
+    let patient = state.patients.find(p => p.id == request.patientId);
+    if (!patient) {
+        window.db.ref(`patients/${request.patientId}`).once('value').then(snap => {
+            if (snap.exists()) {
+                patient = { id: request.patientId, ...snap.val() };
+                state.patients.push(patient);
+                cargarDatosPacienteEnModal(patient, request);
+            } else {
+                showToast('Paciente no encontrado', 'error');
+            }
+        });
+    } else {
+        cargarDatosPacienteEnModal(patient, request);
+    }
+}
 
+function cargarDatosPacienteEnModal(patient, request) {
+    currentRequestId = request.id;
+    const therapistRut = document.getElementById('therapistRut');
+    const patientInfo = document.getElementById('patientInfo');
+    const patientInfoName = document.getElementById('patientInfoName');
+    const patientInfoEmail = document.getElementById('patientInfoEmail');
+    const patientInfoPhone = document.getElementById('patientInfoPhone');
+    const therapistPatientName = document.getElementById('therapistPatientName');
+    const therapistAppointmentType = document.getElementById('therapistAppointmentType');
+    const therapistDate = document.getElementById('therapistDate');
+    const therapistMsg = document.getElementById('therapistMsg');
+    const therapistPaymentMethod = document.getElementById('therapistPaymentMethod');
+    if (therapistRut) therapistRut.value = patient.rut || '';
+    if (patientInfoName) patientInfoName.innerText = patient.name || '';
+    if (patientInfoEmail) patientInfoEmail.innerText = patient.email || '';
+    if (patientInfoPhone) patientInfoPhone.innerText = patient.phone || '';
+    if (patientInfo) patientInfo.style.display = 'block';
+    if (therapistPatientName) therapistPatientName.innerText = patient.name || '';
+    if (therapistAppointmentType) therapistAppointmentType.value = 'presencial';
+    if (therapistDate) therapistDate.value = request.date || '';
+    if (therapistMsg) therapistMsg.value = request.msg || '';
+    if (therapistPaymentMethod) therapistPaymentMethod.value = request.paymentMethod || 'transfer';
+    setTimeout(() => {
+        updateTherapistBookingDetails();
+        setTimeout(() => updateTherapistAvailableSlots(), 200);
+    }, 100);
+    import('./auth.js').then(auth => {
+        if (typeof auth.switchTab === 'function') auth.switchTab('agendar');
+    });
+}
+
+export async function confirmPresencialTime() {
+    if (!currentRequestId) {
+        showToast('No hay solicitud pendiente', 'error');
+        return;
+    }
+    const request = state.pendingRequests.find(r => r.id == currentRequestId);
+    if (!request) {
+        showToast('La solicitud ya no existe', 'error');
+        currentRequestId = null;
+        return;
+    }
+    const date = document.getElementById('therapistDate')?.value;
+    const time = document.getElementById('therapistTime')?.value;
+    if (!date || !time) {
+        showToast('Selecciona fecha y hora', 'error');
+        return;
+    }
     const isAdmin = state.currentUser?.role === 'admin';
     const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == request.psychId;
     if (!isAdmin && !isOwner) {
-        showToast('No tienes permiso para confirmar esta solicitud', 'error');
+        showToast('No tienes permiso', 'error');
         return;
     }
-
     if (isTimeSlotOccupied(request.psychId, date, time)) {
-        showToast('⚠️ La hora seleccionada ya está ocupada. Elige otra.', 'error');
+        showToast('⚠️ La hora ya está ocupada', 'error');
+        updateTherapistAvailableSlots();
         return;
     }
-
     if (new Date(date + 'T' + time) < new Date()) {
-        showToast('No se puede agendar en una fecha/hora pasada.', 'error');
+        showToast('No se puede agendar en fecha/hora pasada', 'error');
         return;
     }
-
     const appointmentId = Date.now().toString();
     const appointment = {
         id: appointmentId,
@@ -1092,102 +1031,45 @@ export async function confirmPresencialTime(requestId, date, time) {
         date: date,
         time: time,
         type: 'presencial',
-        boxId: null,
-        boxName: null,
-        price: request.price || 0,
+        price: request.price || 30000,
         paymentMethod: request.paymentMethod,
         paymentStatus: request.paymentStatus || 'pendiente',
         msg: request.msg,
         status: 'confirmada',
         createdAt: new Date().toISOString(),
         confirmedBy: state.currentUser?.data?.name,
-        emailConfirmacionEnviado: false,
         prevision: request.prevision
     };
-    
-    state.appointments.push(appointment);
-    state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
-    
-    await window.db.ref(`appointments/${appointmentId}`).set(appointment);
-    await window.db.ref(`pendingRequests/${requestId}`).remove();
-    
-    showToast('✅ Cita confirmada', 'success');
-
-    renderAppointments();
-    renderPendingRequests();
-    renderAppointmentsTable();
-    if (typeof window.renderCalendar === 'function') window.renderCalendar();
+    try {
+        const db = window.db;
+        await db.ref(`appointments/${appointmentId}`).set(appointment);
+        await db.ref(`pendingRequests/${currentRequestId}`).remove();
+        state.appointments.push(appointment);
+        state.setPendingRequests(state.pendingRequests.filter(r => r.id != currentRequestId));
+        showToast('✅ Cita presencial confirmada', 'success');
+        currentRequestId = null;
+        document.getElementById('therapistRut').value = '';
+        document.getElementById('patientInfo').style.display = 'none';
+        document.getElementById('therapistDate').value = '';
+        document.getElementById('therapistTime').innerHTML = '<option value="">Selecciona horario</option>';
+        renderAppointments();
+        renderPendingRequests();
+        renderAppointmentsTable();
+        if (typeof window.renderCalendar === 'function') window.renderCalendar();
+        import('./auth.js').then(auth => auth.switchTab('citas'));
+    } catch (error) {
+        console.error('Error confirmando cita:', error);
+        showToast('Error: ' + error.message, 'error');
+    }
 }
 
-export function showConfirmRequestModal(requestId) {
-    const request = state.pendingRequests.find(r => r.id == requestId);
-    if (!request) {
-        showToast('Solicitud no encontrada', 'error');
-        return;
-    }
-
-    const isAdmin = state.currentUser?.role === 'admin';
-    let psychData = null;
-    if (isAdmin) {
-        psychData = state.staff.find(s => s.id == request.psychId);
-        if (!psychData) {
-            showToast('Profesional no encontrado', 'error');
-            return;
-        }
-        state.setSelectedPsychForBooking(psychData);
-    } else {
-        state.setSelectedPsychForBooking(null);
-    }
-
-    const agendarTab = document.getElementById('agendarTab');
-    if (!agendarTab) {
-        showToast('La pestaña "Agendar" no está disponible. Contacta al administrador.', 'error');
-        return;
-    }
-
-    const therapistRut = document.getElementById('therapistRut');
-    const patientInfo = document.getElementById('patientInfo');
-    const patientInfoName = document.getElementById('patientInfoName');
-    const patientInfoEmail = document.getElementById('patientInfoEmail');
-    const patientInfoPhone = document.getElementById('patientInfoPhone');
-    const therapistPatientName = document.getElementById('therapistPatientName');
-    const therapistAppointmentType = document.getElementById('therapistAppointmentType');
-    const therapistDate = document.getElementById('therapistDate');
-    const therapistMsg = document.getElementById('therapistMsg');
-    const therapistPaymentMethod = document.getElementById('therapistPaymentMethod');
-
-    if (!therapistRut || !patientInfo || !patientInfoName || !patientInfoEmail || !patientInfoPhone ||
-        !therapistPatientName || !therapistAppointmentType || !therapistDate || !therapistMsg || !therapistPaymentMethod) {
-        showToast('Error: Faltan elementos en la interfaz para confirmar la solicitud.', 'error');
-        return;
-    }
-
-    state.setSelectedPatientForTherapist(state.patients.find(p => p.id == request.patientId));
-    therapistRut.value = state.selectedPatientForTherapist?.rut || '';
-    patientInfoName.innerText = state.selectedPatientForTherapist?.name || '';
-    patientInfoEmail.innerText = state.selectedPatientForTherapist?.email || '';
-    patientInfoPhone.innerText = state.selectedPatientForTherapist?.phone || '';
-    patientInfo.style.display = 'block';
-    therapistPatientName.innerText = state.selectedPatientForTherapist?.name || '';
-    therapistAppointmentType.value = 'presencial';
-    therapistDate.value = request.date;
-    therapistMsg.value = request.msg;
-    therapistPaymentMethod.value = request.paymentMethod || 'transfer';
-
-    window.currentRequestId = requestId;
-
-    setTimeout(() => {
-        updateTherapistBookingDetails();
-        setTimeout(() => updateTherapistAvailableSlots(), 500);
-    }, 100);
-    
-    import('./auth.js').then(auth => auth.switchTab('agendar'));
-}
+// ============================================
+// OTRAS FUNCIONES (THERAPIST BOOKING, ETC.)
+// ============================================
 
 export function showTherapistBookingModal() {
     state.setSelectedPatientForTherapist(null);
     window.currentRequestId = null;
-
     document.getElementById('therapistRut').value = '';
     document.getElementById('patientInfo').style.display = 'none';
     document.getElementById('therapistAppointmentType').value = 'online';
@@ -1209,7 +1091,6 @@ export function showTherapistBookingModal() {
 export function searchPatientByRutTherapist() {
     const rutInput = document.getElementById('therapistRut').value;
     if (!rutInput) return;
-
     const rutNormalizado = normalizarRut(rutInput);
     const patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
     if (patient) {
@@ -1235,7 +1116,6 @@ export function searchPatientByRutTherapist() {
 export function updateTherapistBookingDetails() {
     const psych = state.selectedPsychForBooking || state.currentUser?.data;
     if (!psych) return;
-    
     const type = document.getElementById('therapistAppointmentType')?.value;
     let price = 0;
     if (type === 'online') {
@@ -1243,12 +1123,10 @@ export function updateTherapistBookingDetails() {
     } else {
         price = psych.pricePresencial || 0;
     }
-    
     const priceElement = document.getElementById('therapistPrice');
     if (priceElement) priceElement.innerText = `$${price.toLocaleString()}`;
     const typeDisplay = document.getElementById('therapistTypeDisplay');
     if (typeDisplay) typeDisplay.innerText = type === 'online' ? 'Online' : 'Presencial';
-
     updateTherapistAvailableSlots();
 }
 
@@ -1256,12 +1134,9 @@ export function updateTherapistAvailableSlots() {
     const date = document.getElementById('therapistDate')?.value;
     const timeSelect = document.getElementById('therapistTime');
     if (!date || !timeSelect) return;
-    
     const psych = state.selectedPsychForBooking || state.currentUser?.data;
     if (!psych) return;
-
     const availableSlots = getAvailableSlots(psych, date);
-
     timeSelect.innerHTML = '<option value="">Selecciona horario</option>';
     availableSlots.forEach(slot => {
         const option = document.createElement('option');
@@ -1274,37 +1149,30 @@ export function updateTherapistAvailableSlots() {
 
 export async function executeTherapistBooking() {
     console.log("🟢 executeTherapistBooking llamada");
-
     const psych = state.selectedPsychForBooking || state.currentUser?.data;
     if (!psych) {
         showToast('No se ha seleccionado un profesional', 'error');
         return;
     }
-
     if (!state.selectedPatientForTherapist) {
         showToast('Debes seleccionar un paciente', 'error');
         return;
     }
-
     const date = document.getElementById('therapistDate')?.value;
     const time = document.getElementById('therapistTime')?.value;
     const type = document.getElementById('therapistAppointmentType')?.value;
     const paymentMethod = document.getElementById('therapistPaymentMethod')?.value;
     const msg = document.getElementById('therapistMsg')?.value;
-
     if (!date || !time) {
         showToast('Selecciona fecha y horario', 'error');
         return;
     }
-
     if (isTimeSlotOccupied(psych.id, date, time)) {
         showToast('⚠️ La hora seleccionada ya está ocupada. Elige otra.', 'error');
         return;
     }
-
     const price = type === 'online' ? psych.priceOnline : psych.pricePresencial;
     if (price === 0) console.warn('⚠️ El precio es 0. Verifica la configuración del profesional.');
-
     const appointmentId = Date.now().toString();
     const appointment = {
         id: appointmentId,
@@ -1330,10 +1198,8 @@ export async function executeTherapistBooking() {
         emailEnviado: false,
         prevision: state.selectedPatientForTherapist.prevision || ''
     };
-
     state.appointments.push(appointment);
     await window.db.ref(`appointments/${appointmentId}`).set(appointment);
-
     let deleted = false;
     if (window.currentRequestId) {
         const req = state.pendingRequests.find(r => r.id == window.currentRequestId);
@@ -1354,36 +1220,29 @@ export async function executeTherapistBooking() {
             await window.db.ref(`pendingRequests/${pending.id}`).remove();
         }
     }
-
     showToast(`✅ Cita creada con valor $${price.toLocaleString()}`, 'success');
-    
     renderAppointments();
     renderPendingRequests();
     renderAppointmentsTable();
     if (typeof window.renderCalendar === 'function') window.renderCalendar();
     updateTherapistAvailableSlots();
-    
     state.setSelectedPsychForBooking(null);
-    
     import('./auth.js').then(auth => auth.switchTab('citas'));
 }
 
 export async function cancelAppointment(id) {
     if (!confirm('¿Cancelar cita?')) return;
-    
     const appointment = state.appointments.find(a => a.id == id);
     if (!appointment) {
         showToast('Cita no encontrada', 'error');
         return;
     }
-    
     const isAdmin = state.currentUser?.role === 'admin';
     const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == appointment.psychId;
     if (!isAdmin && !isOwner) {
         showToast('No tienes permiso para cancelar esta cita', 'error');
         return;
     }
-    
     state.setAppointments(state.appointments.filter(a => a.id != id));
     await window.db.ref(`appointments/${id}`).remove();
     showToast('Cita cancelada', 'success');
@@ -1394,17 +1253,14 @@ export async function cancelAppointment(id) {
 
 export async function rejectRequest(requestId) {
     if (!confirm('¿Rechazar solicitud?')) return;
-    
     const request = state.pendingRequests.find(r => r.id == requestId);
     if (!request) return;
-    
     const isAdmin = state.currentUser?.role === 'admin';
     const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == request.psychId;
     if (!isAdmin && !isOwner) {
         showToast('No tienes permiso para rechazar esta solicitud', 'error');
         return;
     }
-    
     state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
     await window.db.ref(`pendingRequests/${requestId}`).remove();
     showToast('Solicitud rechazada', 'success');
@@ -1415,9 +1271,6 @@ export async function rejectRequest(requestId) {
     }
 }
 
-// ============================================
-// MOSTRAR CITAS DEL PACIENTE POR RUT (CON BÚSQUEDA EN FIREBASE)
-// ============================================
 export async function showPatientAppointmentsByRut() {
     const rutInput = prompt(
         '👋 ¡Bienvenido paciente! Ingresa tu RUT para revisar tus reservas o cancelar citas.\n\n' +
@@ -1425,10 +1278,8 @@ export async function showPatientAppointmentsByRut() {
         'Ejemplo: 12.345.678-9  →  también puedes escribir 123456789 o 12345678-9.'
     );
     if (!rutInput) return;
-    
     const rutNormalizado = normalizarRut(rutInput);
     let patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
-    
     if (!patient) {
         const db = window.db;
         const snapshot = await db.ref('patients').once('value');
@@ -1438,21 +1289,17 @@ export async function showPatientAppointmentsByRut() {
             state.patients.push(patient);
         }
     }
-    
     if (!patient) {
         showToast('❌ No encontramos citas asociadas a ese RUT. Verifica que esté bien escrito.', 'error');
         return;
     }
-    
     const citasPaciente = [...state.appointments, ...state.pendingRequests]
         .filter(c => c.patientId == patient.id)
         .sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
-    
     if (citasPaciente.length === 0) {
         showToast('📭 No tienes citas registradas actualmente.', 'info');
         return;
     }
-    
     const modalContent = `
         <div id="modalCitasPaciente" class="modal" style="display:flex;">
             <div class="modal-content" style="max-width: 800px;">
@@ -1477,7 +1324,7 @@ export async function showPatientAppointmentsByRut() {
                                         ${cita.status === 'confirmada' ? 'Confirmada' : 
                                           cita.status === 'pendiente' ? 'Pendiente' : 
                                           cita.status === 'cancelada' ? 'Cancelada' : '—'}
-                                     </td>
+                                    </td>
                                     <td>
                                         ${cita.status !== 'cancelada' && new Date(cita.date + 'T' + (cita.time || '00:00')) > new Date() ? `
                                             <button onclick="cancelAppointmentByPatient('${cita.id}', '${patient.rut}')" 
@@ -1485,7 +1332,7 @@ export async function showPatientAppointmentsByRut() {
                                                 Cancelar
                                             </button>
                                         ` : '—'}
-                                     </td>
+                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -1509,15 +1356,12 @@ export async function cancelAppointmentByPatient(appointmentId, patientRut) {
         showToast('Cita no encontrada', 'error');
         return;
     }
-    
     const patient = state.patients.find(p => p.id == appointment.patientId);
     if (!patient || normalizarRut(patient.rut) !== normalizarRut(patientRut)) {
         showToast('No tienes permiso para cancelar esta cita', 'error');
         return;
     }
-    
     if (!confirm('¿Cancelar esta cita? Esta acción no se puede deshacer.')) return;
-    
     if (isPending) {
         state.setPendingRequests(state.pendingRequests.filter(r => r.id != appointmentId));
         await window.db.ref(`pendingRequests/${appointmentId}`).remove();
@@ -1525,30 +1369,23 @@ export async function cancelAppointmentByPatient(appointmentId, patientRut) {
         state.setAppointments(state.appointments.filter(a => a.id != appointmentId));
         await window.db.ref(`appointments/${appointmentId}`).remove();
     }
-    
     showToast('Cita cancelada correctamente', 'success');
-    
     const modal = document.getElementById('modalCitasPaciente');
     if (modal) modal.remove();
 }
 
-// ============================================
-// GESTIÓN DE ASISTENCIA Y ESTADOS DE CITA
-// ============================================
 export async function marcarAsistencia(citaId, asistio, justificacion = '') {
     const cita = state.appointments.find(a => a.id == citaId);
     if (!cita) {
         showToast('Cita no encontrada', 'error');
         return;
     }
-
     const isAdmin = state.currentUser?.role === 'admin';
     const isOwner = state.currentUser?.role === 'psych' && state.currentUser.data.id == cita.psychId;
     if (!isAdmin && !isOwner) {
         showToast('No tienes permiso', 'error');
         return;
     }
-
     if (asistio) {
         cita.asistencia = true;
         cita.estadoCita = 'atendida';
@@ -1567,7 +1404,6 @@ export async function marcarAsistencia(citaId, asistio, justificacion = '') {
             cita.paymentConfirmedAt = null;
         }
     }
-
     await window.db.ref(`appointments/${citaId}`).update({
         asistencia: cita.asistencia,
         estadoCita: cita.estadoCita,
@@ -1576,7 +1412,6 @@ export async function marcarAsistencia(citaId, asistio, justificacion = '') {
         paymentConfirmedBy: cita.paymentConfirmedBy,
         paymentConfirmedAt: cita.paymentConfirmedAt
     });
-    
     showToast(asistio ? '✅ Cita marcada como atendida' : '⚠️ Cita marcada como no asistida', 'info');
     renderAppointments();
     renderAppointmentsTable();
@@ -1612,11 +1447,10 @@ window.cancelAppointmentByPatient = cancelAppointmentByPatient;
 window.marcarAsistencia = marcarAsistencia;
 window.calcularEdad = window.calcularEdad;
 
-// Escuchar el evento global de datos cargados para actualizar la tabla
 document.addEventListener('datosPrivadosCargados', () => {
     if (document.getElementById('tabCitas')?.classList.contains('active')) {
         renderAppointmentsTable();
     }
 });
 
-console.log('✅ citas.js actualizado: guardado con window.db, ocupación de horarios, búsqueda en Firebase y actualización en tiempo real');
+console.log('✅ citas.js actualizado: confirmación de solicitudes presenciales corregida, búsqueda en Firebase, guardado con window.db');

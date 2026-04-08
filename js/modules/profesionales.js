@@ -1046,6 +1046,7 @@ export function closeEditTherapistModal() {
 // ============================================
 // FUNCIÓN UPDATE THERAPIST CORREGIDA (SIN save() Y SIN REFERENCIAS CIRCULARES)
 // ============================================
+
 export async function updateTherapist() {
     if (state.currentUser?.role !== 'admin') {
         showToast('Solo administradores pueden editar profesionales', 'error');
@@ -1061,7 +1062,7 @@ export async function updateTherapist() {
     try {
         console.log('📝 Actualizando profesional ID:', id);
         
-        // Obtener datos del formulario (valores planos, sin referencias)
+        // Obtener datos del formulario
         const name = document.getElementById('editName')?.value || '';
         const email = document.getElementById('editEmail')?.value || '';
         const genero = document.getElementById('editGenero')?.value || '';
@@ -1074,11 +1075,9 @@ export async function updateTherapist() {
         const pricePresencial = parseInt(document.getElementById('editPricePresencial')?.value) || 0;
         const advanceNotice = parseInt(document.getElementById('editAdvanceNotice')?.value) || 60;
         
-        // Obtener especialidades seleccionadas
         const specSelect = document.getElementById('editSpec');
         const spec = specSelect ? Array.from(specSelect.selectedOptions).map(opt => opt.value) : [];
         
-        // Datos bancarios (objeto plano)
         const bankDetails = {
             bank: document.getElementById('editBank')?.value || '',
             accountType: document.getElementById('editAccountType')?.value || 'corriente',
@@ -1087,16 +1086,16 @@ export async function updateTherapist() {
             email: document.getElementById('editBankEmail')?.value || ''
         };
         
-        // Links de pago (objeto plano)
         const paymentLinks = {
             online: document.getElementById('editPaymentLinkOnline')?.value || '',
             presencial: document.getElementById('editPaymentLinkPresencial')?.value || ''
         };
         
-        // Obtener el profesional existente para mantener datos no editables
-        const existingPsych = state.staff.find(p => p.id == id);
+        // Obtener datos existentes desde Firebase directamente (NO desde state)
+        const existingSnapshot = await firebase.database().ref(`staff/${id}`).once('value');
+        const existingData = existingSnapshot.val() || {};
         
-        // Crear objeto profesional LIMPIO (sin referencias circulares)
+        // Crear objeto limpio
         const updatedPsych = {
             id: id,
             uid: id,
@@ -1117,86 +1116,87 @@ export async function updateTherapist() {
             paymentMethods: state.globalPaymentMethods || { transfer: true, cardPresencial: true, cash: true },
             isAdmin: false,
             isHiddenAdmin: false,
-            sessionDuration: existingPsych?.sessionDuration || 45,
-            breakBetween: existingPsych?.breakBetween || 10,
-            stars: existingPsych?.stars || 5,
-            availability: existingPsych?.availability || {},
+            sessionDuration: existingData.sessionDuration || 45,
+            breakBetween: existingData.breakBetween || 10,
+            stars: existingData.stars || 5,
+            availability: existingData.availability || {},
+            createdAt: existingData.createdAt || new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
         
-        // Manejar foto si se subió nueva
+        // Foto
         if (state.tempImageData) {
             updatedPsych.img = state.tempImageData;
             updatedPsych.photoURL = state.tempImageData;
-        } else if (existingPsych?.img) {
-            updatedPsych.img = existingPsych.img;
-            updatedPsych.photoURL = existingPsych.photoURL || existingPsych.img;
+        } else if (existingData.img) {
+            updatedPsych.img = existingData.img;
+            updatedPsych.photoURL = existingData.photoURL || existingData.img;
         }
         
-        // Manejar QR si se subió nuevo
+        // QR
         if (state.tempQrOnlineData) {
             updatedPsych.paymentLinks.qrOnline = state.tempQrOnlineData;
-        } else if (existingPsych?.paymentLinks?.qrOnline) {
-            updatedPsych.paymentLinks.qrOnline = existingPsych.paymentLinks.qrOnline;
+        } else if (existingData.paymentLinks?.qrOnline) {
+            updatedPsych.paymentLinks.qrOnline = existingData.paymentLinks.qrOnline;
         }
         
         if (state.tempQrPresencialData) {
             updatedPsych.paymentLinks.qrPresencial = state.tempQrPresencialData;
-        } else if (existingPsych?.paymentLinks?.qrPresencial) {
-            updatedPsych.paymentLinks.qrPresencial = existingPsych.paymentLinks.qrPresencial;
+        } else if (existingData.paymentLinks?.qrPresencial) {
+            updatedPsych.paymentLinks.qrPresencial = existingData.paymentLinks.qrPresencial;
         }
         
-        // Crear una copia limpia para Firebase (sin ninguna referencia circular)
+        // Limpiar referencias circulares
         const cleanData = JSON.parse(JSON.stringify(updatedPsych));
         
         console.log('💾 Guardando en Firebase:', cleanData.name);
         
-        // Guardar directamente en Firebase (NO usar save() que causa el error)
+        // Guardar en Firebase
         await firebase.database().ref(`staff/${id}`).set(cleanData);
-        console.log('✅ Profesional actualizado en Firebase');
+        console.log('✅ Guardado en Firebase');
         
-        // Actualizar el state local con una copia limpia
+        // 🔄 RECARGAR LOS DATOS DESDE FIREBASE (evita referencias circulares)
+        const freshSnapshot = await firebase.database().ref(`staff/${id}`).once('value`);
+        const freshData = freshSnapshot.val();
+        
+        // Actualizar state con datos frescos
         const staffIndex = state.staff.findIndex(p => p.id == id);
+        const cleanFreshData = JSON.parse(JSON.stringify({ id: id, ...freshData }));
+        
         if (staffIndex !== -1) {
-            state.staff[staffIndex] = cleanData;
+            state.staff[staffIndex] = cleanFreshData;
         } else {
-            state.staff.push(cleanData);
+            state.staff.push(cleanFreshData);
         }
         
-        // Manejar cambio de contraseña si se ingresó
+        // Contraseña
         const newPassword = document.getElementById('editPass')?.value?.trim();
         if (newPassword && newPassword !== '') {
-            console.log('🔑 Enviando correo de restablecimiento...');
             await sendPasswordResetEmailForProfessional(email);
-            showToast(`📧 Se ha enviado un correo a ${email} para establecer su nueva contraseña.`, 'info');
+            showToast(`📧 Correo enviado a ${email}`, 'info');
         }
         
-        // Limpiar datos temporales
+        // Limpiar temporales
         state.setTempImageData(null);
         state.setTempQrOnlineData(null);
         state.setTempQrPresencialData(null);
         
-        // Limpiar campo de contraseña
         const editPass = document.getElementById('editPass');
         if (editPass) editPass.value = '';
         
         closeEditTherapistModal();
         
-        // Recargar la tabla
+        // Recargar tabla
         setTimeout(() => {
-            if (typeof renderStaffTable === 'function') {
-                renderStaffTable();
-            }
-            if (typeof window.renderStaffTable === 'function') {
-                window.renderStaffTable();
-            }
+            if (typeof renderStaffTable === 'function') renderStaffTable();
+            if (typeof window.renderStaffTable === 'function') window.renderStaffTable();
         }, 500);
         
         showToast('✅ Profesional actualizado correctamente', 'success');
         
     } catch (error) {
-        console.error('❌ Error actualizando profesional:', error);
-        showToast('Error al actualizar: ' + error.message, 'error');
+        console.error('❌ Error:', error);
+        showToast('Error: ' + error.message, 'error');
     }
 }
 

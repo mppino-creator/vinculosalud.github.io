@@ -402,7 +402,7 @@ function crearModalEdicionProfesional() {
                 <div class="form-group"><label><i class="fa fa-linkedin"></i> LinkedIn</label><input type="url" id="editMyLinkedin" class="filter-input" placeholder="https://linkedin.com/in/..."></div>
                 <div class="form-group"><label><i class="fa fa-instagram"></i> Instagram</label><input type="text" id="editMyInstagram" class="filter-input" placeholder="@usuario o https://..."></div>
                 <div class="form-group"><label><i class="fa fa-globe"></i> Sitio web personal</label><input type="url" id="editMyWebsite" class="filter-input" placeholder="https://..."></div>
-                <div class="form-group"><label><i class="fa fa-whatsapp"></i> WhatsApp</label><input type="text" id="editMyWhatsapp" class="filter-input" placeholder="+56 9 1234 5678"></div>
+                <div class="form-group"><label><i class="fa fa-whatsapp"></i> WhatsApp</label><input type="text" id="editMyWhatsapp" class="filter-input" placeholder="+56"></div>
                 <div class="form-group"><label><i class="fa fa-phone"></i> Teléfono de contacto</label><input type="text" id="editMyPhone" class="filter-input" placeholder="+56 2 1234 5678"></div>
                 <div class="form-group"><label><i class="fa fa-map-marker-alt"></i> Dirección consulta</label><input type="text" id="editMyAddress" class="filter-input" placeholder="Dirección de tu consulta presencial"></div>
             </div>

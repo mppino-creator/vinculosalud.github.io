@@ -20,14 +20,30 @@ export function generarLinkConsentimiento(rutPaciente, nombrePaciente) {
     return link;
 }
 
+// 🔥 CORRECCIÓN: Obtener el profesional asignado al paciente, no el usuario actual
 export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
-    const profesional = state.currentUser?.data?.name || 'Equipo Vínculo Salud';
+    // Buscar el paciente para obtener su psychId
+    const paciente = state.patients.find(p => p.rut === rutPaciente || p.id === rutPaciente);
+    let profesionalNombre = 'Equipo Vínculo Salud';
+    
+    if (paciente && paciente.psychId) {
+        const psicologo = state.staff.find(s => s.id === paciente.psychId);
+        if (psicologo) {
+            profesionalNombre = psicologo.name;
+        }
+    }
+    
+    // Fallback: si no se encontró, usar el usuario actual (por compatibilidad)
+    if (profesionalNombre === 'Equipo Vínculo Salud' && state.currentUser) {
+        profesionalNombre = state.currentUser.data?.name || 'Equipo Vínculo Salud';
+    }
+    
     const rutLimpio = String(rutPaciente || '').replace(/\./g, '').replace(/\-/g, '');
     const token = btoa(rutLimpio);
     const baseUrl = window.location.origin;
-    const link = `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente)}&profesional=${encodeURIComponent(profesional)}`;
+    const link = `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente)}&profesional=${encodeURIComponent(profesionalNombre)}`;
     navigator.clipboard.writeText(link);
-    showToast(`✅ Link de consentimiento copiado para ${nombrePaciente}`, 'success');
+    showToast(`✅ Link de consentimiento copiado para ${nombrePaciente} (Profesional: ${profesionalNombre})`, 'success');
     console.log('📋 Link copiado:', link);
 }
 
@@ -142,7 +158,7 @@ export async function savePatient() {
 }
 
 // ============================================
-// FUNCIÓN OPCIONAL PARA LIMPIAR DUPLICADOS EXISTENTES (ejecutar desde consola si es necesario)
+// FUNCIÓN OPCIONAL PARA LIMPIAR DUPLICADOS EXISTENTES
 // ============================================
 export async function limpiarDuplicadosPacientes() {
     console.log('🧹 Limpiando pacientes duplicados...');
@@ -1105,7 +1121,7 @@ export function printPatientSummary() {
     let total = 0;
     patientApps.forEach(a => {
         total += a.price;
-        summaryHtml += `<tr><td>${a.date}</td><td>${a.time}</td><td>${escapeHtml(a.psych)}</td><td>${a.type === 'online' ? 'Online' : 'Presencial'}</td><td>$${a.price.toLocaleString()}</td><td>${a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td></tr>`;
+        summaryHtml += `<tr><td>${a.date}</td>}.${a.time}</td>}.${escapeHtml(a.psych)}</td>}.${a.type === 'online' ? 'Online' : 'Presencial'}</td>}.$${a.price.toLocaleString()}</td>}.${a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td></tr>`;
     });
 
     summaryHtml += `
@@ -1149,4 +1165,4 @@ if (typeof window !== 'undefined') {
     window.limpiarDuplicadosPacientes = limpiarDuplicadosPacientes;
 }
 
-console.log('✅ pacientes.js - VERSIÓN DEFINITIVA (sin duplicados, usa db.ref().set())');
+console.log('✅ pacientes.js - VERSIÓN DEFINITIVA (sin duplicados, con corrección en link de consentimiento)');

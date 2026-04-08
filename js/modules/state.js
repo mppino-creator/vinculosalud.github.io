@@ -177,32 +177,46 @@ export let ui = {
 };
 
 // ============================================
+// FUNCIONES GETTER (NUEVAS)
+// ============================================
+export function getStaff() { return staff; }
+export function getPatients() { return patients; }
+export function getAppointments() { return appointments; }
+export function getMessages() { return messages; }
+export function getPendingRequests() { return pendingRequests; }
+export function getSpecialties() { return specialties; }
+export function getCurrentUser() { return currentUser; }
+export function getFichasIngreso() { return fichasIngreso; }
+export function getSesiones() { return sesiones; }
+export function getInformes() { return informes; }
+
+// ============================================
 // FUNCIONES SETTER
 // ============================================
-export function setStaff(newStaff) { staff = newStaff; }
-export function setPatients(newPatients) { patients = newPatients; }
-export function setAppointments(newApps) { appointments = newApps; }
-export function setMessages(newMessages) { messages = newMessages; }
-export function setPendingRequests(newReqs) { pendingRequests = newReqs; }
-export function setSpecialties(newSpecs) { specialties = newSpecs; }
-export function setHeroTexts(newTexts) { heroTexts = newTexts; }
-export function setGlobalPaymentMethods(newMethods) { globalPaymentMethods = newMethods; }
-export function setBackgroundImage(newImg) { backgroundImage = newImg; }
-export function setLogoImage(newLogo) { logoImage = newLogo; }
+export function setStaff(newStaff) { staff = [...newStaff]; }
+export function setPatients(newPatients) { patients = [...newPatients]; }
+export function setAppointments(newApps) { appointments = [...newApps]; }
+export function setMessages(newMessages) { messages = [...newMessages]; }
+export function setPendingRequests(newReqs) { pendingRequests = [...newReqs]; }
+export function setSpecialties(newSpecs) { specialties = [...newSpecs]; }
+export function setHeroTexts(newTexts) { heroTexts = { ...heroTexts, ...newTexts }; }
+export function setGlobalPaymentMethods(newMethods) { globalPaymentMethods = { ...globalPaymentMethods, ...newMethods }; }
+export function setBackgroundImage(newImg) { backgroundImage = { ...backgroundImage, ...newImg }; }
+export function setLogoImage(newLogo) { logoImage = { ...logoImage, ...newLogo }; }
 
 // Setters para secciones editables
 export function setMissionText(text) { missionText = text; }
 export function setVisionText(text) { visionText = text; }
 export function setAboutTeamText(text) { aboutTeamText = text; }
 export function setAboutImage(url) { aboutImage = url; }
-export function setAtencionTexts(data) { atencionTexts = data; }
-export function setContactInfo(data) { contactInfo = data; }
+export function setAtencionTexts(data) { atencionTexts = { ...atencionTexts, ...data }; }
+export function setContactInfo(data) { contactInfo = { ...contactInfo, ...data }; }
 export function setInstagramData(data) { instagramData = { ...instagramData, ...data }; }
 
 // Setters para fichas clínicas
-export function setFichasIngreso(newFichas) { fichasIngreso = newFichas; }
-export function setSesiones(newSesiones) { sesiones = newSesiones; }
-export function setInformes(newInformes) { informes = newInformes; }
+export function setFichasIngreso(newFichas) { fichasIngreso = [...newFichas]; }
+export function setSesiones(newSesiones) { sesiones = [...newSesiones]; }
+export function setInformes(newInformes) { informes = [...newInformes]; }
 
 // 🔥 Setter para currentPsychId
 export function setCurrentPsychId(id) { currentPsychId = id; }
@@ -252,7 +266,7 @@ export function setCurrentUser(user) {
 export function setSelectedPsych(psych) { selectedPsych = psych; }
 export function setCurrentRating(rating) { currentRating = rating; }
 export function setGeneratedSlots(slots) { generatedSlots = slots; }
-export function setSelectedWeekdays(days) { selectedWeekdays = days; }
+export function setSelectedWeekdays(days) { selectedWeekdays = [...days]; }
 export function setTempImageData(data) { tempImageData = data; }
 export function setTempBackgroundImageData(data) { tempBackgroundImageData = data; }
 export function setTempLogoData(data) { tempLogoData = data; }
@@ -467,7 +481,7 @@ export function resetAllState() {
     tempQrData = null;
     selectedPatientForTherapist = null;
     selectedPsychForBooking = null;
-    currentPsychId = null; // 🔥 Reiniciar también
+    currentPsychId = null;
     dataLoaded = false;
 
     fichasIngreso = [];
@@ -534,6 +548,40 @@ export function verInstagram() {
 }
 
 // ============================================
+// FUNCIÓN GLOBAL DE GUARDADO (IMPORTANTE)
+// ============================================
+/**
+ * Guarda todos los datos actuales en Firebase
+ * Esta función es llamada desde pacientes.js y otros módulos
+ */
+export async function saveToFirebase() {
+    try {
+        const { db, ref, set } = await import('firebase/database');
+        const firebaseApp = (await import('../config/firebase.js')).default;
+        const database = firebaseApp.db || db;
+        
+        console.log('💾 Guardando todos los datos en Firebase...');
+        
+        // Guardar cada colección en su nodo correspondiente
+        await set(ref(database, 'patients'), patients);
+        await set(ref(database, 'staff'), staff);
+        await set(ref(database, 'appointments'), appointments);
+        await set(ref(database, 'messages'), messages);
+        await set(ref(database, 'pendingRequests'), pendingRequests);
+        await set(ref(database, 'specialties'), specialties);
+        await set(ref(database, 'fichasIngreso'), fichasIngreso);
+        await set(ref(database, 'sesiones'), sesiones);
+        await set(ref(database, 'informes'), informes);
+        
+        console.log('✅ Todos los datos guardados correctamente');
+        return true;
+    } catch (error) {
+        console.error('❌ Error guardando datos:', error);
+        return false;
+    }
+}
+
+// ============================================
 // EXPORTAR OBJETO ÚNICO (para compatibilidad)
 // ============================================
 const state = {
@@ -561,7 +609,7 @@ const state = {
     tempQrData,
     selectedPatientForTherapist,
     selectedPsychForBooking,
-    currentPsychId, // 🔥 Incluida en el objeto
+    currentPsychId,
     dataLoaded,
     EDIT_HOURS,
 
@@ -580,6 +628,18 @@ const state = {
     instagramData,
 
     ui,
+
+    // Getters (nuevos)
+    getStaff,
+    getPatients,
+    getAppointments,
+    getMessages,
+    getPendingRequests,
+    getSpecialties,
+    getCurrentUser,
+    getFichasIngreso,
+    getSesiones,
+    getInformes,
 
     // Setters
     setStaff,
@@ -605,7 +665,7 @@ const state = {
     setTempQrData,
     setSelectedPatientForTherapist,
     setSelectedPsychForBooking,
-    setCurrentPsychId, // 🔥 Setter para la nueva variable
+    setCurrentPsychId,
     setDataLoaded,
 
     // Setters de secciones editables
@@ -641,7 +701,10 @@ const state = {
     // Utilidades
     resetAllState,
     getStateSummary,
-    verInstagram
+    verInstagram,
+    
+    // Función global de guardado
+    saveToFirebase
 };
 
 export default state;
@@ -653,7 +716,7 @@ if (typeof window !== 'undefined') {
     window.state = state;
     window.verInstagram = verInstagram;
 
-    console.log('📦 state.js cargado con fichas clínicas, datos de profesionales, secciones editables y SECCIÓN INSTAGRAM v3.0 (boxes eliminado)');
+    console.log('📦 state.js cargado con fichas clínicas, datos de profesionales, secciones editables y SECCIÓN INSTAGRAM v3.0');
 
     window.estado = function() {
         console.table(state.getStateSummary());

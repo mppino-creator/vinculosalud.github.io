@@ -3,7 +3,25 @@ import * as state from './state.js';
 import { showToast, validarRut, formatRut, formatDate, calculateAge, getInitials, normalizarRut } from './utils.js';
 import { puedeAccederAPaciente, puedeEditarFichas } from './permisos.js';
 import { obtenerSesionesDePaciente, obtenerFichasIngresoDePaciente } from './fichasClinicas.js';
-import { save } from '../main.js';
+
+// ============================================
+// FUNCIÓN PARA GUARDAR EN FIREBASE
+// ============================================
+
+async function guardarEnFirebase(ruta, datos) {
+    try {
+        const { db, ref, set } = await import('firebase/database');
+        const firebaseApp = (await import('../config/firebase.js')).default;
+        const database = firebaseApp.db || db;
+        const reference = ref(database, ruta);
+        await set(reference, datos);
+        console.log(`✅ Guardado en ${ruta}:`, datos);
+        return true;
+    } catch (error) {
+        console.error(`❌ Error guardando en ${ruta}:`, error);
+        return false;
+    }
+}
 
 // ============================================
 // FUNCIÓN PARA GENERAR LINK DE CONSENTIMIENTO
@@ -14,7 +32,7 @@ export function generarLinkConsentimiento(rutPaciente, nombrePaciente) {
         showToast('❌ RUT y nombre son requeridos', 'error');
         return null;
     }
-    const rutLimpio = rutPaciente.replace(/\./g, '').replace(/\-/g, '');
+    const rutLimpio = String(rutPaciente).replace(/\./g, '').replace(/\-/g, '');
     const token = btoa(rutLimpio);
     const baseUrl = window.location.origin;
     const link = `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente)}`;
@@ -23,7 +41,7 @@ export function generarLinkConsentimiento(rutPaciente, nombrePaciente) {
 
 export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
     const profesional = state.currentUser?.data?.name || 'Equipo Vínculo Salud';
-    const rutLimpio = rutPaciente.replace(/\./g, '').replace(/\-/g, '');
+    const rutLimpio = String(rutPaciente || '').replace(/\./g, '').replace(/\-/g, '');
     const token = btoa(rutLimpio);
     const baseUrl = window.location.origin;
     const link = `${baseUrl}/consentimiento.html?token=${token}&nombre=${encodeURIComponent(nombrePaciente)}&profesional=${encodeURIComponent(profesional)}`;
@@ -33,7 +51,123 @@ export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
 }
 
 // ============================================
-// RENDERIZAR LISTA DE PACIENTES (CON PACIENTES DE CITAS)
+// FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (CORREGIDA)
+// ============================================
+
+export async function savePatient() {
+    console.log('🔍 Ejecutando savePatient...');
+    
+    // Obtener valores del formulario
+    const id = document.getElementById('editPatientId')?.value || '';
+    const rutInput = document.getElementById('patientRut')?.value || '';
+    const name = document.getElementById('patientName')?.value || '';
+    const email = document.getElementById('patientEmail')?.value || '';
+    const phone = document.getElementById('patientPhone')?.value || '';
+    const prevision = document.getElementById('patientPrevision')?.value || '';
+    const birthdate = document.getElementById('patientBirthdate')?.value || '';
+    const notes = document.getElementById('patientNotes')?.value || '';
+
+    // Validaciones
+    if (!rutInput || !name || !email) {
+        showToast('RUT, nombre y email son obligatorios', 'error');
+        return false;
+    }
+
+    if (!validarRut(rutInput)) {
+        showToast('RUT inválido', 'error');
+        return false;
+    }
+
+    // Normalizar RUT (eliminar puntos y guiones)
+    const rutNormalizado = normalizarRut(rutInput);
+    console.log('📝 RUT normalizado:', rutNormalizado);
+
+    // Verificar si el email pertenece a un profesional (bloqueo)
+    const esEmailProfesional = state.staff.some(p => p.email === email);
+    if (esEmailProfesional) {
+        showToast('❌ Este email pertenece a un profesional del centro. No puede ser usado para un paciente.', 'error');
+        return false;
+    }
+
+    try {
+        // Buscar si el paciente ya existe
+        const pacienteExistente = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
+        
+        const now = new Date().toISOString();
+        
+        const patientData = {
+            id: rutNormalizado,
+            rut: rutNormalizado,
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            phone: phone || '',
+            prevision: prevision || '',
+            birthdate: birthdate || '',
+            notes: notes || '',
+            psychId: state.currentUser?.role === 'psych' ? state.currentUser.data.id : (pacienteExistente?.psychId || ''),
+            updatedAt: now
+        };
+
+        if (!pacienteExistente) {
+            // Nuevo paciente
+            patientData.createdAt = now;
+            patientData.appointments = [];
+        }
+
+        console.log('💾 Guardando paciente en Firebase:', patientData);
+
+        // Guardar en Firebase
+        const { db, ref, set } = await import('firebase/database');
+        const firebaseApp = (await import('../config/firebase.js')).default;
+        const database = firebaseApp.db || db;
+        const patientRef = ref(database, `patients/${rutNormalizado}`);
+        await set(patientRef, patientData);
+
+        // Actualizar estado global
+        if (pacienteExistente) {
+            // Actualizar existente
+            const index = state.patients.findIndex(p => p.id === rutNormalizado);
+            if (index !== -1) {
+                state.patients[index] = { ...state.patients[index], ...patientData };
+                state.setPatients([...state.patients]);
+            }
+        } else {
+            // Agregar nuevo
+            state.setPatients([...state.patients, patientData]);
+        }
+
+        // Cerrar modal
+        closePatientModal();
+        
+        // Mostrar éxito
+        showToast(pacienteExistente ? '✅ Paciente actualizado correctamente' : '✅ Paciente creado correctamente', 'success');
+        
+        // Actualizar lista
+        setTimeout(() => renderPatients(), 500);
+        
+        // Si estamos en agenda de terapeuta, actualizar el campo RUT
+        if (document.getElementById('tabAgendar')?.classList.contains('active')) {
+            const therapistRut = document.getElementById('therapistRut');
+            if (therapistRut) therapistRut.value = rutNormalizado;
+            
+            // Importar y buscar paciente en agenda
+            const citasModule = await import('./citas.js');
+            if (citasModule.searchPatientByRutTherapist) {
+                citasModule.searchPatientByRutTherapist();
+            }
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Error en savePatient:', error);
+        showToast('Error al guardar: ' + error.message, 'error');
+        return false;
+    }
+}
+
+// ============================================
+// RENDERIZAR LISTA DE PACIENTES
 // ============================================
 
 export function renderPatients() {
@@ -113,26 +247,22 @@ export function renderPatients() {
             .sort((a, b) => new Date(b.fechaAtencion) - new Date(a.fechaAtencion))[0];
 
         const profesional = state.staff.find(s => s.id == p.psychId);
-        
-        // Verificar si ya firmó consentimiento (opcional)
-        const tieneConsentimiento = false; // Esto se puede cargar async, por ahora false
 
         return `
             <div class="patient-card" data-id="${p.id}" style="cursor:pointer;" onclick="verFichaCompleta('${p.id}')">
                 <div class="patient-header">
-                    <span class="patient-name">${p.name}</span>
+                    <span class="patient-name">${escapeHtml(p.name)}</span>
                     <div style="display:flex; gap:5px;">
                         ${tieneFichaIngreso ? '<span class="badge" style="background:var(--verde-exito);">📋 Ficha</span>' : ''}
                         <span class="badge" style="background:var(--azul-medico);">${totalSessions} citas</span>
-                        ${tieneConsentimiento ? '<span class="badge" style="background:var(--accent);">✅ Consentimiento</span>' : ''}
                     </div>
                 </div>
                 
                 <div class="patient-contact">
                     <span><i class="fa fa-id-card"></i> ${p.rut || 'Sin RUT'}</span>
-                    <span><i class="fa fa-envelope"></i> ${p.email}</span>
-                    ${p.phone ? `<span><i class="fa fa-phone"></i> ${p.phone}</span>` : ''}
-                    ${p.prevision ? `<span><i class="fa fa-id-card"></i> ${p.prevision}</span>` : ''}
+                    <span><i class="fa fa-envelope"></i> ${escapeHtml(p.email)}</span>
+                    ${p.phone ? `<span><i class="fa fa-phone"></i> ${escapeHtml(p.phone)}</span>` : ''}
+                    ${p.prevision ? `<span><i class="fa fa-id-card"></i> ${escapeHtml(p.prevision)}</span>` : ''}
                 </div>
                 
                 <div style="margin-top:10px; font-size:0.85rem;">
@@ -165,7 +295,7 @@ export function renderPatients() {
                         ${recentApps.map(a => `
                             <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-top:5px;">
                                 <span>${a.date}</span>
-                                <span>${a.psych}</span>
+                                <span>${escapeHtml(a.psych)}</span>
                                 <span>$${a.price.toLocaleString()}</span>
                             </div>
                         `).join('')}
@@ -181,7 +311,7 @@ export function renderPatients() {
                             style="background: var(--text-light); color: white;">
                         <i class="fa fa-edit"></i>
                     </button>
-                    <button class="btn-icon" onclick="event.stopPropagation(); copiarLinkConsentimiento('${p.rut || ''}', '${p.name.replace(/'/g, "\\'")}')" 
+                    <button class="btn-icon" onclick="event.stopPropagation(); copiarLinkConsentimiento('${p.rut || ''}', '${escapeHtml(p.name).replace(/'/g, "\\'")}')" 
                             style="background: #B8860B; color: white;">
                         <i class="fa fa-file-signature"></i> Link Consentimiento
                     </button>
@@ -193,9 +323,21 @@ export function renderPatients() {
     console.log(`✅ Renderizados ${pacientesAMostrar.length} pacientes`);
 }
 
+// Función auxiliar para escapar HTML
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // ============================================
 // FUNCIÓN PARA MOSTRAR DETALLE DEL PACIENTE
 // ============================================
+
 export async function mostrarDetallePaciente(patientId) {
     console.log('🔍 Mostrando detalle para paciente:', patientId);
     
@@ -268,12 +410,12 @@ function mostrarOpcionCrearFicha(patient, sesiones = []) {
                         ${iniciales}
                     </div>
                     <div>
-                        <h2 style="margin:0;">${patient.name}</h2>
+                        <h2 style="margin:0;">${escapeHtml(patient.name)}</h2>
                         <p style="margin:5px 0 0; color:#666;">${patient.rut} · ${edad} años</p>
                     </div>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${patient.name.replace(/'/g, "\\'")}')" 
+                    <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${escapeHtml(patient.name).replace(/'/g, "\\'")}')" 
                             style="background: #B8860B; color: white;">
                         <i class="fa fa-file-signature"></i> Link Consentimiento
                     </button>
@@ -298,7 +440,7 @@ function mostrarOpcionCrearFicha(patient, sesiones = []) {
             <div style="background:white; border-radius:12px; padding:20px;">
                 <h3 style="margin:0 0 15px 0;">📋 Información del Paciente</h3>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                    <div><strong>Email:</strong> ${patient.email}</div>
+                    <div><strong>Email:</strong> ${escapeHtml(patient.email)}</div>
                     <div><strong>Teléfono:</strong> ${patient.phone || '—'}</div>
                     <div><strong>Previsión:</strong> ${patient.prevision || '—'}</div>
                     <div><strong>Fecha Registro:</strong> ${patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : '—'}</div>
@@ -324,12 +466,12 @@ function renderDetallePaciente(patient, sesiones = [], fichaIngreso = null) {
                         ${iniciales}
                     </div>
                     <div>
-                        <h2 style="margin:0;">${patient.name}</h2>
+                        <h2 style="margin:0;">${escapeHtml(patient.name)}</h2>
                         <p style="margin:5px 0 0; color:#666;">${patient.rut} · ${edad} años</p>
                     </div>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${patient.name.replace(/'/g, "\\'")}')" 
+                    <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${escapeHtml(patient.name).replace(/'/g, "\\'")}')" 
                             style="background: #B8860B; color: white;">
                         <i class="fa fa-file-signature"></i> Link Consentimiento
                     </button>
@@ -393,14 +535,14 @@ function renderPerfil(patient, sesiones = []) {
         <div class="perfil-paciente" style="background:white; padding:20px; border-radius:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="margin:0;">📋 Datos Personales</h3>
-                <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${patient.name.replace(/'/g, "\\'")}')" 
+                <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${escapeHtml(patient.name).replace(/'/g, "\\'")}')" 
                         style="background: #B8860B; color: white;">
                     <i class="fa fa-file-signature"></i> Link Consentimiento
                 </button>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:15px;">
                 <div><strong>RUT:</strong> ${patient.rut || '—'}</div>
-                <div><strong>Email:</strong> ${patient.email}</div>
+                <div><strong>Email:</strong> ${escapeHtml(patient.email)}</div>
                 <div><strong>Teléfono:</strong> ${patient.phone || '—'}</div>
                 <div><strong>Previsión:</strong> ${patient.prevision || '—'}</div>
                 <div><strong>Fecha Nac.:</strong> ${patient.birthdate || '—'} (${edad} años)</div>
@@ -425,7 +567,7 @@ function renderPerfil(patient, sesiones = []) {
             </div>
             
             <div style="margin-top:20px; display:flex; gap:10px;">
-                <button class="btn-icon" onclick="viewPatientDetails(${patient.id})" 
+                <button class="btn-icon" onclick="viewPatientDetails('${patient.id}')" 
                         style="background: var(--azul-apple); color: white;">
                     <i class="fa fa-edit"></i> Editar Datos
                 </button>
@@ -465,25 +607,25 @@ function renderFichaIngreso(patient, fichaIngreso) {
             <div style="display:grid; gap:20px;">
                 <div style="background:#f8fafc; padding:15px; border-radius:8px;">
                     <h4 style="margin:0 0 10px 0; color:var(--azul-apple);">Motivo de Consulta</h4>
-                    <p style="margin:0;">${fichaIngreso.motivoConsulta || '—'}</p>
+                    <p style="margin:0;">${escapeHtml(fichaIngreso.motivoConsulta || '—')}</p>
                 </div>
                 
                 <div style="background:#f8fafc; padding:15px; border-radius:8px;">
                     <h4 style="margin:0 0 10px 0; color:var(--azul-apple);">Sintomatología</h4>
                     <p><strong>Inicio:</strong> ${fichaIngreso.sintomatologia?.fechaInicio || '—'}</p>
-                    <p><strong>Progresión:</strong> ${fichaIngreso.sintomatologia?.progresion || '—'}</p>
-                    <p><strong>Tratamientos previos:</strong> ${fichaIngreso.sintomatologia?.tratamientosPrevios || '—'}</p>
-                    <p><strong>Medicamentos:</strong> ${fichaIngreso.sintomatologia?.medicamentos || '—'}</p>
+                    <p><strong>Progresión:</strong> ${escapeHtml(fichaIngreso.sintomatologia?.progresion || '—')}</p>
+                    <p><strong>Tratamientos previos:</strong> ${escapeHtml(fichaIngreso.sintomatologia?.tratamientosPrevios || '—')}</p>
+                    <p><strong>Medicamentos:</strong> ${escapeHtml(fichaIngreso.sintomatologia?.medicamentos || '—')}</p>
                 </div>
                 
                 <div style="background:#f8fafc; padding:15px; border-radius:8px;">
                     <h4 style="margin:0 0 10px 0; color:var(--azul-apple);">Composición Familiar</h4>
-                    <p>${fichaIngreso.composicionFamiliar || '—'}</p>
+                    <p>${escapeHtml(fichaIngreso.composicionFamiliar || '—')}</p>
                 </div>
                 
                 <div style="background:#f8fafc; padding:15px; border-radius:8px;">
                     <h4 style="margin:0 0 10px 0; color:var(--azul-apple);">Otros Antecedentes</h4>
-                    <p>${fichaIngreso.otrosAntecedentes || '—'}</p>
+                    <p>${escapeHtml(fichaIngreso.otrosAntecedentes || '—')}</p>
                 </div>
             </div>
             
@@ -543,7 +685,7 @@ export async function guardarNuevaSesion(patientId) {
     }
     
     const nuevaSesion = {
-        id: Date.now(),
+        id: Date.now().toString(),
         patientId: patientId,
         pacienteNombre: patient.name,
         psychId: state.currentUser.data.id,
@@ -554,7 +696,7 @@ export async function guardarNuevaSesion(patientId) {
     };
     
     state.sesiones.push(nuevaSesion);
-    await save();
+    await guardarEnFirebase(`sesiones/${nuevaSesion.id}`, nuevaSesion);
     closeNewSesionModal();
     mostrarDetallePaciente(patientId);
     showToast('✅ Nota guardada', 'success');
@@ -585,7 +727,7 @@ export function editarSesion(sesionId) {
             }
             sesion.notas = newContent;
             sesion.updatedAt = new Date().toISOString();
-            await save();
+            await guardarEnFirebase(`sesiones/${sesion.id}`, sesion);
             closeEditSesionModal();
             mostrarDetallePaciente(sesion.patientId);
             showToast('Nota actualizada', 'success');
@@ -605,7 +747,10 @@ export async function eliminarSesion(sesionId) {
     if (!sesion) return;
     
     state.sesiones = state.sesiones.filter(s => s.id != sesionId);
-    await save();
+    const { db, ref, remove } = await import('firebase/database');
+    const firebaseApp = (await import('../config/firebase.js')).default;
+    const database = firebaseApp.db || db;
+    await remove(ref(database, `sesiones/${sesionId}`));
     mostrarDetallePaciente(sesion.patientId);
     showToast('Nota eliminada', 'success');
 }
@@ -616,7 +761,7 @@ function renderSesiones(patient, sesiones) {
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <strong>${formatDate(s.fechaAtencion)}</strong>
-                    <p style="margin:5px 0 0; color:#666; font-size:14px;">${s.notas?.substring(0, 200)}${s.notas?.length > 200 ? '...' : ''}</p>
+                    <p style="margin:5px 0 0; color:#666; font-size:14px;">${escapeHtml(s.notas?.substring(0, 200))}${s.notas?.length > 200 ? '...' : ''}</p>
                 </div>
                 <div style="display:flex; gap:5px;">
                     <button class="btn-icon" onclick="editarSesion('${s.id}')" 
@@ -637,7 +782,7 @@ function renderSesiones(patient, sesiones) {
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="margin:0;">📅 Notas de Evolución</h3>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${patient.name.replace(/'/g, "\\'")}')" 
+                    <button class="btn-icon" onclick="copiarLinkConsentimiento('${patient.rut || ''}', '${escapeHtml(patient.name).replace(/'/g, "\\'")}')" 
                             style="background: #B8860B; color: white;">
                         <i class="fa fa-file-signature"></i> Link Consentimiento
                     </button>
@@ -681,7 +826,7 @@ export function exportarHistorialPaciente(patientId) {
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>Historial Clínico - ${patient.name}</title>
+            <title>Historial Clínico - ${escapeHtml(patient.name)}</title>
             <style>
                 body { font-family: 'Arial', sans-serif; padding: 20px; margin: 0 auto; max-width: 1200px; }
                 h1, h2, h3 { color: #2c3e50; }
@@ -705,9 +850,9 @@ export function exportarHistorialPaciente(patientId) {
             
             <div class="patient-info">
                 <h3>Datos del Paciente</h3>
-                <p><strong>Nombre:</strong> ${patient.name}</p>
+                <p><strong>Nombre:</strong> ${escapeHtml(patient.name)}</p>
                 <p><strong>RUT:</strong> ${patient.rut || '—'}</p>
-                <p><strong>Email:</strong> ${patient.email}</p>
+                <p><strong>Email:</strong> ${escapeHtml(patient.email)}</p>
                 <p><strong>Teléfono:</strong> ${patient.phone || '—'}</p>
                 <p><strong>Fecha de Nacimiento:</strong> ${patient.birthdate || '—'} (${edad} años)</p>
                 <p><strong>Previsión:</strong> ${patient.prevision || '—'}</p>
@@ -721,12 +866,12 @@ export function exportarHistorialPaciente(patientId) {
                 ${fichasIngreso.length > 0 ? fichasIngreso.map(f => `
                     <div class="sesion-card">
                         <div class="sesion-header"><span>Ficha creada el ${new Date(f.fechaCreacion).toLocaleDateString()}</span></div>
-                        <p><strong>Motivo de Consulta:</strong> ${f.motivoConsulta || '—'}</p>
-                        <p><strong>Sintomatología:</strong> Inicio: ${f.sintomatologia?.fechaInicio || '—'}, Progresión: ${f.sintomatologia?.progresion || '—'}</p>
-                        <p><strong>Tratamientos previos:</strong> ${f.sintomatologia?.tratamientosPrevios || '—'}</p>
-                        <p><strong>Medicamentos:</strong> ${f.sintomatologia?.medicamentos || '—'}</p>
-                        <p><strong>Composición Familiar:</strong> ${f.composicionFamiliar || '—'}</p>
-                        <p><strong>Otros Antecedentes:</strong> ${f.otrosAntecedentes || '—'}</p>
+                        <p><strong>Motivo de Consulta:</strong> ${escapeHtml(f.motivoConsulta || '—')}</p>
+                        <p><strong>Sintomatología:</strong> Inicio: ${f.sintomatologia?.fechaInicio || '—'}, Progresión: ${escapeHtml(f.sintomatologia?.progresion || '—')}</p>
+                        <p><strong>Tratamientos previos:</strong> ${escapeHtml(f.sintomatologia?.tratamientosPrevios || '—')}</p>
+                        <p><strong>Medicamentos:</strong> ${escapeHtml(f.sintomatologia?.medicamentos || '—')}</p>
+                        <p><strong>Composición Familiar:</strong> ${escapeHtml(f.composicionFamiliar || '—')}</p>
+                        <p><strong>Otros Antecedentes:</strong> ${escapeHtml(f.otrosAntecedentes || '—')}</p>
                     </div>
                 `).join('') : '<p>No hay ficha de ingreso registrada.</p>'}
             </div>
@@ -736,28 +881,27 @@ export function exportarHistorialPaciente(patientId) {
                 ${sesiones.length > 0 ? sesiones.map(s => `
                     <div class="sesion-card">
                         <div class="sesion-header"><span>${formatDate(s.fechaAtencion)}</span></div>
-                        <p>${s.notas || 'Sin contenido'}</p>
+                        <p>${escapeHtml(s.notas || 'Sin contenido')}</p>
                     </div>
                 `).join('') : '<p>No hay notas de evolución registradas.</p>'}
             </div>
             
             <div class="section">
                 <h3>📅 Atenciones (${citas.length} citas)</h3>
-                 <table>
+                </table>
                     <thead><tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead>
                     <tbody>
                         ${citas.map(c => `
                             <tr>
-                                <td>${c.date}</td>
-                                <td>${c.time}</td>
-                                <td>${c.psych}</td>
+                                <td>${c.date}</td><td>${c.time}</td>
+                                <td>${escapeHtml(c.psych)}</td>
                                 <td>${c.type === 'online' ? 'Online' : 'Presencial'}</td>
                                 <td>$${c.price.toLocaleString()}</td>
                                 <td>${c.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
-                 </table>
+                </table>
                 <div class="total">Total pagado: $${citas.reduce((sum, c) => sum + (c.paymentStatus === 'pagado' ? c.price : 0), 0).toLocaleString()}</div>
             </div>
             
@@ -765,8 +909,8 @@ export function exportarHistorialPaciente(patientId) {
                 <h3>📄 Informes</h3>
                 ${informes.length > 0 ? informes.map(i => `
                     <div class="informe-card">
-                        <div class="informe-header"><span>${i.titulo || 'Informe'}</span><span>${formatDate(i.fecha)}</span></div>
-                        <p>${i.contenido || 'Sin contenido'}</p>
+                        <div class="informe-header"><span>${escapeHtml(i.titulo || 'Informe')}</span><span>${formatDate(i.fecha)}</span></div>
+                        <p>${escapeHtml(i.contenido || 'Sin contenido')}</p>
                     </div>
                 `).join('') : '<p>No hay informes registrados.</p>'}
             </div>
@@ -799,7 +943,7 @@ export function volverALista() {
 }
 
 // ============================================
-// FUNCIONES EXISTENTES (CON PREVISIÓN)
+// FUNCIONES DE MODAL
 // ============================================
 
 export function showNewPatientModal() {
@@ -853,7 +997,7 @@ export function viewPatientDetails(id) {
         historyList.innerHTML = patientApps.map(a => `
             <div class="history-item">
                 <span class="history-date">${a.date} ${a.time}</span>
-                <span class="history-psych">${a.psych}</span>
+                <span class="history-psych">${escapeHtml(a.psych)}</span>
                 <span class="history-type">${a.type === 'online' ? 'Online' : 'Presencial'}</span>
                 <span class="history-amount">$${a.price.toLocaleString()}</span>
                 <span style="color:${a.paymentStatus === 'pagado' ? 'var(--verde-exito)' : 'var(--naranja-aviso)'}">${a.paymentStatus === 'pagado' ? '✓' : '⏳'}</span>
@@ -890,81 +1034,6 @@ export function searchPatientByRut() {
     }
 }
 
-export async function savePatient() {
-    const id = document.getElementById('editPatientId').value;
-    const rut = document.getElementById('patientRut').value;
-    const name = document.getElementById('patientName').value;
-    const email = document.getElementById('patientEmail').value;
-    const phone = document.getElementById('patientPhone').value;
-    const prevision = document.getElementById('patientPrevision').value;
-    const birthdate = document.getElementById('patientBirthdate').value;
-    const notes = document.getElementById('patientNotes').value;
-
-    if (!rut || !name || !email) {
-        showToast('RUT, nombre y email son obligatorios', 'error');
-        return;
-    }
-
-    if (!validarRut(rut)) {
-        showToast('RUT inválido', 'error');
-        return;
-    }
-
-    const rutNormalizado = normalizarRut(rut);
-
-    if (id) {
-        const patient = state.patients.find(p => p.id == id);
-        if (patient) {
-            patient.rut = rutNormalizado;
-            patient.name = name;
-            patient.email = email;
-            patient.phone = phone;
-            patient.prevision = prevision;
-            patient.birthdate = birthdate;
-            patient.notes = notes;
-        }
-    } else {
-        const existingPatient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
-        if (existingPatient) {
-            if (confirm('Ya existe un paciente con este RUT. ¿Actualizar sus datos?')) {
-                existingPatient.name = name;
-                existingPatient.email = email;
-                existingPatient.phone = phone;
-                existingPatient.prevision = prevision;
-                existingPatient.birthdate = birthdate;
-                existingPatient.notes = notes;
-            } else {
-                return;
-            }
-        } else {
-            state.patients.push({
-                id: Date.now(),
-                rut: rutNormalizado,
-                name,
-                email,
-                phone,
-                prevision,
-                birthdate,
-                notes,
-                psychId: state.currentUser?.role === 'psych' ? state.currentUser.data.id : null,
-                createdAt: new Date().toISOString(),
-                appointments: []
-            });
-        }
-    }
-
-    await save();
-    closePatientModal();
-
-    if (document.getElementById('tabAgendar')?.classList.contains('active')) {
-        document.getElementById('therapistRut').value = rutNormalizado;
-        import('./citas.js').then(citas => citas.searchPatientByRutTherapist());
-    }
-
-    showToast('Paciente guardado', 'success');
-    setTimeout(() => renderPatients(), 500);
-}
-
 export function printPatientSummary() {
     const patientId = document.getElementById('editPatientId').value;
     const patient = state.patients.find(p => p.id == patientId);
@@ -977,7 +1046,7 @@ export function printPatientSummary() {
 
     let summaryHtml = `
         <html>
-        <head><title>Resumen de Atenciones - ${patient.name}</title>
+        <head><title>Resumen de Atenciones - ${escapeHtml(patient.name)}</title>
         <style>
             body { font-family: Arial, sans-serif; padding: 20px; }
             h1 { color: #2c3e50; }
@@ -992,9 +1061,9 @@ export function printPatientSummary() {
         <body>
             <div class="header">
                 <h1>Vínculo Salud - Resumen de Atenciones</h1>
-                <p><strong>Paciente:</strong> ${patient.name}</p>
+                <p><strong>Paciente:</strong> ${escapeHtml(patient.name)}</p>
                 <p><strong>RUT:</strong> ${patient.rut}</p>
-                <p><strong>Email:</strong> ${patient.email}</p>
+                <p><strong>Email:</strong> ${escapeHtml(patient.email)}</p>
                 <p><strong>Teléfono:</strong> ${patient.phone || '—'}</p>
                 <p><strong>Previsión:</strong> ${patient.prevision || '—'}</p>
             </div>
@@ -1014,7 +1083,7 @@ export function printPatientSummary() {
     let total = 0;
     patientApps.forEach(a => {
         total += a.price;
-        summaryHtml += `<tr><td>${a.date}</td><td>${a.time}</td><td>${a.psych}</td><td>${a.type === 'online' ? 'Online' : 'Presencial'}</td><td>$${a.price.toLocaleString()}</td><td>${a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td></tr>`;
+        summaryHtml += `<tr><td>${a.date}</td><td>${a.time}</td><td>${escapeHtml(a.psych)}</td><td>${a.type === 'online' ? 'Online' : 'Presencial'}</td><td>$${a.price.toLocaleString()}</td><td>${a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td></tr>`;
     });
 
     summaryHtml += `
@@ -1056,4 +1125,4 @@ if (typeof window !== 'undefined') {
     window.generarLinkConsentimiento = generarLinkConsentimiento;
 }
 
-console.log('✅ pacientes.js actualizado con botón de Link de Consentimiento');
+console.log('✅ pacientes.js actualizado con correcciones de guardado');

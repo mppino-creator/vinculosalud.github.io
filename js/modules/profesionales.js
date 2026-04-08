@@ -1043,6 +1043,9 @@ export function closeEditTherapistModal() {
 // ============================================
 // FUNCIÓN UPDATE THERAPIST CORREGIDA (SIN REFERENCIAS CIRCULARES)
 // ============================================
+// ============================================
+// FUNCIÓN UPDATE THERAPIST CORREGIDA (SIN save() Y SIN REFERENCIAS CIRCULARES)
+// ============================================
 export async function updateTherapist() {
     if (state.currentUser?.role !== 'admin') {
         showToast('Solo administradores pueden editar profesionales', 'error');
@@ -1056,6 +1059,8 @@ export async function updateTherapist() {
     }
     
     try {
+        console.log('📝 Actualizando profesional ID:', id);
+        
         // Obtener datos del formulario (valores planos, sin referencias)
         const name = document.getElementById('editName')?.value || '';
         const email = document.getElementById('editEmail')?.value || '';
@@ -1088,9 +1093,13 @@ export async function updateTherapist() {
             presencial: document.getElementById('editPaymentLinkPresencial')?.value || ''
         };
         
+        // Obtener el profesional existente para mantener datos no editables
+        const existingPsych = state.staff.find(p => p.id == id);
+        
         // Crear objeto profesional LIMPIO (sin referencias circulares)
         const updatedPsych = {
             id: id,
+            uid: id,
             name: name,
             email: email,
             genero: genero,
@@ -1105,7 +1114,13 @@ export async function updateTherapist() {
             spec: spec,
             bankDetails: bankDetails,
             paymentLinks: paymentLinks,
+            paymentMethods: state.globalPaymentMethods || { transfer: true, cardPresencial: true, cash: true },
             isAdmin: false,
+            isHiddenAdmin: false,
+            sessionDuration: existingPsych?.sessionDuration || 45,
+            breakBetween: existingPsych?.breakBetween || 10,
+            stars: existingPsych?.stars || 5,
+            availability: existingPsych?.availability || {},
             updatedAt: new Date().toISOString()
         };
         
@@ -1113,57 +1128,45 @@ export async function updateTherapist() {
         if (state.tempImageData) {
             updatedPsych.img = state.tempImageData;
             updatedPsych.photoURL = state.tempImageData;
-        } else {
-            // Mantener foto existente
-            const existingPsych = state.staff.find(p => p.id == id);
-            if (existingPsych && existingPsych.img) {
-                updatedPsych.img = existingPsych.img;
-                updatedPsych.photoURL = existingPsych.photoURL || existingPsych.img;
-            }
+        } else if (existingPsych?.img) {
+            updatedPsych.img = existingPsych.img;
+            updatedPsych.photoURL = existingPsych.photoURL || existingPsych.img;
         }
         
         // Manejar QR si se subió nuevo
         if (state.tempQrOnlineData) {
             updatedPsych.paymentLinks.qrOnline = state.tempQrOnlineData;
-        } else {
-            const existingPsych = state.staff.find(p => p.id == id);
-            if (existingPsych && existingPsych.paymentLinks?.qrOnline) {
-                updatedPsych.paymentLinks.qrOnline = existingPsych.paymentLinks.qrOnline;
-            }
+        } else if (existingPsych?.paymentLinks?.qrOnline) {
+            updatedPsych.paymentLinks.qrOnline = existingPsych.paymentLinks.qrOnline;
         }
         
         if (state.tempQrPresencialData) {
             updatedPsych.paymentLinks.qrPresencial = state.tempQrPresencialData;
-        } else {
-            const existingPsych = state.staff.find(p => p.id == id);
-            if (existingPsych && existingPsych.paymentLinks?.qrPresencial) {
-                updatedPsych.paymentLinks.qrPresencial = existingPsych.paymentLinks.qrPresencial;
-            }
+        } else if (existingPsych?.paymentLinks?.qrPresencial) {
+            updatedPsych.paymentLinks.qrPresencial = existingPsych.paymentLinks.qrPresencial;
         }
         
-        // Manejar métodos de pago
-        const paymentMethods = { ...state.globalPaymentMethods };
-        updatedPsych.paymentMethods = paymentMethods;
+        // Crear una copia limpia para Firebase (sin ninguna referencia circular)
+        const cleanData = JSON.parse(JSON.stringify(updatedPsych));
         
-        console.log('📝 Guardando profesional:', updatedPsych.name);
+        console.log('💾 Guardando en Firebase:', cleanData.name);
         
-        // Actualizar en state (creando una copia limpia)
+        // Guardar directamente en Firebase (NO usar save() que causa el error)
+        await firebase.database().ref(`staff/${id}`).set(cleanData);
+        console.log('✅ Profesional actualizado en Firebase');
+        
+        // Actualizar el state local con una copia limpia
         const staffIndex = state.staff.findIndex(p => p.id == id);
         if (staffIndex !== -1) {
-            // Crear una copia limpia para evitar referencias circulares
-            const cleanCopy = JSON.parse(JSON.stringify(updatedPsych));
-            state.staff[staffIndex] = cleanCopy;
+            state.staff[staffIndex] = cleanData;
+        } else {
+            state.staff.push(cleanData);
         }
-        
-        // Guardar en Firebase (con serialización segura)
-        const cleanData = JSON.parse(JSON.stringify(updatedPsych));
-        await firebase.database().ref(`staff/${id}`).set(cleanData);
-        console.log('✅ Profesional actualizado en DB');
         
         // Manejar cambio de contraseña si se ingresó
         const newPassword = document.getElementById('editPass')?.value?.trim();
         if (newPassword && newPassword !== '') {
-            console.log('🔑 Se detectó cambio de contraseña, enviando correo de restablecimiento...');
+            console.log('🔑 Enviando correo de restablecimiento...');
             await sendPasswordResetEmailForProfessional(email);
             showToast(`📧 Se ha enviado un correo a ${email} para establecer su nueva contraseña.`, 'info');
         }
@@ -1172,6 +1175,10 @@ export async function updateTherapist() {
         state.setTempImageData(null);
         state.setTempQrOnlineData(null);
         state.setTempQrPresencialData(null);
+        
+        // Limpiar campo de contraseña
+        const editPass = document.getElementById('editPass');
+        if (editPass) editPass.value = '';
         
         closeEditTherapistModal();
         

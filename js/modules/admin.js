@@ -954,6 +954,127 @@ window.eliminarTodosLosMensajes = async () => {
 };
 
 // ============================================
+// ELIMINAR PACIENTES DE PRUEBA
+// ============================================
+
+window.eliminarPacientesPrueba = async () => {
+    if (state.currentUser?.role !== 'admin') {
+        showToast('Solo administradores', 'error');
+        return;
+    }
+    
+    const pacientesPrueba = state.patients.filter(p => 
+        p.name?.toLowerCase().includes('test') || 
+        p.email?.toLowerCase().includes('test') ||
+        p.name?.toLowerCase().includes('prueba')
+    );
+    
+    if (pacientesPrueba.length === 0) {
+        showToast('No hay pacientes de prueba para eliminar', 'info');
+        return;
+    }
+    
+    const confirmar = confirm(`⚠️ ¿Eliminar ${pacientesPrueba.length} pacientes de prueba?`);
+    if (!confirmar) return;
+    
+    try {
+        const patientIds = new Set(pacientesPrueba.map(p => p.id));
+        state.setPatients(state.patients.filter(p => !patientIds.has(p.id)));
+        state.setFichasIngreso(state.fichasIngreso.filter(f => !patientIds.has(f.patientId)));
+        state.setSesiones(state.sesiones.filter(s => !patientIds.has(s.patientId)));
+        state.setInformes(state.informes.filter(i => !patientIds.has(i.patientId)));
+        await save();
+        showToast(`✅ ${pacientesPrueba.length} pacientes de prueba eliminados`, 'success');
+        actualizarContadoresReinicio();
+        if (typeof window.renderPatients === 'function') window.renderPatients();
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('❌ Error al eliminar', 'error');
+    }
+};
+
+// ============================================
+// ELIMINAR CITAS DE PRUEBA
+// ============================================
+
+window.eliminarCitasPrueba = async () => {
+    if (state.currentUser?.role !== 'admin') {
+        showToast('Solo administradores', 'error');
+        return;
+    }
+    
+    const citasPrueba = state.appointments.filter(c => 
+        c.patient?.toLowerCase().includes('test') ||
+        c.patient?.toLowerCase().includes('prueba')
+    );
+    
+    if (citasPrueba.length === 0) {
+        showToast('No hay citas de prueba para eliminar', 'info');
+        return;
+    }
+    
+    const confirmar = confirm(`⚠️ ¿Eliminar ${citasPrueba.length} citas de prueba?`);
+    if (!confirmar) return;
+    
+    try {
+        state.setAppointments(state.appointments.filter(c => !citasPrueba.includes(c)));
+        await save();
+        showToast(`✅ ${citasPrueba.length} citas de prueba eliminadas`, 'success');
+        actualizarContadoresReinicio();
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('❌ Error al eliminar', 'error');
+    }
+};
+
+// ============================================
+// RESTAURAR MENSAJES INICIALES
+// ============================================
+
+window.restaurarMensajesIniciales = async () => {
+    if (state.currentUser?.role !== 'admin') {
+        showToast('Solo administradores', 'error');
+        return;
+    }
+    
+    const mensajesIniciales = [
+        {
+            id: Date.now().toString(),
+            name: 'María González',
+            therapistName: 'General',
+            rating: 5,
+            text: 'Excelente atención, muy profesionales. Me siento muy acompañada en mi proceso.',
+            date: new Date().toISOString(),
+            whatsapp: '+56912345678',
+            email: 'maria@example.com'
+        },
+        {
+            id: (Date.now() + 1).toString(),
+            name: 'Carlos Pérez',
+            therapistName: 'General',
+            rating: 4,
+            text: 'Muy buena experiencia, el equipo es muy cálido y profesional.',
+            date: new Date().toISOString(),
+            whatsapp: '+56987654321',
+            email: 'carlos@example.com'
+        }
+    ];
+    
+    const confirmar = confirm(`⚠️ ¿Restaurar ${mensajesIniciales.length} mensajes de ejemplo?`);
+    if (!confirmar) return;
+    
+    try {
+        state.setMessages([...state.messages, ...mensajesIniciales]);
+        await save();
+        showToast(`✅ ${mensajesIniciales.length} mensajes de ejemplo agregados`, 'success');
+        actualizarContadoresReinicio();
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('❌ Error al restaurar', 'error');
+    }
+};
+
+// ============================================
 // EXPOSICIÓN AL OBJETO WINDOW (para compatibilidad con HTML)
 // ============================================
 

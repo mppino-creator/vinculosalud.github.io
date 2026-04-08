@@ -1,12 +1,9 @@
 // js/modules/citas.js
-import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { 
     showToast, validarRut, formatDate, normalizarRut, 
     normalizarFecha, getTimePeriod, calcularEdad 
 } from './utils.js';
-// ⚠️ IMPORTANTE: save() desactivada - usamos Firebase directo
-// import { save } from '../main.js';
 
 // ============================================
 // VARIABLE GLOBAL PARA HORA SELECCIONADA
@@ -543,7 +540,7 @@ export function checkOnlineAvailability() {
 let bookingEnProceso = false;
 
 // ============================================
-// FUNCIÓN EXECUTE BOOKING CORREGIDA (SIN save())
+// FUNCIÓN EXECUTE BOOKING CORREGIDA (USA window.db)
 // ============================================
 export async function executeBooking() {
     console.log("🟢 executeBooking llamada");
@@ -679,11 +676,6 @@ export async function executeBooking() {
         if (isTimeSlotOccupied(state.selectedPsych.id, date, time)) {
             showToast('⚠️ Este horario ya está ocupado. Por favor selecciona otro.', 'error');
             bookingEnProceso = false;
-            const bookBtn = document.getElementById('bookBtn');
-            if (bookBtn) {
-                bookBtn.innerHTML = bookBtn.getAttribute('data-original-text') || 'SOLICITAR CITA';
-                bookBtn.disabled = false;
-            }
             return;
         }
     }
@@ -694,6 +686,7 @@ export async function executeBooking() {
     bookBtn.disabled = true;
 
     try {
+        const db = window.db;  // Usar la referencia global
         let patient = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
         let patientId = null;
         
@@ -715,7 +708,7 @@ export async function executeBooking() {
                 appointments: []
             };
             state.patients.push(patient);
-            await firebase.database().ref(`patients/${patientId}`).set(patient);
+            await db.ref(`patients/${patientId}`).set(patient);
             console.log('✅ Paciente guardado en Firebase');
         } else {
             patientId = patient.id;
@@ -745,7 +738,7 @@ export async function executeBooking() {
                 datosActualizados = true;
             }
             if (datosActualizados) {
-                await firebase.database().ref(`patients/${patientId}`).update(patient);
+                await db.ref(`patients/${patientId}`).update(patient);
                 console.log('✅ Paciente actualizado en Firebase');
             }
         }
@@ -788,18 +781,20 @@ export async function executeBooking() {
 
         if (type === 'online') {
             state.appointments.push(appointment);
-            await firebase.database().ref(`appointments/${appointmentId}`).set(appointment);
+            await db.ref(`appointments/${appointmentId}`).set(appointment);
             console.log('✅ Cita online guardada en Firebase');
             showToast('✅ Solicitud creada', 'success');
-            if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
+            // Actualizar horarios disponibles inmediatamente
+            updateAvailableTimes();
         } else {
             state.pendingRequests.push(appointment);
-            await firebase.database().ref(`pendingRequests/${appointmentId}`).set(appointment);
+            await db.ref(`pendingRequests/${appointmentId}`).set(appointment);
             console.log('✅ Solicitud presencial guardada en Firebase');
             let mensaje = '✅ Solicitud enviada';
             if (time) mensaje += ` (Preferencia: ${time})`;
             if (preferenciaAMPM) mensaje += ` ${preferenciaAMPM}`;
             showToast(mensaje, 'success');
+            // Para presencial también se puede refrescar la vista de disponibilidad (aunque no afecta horarios)
             if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
         }
 
@@ -809,7 +804,6 @@ export async function executeBooking() {
         }
         
         window.horaSeleccionada = null;
-        setTimeout(() => { if (typeof updateAvailableTimes === 'function') updateAvailableTimes(); }, 300);
         limpiarFormularioReserva();
         mostrarResumenYAcciones({
             paciente: name,
@@ -905,7 +899,7 @@ export function renderAppointments() {
     }
 
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = '<td><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td></tr>';
+        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td></tr>';
         return;
     }
 
@@ -957,7 +951,7 @@ export function renderPendingRequests() {
     }
 
     if (requestsToShow.length === 0) {
-        tb.innerHTML = '<td><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
+        tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
         return;
     }
 
@@ -1027,7 +1021,7 @@ export async function confirmPayment(appointmentId) {
     
     const refPath = state.appointments.find(a => a.id == appointmentId) ? 
                     `appointments/${appointmentId}` : `pendingRequests/${appointmentId}`;
-    await firebase.database().ref(refPath).update({
+    await window.db.ref(refPath).update({
         paymentStatus: 'pagado',
         paymentConfirmedBy: appointment.paymentConfirmedBy,
         status: appointment.status
@@ -1093,8 +1087,8 @@ export async function confirmPresencialTime(requestId, date, time) {
     state.appointments.push(appointment);
     state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
     
-    await firebase.database().ref(`appointments/${appointmentId}`).set(appointment);
-    await firebase.database().ref(`pendingRequests/${requestId}`).remove();
+    await window.db.ref(`appointments/${appointmentId}`).set(appointment);
+    await window.db.ref(`pendingRequests/${requestId}`).remove();
     
     showToast('✅ Cita confirmada', 'success');
 
@@ -1317,14 +1311,14 @@ export async function executeTherapistBooking() {
     };
 
     state.appointments.push(appointment);
-    await firebase.database().ref(`appointments/${appointmentId}`).set(appointment);
+    await window.db.ref(`appointments/${appointmentId}`).set(appointment);
 
     let deleted = false;
     if (window.currentRequestId) {
         const req = state.pendingRequests.find(r => r.id == window.currentRequestId);
         if (req) {
             state.setPendingRequests(state.pendingRequests.filter(r => r.id != window.currentRequestId));
-            await firebase.database().ref(`pendingRequests/${window.currentRequestId}`).remove();
+            await window.db.ref(`pendingRequests/${window.currentRequestId}`).remove();
             deleted = true;
         }
     }
@@ -1336,7 +1330,7 @@ export async function executeTherapistBooking() {
         );
         if (pending) {
             state.setPendingRequests(state.pendingRequests.filter(r => r.id != pending.id));
-            await firebase.database().ref(`pendingRequests/${pending.id}`).remove();
+            await window.db.ref(`pendingRequests/${pending.id}`).remove();
         }
     }
 
@@ -1370,7 +1364,7 @@ export async function cancelAppointment(id) {
     }
     
     state.setAppointments(state.appointments.filter(a => a.id != id));
-    await firebase.database().ref(`appointments/${id}`).remove();
+    await window.db.ref(`appointments/${id}`).remove();
     showToast('Cita cancelada', 'success');
     renderAppointments();
     renderAppointmentsTable();
@@ -1391,7 +1385,7 @@ export async function rejectRequest(requestId) {
     }
     
     state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
-    await firebase.database().ref(`pendingRequests/${requestId}`).remove();
+    await window.db.ref(`pendingRequests/${requestId}`).remove();
     showToast('Solicitud rechazada', 'success');
     renderPendingRequests();
     if (request.time && request.time !== 'Pendiente') {
@@ -1436,7 +1430,7 @@ export function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                              </td>
+                              </table>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => `
@@ -1492,10 +1486,10 @@ export async function cancelAppointmentByPatient(appointmentId, patientRut) {
     
     if (isPending) {
         state.setPendingRequests(state.pendingRequests.filter(r => r.id != appointmentId));
-        await firebase.database().ref(`pendingRequests/${appointmentId}`).remove();
+        await window.db.ref(`pendingRequests/${appointmentId}`).remove();
     } else {
         state.setAppointments(state.appointments.filter(a => a.id != appointmentId));
-        await firebase.database().ref(`appointments/${appointmentId}`).remove();
+        await window.db.ref(`appointments/${appointmentId}`).remove();
     }
     
     showToast('Cita cancelada correctamente', 'success');
@@ -1507,13 +1501,6 @@ export async function cancelAppointmentByPatient(appointmentId, patientRut) {
 // ============================================
 // GESTIÓN DE ASISTENCIA Y ESTADOS DE CITA
 // ============================================
-
-/**
- * Marca una cita como asistida o no asistida.
- * @param {string} citaId - ID de la cita
- * @param {boolean} asistio - true si asistió, false si no
- * @param {string} justificacion - motivo de inasistencia (opcional)
- */
 export async function marcarAsistencia(citaId, asistio, justificacion = '') {
     const cita = state.appointments.find(a => a.id == citaId);
     if (!cita) {
@@ -1547,7 +1534,7 @@ export async function marcarAsistencia(citaId, asistio, justificacion = '') {
         }
     }
 
-    await firebase.database().ref(`appointments/${citaId}`).update({
+    await window.db.ref(`appointments/${citaId}`).update({
         asistencia: cita.asistencia,
         estadoCita: cita.estadoCita,
         motivoInasistencia: cita.motivoInasistencia,
@@ -1598,4 +1585,4 @@ document.addEventListener('datosPrivadosCargados', () => {
     }
 });
 
-console.log('✅ citas.js refactorizado: modular, async/await, validación centralizada, sin duplicación');
+console.log('✅ citas.js actualizado: guardado con window.db, ocupación de horarios y actualización en tiempo real');

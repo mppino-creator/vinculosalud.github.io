@@ -1103,4 +1103,22 @@ if (typeof window !== 'undefined') {
     }, 2000);
 }
 
+// Ver a qué psicólogo está asignado el paciente
+firebase.database().ref('patients').once('value').then(snap => {
+    const patients = snap.val();
+    Object.entries(patients).forEach(([id, p]) => {
+        console.log(`Paciente: ${p.name}`);
+        console.log(`  - Asignado a psicólogo ID: ${p.psychId}`);
+        console.log(`  - Estado: ${p.isHiddenAdmin ? 'Oculto' : 'Visible'}`);
+    });
+});
+
+// Ver los psicólogos disponibles
+firebase.database().ref('staff').once('value').then(snap => {
+    const staff = snap.val();
+    Object.entries(staff).forEach(([id, s]) => {
+        console.log(`Psicólogo: ${s.name} - ID: ${id} - isAdmin: ${s.isAdmin}`);
+    });
+});
+
 console.log('✅ admin.js actualizado con módulo de consentimientos y funciones de reinicio corregidas');

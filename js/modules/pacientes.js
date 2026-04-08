@@ -32,11 +32,11 @@ export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
 }
 
 // ============================================
-// FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (VERSIÓN DEFINITIVA - SIN getDatabase)
+// FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (CORREGIDA - SIN DUPLICADOS)
 // ============================================
 
 export async function savePatient() {
-    console.log('🔍 Ejecutando savePatient - VERSION DEFINITIVA CON DB.REF');
+    console.log('🔍 Ejecutando savePatient - VERSION CORREGIDA (sin duplicados)');
     
     const rutInput = document.getElementById('patientRut')?.value || '';
     const name = document.getElementById('patientName')?.value || '';
@@ -66,13 +66,15 @@ export async function savePatient() {
     }
 
     try {
-        // Usar window.db (ya está inicializado en firebase.js)
         const db = window.db;
-        if (!db) {
-            throw new Error('Firebase no está inicializado');
+        if (!db) throw new Error('Firebase no está inicializado');
+
+        // Buscar paciente existente por ID (RUT normalizado) o por RUT normalizado
+        let pacienteExistente = state.patients.find(p => p.id === rutNormalizado);
+        if (!pacienteExistente) {
+            pacienteExistente = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
         }
-        
-        const pacienteExistente = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
+
         const now = new Date().toISOString();
         
         const patientData = {
@@ -91,23 +93,40 @@ export async function savePatient() {
         if (!pacienteExistente) {
             patientData.createdAt = now;
             patientData.appointments = [];
+        } else {
+            // Conservar fecha de creación original
+            patientData.createdAt = pacienteExistente.createdAt || now;
         }
 
         console.log('💾 Guardando paciente en Firebase:', patientData);
 
-        // Guardar usando db.ref().set()
+        // Guardar en Firebase (sobreescribe el nodo si ya existe)
         await db.ref(`patients/${rutNormalizado}`).set(patientData);
 
-        // Actualizar estado global
+        // Actualizar estado global SIN duplicados
+        let nuevosPacientes;
         if (pacienteExistente) {
-            const index = state.patients.findIndex(p => p.id === rutNormalizado);
-            if (index !== -1) {
-                state.patients[index] = { ...state.patients[index], ...patientData };
-                state.setPatients([...state.patients]);
-            }
+            // Reemplazar el existente
+            nuevosPacientes = state.patients.map(p => 
+                (p.id === rutNormalizado || normalizarRut(p.rut) === rutNormalizado) ? patientData : p
+            );
         } else {
-            state.setPatients([...state.patients, patientData]);
+            // Agregar nuevo
+            nuevosPacientes = [...state.patients, patientData];
         }
+
+        // Eliminar posibles duplicados (por si acaso)
+        const sinDuplicados = [];
+        const idsVistos = new Set();
+        for (const p of nuevosPacientes) {
+            const idUnico = p.id || normalizarRut(p.rut);
+            if (!idsVistos.has(idUnico)) {
+                idsVistos.add(idUnico);
+                sinDuplicados.push(p);
+            }
+        }
+
+        state.setPatients(sinDuplicados);
 
         closePatientModal();
         showToast(pacienteExistente ? '✅ Paciente actualizado correctamente' : '✅ Paciente creado correctamente', 'success');
@@ -120,6 +139,33 @@ export async function savePatient() {
         showToast('Error al guardar: ' + error.message, 'error');
         return false;
     }
+}
+
+// ============================================
+// FUNCIÓN OPCIONAL PARA LIMPIAR DUPLICADOS EXISTENTES (ejecutar desde consola si es necesario)
+// ============================================
+export async function limpiarDuplicadosPacientes() {
+    console.log('🧹 Limpiando pacientes duplicados...');
+    const pacientes = state.patients;
+    const unicos = new Map();
+    for (const p of pacientes) {
+        const id = p.id || normalizarRut(p.rut);
+        if (!unicos.has(id)) {
+            unicos.set(id, p);
+        } else {
+            console.log(`Duplicado eliminado: ${p.name} (${id})`);
+        }
+    }
+    const sinDuplicados = Array.from(unicos.values());
+    console.log(`Pacientes originales: ${pacientes.length}, después de limpieza: ${sinDuplicados.length}`);
+    state.setPatients(sinDuplicados);
+    // Guardar en Firebase (sobrescribe los duplicados)
+    const db = window.db;
+    for (const p of sinDuplicados) {
+        await db.ref(`patients/${p.id}`).set(p);
+    }
+    renderPatients();
+    showToast(`Duplicados eliminados. Quedan ${sinDuplicados.length} pacientes.`, 'success');
 }
 
 // ============================================
@@ -1099,6 +1145,8 @@ if (typeof window !== 'undefined') {
     window.eliminarSesion = eliminarSesion;
     window.copiarLinkConsentimiento = copiarLinkConsentimiento;
     window.generarLinkConsentimiento = generarLinkConsentimiento;
+    // Exponer función de limpieza por si es necesario
+    window.limpiarDuplicadosPacientes = limpiarDuplicadosPacientes;
 }
 
-console.log('✅ pacientes.js - VERSIÓN DEFINITIVA (usa db.ref().set(), sin getDatabase)');
+console.log('✅ pacientes.js - VERSIÓN DEFINITIVA (sin duplicados, usa db.ref().set())');

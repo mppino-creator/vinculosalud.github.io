@@ -156,7 +156,7 @@ export async function openMyProfileModal() {
     if (editMyLanguages) editMyLanguages.value = professionalData.languages ? professionalData.languages.join(', ') : '';
     
     if (editMyLinkedin) editMyLinkedin.value = professionalData.socialLinks?.linkedin || '';
-    if (editMyInstagram) editMyInstagram.value = professionalData.socialLinks?.instagram || '';
+    if (editMyInstagram) editMyInstagram.value = professionalData.socialLinks?.instagram || professionalData.instagram || '';
     if (editMyWebsite) editMyWebsite.value = professionalData.socialLinks?.website || '';
     
     if (editMyPriceOnline) editMyPriceOnline.value = professionalData.priceOnline || '';
@@ -664,6 +664,11 @@ export async function saveMyProfile() {
         updates.socialLinks = newSocialLinks;
     }
     
+    // ✅ Guardar también el Instagram directamente en la raíz (para compatibilidad con publico.js)
+    if (editMyInstagram !== undefined && editMyInstagram !== (currentData.instagram || '')) {
+        updates.instagram = editMyInstagram;
+    }
+    
     if (editMyWhatsapp !== undefined && editMyWhatsapp !== currentData.whatsapp) updates.whatsapp = editMyWhatsapp;
     if (editMyPhone !== undefined && editMyPhone !== currentData.phone) updates.phone = editMyPhone;
     if (editMyAddress !== undefined && editMyAddress !== currentData.address) updates.address = editMyAddress;
@@ -730,15 +735,31 @@ export async function saveMyProfile() {
         const modal = document.getElementById('editMyProfileModal');
         if (modal) modal.style.display = 'none';
         
-        setTimeout(() => {
-            if (typeof window.filterProfessionals === 'function') window.filterProfessionals();
+        // 🔥 FORZAR ACTUALIZACIÓN DE LA VISTA PÚBLICA
+        setTimeout(async () => {
+            // 1. Actualizar la lista de profesionales en la vista pública si existe el módulo
+            if (window.publico) {
+                if (typeof window.publico.cargarDatosPublicos === 'function') {
+                    await window.publico.cargarDatosPublicos();
+                } else if (typeof window.publico.filterProfessionals === 'function') {
+                    window.publico.filterProfessionals();
+                }
+            }
+            // 2. Alternativa: recargar los datos de staff y disparar evento
+            const freshStaffSnapshot = await firebase.database().ref('staff').once('value');
+            const allStaff = freshStaffSnapshot.val() || {};
+            const staffArray = Object.entries(allStaff).map(([id, data]) => ({ id, ...data }));
+            state.setStaff(staffArray);
+            // 3. Disparar evento personalizado para que otros módulos reaccionen
+            window.dispatchEvent(new CustomEvent('staff-updated'));
+            
             if (state.currentUser?.role === 'admin' && typeof window.renderStaffTable === 'function') {
                 window.renderStaffTable();
             }
             if (typeof window.updateStats === 'function') window.updateStats();
+            
+            showToast('✅ Perfil actualizado correctamente', 'success');
         }, 300);
-        
-        showToast('✅ Perfil actualizado correctamente', 'success');
         
     } catch (error) {
         console.error('❌ Error guardando perfil:', error);

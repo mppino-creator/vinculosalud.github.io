@@ -78,7 +78,7 @@ export async function savePatient() {
         }
         
         // Obtener ref y set de Firebase
-        const { getDatabase, ref, set } = window.firebase;
+        const { ref, set } = window.firebase.database;
         
         // Buscar si el paciente ya existe
         const pacienteExistente = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);

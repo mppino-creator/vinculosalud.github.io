@@ -1,4 +1,4 @@
-// js/modules/profesionales.js
+// js/modules/profilesionales.js
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, normalizarRut, validarRut } from './utils.js';
@@ -1040,82 +1040,155 @@ export function closeEditTherapistModal() {
     if (modal) modal.style.display = 'none';
 }
 
+// ============================================
+// FUNCIÓN UPDATE THERAPIST CORREGIDA (SIN REFERENCIAS CIRCULARES)
+// ============================================
 export async function updateTherapist() {
+    if (state.currentUser?.role !== 'admin') {
+        showToast('Solo administradores pueden editar profesionales', 'error');
+        return;
+    }
+    
     const id = document.getElementById('editTherapistId')?.value;
-    const therapist = state.staff.find(s => s.id == id);
-    if (!therapist) return;
-    
-    const editName = document.getElementById('editName');
-    const editEmail = document.getElementById('editEmail');
-    const editSpecSelect = document.getElementById('editSpec');
-    const editUser = document.getElementById('editUser');
-    const editWhatsapp = document.getElementById('editWhatsapp');
-    const editInstagram = document.getElementById('editInstagram');
-    const editAddress = document.getElementById('editAddress');
-    const editPhone = document.getElementById('editPhone');
-    const editPriceOnline = document.getElementById('editPriceOnline');
-    const editPricePresencial = document.getElementById('editPricePresencial');
-    const editGenero = document.getElementById('editGenero');
-    const editAdvanceNotice = document.getElementById('editAdvanceNotice');
-    const editBank = document.getElementById('editBank');
-    const editAccountType = document.getElementById('editAccountType');
-    const editAccountNumber = document.getElementById('editAccountNumber');
-    const editBankRut = document.getElementById('editBankRut');
-    const editBankEmail = document.getElementById('editBankEmail');
-    const editPaymentLinkOnline = document.getElementById('editPaymentLinkOnline');
-    const editPaymentLinkPresencial = document.getElementById('editPaymentLinkPresencial');
-    const editPass = document.getElementById('editPass');
-    
-    if (editName) therapist.name = editName.value;
-    if (editEmail) therapist.email = editEmail.value;
-    if (editSpecSelect) therapist.spec = Array.from(editSpecSelect.selectedOptions).map(opt => opt.value);
-    if (editUser) therapist.usuario = editUser.value;
-    if (editWhatsapp) therapist.whatsapp = editWhatsapp.value;
-    if (editInstagram) therapist.instagram = editInstagram.value;
-    if (editAddress) therapist.address = editAddress.value;
-    if (editPhone) therapist.phone = editPhone.value;
-    if (editPriceOnline) therapist.priceOnline = parseInt(editPriceOnline.value);
-    if (editPricePresencial) therapist.pricePresencial = parseInt(editPricePresencial.value);
-    if (editAdvanceNotice) therapist.advanceNotice = parseInt(editAdvanceNotice.value);
-    if (editGenero) therapist.genero = editGenero.value;
-    
-    therapist.bankDetails = {
-        bank: editBank?.value || '',
-        accountType: editAccountType?.value || 'corriente',
-        accountNumber: editAccountNumber?.value || '',
-        rut: editBankRut?.value || '',
-        email: editBankEmail?.value || ''
-    };
-    
-    therapist.paymentLinks = {
-        online: editPaymentLinkOnline?.value || '',
-        presencial: editPaymentLinkPresencial?.value || '',
-        qrOnline: state.tempQrOnlineData || therapist.paymentLinks?.qrOnline || '',
-        qrPresencial: state.tempQrPresencialData || therapist.paymentLinks?.qrPresencial || ''
-    };
-    
-    if (state.tempImageData) {
-        therapist.img = state.tempImageData;
+    if (!id) {
+        showToast('ID del profesional no encontrado', 'error');
+        return;
     }
     
     try {
-        await firebase.database().ref(`staff/${id}`).update(therapist);
-        console.log('✅ Profesional actualizado en DB');
+        // Obtener datos del formulario (valores planos, sin referencias)
+        const name = document.getElementById('editName')?.value || '';
+        const email = document.getElementById('editEmail')?.value || '';
+        const genero = document.getElementById('editGenero')?.value || '';
+        const usuario = document.getElementById('editUser')?.value || '';
+        const whatsapp = document.getElementById('editWhatsapp')?.value || '';
+        const instagram = document.getElementById('editInstagram')?.value || '';
+        const address = document.getElementById('editAddress')?.value || '';
+        const phone = document.getElementById('editPhone')?.value || '';
+        const priceOnline = parseInt(document.getElementById('editPriceOnline')?.value) || 0;
+        const pricePresencial = parseInt(document.getElementById('editPricePresencial')?.value) || 0;
+        const advanceNotice = parseInt(document.getElementById('editAdvanceNotice')?.value) || 60;
         
-        const newPassword = editPass?.value.trim();
-        if (newPassword && newPassword !== '') {
-            console.log('🔑 Se detectó cambio de contraseña, enviando correo de restablecimiento...');
-            await sendPasswordResetEmailForProfessional(therapist.email);
-            showToast(`📧 Se ha enviado un correo a ${therapist.email} para establecer su nueva contraseña.`, 'info');
+        // Obtener especialidades seleccionadas
+        const specSelect = document.getElementById('editSpec');
+        const spec = specSelect ? Array.from(specSelect.selectedOptions).map(opt => opt.value) : [];
+        
+        // Datos bancarios (objeto plano)
+        const bankDetails = {
+            bank: document.getElementById('editBank')?.value || '',
+            accountType: document.getElementById('editAccountType')?.value || 'corriente',
+            accountNumber: document.getElementById('editAccountNumber')?.value || '',
+            rut: document.getElementById('editBankRut')?.value || '',
+            email: document.getElementById('editBankEmail')?.value || ''
+        };
+        
+        // Links de pago (objeto plano)
+        const paymentLinks = {
+            online: document.getElementById('editPaymentLinkOnline')?.value || '',
+            presencial: document.getElementById('editPaymentLinkPresencial')?.value || ''
+        };
+        
+        // Crear objeto profesional LIMPIO (sin referencias circulares)
+        const updatedPsych = {
+            id: id,
+            name: name,
+            email: email,
+            genero: genero,
+            usuario: usuario,
+            whatsapp: whatsapp,
+            instagram: instagram,
+            address: address,
+            phone: phone,
+            priceOnline: priceOnline,
+            pricePresencial: pricePresencial,
+            advanceNotice: advanceNotice,
+            spec: spec,
+            bankDetails: bankDetails,
+            paymentLinks: paymentLinks,
+            isAdmin: false,
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Manejar foto si se subió nueva
+        if (state.tempImageData) {
+            updatedPsych.img = state.tempImageData;
+            updatedPsych.photoURL = state.tempImageData;
+        } else {
+            // Mantener foto existente
+            const existingPsych = state.staff.find(p => p.id == id);
+            if (existingPsych && existingPsych.img) {
+                updatedPsych.img = existingPsych.img;
+                updatedPsych.photoURL = existingPsych.photoURL || existingPsych.img;
+            }
         }
         
-        await save();
+        // Manejar QR si se subió nuevo
+        if (state.tempQrOnlineData) {
+            updatedPsych.paymentLinks.qrOnline = state.tempQrOnlineData;
+        } else {
+            const existingPsych = state.staff.find(p => p.id == id);
+            if (existingPsych && existingPsych.paymentLinks?.qrOnline) {
+                updatedPsych.paymentLinks.qrOnline = existingPsych.paymentLinks.qrOnline;
+            }
+        }
+        
+        if (state.tempQrPresencialData) {
+            updatedPsych.paymentLinks.qrPresencial = state.tempQrPresencialData;
+        } else {
+            const existingPsych = state.staff.find(p => p.id == id);
+            if (existingPsych && existingPsych.paymentLinks?.qrPresencial) {
+                updatedPsych.paymentLinks.qrPresencial = existingPsych.paymentLinks.qrPresencial;
+            }
+        }
+        
+        // Manejar métodos de pago
+        const paymentMethods = { ...state.globalPaymentMethods };
+        updatedPsych.paymentMethods = paymentMethods;
+        
+        console.log('📝 Guardando profesional:', updatedPsych.name);
+        
+        // Actualizar en state (creando una copia limpia)
+        const staffIndex = state.staff.findIndex(p => p.id == id);
+        if (staffIndex !== -1) {
+            // Crear una copia limpia para evitar referencias circulares
+            const cleanCopy = JSON.parse(JSON.stringify(updatedPsych));
+            state.staff[staffIndex] = cleanCopy;
+        }
+        
+        // Guardar en Firebase (con serialización segura)
+        const cleanData = JSON.parse(JSON.stringify(updatedPsych));
+        await firebase.database().ref(`staff/${id}`).set(cleanData);
+        console.log('✅ Profesional actualizado en DB');
+        
+        // Manejar cambio de contraseña si se ingresó
+        const newPassword = document.getElementById('editPass')?.value?.trim();
+        if (newPassword && newPassword !== '') {
+            console.log('🔑 Se detectó cambio de contraseña, enviando correo de restablecimiento...');
+            await sendPasswordResetEmailForProfessional(email);
+            showToast(`📧 Se ha enviado un correo a ${email} para establecer su nueva contraseña.`, 'info');
+        }
+        
+        // Limpiar datos temporales
+        state.setTempImageData(null);
+        state.setTempQrOnlineData(null);
+        state.setTempQrPresencialData(null);
+        
         closeEditTherapistModal();
-        renderStaffTable();
-        showToast('Profesional actualizado correctamente', 'success');
+        
+        // Recargar la tabla
+        setTimeout(() => {
+            if (typeof renderStaffTable === 'function') {
+                renderStaffTable();
+            }
+            if (typeof window.renderStaffTable === 'function') {
+                window.renderStaffTable();
+            }
+        }, 500);
+        
+        showToast('✅ Profesional actualizado correctamente', 'success');
         
     } catch (error) {
-        console.error('Error actualizando profesional:', error);
+        console.error('❌ Error actualizando profesional:', error);
         showToast('Error al actualizar: ' + error.message, 'error');
     }
 }

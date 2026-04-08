@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN ACTUALIZADA CON GUARDADO SIN AUTENTICACIÓN PARA PACIENTES
+// js/main.js - VERSIÓN CORREGIDA (save() DESACTIVADA)
 import { db } from './config/firebase.js';
 import * as state from './modules/state.js';
 window.state = state;
@@ -326,212 +326,12 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (CORREGIDA - PERMITE GUARDAR SIN LOGIN)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (DESACTIVADA PARA EVITAR ERROR DE REFERENCIA CIRCULAR)
 // ============================================
 export function save() {
-    console.log("💾 Guardando datos en Firebase...");
-    
-    // Nodos que pueden guardarse SIN autenticación
-    const nodosPublicos = [
-        'appointments', 'pendingRequests', 'patients', 'messages',
-        'fichasIngreso', 'sesiones', 'informes', 'consentimientos'
-    ];
-    
-    // Nodos que requieren autenticación (solo admin)
-    const nodosPrivados = [
-        'staff', 'specialties', 'textosEditables', 'paymentMethods',
-        'backgroundImage', 'logoImage', 'heroTexts', 'aboutTexts',
-        'atencionTexts', 'contactInfo', 'instagramData'
-    ];
-    
-    const promises = [];
-    const user = firebase.auth().currentUser;
-    const role = state.currentUser?.role;
-    
-    // Función auxiliar para limpiar objetos
-    const safeClean = (obj) => {
-        if (obj === null || typeof obj !== 'object') return obj;
-        try {
-            return JSON.parse(JSON.stringify(obj));
-        } catch(e) {
-            console.warn('Error limpiando objeto:', e.message);
-            return null;
-        }
-    };
-    
-    // 1. Guardar nodos públicos
-    for (const node of nodosPublicos) {
-        let data;
-        try {
-            switch (node) {
-                case 'appointments':
-                    const appointmentsObj = {};
-                    (state.appointments || []).forEach(item => { 
-                        if (item && item.id) appointmentsObj[item.id] = safeClean(item); 
-                    });
-                    data = appointmentsObj;
-                    break;
-                case 'pendingRequests':
-                    const pendingRequestsObj = {};
-                    (state.pendingRequests || []).forEach(item => { 
-                        if (item && item.id) pendingRequestsObj[item.id] = safeClean(item); 
-                    });
-                    data = pendingRequestsObj;
-                    break;
-                case 'patients':
-                    const patientsObj = {};
-                    (state.patients || []).forEach(item => { 
-                        if (item && item.id) patientsObj[item.id] = safeClean(item); 
-                    });
-                    data = patientsObj;
-                    break;
-                case 'messages':
-                    const messagesObj = {};
-                    (state.messages || []).forEach(item => { 
-                        if (item && item.id) messagesObj[item.id] = safeClean(item); 
-                    });
-                    data = messagesObj;
-                    break;
-                case 'fichasIngreso':
-                    const fichasObj = {};
-                    (state.fichasIngreso || []).forEach(item => { 
-                        if (item && item.id) fichasObj[item.id] = safeClean(item); 
-                    });
-                    data = fichasObj;
-                    break;
-                case 'sesiones':
-                    const sesionesObj = {};
-                    (state.sesiones || []).forEach(item => { 
-                        if (item && item.id) sesionesObj[item.id] = safeClean(item); 
-                    });
-                    data = sesionesObj;
-                    break;
-                case 'informes':
-                    const informesObj = {};
-                    (state.informes || []).forEach(item => { 
-                        if (item && item.id) informesObj[item.id] = safeClean(item); 
-                    });
-                    data = informesObj;
-                    break;
-                case 'consentimientos':
-                    const consentimientosObj = {};
-                    (state.consentimientos || []).forEach(item => { 
-                        if (item && item.id) consentimientosObj[item.id] = safeClean(item); 
-                    });
-                    data = consentimientosObj;
-                    break;
-                default:
-                    continue;
-            }
-        } catch(e) {
-            console.error(`❌ Error en nodo ${node}:`, e);
-            continue;
-        }
-        
-        if (data && Object.keys(data).length > 0) {
-            promises.push(db.ref(node).set(data).catch(err => {
-                console.error(`❌ Error en ${node}:`, err);
-                return null;
-            }));
-        }
-    }
-    
-    // 2. Guardar nodos privados (solo admin)
-    if (user && role === 'admin') {
-        for (const node of nodosPrivados) {
-            let data;
-            try {
-                switch (node) {
-                    case 'staff':
-                        const staffObj = {};
-                        (state.staff || []).forEach(item => { 
-                            if (item && item.id) staffObj[item.id] = safeClean(item); 
-                        });
-                        data = staffObj;
-                        break;
-                    case 'specialties':
-                        const specialtiesObj = {};
-                        (state.specialties || []).forEach(item => { 
-                            if (item && item.id) specialtiesObj[item.id] = { name: item.name }; 
-                        });
-                        data = specialtiesObj;
-                        break;
-                    case 'textosEditables':
-                        data = safeClean({
-                            missionText: state.missionText || '',
-                            visionText: state.visionText || '',
-                            aboutTeamText: state.aboutTeamText || '',
-                            aboutImage: state.aboutImage || '',
-                            contactInfo: {
-                                phone: (state.contactInfo?.phone || '').toString(),
-                                email: (state.contactInfo?.email || '').toString(),
-                                address: (state.contactInfo?.address || '').toString()
-                            }
-                        });
-                        break;
-                    case 'paymentMethods':
-                        data = safeClean(state.globalPaymentMethods || {});
-                        break;
-                    case 'backgroundImage':
-                        data = state.backgroundImage || '';
-                        break;
-                    case 'logoImage':
-                        data = state.logoImage || '';
-                        break;
-                    case 'heroTexts':
-                        data = safeClean(state.heroTexts || {});
-                        break;
-                    case 'aboutTexts':
-                        data = safeClean({
-                            teamText: state.aboutTeamText || '',
-                            mission: state.missionText || '',
-                            vision: state.visionText || '',
-                            image: state.aboutImage || ''
-                        });
-                        break;
-                    case 'atencionTexts':
-                        data = safeClean(state.atencionTexts || {});
-                        break;
-                    case 'contactInfo':
-                        data = safeClean({
-                            phone: (state.contactInfo?.phone || '').toString(),
-                            email: (state.contactInfo?.email || '').toString(),
-                            address: (state.contactInfo?.address || '').toString()
-                        });
-                        break;
-                    case 'instagramData':
-                        data = safeClean(state.instagramData || {});
-                        break;
-                    default:
-                        continue;
-                }
-            } catch(e) {
-                console.error(`❌ Error en nodo ${node}:`, e);
-                continue;
-            }
-            
-            if (data && (typeof data === 'object' ? Object.keys(data).length > 0 : data)) {
-                promises.push(db.ref(node).set(data).catch(err => {
-                    console.error(`❌ Error en ${node}:`, err);
-                    return null;
-                }));
-            }
-        }
-    }
-    
-    if (promises.length === 0) {
-        console.log('ℹ️ No hay datos para guardar');
-        return Promise.resolve();
-    }
-    
-    return Promise.all(promises)
-        .then((results) => {
-            const successful = results.filter(r => r !== null).length;
-            console.log(`✅ ${successful}/${promises.length} nodos guardados`);
-        })
-        .catch(err => {
-            console.error('❌ Error guardando:', err);
-        });
+    console.log("⚠️ save() DESACTIVADA - Error de referencia circular evitado");
+    console.log("💡 Los datos se guardan individualmente desde cada módulo");
+    return Promise.resolve();
 }
 
 // ============================================
@@ -585,7 +385,7 @@ window.addEventListener('load', function() {
     }, 1000);
 });
 
-window.save = save;
-console.log('✅ main.js cargado (versión actualizada con guardado SIN autenticación para pacientes)');
+// window.save = save;  // DESACTIVADO - Los datos se guardan desde cada módulo individualmente
+console.log('✅ main.js cargado (versión corregida - save() desactivada)');
 console.log('✅ Nodos de Firebase en minúsculas consistentes');
 console.log('✅ esEmailProfesional expuesto globalmente');

@@ -5,25 +5,6 @@ import { puedeAccederAPaciente, puedeEditarFichas } from './permisos.js';
 import { obtenerSesionesDePaciente, obtenerFichasIngresoDePaciente } from './fichasClinicas.js';
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE
-// ============================================
-
-async function guardarEnFirebase(ruta, datos) {
-    try {
-        const { db, ref, set } = await import('firebase/database');
-        const firebaseApp = (await import('../config/firebase.js')).default;
-        const database = firebaseApp.db || db;
-        const reference = ref(database, ruta);
-        await set(reference, datos);
-        console.log(`✅ Guardado en ${ruta}:`, datos);
-        return true;
-    } catch (error) {
-        console.error(`❌ Error guardando en ${ruta}:`, error);
-        return false;
-    }
-}
-
-// ============================================
 // FUNCIÓN PARA GENERAR LINK DE CONSENTIMIENTO
 // ============================================
 
@@ -52,10 +33,6 @@ export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
 
 // ============================================
 // FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (CORREGIDA)
-// ============================================
-
-// ============================================
-// FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (CORREGIDA - SIN IMPORT DINÁMICO)
 // ============================================
 
 export async function savePatient() {
@@ -94,13 +71,14 @@ export async function savePatient() {
     }
 
     try {
-        // Obtener Firebase de la configuración global (window.db ya está disponible)
+        // Usar Firebase desde window (ya está inicializado)
         const database = window.db;
         if (!database) {
             throw new Error('Firebase no está inicializado. Espera a que cargue la página.');
         }
         
-        const { ref, set } = await import('firebase/database');
+        // Obtener ref y set de Firebase
+        const { getDatabase, ref, set } = window.firebase;
         
         // Buscar si el paciente ya existe
         const pacienteExistente = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
@@ -121,50 +99,33 @@ export async function savePatient() {
         };
 
         if (!pacienteExistente) {
-            // Nuevo paciente
             patientData.createdAt = now;
             patientData.appointments = [];
         }
 
         console.log('💾 Guardando paciente en Firebase:', patientData);
 
-        // Guardar en Firebase usando window.db
+        // Guardar en Firebase
         const patientRef = ref(database, `patients/${rutNormalizado}`);
         await set(patientRef, patientData);
 
         // Actualizar estado global
         if (pacienteExistente) {
-            // Actualizar existente
             const index = state.patients.findIndex(p => p.id === rutNormalizado);
             if (index !== -1) {
                 state.patients[index] = { ...state.patients[index], ...patientData };
                 state.setPatients([...state.patients]);
             }
         } else {
-            // Agregar nuevo
             state.setPatients([...state.patients, patientData]);
         }
 
         // Cerrar modal
         closePatientModal();
         
-        // Mostrar éxito
         showToast(pacienteExistente ? '✅ Paciente actualizado correctamente' : '✅ Paciente creado correctamente', 'success');
         
-        // Actualizar lista
         setTimeout(() => renderPatients(), 500);
-        
-        // Si estamos en agenda de terapeuta, actualizar el campo RUT
-        if (document.getElementById('tabAgendar')?.classList.contains('active')) {
-            const therapistRut = document.getElementById('therapistRut');
-            if (therapistRut) therapistRut.value = rutNormalizado;
-            
-            // Importar y buscar paciente en agenda
-            const citasModule = await import('./citas.js');
-            if (citasModule.searchPatientByRutTherapist) {
-                citasModule.searchPatientByRutTherapist();
-            }
-        }
         
         return true;
         
@@ -174,6 +135,7 @@ export async function savePatient() {
         return false;
     }
 }
+
 // ============================================
 // RENDERIZAR LISTA DE PACIENTES
 // ============================================
@@ -704,10 +666,20 @@ export async function guardarNuevaSesion(patientId) {
     };
     
     state.sesiones.push(nuevaSesion);
-    await guardarEnFirebase(`sesiones/${nuevaSesion.id}`, nuevaSesion);
+    
+    try {
+        const database = window.db;
+        const { ref, set } = window.firebase;
+        const sesionRef = ref(database, `sesiones/${nuevaSesion.id}`);
+        await set(sesionRef, nuevaSesion);
+        showToast('✅ Nota guardada', 'success');
+    } catch (error) {
+        console.error('Error guardando sesión:', error);
+        showToast('Error al guardar la nota', 'error');
+    }
+    
     closeNewSesionModal();
     mostrarDetallePaciente(patientId);
-    showToast('✅ Nota guardada', 'success');
 }
 
 export function editarSesion(sesionId) {
@@ -735,10 +707,20 @@ export function editarSesion(sesionId) {
             }
             sesion.notas = newContent;
             sesion.updatedAt = new Date().toISOString();
-            await guardarEnFirebase(`sesiones/${sesion.id}`, sesion);
+            
+            try {
+                const database = window.db;
+                const { ref, set } = window.firebase;
+                const sesionRef = ref(database, `sesiones/${sesion.id}`);
+                await set(sesionRef, sesion);
+                showToast('Nota actualizada', 'success');
+            } catch (error) {
+                console.error('Error actualizando sesión:', error);
+                showToast('Error al actualizar la nota', 'error');
+            }
+            
             closeEditSesionModal();
             mostrarDetallePaciente(sesion.patientId);
-            showToast('Nota actualizada', 'success');
         };
     }
 }
@@ -755,12 +737,19 @@ export async function eliminarSesion(sesionId) {
     if (!sesion) return;
     
     state.sesiones = state.sesiones.filter(s => s.id != sesionId);
-    const { db, ref, remove } = await import('firebase/database');
-    const firebaseApp = (await import('../config/firebase.js')).default;
-    const database = firebaseApp.db || db;
-    await remove(ref(database, `sesiones/${sesionId}`));
+    
+    try {
+        const database = window.db;
+        const { ref, remove } = window.firebase;
+        const sesionRef = ref(database, `sesiones/${sesionId}`);
+        await remove(sesionRef);
+        showToast('Nota eliminada', 'success');
+    } catch (error) {
+        console.error('Error eliminando sesión:', error);
+        showToast('Error al eliminar la nota', 'error');
+    }
+    
     mostrarDetallePaciente(sesion.patientId);
-    showToast('Nota eliminada', 'success');
 }
 
 function renderSesiones(patient, sesiones) {
@@ -896,12 +885,13 @@ export function exportarHistorialPaciente(patientId) {
             
             <div class="section">
                 <h3>📅 Atenciones (${citas.length} citas)</h3>
-                </table>
+                <table>
                     <thead><tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead>
                     <tbody>
                         ${citas.map(c => `
                             <tr>
-                                <td>${c.date}</td><td>${c.time}</td>
+                                <td>${c.date}</td>
+                                <td>${c.time}</td>
                                 <td>${escapeHtml(c.psych)}</td>
                                 <td>${c.type === 'online' ? 'Online' : 'Presencial'}</td>
                                 <td>$${c.price.toLocaleString()}</td>
@@ -1133,4 +1123,4 @@ if (typeof window !== 'undefined') {
     window.generarLinkConsentimiento = generarLinkConsentimiento;
 }
 
-console.log('✅ pacientes.js actualizado con correcciones de guardado');
+console.log('✅ pacientes.js actualizado - Firebase desde window');

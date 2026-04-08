@@ -77,7 +77,7 @@ export async function savePatient() {
             throw new Error('Firebase no está inicializado. Espera a que cargue la página.');
         }
         
-        // Obtener ref y set de Firebase
+        // 🔧 CORRECCIÓN IMPORTANTE: Obtener ref y set de Firebase
         const { ref, set } = window.firebase.database;
         
         // Buscar si el paciente ya existe
@@ -669,7 +669,7 @@ export async function guardarNuevaSesion(patientId) {
     
     try {
         const database = window.db;
-        const { ref, set } = window.firebase;
+        const { ref, set } = window.firebase.database;
         const sesionRef = ref(database, `sesiones/${nuevaSesion.id}`);
         await set(sesionRef, nuevaSesion);
         showToast('✅ Nota guardada', 'success');
@@ -710,7 +710,7 @@ export function editarSesion(sesionId) {
             
             try {
                 const database = window.db;
-                const { ref, set } = window.firebase;
+                const { ref, set } = window.firebase.database;
                 const sesionRef = ref(database, `sesiones/${sesion.id}`);
                 await set(sesionRef, sesion);
                 showToast('Nota actualizada', 'success');
@@ -740,7 +740,7 @@ export async function eliminarSesion(sesionId) {
     
     try {
         const database = window.db;
-        const { ref, remove } = window.firebase;
+        const { ref, remove } = window.firebase.database;
         const sesionRef = ref(database, `sesiones/${sesionId}`);
         await remove(sesionRef);
         showToast('Nota eliminada', 'success');

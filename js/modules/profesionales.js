@@ -457,23 +457,70 @@ window.showMyProfileTab = function(tabName) {
 window.previewMyPhoto = function(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
+        const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+        console.log(`📸 Foto perfil original: ${originalSizeMB} MB`);
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
             img.onload = function() {
+                // Configuración equilibrada: buena calidad sin exceder límites
+                const MAX_WIDTH = 600;      // 600px es buen equilibrio
+                const MAX_HEIGHT = 600;
+                const JPEG_QUALITY = 0.88;  // 88% calidad (excelente)
+                const MAX_BASE64_SIZE_KB = 500; // Límite seguro para Firebase
+                
+                let width = img.width;
+                let height = img.height;
+                
+                // Redimensionar manteniendo proporción
+                if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height = Math.round(height * (MAX_WIDTH / width));
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width = Math.round(width * (MAX_HEIGHT / height));
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                }
+                
                 const canvas = document.createElement('canvas');
-                // Aumentar tamaño máximo de 400px a 800px para mejor calidad
-                const MAX_WIDTH = 800;
-                const scale = MAX_WIDTH / img.width;
-                canvas.width = MAX_WIDTH;
-                canvas.height = img.height * scale;
+                canvas.width = width;
+                canvas.height = height;
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                // Cambiar calidad de 0.7 a 0.95 para mejor definición
-                const reducedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                document.getElementById('editMyPhotoPreview').src = reducedDataUrl;
-                state.setTempImageData(reducedDataUrl);
-                showToast('✅ Foto optimizada (alta calidad)', 'success');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Comenzar con calidad alta
+                let quality = JPEG_QUALITY;
+                let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                let base64SizeKB = Math.round(compressedDataUrl.length * 0.75 / 1024);
+                
+                // Reducir calidad progresivamente si excede el límite
+                let intentos = 0;
+                while (base64SizeKB > MAX_BASE64_SIZE_KB && quality > 0.6 && intentos < 5) {
+                    quality -= 0.05; // Reducir 5% cada vez
+                    compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                    base64SizeKB = Math.round(compressedDataUrl.length * 0.75 / 1024);
+                    intentos++;
+                }
+                
+                // Aplicar la imagen procesada
+                document.getElementById('editMyPhotoPreview').src = compressedDataUrl;
+                if (window.state) window.state.setTempImageData(compressedDataUrl);
+                
+                // Información de depuración
+                console.log(`📸 Foto perfil procesada: ${width}x${height}, ${base64SizeKB} KB, calidad ${Math.round(quality*100)}%`);
+                
+                if (base64SizeKB > MAX_BASE64_SIZE_KB) {
+                    console.warn(`⚠️ La foto aún es grande (${base64SizeKB} KB). Considera usar una imagen más pequeña.`);
+                    showToast(`⚠️ La foto se redujo a ${base64SizeKB} KB. Para mejor calidad, usa imágenes más pequeñas.`, 'warning');
+                } else {
+                    showToast('✅ Foto de perfil actualizada con alta calidad', 'success');
+                }
             };
             img.src = e.target.result;
         };

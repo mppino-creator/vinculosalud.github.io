@@ -331,13 +331,13 @@ setTimeout(() => {
 export function save() {
     console.log("💾 Guardando datos en Firebase...");
     
-    // Nodos que pueden guardarse SIN autenticación (para pacientes que reservan citas)
+    // Nodos que pueden guardarse SIN autenticación
     const nodosPublicos = [
         'appointments', 'pendingRequests', 'patients', 'messages',
         'fichasIngreso', 'sesiones', 'informes', 'consentimientos'
     ];
     
-    // Nodos que requieren autenticación (admin o psicólogo)
+    // Nodos que requieren autenticación
     const nodosPrivados = [
         'staff', 'specialties', 'textosEditables', 'paymentMethods',
         'backgroundImage', 'logoImage', 'heroTexts', 'aboutTexts',
@@ -348,7 +348,7 @@ export function save() {
     const user = firebase.auth().currentUser;
     const role = state.currentUser?.role;
     
-    // 1. Guardar nodos públicos (SIEMPRE, sin importar autenticación)
+    // 1. Guardar nodos públicos
     for (const node of nodosPublicos) {
         let data;
         try {
@@ -417,7 +417,7 @@ export function save() {
             continue;
         }
         
-        if (data !== undefined) {
+        if (data !== undefined && Object.keys(data).length > 0) {
             const finalData = safeClean(data, null);
             if (finalData !== null) {
                 promises.push(db.ref(node).set(finalData).catch(err => {
@@ -428,8 +428,8 @@ export function save() {
         }
     }
     
-    // 2. Guardar nodos privados (solo si hay usuario autenticado)
-    if (user && (role === 'admin' || role === 'psych')) {
+    // 2. Guardar nodos privados (solo admin)
+    if (user && role === 'admin') {
         for (const node of nodosPrivados) {
             let data;
             try {
@@ -454,29 +454,10 @@ export function save() {
                             visionText: state.visionText || '',
                             aboutTeamText: state.aboutTeamText || '',
                             aboutImage: state.aboutImage || '',
-                            atencionTexts: Array.isArray(state.atencionTexts) ? state.atencionTexts.map(item => ({
-                                titulo: (item.titulo || '').toString(),
-                                icono: (item.icono || '').toString(),
-                                descripcion: (item.descripcion || '').toString(),
-                                precio: (item.precio || '').toString(),
-                                activo: item.activo !== false
-                            })) : [],
                             contactInfo: {
                                 phone: (state.contactInfo?.phone || '').toString(),
                                 email: (state.contactInfo?.email || '').toString(),
                                 address: (state.contactInfo?.address || '').toString()
-                            },
-                            heroTexts: safeClean(state.heroTexts, {}),
-                            logoImage: state.logoImage || '',
-                            backgroundImage: state.backgroundImage || '',
-                            instagramData: {
-                                title: (state.instagramData?.title || '').toString(),
-                                subtitle: (state.instagramData?.subtitle || '').toString(),
-                                quote: (state.instagramData?.quote || '').toString(),
-                                text: (state.instagramData?.text || '').toString(),
-                                message: (state.instagramData?.message || '').toString(),
-                                link: (state.instagramData?.link || '').toString(),
-                                image: (state.instagramData?.image || '').toString()
                             }
                         };
                         break;
@@ -501,14 +482,7 @@ export function save() {
                         };
                         break;
                     case 'atencionTexts':
-                        data = Array.isArray(state.atencionTexts) ? state.atencionTexts.map(item => ({
-                            titulo: (item.titulo || '').toString(),
-                            icono: (item.icono || '').toString(),
-                            descripcion: (item.descripcion || '').toString(),
-                            precio: (item.precio || '').toString(),
-                            activo: item.activo !== false
-                        })) : [];
-                        data = JSON.parse(JSON.stringify(data));
+                        data = JSON.parse(JSON.stringify(state.atencionTexts || {}));
                         break;
                     case 'contactInfo':
                         data = {
@@ -518,15 +492,7 @@ export function save() {
                         };
                         break;
                     case 'instagramData':
-                        data = {
-                            title: (state.instagramData?.title || '').toString(),
-                            subtitle: (state.instagramData?.subtitle || '').toString(),
-                            quote: (state.instagramData?.quote || '').toString(),
-                            text: (state.instagramData?.text || '').toString(),
-                            message: (state.instagramData?.message || '').toString(),
-                            link: (state.instagramData?.link || '').toString(),
-                            image: (state.instagramData?.image || '').toString()
-                        };
+                        data = JSON.parse(JSON.stringify(state.instagramData || {}));
                         break;
                     default:
                         continue;
@@ -536,7 +502,7 @@ export function save() {
                 continue;
             }
             
-            if (data !== undefined) {
+            if (data !== undefined && (typeof data === 'object' ? Object.keys(data).length > 0 : data)) {
                 const finalData = safeClean(data, null);
                 if (finalData !== null) {
                     promises.push(db.ref(node).set(finalData).catch(err => {
@@ -546,47 +512,39 @@ export function save() {
                 }
             }
         }
-    } else {
-        console.log('ℹ️ Usuario no autenticado o sin rol - solo se guardan nodos públicos');
+    } else if (user && role === 'psych') {
+        // Psicólogos solo pueden actualizar su propio perfil
+        const uid = user.uid;
+        const myData = state.staff.find(s => s.id === uid);
+        if (myData) {
+            const cleanMyData = safeClean(myData, null);
+            if (cleanMyData) {
+                promises.push(db.ref(`staff/${uid}`).set(cleanMyData).catch(err => {
+                    console.error(`❌ Error actualizando perfil:`, err);
+                    return null;
+                }));
+            }
+        }
     }
     
-    Promise.all(promises)
+    if (promises.length === 0) {
+        console.log('ℹ️ No hay datos para guardar');
+        return Promise.resolve();
+    }
+    
+    return Promise.all(promises)
         .then((results) => {
             const successful = results.filter(r => r !== null).length;
-            const total = promises.length;
-            console.log(`✅ ${successful}/${total} nodos guardados correctamente en Firebase`);
-            
-            // Actualizar UI si hay usuario logueado
-            if (state.currentUser) {
-                if (typeof auth.updateStats === 'function') auth.updateStats();
-                if (typeof citas.renderPendingRequests === 'function') citas.renderPendingRequests();
-                if (state.currentUser.role === 'admin') {
-                    if (typeof profesionales.renderStaffTable === 'function') profesionales.renderStaffTable();
-                    if (typeof mensajes.renderMessagesTable === 'function') mensajes.renderMessagesTable();
-                    if (typeof admin.addEditButtonsToAdmin === 'function') setTimeout(admin.addEditButtonsToAdmin, 500);
-                }
-                if (state.currentUser.role === 'psych') {
-                    if (typeof pacientes.renderPatients === 'function') pacientes.renderPatients();
-                }
-            }
-            
-            // Actualizar vista pública siempre
-            if (typeof publico.filterProfessionals === 'function') publico.filterProfessionals();
-            if (typeof mensajes.renderMessages === 'function') mensajes.renderMessages();
-            if (typeof mensajes.updateMarquee === 'function') mensajes.updateMarquee();
-            if (typeof personalizacion.updateAboutSection === 'function') personalizacion.updateAboutSection();
-            if (typeof personalizacion.updateAtencionSection === 'function') personalizacion.updateAtencionSection();
-            if (typeof personalizacion.updateContactSection === 'function') personalizacion.updateContactSection();
-            if (typeof personalizacion.updateInstagramSection === 'function') personalizacion.updateInstagramSection();
-            
-            if (typeof utils.showToast === 'function') {
-                if (successful === total && total > 0) utils.showToast('✅ Todos los datos guardados', 'success');
-                else if (total > 0) utils.showToast(`⚠️ ${successful}/${total} datos guardados`, 'warning');
+            console.log(`✅ ${successful}/${promises.length} nodos guardados correctamente`);
+            if (typeof utils.showToast === 'function' && successful === promises.length) {
+                utils.showToast('✅ Datos guardados', 'success');
             }
         })
         .catch(err => {
-            console.error('❌ Error general al guardar en Firebase:', err);
-            if (typeof utils.showToast === 'function') utils.showToast('Error al guardar los datos', 'error');
+            console.error('❌ Error guardando:', err);
+            if (typeof utils.showToast === 'function') {
+                utils.showToast('Error al guardar', 'error');
+            }
         });
 }
 

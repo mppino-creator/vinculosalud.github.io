@@ -462,16 +462,14 @@ window.previewMyPhoto = function(input) {
         reader.onload = function(e) {
             const img = new Image();
             img.onload = function() {
-                // Configuración equilibrada: buena calidad sin exceder límites
-                const MAX_WIDTH = 600;      // 600px es buen equilibrio
+                const MAX_WIDTH = 600;
                 const MAX_HEIGHT = 600;
-                const JPEG_QUALITY = 0.88;  // 88% calidad (excelente)
-                const MAX_BASE64_SIZE_KB = 500; // Límite seguro para Firebase
+                const JPEG_QUALITY = 0.88;
+                const MAX_BASE64_SIZE_KB = 500;
                 
                 let width = img.width;
                 let height = img.height;
                 
-                // Redimensionar manteniendo proporción
                 if (width > MAX_WIDTH || height > MAX_HEIGHT) {
                     if (width > height) {
                         if (width > MAX_WIDTH) {
@@ -492,25 +490,19 @@ window.previewMyPhoto = function(input) {
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                // Comenzar con calidad alta
                 let quality = JPEG_QUALITY;
                 let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
                 let base64SizeKB = Math.round(compressedDataUrl.length * 0.75 / 1024);
                 
-                // Reducir calidad progresivamente si excede el límite
-                let intentos = 0;
-                while (base64SizeKB > MAX_BASE64_SIZE_KB && quality > 0.6 && intentos < 5) {
-                    quality -= 0.05; // Reducir 5% cada vez
+                while (base64SizeKB > MAX_BASE64_SIZE_KB && quality > 0.6) {
+                    quality -= 0.05;
                     compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
                     base64SizeKB = Math.round(compressedDataUrl.length * 0.75 / 1024);
-                    intentos++;
                 }
                 
-                // Aplicar la imagen procesada
                 document.getElementById('editMyPhotoPreview').src = compressedDataUrl;
                 if (window.state) window.state.setTempImageData(compressedDataUrl);
                 
-                // Información de depuración
                 console.log(`📸 Foto perfil procesada: ${width}x${height}, ${base64SizeKB} KB, calidad ${Math.round(quality*100)}%`);
                 
                 if (base64SizeKB > MAX_BASE64_SIZE_KB) {
@@ -721,7 +713,6 @@ export async function saveMyProfile() {
             state.currentUser.data = fullData;
         }
         
-        // Actualizar localStorage
         localStorage.setItem('vinculo_user', JSON.stringify(state.currentUser));
         localStorage.setItem('vinculoCurrentUser', JSON.stringify({
             role: 'psych',
@@ -762,7 +753,7 @@ export function renderStaffTable() {
     
     const tb = document.getElementById('staffTableBody');
     if (!tb) {
-        console.warn('⚠️ staffTableBody no encontrado (probablemente el admin no está en dashboard)');
+        console.warn('⚠️ staffTableBody no encontrado');
         return;
     }
     
@@ -805,7 +796,7 @@ export function renderStaffTable() {
 }
 
 // ============================================
-// FUNCIÓN PARA AGREGAR PROFESIONAL (SIN GUARDAR CONTRASEÑA)
+// FUNCIÓN PARA AGREGAR PROFESIONAL
 // ============================================
 export async function addStaff() {
     const name = document.getElementById('addName')?.value;
@@ -838,13 +829,11 @@ export async function addStaff() {
     }
 
     try {
-        // 1. Crear usuario en Firebase Authentication con una contraseña aleatoria (solo para crear la cuenta)
-        const randomPassword = Math.random().toString(36).slice(-10); // generamos una clave temporal
+        const randomPassword = Math.random().toString(36).slice(-10);
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, randomPassword);
         const uid = userCredential.user.uid;
         console.log('✅ Usuario creado en Auth con UID:', uid);
         
-        // 2. Construir objeto del profesional (sin password)
         const nuevoProfesional = {
             id: uid,
             uid: uid,
@@ -884,14 +873,10 @@ export async function addStaff() {
             createdAt: new Date().toISOString()
         };
         
-        // 3. Guardar en Realtime Database usando el UID como clave
         await firebase.database().ref(`staff/${uid}`).set(nuevoProfesional);
-        
-        // 4. Enviar correo de restablecimiento para que el profesional cree su contraseña
         await firebase.auth().sendPasswordResetEmail(email);
         console.log('📧 Correo de restablecimiento enviado a:', email);
         
-        // 5. Actualizar estado local
         state.staff.push(nuevoProfesional);
         closeAddStaffModal();
         renderStaffTable();
@@ -902,7 +887,7 @@ export async function addStaff() {
         console.error('❌ Error al crear profesional:', error);
         let mensaje = 'Error al crear profesional';
         if (error.code === 'auth/email-already-in-use') {
-            mensaje = 'El email ya está registrado en el sistema. Si el profesional ya existe, usa el botón "Enviar correo de restablecimiento" en su edición.';
+            mensaje = 'El email ya está registrado. Usa el botón "Enviar correo de restablecimiento" en su edición.';
         } else if (error.code === 'auth/invalid-email') {
             mensaje = 'El email no es válido.';
         } else {
@@ -913,7 +898,7 @@ export async function addStaff() {
 }
 
 // ============================================
-// FUNCIÓN PARA REENVIAR CORREO DE RESTABLECIMIENTO (DESDE EDICIÓN)
+// FUNCIÓN PARA REENVIAR CORREO DE RESTABLECIMIENTO
 // ============================================
 export async function sendPasswordResetEmailForProfessional(email) {
     if (!state.currentUser || state.currentUser.role !== 'admin') {
@@ -1039,9 +1024,8 @@ export function closeEditTherapistModal() {
 }
 
 // ============================================
-// FUNCIÓN UPDATE THERAPIST CORREGIDA (SIN save() Y SIN REFERENCIAS CIRCULARES)
+// FUNCIÓN UPDATE THERAPIST CORREGIDA (SIN REFERENCIAS CIRCULARES)
 // ============================================
-
 export async function updateTherapist() {
     if (state.currentUser?.role !== 'admin') {
         showToast('Solo administradores pueden editar profesionales', 'error');
@@ -1057,7 +1041,6 @@ export async function updateTherapist() {
     try {
         console.log('📝 Actualizando profesional ID:', id);
         
-        // Obtener datos del formulario
         const name = document.getElementById('editName')?.value || '';
         const email = document.getElementById('editEmail')?.value || '';
         const genero = document.getElementById('editGenero')?.value || '';
@@ -1086,11 +1069,9 @@ export async function updateTherapist() {
             presencial: document.getElementById('editPaymentLinkPresencial')?.value || ''
         };
         
-        // Obtener datos existentes desde Firebase directamente (NO desde state)
         const existingSnapshot = await firebase.database().ref(`staff/${id}`).once('value');
         const existingData = existingSnapshot.val() || {};
         
-        // Crear objeto limpio
         const updatedPsych = {
             id: id,
             uid: id,
@@ -1119,7 +1100,6 @@ export async function updateTherapist() {
             updatedAt: new Date().toISOString()
         };
         
-        // Foto
         if (state.tempImageData) {
             updatedPsych.img = state.tempImageData;
             updatedPsych.photoURL = state.tempImageData;
@@ -1128,7 +1108,6 @@ export async function updateTherapist() {
             updatedPsych.photoURL = existingData.photoURL || existingData.img;
         }
         
-        // QR
         if (state.tempQrOnlineData) {
             updatedPsych.paymentLinks.qrOnline = state.tempQrOnlineData;
         } else if (existingData.paymentLinks?.qrOnline) {
@@ -1141,33 +1120,24 @@ export async function updateTherapist() {
             updatedPsych.paymentLinks.qrPresencial = existingData.paymentLinks.qrPresencial;
         }
         
-        // Limpiar referencias circulares
         const cleanData = JSON.parse(JSON.stringify(updatedPsych));
         
-        console.log('💾 Guardando en Firebase (sin save):', cleanData.name);
+        console.log('💾 Guardando en Firebase:', cleanData.name);
         
-        // Guardar en Firebase (DIRECTAMENTE, sin usar save())
         await firebase.database().ref(`staff/${id}`).set(cleanData);
         console.log('✅ Guardado en Firebase');
         
-        // Actualizar state con datos frescos
         const staffIndex = state.staff.findIndex(p => p.id == id);
-        const cleanFreshData = JSON.parse(JSON.stringify({ id: id, ...cleanData }));
-        
         if (staffIndex !== -1) {
-            state.staff[staffIndex] = cleanFreshData;
-        } else {
-            state.staff.push(cleanFreshData);
+            state.staff[staffIndex] = cleanData;
         }
         
-        // Contraseña
         const newPassword = document.getElementById('editPass')?.value?.trim();
         if (newPassword && newPassword !== '') {
             await sendPasswordResetEmailForProfessional(email);
             showToast(`📧 Correo enviado a ${email}`, 'info');
         }
         
-        // Limpiar temporales
         state.setTempImageData(null);
         state.setTempQrOnlineData(null);
         state.setTempQrPresencialData(null);
@@ -1177,7 +1147,6 @@ export async function updateTherapist() {
         
         closeEditTherapistModal();
         
-        // Recargar tabla
         setTimeout(() => {
             if (typeof renderStaffTable === 'function') renderStaffTable();
             if (typeof window.renderStaffTable === 'function') window.renderStaffTable();

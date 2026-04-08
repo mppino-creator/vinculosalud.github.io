@@ -1,7 +1,7 @@
 // js/modules/citas.js
 import * as state from './state.js';
 import { 
-    showToast, validarRut, formatDate, normalizarRut, 
+    showToast, validarRut, formatDate, formatRut, normalizarRut, 
     normalizarFecha, getTimePeriod, calcularEdad 
 } from './utils.js';
 
@@ -15,24 +15,27 @@ let currentRequestId = null;          // ID de la solicitud presencial a confirm
 // FUNCIONES AUXILIARES INTERNAS
 // ============================================
 
-function isTimeSlotOccupied(psychId, date, time) {
+function isTimeSlotOccupied(psychId, date, time, excludeRequestId = null) {
     if (!time) return false;
+    // Verificar citas confirmadas o pendientes
     const occupiedAppointments = state.appointments.some(a => 
         a.psychId == psychId && a.date === date && a.time === time &&
         (a.status === 'confirmada' || a.status === 'pendiente')
     );
+    // Verificar solicitudes pendientes, excluyendo la actual si se proporciona su ID
     const occupiedRequests = state.pendingRequests.some(r => 
-        r.psychId == psychId && r.date === date && r.time === time && r.time !== 'Pendiente'
+        r.psychId == psychId && r.date === date && r.time === time && 
+        r.time !== 'Pendiente' && r.id !== excludeRequestId
     );
     return occupiedAppointments || occupiedRequests;
 }
 
-function getAvailableSlots(psych, date) {
+function getAvailableSlots(psych, date, excludeRequestId = null) {
     const availableSlots = psych.availability?.[date] || [];
     if (!availableSlots.length) return [];
     const now = new Date();
     return availableSlots
-        .filter(slot => !isTimeSlotOccupied(psych.id, date, slot.time))
+        .filter(slot => !isTimeSlotOccupied(psych.id, date, slot.time, excludeRequestId))
         .filter(slot => new Date(date + 'T' + slot.time) > now)
         .sort((a, b) => a.time.localeCompare(b.time));
 }
@@ -441,6 +444,8 @@ export async function searchPatientByRutBooking() {
     }
     if (patient) {
         console.log('✅ Paciente encontrado:', patient);
+        // Mostrar RUT formateado
+        document.getElementById('custRut').value = formatRut(patient.rut) || '';
         document.getElementById('custName').value = patient.name || '';
         document.getElementById('custEmail').value = patient.email || '';
         const birthdate = document.getElementById('custBirthdate');
@@ -455,7 +460,7 @@ export async function searchPatientByRutBooking() {
             const tutorRut = document.getElementById('tutorRut');
             const tutorRelationship = document.getElementById('tutorRelationship');
             if (tutorName) tutorName.value = patient.tutor.nombre || '';
-            if (tutorRut) tutorRut.value = patient.tutor.rut || '';
+            if (tutorRut) tutorRut.value = formatRut(patient.tutor.rut) || '';
             if (tutorRelationship) tutorRelationship.value = patient.tutor.parentesco || '';
         }
         const phoneParts = patient.phone ? patient.phone.split(' ') : ['+56', '9', ''];
@@ -754,7 +759,8 @@ export function renderAppointmentsTable() {
     }
     citasFiltradas.sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
     if (citasFiltradas.length === 0) {
-        container.innerHTML = '<tr><td colspan="9" style="text-align:center;">No hay citas programadas</td></tr>';
+        container.innerHTML = '<tr><td colspan="9" style="text-align:center;">No hay citas programadas</td>' +
+                             '</tr>';
         return;
     }
     container.innerHTML = citasFiltradas.map(apt => {
@@ -766,7 +772,7 @@ export function renderAppointmentsTable() {
         const statusText = isPast ? 'Completada' : (apt.status === 'confirmada' ? 'Confirmada' : 'Pendiente');
         return `
             <tr>
-                <td><strong>${patient?.name || apt.patient || '—'}</strong><br><small>${patient?.rut || apt.patientRut || ''}</small></td>
+                <td><strong>${patient?.name || apt.patient || '—'}</strong><br><small>${formatRut(patient?.rut || apt.patientRut || '')}</small></td>
                 <td>${psych?.name || apt.psych || '—'}</td>
                 <td>${apt.date || '—'} <br><small>${apt.time || '—'}</small></td>
                 <td><span style="background:${apt.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${apt.type === 'online' ? 'Online' : 'Presencial'}</span></td>
@@ -813,7 +819,7 @@ export function renderAppointments() {
         const statusText = isPast ? 'Completada' : (a.status === 'confirmada' ? 'Confirmada' : 'Pendiente');
         return `
             <tr>
-                <td><strong>${a.patient || '—'}</strong><br><small>${a.patientRut || ''}</small></td>
+                <td><strong>${a.patient || '—'}</strong><br><small>${formatRut(a.patientRut || '')}</small></td>
                 <td>${a.psych || '—'}</td>
                 <td>${a.date || '—'} <br><small>${a.time || '—'}</small></td>
                 <td><span style="background:${a.type === 'online' ? 'var(--exito)' : 'var(--primario)'}; color:white; padding:4px 8px; border-radius:6px; font-size:0.7rem;">${a.type === 'online' ? 'Online' : 'Presencial'}</span></td>
@@ -859,7 +865,7 @@ export function renderPendingRequests() {
                 <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
                 <td>
                     <strong>${r.patient}</strong><br>
-                    <small>${r.patientRut}</small>
+                    <small>${formatRut(r.patientRut)}</small>
                     ${tieneFicha ? '<span style="color:var(--exito); font-size:0.6rem;">📋 Ficha</span>' : ''}
                     ${r.patientBirthdate ? `<br><small>🎂 ${r.patientBirthdate}</small>` : ''}
                     ${r.patientTutor ? `<br><small>👤 Tutor: ${r.patientTutor.nombre}</small>` : ''}
@@ -967,7 +973,7 @@ function cargarDatosPacienteEnModal(patient, request) {
     const therapistDate = document.getElementById('therapistDate');
     const therapistMsg = document.getElementById('therapistMsg');
     const therapistPaymentMethod = document.getElementById('therapistPaymentMethod');
-    if (therapistRut) therapistRut.value = patient.rut || '';
+    if (therapistRut) therapistRut.value = formatRut(patient.rut) || '';
     if (patientInfoName) patientInfoName.innerText = patient.name || '';
     if (patientInfoEmail) patientInfoEmail.innerText = patient.email || '';
     if (patientInfoPhone) patientInfoPhone.innerText = patient.phone || '';
@@ -1009,8 +1015,16 @@ export async function confirmPresencialTime() {
         showToast('No tienes permiso', 'error');
         return;
     }
-    if (isTimeSlotOccupied(request.psychId, date, time)) {
-        showToast('⚠️ La hora ya está ocupada', 'error');
+    // Obtener horarios disponibles excluyendo la solicitud actual
+    const psych = state.staff.find(s => s.id == request.psychId);
+    if (!psych) {
+        showToast('Profesional no encontrado', 'error');
+        return;
+    }
+    const availableSlots = getAvailableSlots(psych, date, currentRequestId);
+    const isAvailable = availableSlots.some(slot => slot.time === time);
+    if (!isAvailable) {
+        showToast('⚠️ La hora seleccionada no está disponible o ya está ocupada', 'error');
         updateTherapistAvailableSlots();
         return;
     }
@@ -1136,7 +1150,9 @@ export function updateTherapistAvailableSlots() {
     if (!date || !timeSelect) return;
     const psych = state.selectedPsychForBooking || state.currentUser?.data;
     if (!psych) return;
-    const availableSlots = getAvailableSlots(psych, date);
+    // Excluir la solicitud actual (si existe) de la verificación de disponibilidad
+    const excludeId = currentRequestId || null;
+    const availableSlots = getAvailableSlots(psych, date, excludeId);
     timeSelect.innerHTML = '<option value="">Selecciona horario</option>';
     availableSlots.forEach(slot => {
         const option = document.createElement('option');
@@ -1167,7 +1183,9 @@ export async function executeTherapistBooking() {
         showToast('Selecciona fecha y horario', 'error');
         return;
     }
-    if (isTimeSlotOccupied(psych.id, date, time)) {
+    // Verificar disponibilidad excluyendo la solicitud actual (si se está confirmando)
+    const excludeId = currentRequestId || null;
+    if (isTimeSlotOccupied(psych.id, date, time, excludeId)) {
         showToast('⚠️ La hora seleccionada ya está ocupada. Elige otra.', 'error');
         return;
     }
@@ -1305,7 +1323,7 @@ export async function showPatientAppointmentsByRut() {
             <div class="modal-content" style="max-width: 800px;">
                 <button class="modal-close" onclick="document.getElementById('modalCitasPaciente').remove()">&times;</button>
                 <h2 style="margin-bottom: 20px;">📅 Mis Citas</h2>
-                <p><strong>Paciente:</strong> ${patient.name} (${patient.rut})</p>
+                <p><strong>Paciente:</strong> ${patient.name} (${formatRut(patient.rut)})</p>
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse;">
                         <thead>
@@ -1453,4 +1471,4 @@ document.addEventListener('datosPrivadosCargados', () => {
     }
 });
 
-console.log('✅ citas.js actualizado: confirmación de solicitudes presenciales corregida, búsqueda en Firebase, guardado con window.db');
+console.log('✅ citas.js actualizado: confirmación de solicitudes presenciales corregida, búsqueda en Firebase, guardado con window.db y formato de RUT unificado');

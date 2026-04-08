@@ -1,8 +1,7 @@
-// js/modules/profilesionales.js
+// js/modules/profesionales.js
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, normalizarRut, validarRut } from './utils.js';
-import { save } from '../main.js';
 
 // ============================================
 // FUNCIONES DE ADMIN PARA PROFESIONALES
@@ -14,7 +13,6 @@ export function showAddStaffModal() {
     
     modal.style.display = 'flex';
     
-    // Limpiar campos (se elimina addPass)
     const addName = document.getElementById('addName');
     const addEmail = document.getElementById('addEmail');
     const addSpec = document.getElementById('addSpec');
@@ -1041,9 +1039,6 @@ export function closeEditTherapistModal() {
 }
 
 // ============================================
-// FUNCIÓN UPDATE THERAPIST CORREGIDA (SIN REFERENCIAS CIRCULARES)
-// ============================================
-// ============================================
 // FUNCIÓN UPDATE THERAPIST CORREGIDA (SIN save() Y SIN REFERENCIAS CIRCULARES)
 // ============================================
 
@@ -1149,19 +1144,15 @@ export async function updateTherapist() {
         // Limpiar referencias circulares
         const cleanData = JSON.parse(JSON.stringify(updatedPsych));
         
-        console.log('💾 Guardando en Firebase:', cleanData.name);
+        console.log('💾 Guardando en Firebase (sin save):', cleanData.name);
         
-        // Guardar en Firebase
+        // Guardar en Firebase (DIRECTAMENTE, sin usar save())
         await firebase.database().ref(`staff/${id}`).set(cleanData);
         console.log('✅ Guardado en Firebase');
         
-        // 🔄 RECARGAR LOS DATOS DESDE FIREBASE (evita referencias circulares)
-        const freshSnapshot = await firebase.database().ref(`staff/${id}`).once('value`);
-        const freshData = freshSnapshot.val();
-        
         // Actualizar state con datos frescos
         const staffIndex = state.staff.findIndex(p => p.id == id);
-        const cleanFreshData = JSON.parse(JSON.stringify({ id: id, ...freshData }));
+        const cleanFreshData = JSON.parse(JSON.stringify({ id: id, ...cleanData }));
         
         if (staffIndex !== -1) {
             state.staff[staffIndex] = cleanFreshData;

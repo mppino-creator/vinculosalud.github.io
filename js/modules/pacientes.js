@@ -32,11 +32,11 @@ export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
 }
 
 // ============================================
-// FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (VERSIÓN DEFINITIVA)
+// FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (VERSIÓN DEFINITIVA - SIN getDatabase)
 // ============================================
 
 export async function savePatient() {
-    console.log('🔍 Ejecutando savePatient - VERSION DEFINITIVA');
+    console.log('🔍 Ejecutando savePatient - VERSION DEFINITIVA CON DB.REF');
     
     const rutInput = document.getElementById('patientRut')?.value || '';
     const name = document.getElementById('patientName')?.value || '';
@@ -66,7 +66,7 @@ export async function savePatient() {
     }
 
     try {
-        // Usar window.db directamente (ya está inicializado y tiene método ref)
+        // Usar window.db (ya está inicializado en firebase.js)
         const db = window.db;
         if (!db) {
             throw new Error('Firebase no está inicializado');
@@ -95,7 +95,7 @@ export async function savePatient() {
 
         console.log('💾 Guardando paciente en Firebase:', patientData);
 
-        // Guardar usando window.db.ref().set()
+        // Guardar usando db.ref().set()
         await db.ref(`patients/${rutNormalizado}`).set(patientData);
 
         // Actualizar estado global
@@ -1101,4 +1101,4 @@ if (typeof window !== 'undefined') {
     window.generarLinkConsentimiento = generarLinkConsentimiento;
 }
 
-console.log('✅ pacientes.js actualizado - VERSIÓN DEFINITIVA CON DB.REF().SET()');
+console.log('✅ pacientes.js - VERSIÓN DEFINITIVA (usa db.ref().set(), sin getDatabase)');

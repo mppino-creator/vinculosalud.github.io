@@ -24,14 +24,28 @@ function cargarPacientesParaNotas() {
 
         const appointmentsRef = ref(db, 'appointments');
         onValue(appointmentsRef, (snapshot) => {
+            // ✅ Verificar que el usuario aún existe (por si cerró sesión mientras se recibía el evento)
+            if (!currentUser) {
+                console.warn('⚠️ Usuario ya no está autenticado, se cancela carga de pacientes');
+                resolve([]);
+                return;
+            }
+
             const citas = snapshot.val() || {};
 
             let citasDelProfesional = Object.values(citas);
-            if (currentRole !== 'admin') {
+            if (currentRole !== 'admin' && currentUser && currentUser.uid) {
                 citasDelProfesional = citasDelProfesional.filter(cita => cita.psychId === currentUser.uid);
                 console.log(`🔍 Citas filtradas (psicólogo): ${citasDelProfesional.length}`);
-            } else {
+            } else if (currentRole === 'admin') {
                 console.log(`🔍 Citas totales (admin): ${citasDelProfesional.length}`);
+            } else {
+                // Sin rol definido (vista pública) – no cargar pacientes
+                console.log('👤 Usuario sin rol, no se cargan pacientes para notas');
+                allPatients = [];
+                actualizarSelects();
+                resolve();
+                return;
             }
 
             const patientIds = [...new Set(citasDelProfesional.map(cita => cita.patientId).filter(id => id))];
@@ -46,6 +60,11 @@ function cargarPacientesParaNotas() {
 
             const patientsRef = ref(db, 'patients');
             onValue(patientsRef, (snapshot) => {
+                if (!currentUser) {
+                    console.warn('⚠️ Usuario ya no está autenticado, se cancela carga de pacientes');
+                    resolve([]);
+                    return;
+                }
                 const allPatientsData = snapshot.val() || {};
                 allPatients = patientIds.map(id => ({
                     id,
@@ -96,6 +115,13 @@ function actualizarSelects() {
 // 2. Cargar notas desde Firebase (carga única, con limpieza de datos)
 // ---------------------------------------------------------------------
 async function cargarNotas() {
+    if (!currentUser) {
+        console.warn('⚠️ No hay usuario, no se cargan notas');
+        allNotas = [];
+        renderNotasListado();
+        return;
+    }
+
     try {
         const sesionesRef = ref(db, 'sesiones');
         const snapshot = await get(sesionesRef);
@@ -335,6 +361,8 @@ function initNotas() {
         } else {
             currentUser = null;
             currentRole = null;
+            allNotas = [];
+            allPatients = [];
             const container = document.getElementById('notasListado');
             if (container) container.innerHTML = '<div style="text-align:center; padding:40px;">🔒 Inicia sesión para ver notas</div>';
         }

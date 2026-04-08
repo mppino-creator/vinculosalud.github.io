@@ -32,13 +32,12 @@ export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
 }
 
 // ============================================
-// FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (CORREGIDA)
+// FUNCIÓN PRINCIPAL PARA GUARDAR PACIENTE (VERSIÓN DEFINITIVA)
 // ============================================
 
 export async function savePatient() {
-    console.log('🔍 Ejecutando savePatient...');
+    console.log('🔍 Ejecutando savePatient - VERSION DEFINITIVA');
     
-    const id = document.getElementById('editPatientId')?.value || '';
     const rutInput = document.getElementById('patientRut')?.value || '';
     const name = document.getElementById('patientName')?.value || '';
     const email = document.getElementById('patientEmail')?.value || '';
@@ -67,9 +66,11 @@ export async function savePatient() {
     }
 
     try {
-        // 🔧 CORRECCIÓN DEFINITIVA: Usar getDatabase() de Firebase
-        const { getDatabase, ref, set } = window.firebase;
-        const database = getDatabase();
+        // Usar window.db directamente (ya está inicializado y tiene método ref)
+        const db = window.db;
+        if (!db) {
+            throw new Error('Firebase no está inicializado');
+        }
         
         const pacienteExistente = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
         const now = new Date().toISOString();
@@ -94,9 +95,10 @@ export async function savePatient() {
 
         console.log('💾 Guardando paciente en Firebase:', patientData);
 
-        const patientRef = ref(database, `patients/${rutNormalizado}`);
-        await set(patientRef, patientData);
+        // Guardar usando window.db.ref().set()
+        await db.ref(`patients/${rutNormalizado}`).set(patientData);
 
+        // Actualizar estado global
         if (pacienteExistente) {
             const index = state.patients.findIndex(p => p.id === rutNormalizado);
             if (index !== -1) {
@@ -650,10 +652,8 @@ export async function guardarNuevaSesion(patientId) {
     state.sesiones.push(nuevaSesion);
     
     try {
-        const { getDatabase, ref, set } = window.firebase;
-        const database = getDatabase();
-        const sesionRef = ref(database, `sesiones/${nuevaSesion.id}`);
-        await set(sesionRef, nuevaSesion);
+        const db = window.db;
+        await db.ref(`sesiones/${nuevaSesion.id}`).set(nuevaSesion);
         showToast('✅ Nota guardada', 'success');
     } catch (error) {
         console.error('Error guardando sesión:', error);
@@ -691,10 +691,8 @@ export function editarSesion(sesionId) {
             sesion.updatedAt = new Date().toISOString();
             
             try {
-                const { getDatabase, ref, set } = window.firebase;
-                const database = getDatabase();
-                const sesionRef = ref(database, `sesiones/${sesion.id}`);
-                await set(sesionRef, sesion);
+                const db = window.db;
+                await db.ref(`sesiones/${sesion.id}`).set(sesion);
                 showToast('Nota actualizada', 'success');
             } catch (error) {
                 console.error('Error actualizando sesión:', error);
@@ -721,10 +719,8 @@ export async function eliminarSesion(sesionId) {
     state.sesiones = state.sesiones.filter(s => s.id != sesionId);
     
     try {
-        const { getDatabase, ref, remove } = window.firebase;
-        const database = getDatabase();
-        const sesionRef = ref(database, `sesiones/${sesionId}`);
-        await remove(sesionRef);
+        const db = window.db;
+        await db.ref(`sesiones/${sesionId}`).remove();
         showToast('Nota eliminada', 'success');
     } catch (error) {
         console.error('Error eliminando sesión:', error);
@@ -1105,4 +1101,4 @@ if (typeof window !== 'undefined') {
     window.generarLinkConsentimiento = generarLinkConsentimiento;
 }
 
-console.log('✅ pacientes.js actualizado - CORRECCIÓN DEFINITIVA con getDatabase()');
+console.log('✅ pacientes.js actualizado - VERSIÓN DEFINITIVA CON DB.REF().SET()');

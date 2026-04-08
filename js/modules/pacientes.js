@@ -38,7 +38,6 @@ export function copiarLinkConsentimiento(rutPaciente, nombrePaciente) {
 export async function savePatient() {
     console.log('🔍 Ejecutando savePatient...');
     
-    // Obtener valores del formulario
     const id = document.getElementById('editPatientId')?.value || '';
     const rutInput = document.getElementById('patientRut')?.value || '';
     const name = document.getElementById('patientName')?.value || '';
@@ -48,7 +47,6 @@ export async function savePatient() {
     const birthdate = document.getElementById('patientBirthdate')?.value || '';
     const notes = document.getElementById('patientNotes')?.value || '';
 
-    // Validaciones
     if (!rutInput || !name || !email) {
         showToast('RUT, nombre y email son obligatorios', 'error');
         return false;
@@ -59,11 +57,9 @@ export async function savePatient() {
         return false;
     }
 
-    // Normalizar RUT (eliminar puntos y guiones)
     const rutNormalizado = normalizarRut(rutInput);
     console.log('📝 RUT normalizado:', rutNormalizado);
 
-    // Verificar si el email pertenece a un profesional (bloqueo)
     const esEmailProfesional = state.staff.some(p => p.email === email);
     if (esEmailProfesional) {
         showToast('❌ Este email pertenece a un profesional del centro. No puede ser usado para un paciente.', 'error');
@@ -71,18 +67,11 @@ export async function savePatient() {
     }
 
     try {
-        // Usar Firebase desde window (ya está inicializado)
-        const database = window.db;
-        if (!database) {
-            throw new Error('Firebase no está inicializado. Espera a que cargue la página.');
-        }
+        // 🔧 CORRECCIÓN DEFINITIVA: Usar getDatabase() de Firebase
+        const { getDatabase, ref, set } = window.firebase;
+        const database = getDatabase();
         
-        // 🔧 CORRECCIÓN IMPORTANTE: Obtener ref y set de Firebase
-        const { ref, set } = window.firebase.database;
-        
-        // Buscar si el paciente ya existe
         const pacienteExistente = state.patients.find(p => normalizarRut(p.rut) === rutNormalizado);
-        
         const now = new Date().toISOString();
         
         const patientData = {
@@ -105,11 +94,9 @@ export async function savePatient() {
 
         console.log('💾 Guardando paciente en Firebase:', patientData);
 
-        // Guardar en Firebase
         const patientRef = ref(database, `patients/${rutNormalizado}`);
         await set(patientRef, patientData);
 
-        // Actualizar estado global
         if (pacienteExistente) {
             const index = state.patients.findIndex(p => p.id === rutNormalizado);
             if (index !== -1) {
@@ -120,11 +107,8 @@ export async function savePatient() {
             state.setPatients([...state.patients, patientData]);
         }
 
-        // Cerrar modal
         closePatientModal();
-        
         showToast(pacienteExistente ? '✅ Paciente actualizado correctamente' : '✅ Paciente creado correctamente', 'success');
-        
         setTimeout(() => renderPatients(), 500);
         
         return true;
@@ -293,7 +277,6 @@ export function renderPatients() {
     console.log(`✅ Renderizados ${pacientesAMostrar.length} pacientes`);
 }
 
-// Función auxiliar para escapar HTML
 function escapeHtml(str) {
     if (!str) return '';
     return str
@@ -315,7 +298,6 @@ export async function mostrarDetallePaciente(patientId) {
     const maxIntentos = 20;
     
     while (!state.currentUser && intentos < maxIntentos) {
-        console.log(`⏳ Esperando usuario... Intento ${intentos + 1}/${maxIntentos}`);
         await new Promise(resolve => setTimeout(resolve, 100));
         intentos++;
     }
@@ -668,8 +650,8 @@ export async function guardarNuevaSesion(patientId) {
     state.sesiones.push(nuevaSesion);
     
     try {
-        const database = window.db;
-        const { ref, set } = window.firebase.database;
+        const { getDatabase, ref, set } = window.firebase;
+        const database = getDatabase();
         const sesionRef = ref(database, `sesiones/${nuevaSesion.id}`);
         await set(sesionRef, nuevaSesion);
         showToast('✅ Nota guardada', 'success');
@@ -709,8 +691,8 @@ export function editarSesion(sesionId) {
             sesion.updatedAt = new Date().toISOString();
             
             try {
-                const database = window.db;
-                const { ref, set } = window.firebase.database;
+                const { getDatabase, ref, set } = window.firebase;
+                const database = getDatabase();
                 const sesionRef = ref(database, `sesiones/${sesion.id}`);
                 await set(sesionRef, sesion);
                 showToast('Nota actualizada', 'success');
@@ -739,8 +721,8 @@ export async function eliminarSesion(sesionId) {
     state.sesiones = state.sesiones.filter(s => s.id != sesionId);
     
     try {
-        const database = window.db;
-        const { ref, remove } = window.firebase.database;
+        const { getDatabase, ref, remove } = window.firebase;
+        const database = getDatabase();
         const sesionRef = ref(database, `sesiones/${sesionId}`);
         await remove(sesionRef);
         showToast('Nota eliminada', 'success');
@@ -1123,4 +1105,4 @@ if (typeof window !== 'undefined') {
     window.generarLinkConsentimiento = generarLinkConsentimiento;
 }
 
-console.log('✅ pacientes.js actualizado - Firebase desde window');
+console.log('✅ pacientes.js actualizado - CORRECCIÓN DEFINITIVA con getDatabase()');

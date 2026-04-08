@@ -262,16 +262,49 @@ export function sendEmailToProfessional(professional_email, subject, message, te
     return Promise.resolve(true);
 }
 
+// ============================================
+// FUNCIÓN FORMAT RUT CORREGIDA (maneja string o evento)
+// ============================================
+/**
+ * Formatea un RUT en el formato XX.XXX.XXX-X.
+ * Puede recibir un string (RUT) o un evento de input.
+ * Si recibe un string, devuelve el RUT formateado.
+ * Si recibe un evento, actualiza el input y no devuelve nada.
+ */
 export function formatRut(input) {
-    let value = input.value.replace(/[^0-9kK]/g, '');
+    // Si es un string, formatear y devolver
+    if (typeof input === 'string') {
+        if (!input) return '';
+        let valor = input.replace(/\./g, '').replace(/\-/g, '');
+        if (valor.length <= 1) return input;
+        let cuerpo = valor.slice(0, -1);
+        let dv = valor.slice(-1).toUpperCase();
+        cuerpo = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return cuerpo + "-" + dv;
+    }
+    
+    // Si es un evento (input element), procesar el campo
+    const elemento = input;
+    let value = elemento.value.replace(/[^0-9kK]/g, '');
     if (value.length <= 1) {
-        input.value = value;
+        elemento.value = value;
         return;
     }
     let rut = value.slice(0, -1);
     let dv = value.slice(-1).toUpperCase();
     rut = rut.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    input.value = `${rut}-${dv}`;
+    elemento.value = `${rut}-${dv}`;
+}
+
+// Función auxiliar para formatear RUT puro (solo string)
+export function formatearRut(rut) {
+    if (!rut) return '';
+    let valor = String(rut).replace(/\./g, '').replace(/\-/g, '');
+    if (valor.length <= 1) return rut;
+    let cuerpo = valor.slice(0, -1);
+    let dv = valor.slice(-1).toUpperCase();
+    cuerpo = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return cuerpo + "-" + dv;
 }
 
 export function validarRut(rutCompleto) {
@@ -318,6 +351,7 @@ export function getPublicStaff() {
 // ============================================
 if (typeof window !== 'undefined') {
     window.formatRut = formatRut;
+    window.formatearRut = formatearRut;
     window.validarRut = validarRut;
     window.showToast = showToast;
     window.formatCurrency = formatCurrency;
@@ -334,7 +368,7 @@ if (typeof window !== 'undefined') {
 // Normalizar RUT (solo números y dígito verificador)
 export function normalizarRut(rut) {
     if (!rut) return '';
-    return rut.replace(/[\.\-]/g, '').replace(/\s/g, '').toUpperCase();
+    return String(rut).replace(/[\.\-]/g, '').replace(/\s/g, '').toUpperCase();
 }
 
 // Convertir fecha dd/mm/aaaa a aaaa-mm-dd
@@ -358,4 +392,5 @@ export function getTimePeriod(time) {
     const hour = parseInt(time.split(':')[0]);
     return hour < 12 ? 'AM' : 'PM';
 }
+
 console.log('✅ utils.js actualizado con calcularEdad y alias');

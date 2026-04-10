@@ -693,35 +693,36 @@ export async function guardarNuevaSesion(patientId) {
         showToast('Escribe el contenido de la nota', 'error');
         return;
     }
-    
     const patient = state.patients.find(p => p.id == patientId);
     if (!patient) {
         showToast('Paciente no encontrado', 'error');
         return;
     }
-    
+
+    // 🔥 Crear objeto con datos primitivos
     const nuevaSesion = {
         id: Date.now().toString(),
-        patientId: patientId,
-        pacienteNombre: patient.name,
-        psychId: state.currentUser.data.id,
-        psicologoNombre: state.currentUser.data.name,
+        patientId: String(patientId),
+        pacienteNombre: String(patient.name),
+        psychId: String(state.currentUser.data.id),
+        psicologoNombre: String(state.currentUser.data.name),
         fechaAtencion: new Date().toISOString().split('T')[0],
-        notas: content,
+        notas: String(content),
         createdAt: new Date().toISOString()
     };
-    
-    state.sesiones.push(nuevaSesion);
-    
+
+    // Limpieza extrema
+    const cleanData = JSON.parse(JSON.stringify(nuevaSesion));
+
+    state.sesiones.push(cleanData);
     try {
         const db = window.db;
-        await db.ref(`sesiones/${nuevaSesion.id}`).set(nuevaSesion);
+        await db.ref(`sesiones/${cleanData.id}`).set(cleanData);
         showToast('✅ Nota guardada', 'success');
     } catch (error) {
         console.error('Error guardando sesión:', error);
         showToast('Error al guardar la nota', 'error');
     }
-    
     closeNewSesionModal();
     mostrarDetallePaciente(patientId);
 }

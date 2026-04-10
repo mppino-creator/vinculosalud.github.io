@@ -231,24 +231,25 @@ window.guardarNota = async function() {
     if (!patientId) { alert('Selecciona un paciente'); return; }
     if (!date) { alert('Selecciona una fecha'); return; }
     if (!content) { alert('El contenido no puede estar vacío'); return; }
-    if (!currentUser || !currentUser.uid) { alert('No hay usuario logueado'); return; }
+    if (!state.currentUser || !state.currentUser.data?.id) { alert('No hay usuario logueado'); return; }
 
-    // Crear objeto plano con valores convertidos a string para evitar referencias
+    // 🔥 EXTRAER SOLO LOS DATOS PRIMITIVOS (sin referencias circulares)
     const notaData = {
         patientId: String(patientId),
         date: String(date),
         content: String(content),
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        createdBy: String(currentUser.uid),
-        professionalId: String(currentUser.uid)
+        createdBy: String(state.currentUser.data.id),
+        professionalId: String(state.currentUser.data.id)
     };
 
-    // 🔥 LIMPIEZA EXTREMA: serializar para eliminar cualquier referencia circular
+    // Limpieza extrema
     const cleanData = JSON.parse(JSON.stringify(notaData));
 
     console.log('📝 Guardando nota (datos limpios):', cleanData);
 
+    const db = window.db;
     const sesionesRef = ref(db, 'sesiones');
     try {
         if (id) {
@@ -260,7 +261,7 @@ window.guardarNota = async function() {
             alert('Nota creada');
         }
         cerrarModalNota();
-        // Recargar notas manualmente después de guardar
+        // Recargar notas
         await cargarNotas();
     } catch (error) {
         console.error('Error guardando nota:', error);

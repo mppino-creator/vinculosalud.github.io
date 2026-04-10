@@ -574,7 +574,7 @@ export async function reinicioCompleto() {
             pareja: { title: 'Pareja', description: 'Terapia de pareja para fortalecer la relación', icono: 'fa-heart', activo: true },
             familiar: { title: 'Familiar', description: 'Terapia familiar para mejorar la dinámica del hogar', icono: 'fa-users', activo: true }
         };
-        state.contactInfo = { email: 'vinculosalud@hotmail.com', phone: '+56 9 ', address: 'Ohiggins 263, Concepción' };
+        state.contactInfo = { email: 'vinculosalud@hotmail.com', phone: '+56 9 3209 3724', address: 'Ohiggins 263, Concepción' };
         
         // Guardar en Firebase
         await save();

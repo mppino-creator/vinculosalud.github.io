@@ -91,7 +91,7 @@ empresas: {
 
 const DEFAULT_CONTACT_INFO = {
     email: 'vinculosalud@hotmail.com',
-    phone: '+56 9 1234 5678',
+    phone: '+56 9 3209 3724',
     address: 'Ohiggins 263, Concepción'
 };
 

@@ -1,17 +1,18 @@
-// js/modules/notas.js - VERSIÓN CORREGIDA (sin recursión, con carga única)
+// js/modules/notas.js - VERSIÓN DEFINITIVA (sin recursión, con control de carga única)
 import { db, auth } from '../config/firebase.js';
 import { ref, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 import * as state from './state.js';
 
-console.log('📦 Cargando módulo notas.js (versión sin recursión)...');
+console.log('📦 Cargando módulo notas.js (versión definitiva sin recursión)...');
 
 let currentUser = null;
 let currentRole = null;
 let allNotas = [];
 let allPatients = [];
+let datosCargados = false; // Evita múltiples cargas simultáneas
 
 // ---------------------------------------------------------------------
-// 1. Obtener pacientes (carga única, sin escucha continua)
+// 1. Obtener pacientes (carga única, sin escucha)
 // ---------------------------------------------------------------------
 async function cargarPacientesParaNotas() {
     if (!currentUser) {
@@ -24,7 +25,7 @@ async function cargarPacientesParaNotas() {
     console.log(`👤 Cargando pacientes para rol: ${currentRole}, UID: ${currentUser.uid}`);
 
     try {
-        // 1. Obtener citas (una sola vez)
+        // 1. Obtener citas una sola vez
         const citasSnap = await get(ref(db, 'appointments'));
         const citas = citasSnap.val() || {};
 
@@ -47,7 +48,7 @@ async function cargarPacientesParaNotas() {
             return;
         }
 
-        // 2. Obtener datos de pacientes (una sola vez)
+        // 2. Obtener datos de pacientes una sola vez
         const patientsSnap = await get(ref(db, 'patients'));
         const allPatientsData = patientsSnap.val() || {};
 
@@ -95,7 +96,7 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar notas (carga única, con limpieza de datos)
+// 2. Cargar notas (carga única, con limpieza de referencias circulares)
 // ---------------------------------------------------------------------
 async function cargarNotas() {
     if (!currentUser) {
@@ -104,6 +105,10 @@ async function cargarNotas() {
         renderNotasListado();
         return;
     }
+
+    // Evitar múltiples cargas simultáneas
+    if (datosCargados) return;
+    datosCargados = true;
 
     try {
         const sesionesSnap = await get(ref(db, 'sesiones'));
@@ -133,6 +138,8 @@ async function cargarNotas() {
         console.error('Error cargando notas:', error);
         allNotas = [];
         renderNotasListado();
+    } finally {
+        datosCargados = false;
     }
 }
 
@@ -243,7 +250,7 @@ window.guardarNota = async function() {
             alert('Nota creada');
         }
         cerrarModalNota();
-        await cargarNotas();
+        await cargarNotas(); // Recargar notas
     } catch (error) {
         console.error('Error guardando nota:', error);
         alert('Error al guardar nota: ' + error.message);
@@ -321,7 +328,7 @@ window.exportarNotasPDF = async function() {
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización (carga única, sin setInterval)
+// 5. Inicialización (carga única, sin intervalos)
 // ---------------------------------------------------------------------
 function initNotas() {
     auth.onAuthStateChanged(async (user) => {
@@ -334,7 +341,7 @@ function initNotas() {
                 await cargarPacientesParaNotas();
                 await cargarNotas();
             } else {
-                // Si state no está listo, esperar un poco (solo una vez)
+                // Espera única
                 const checkState = () => {
                     if (window.state?.currentUser) {
                         currentRole = window.state.currentUser.role;
@@ -351,6 +358,7 @@ function initNotas() {
             currentRole = null;
             allNotas = [];
             allPatients = [];
+            datosCargados = false;
             const container = document.getElementById('notasListado');
             if (container) container.innerHTML = '<div style="text-align:center; padding:40px;">🔒 Inicia sesión para ver notas</div>';
         }
@@ -360,4 +368,4 @@ function initNotas() {
 window.cargarNotas = cargarNotas;
 
 initNotas();
-console.log('✅ notas.js cargado correctamente (versión sin recursión, con carga única)');
+console.log('✅ notas.js cargado correctamente (versión definitiva, sin recursión, con carga única)');

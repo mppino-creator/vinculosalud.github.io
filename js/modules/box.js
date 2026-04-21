@@ -1,4 +1,4 @@
-// js/modules/box.js - Módulo de gestión de Box Compartido (con previsualización y validación mejorada)
+// js/modules/box.js - Módulo de gestión de Box Compartido (con limpieza de horas)
 import { db } from '../config/firebase.js';
 import { showToast } from './utils.js';
 
@@ -54,7 +54,7 @@ export async function loadBoxSlots(dateStr) {
 }
 
 // ============================================
-// PANEL ADMIN (con previsualización)
+// PANEL ADMIN (con previsualización y limpieza de horas)
 // ============================================
 export async function renderAdminBoxPanel() {
     const container = document.getElementById('tabBox');
@@ -154,8 +154,8 @@ export async function renderAdminBoxPanel() {
     // ========== ELEMENTOS ==========
     const rangeStart = document.getElementById('rangeStartDate');
     const rangeEnd = document.getElementById('rangeEndDate');
-    const startTime = document.getElementById('startTime');
-    const endTime = document.getElementById('endTime');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
     const duracionInput = document.getElementById('duracionAtencion');
     const holguraInput = document.getElementById('holguraTurnos');
     const previewBtn = document.getElementById('previewRangeBtn');
@@ -166,16 +166,21 @@ export async function renderAdminBoxPanel() {
     const previewContainer = document.getElementById('previewContainer');
     const previewDetails = document.getElementById('previewDetails');
 
-    // ========== FUNCIÓN PARA GENERAR PREVISUALIZACIÓN ==========
+    // 🔧 Función auxiliar para limpiar hora (quita "a.m."/"p.m." si existen)
+    function limpiarHora(valor) {
+        if (!valor) return '';
+        return valor.split(' ')[0]; // elimina cualquier sufijo
+    }
+
+    // ========== PREVISUALIZACIÓN ==========
     async function generarPrevisualizacion() {
         const start = rangeStart.value;
         const end = rangeEnd.value;
-        const startH = startTime.value;
-        const endH = endTime.value;
+        const startH = limpiarHora(startTimeInput.value);
+        const endH = limpiarHora(endTimeInput.value);
         const duracion = parseInt(duracionInput.value);
         const holgura = parseInt(holguraInput.value);
 
-        // Validaciones específicas con mensajes claros
         if (!start) { showToast('❌ Falta la fecha de inicio', 'error'); return false; }
         if (!end) { showToast('❌ Falta la fecha de fin', 'error'); return false; }
         if (!startH) { showToast('❌ Falta la hora de inicio', 'error'); return false; }
@@ -216,12 +221,11 @@ export async function renderAdminBoxPanel() {
     async function generarYGuardar() {
         const start = rangeStart.value;
         const end = rangeEnd.value;
-        const startH = startTime.value;
-        const endH = endTime.value;
+        const startH = limpiarHora(startTimeInput.value);
+        const endH = limpiarHora(endTimeInput.value);
         const duracion = parseInt(duracionInput.value);
         const holgura = parseInt(holguraInput.value);
 
-        // Validaciones
         if (!start || !end || !startH || !endH) {
             showToast('❌ Completa todas las fechas y horarios', 'error');
             return;
@@ -331,15 +335,14 @@ export async function renderAdminBoxPanel() {
 }
 
 // ============================================
-// PANEL PROFESIONAL (con calendario mensual)
+// PANEL PROFESIONAL (sin cambios, pero se mantiene)
 // ============================================
 export async function renderProfessionalBoxPanel() {
+    // ... (todo igual, no necesita cambios)
     const container = document.getElementById('tabBoxProfesional');
     if (!container) return;
-
     const today = new Date();
     const fechaActual = today.toISOString().slice(0,10);
-
     container.innerHTML = `
         <h3>📦 Reservar Box Compartido</h3>
         <div style="margin-bottom:20px;">
@@ -363,7 +366,6 @@ export async function renderProfessionalBoxPanel() {
             <div id="proBoxSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;"></div>
         </div>
     `;
-
     const prevBtn = document.getElementById('prevMonthBtn');
     const nextBtn = document.getElementById('nextMonthBtn');
     const monthYearSpan = document.getElementById('currentMonthYear');
@@ -371,15 +373,12 @@ export async function renderProfessionalBoxPanel() {
     const refreshBtn = document.getElementById('refreshProBoxBtn');
     const calendarioDiv = document.getElementById('calendarioBoxContainer');
     const slotsContainer = document.getElementById('proBoxSlotsContainer');
-
     async function renderCalendario() {
         const primerDia = new Date(añoActual, mesActual, 1);
         const ultimoDia = new Date(añoActual, mesActual + 1, 0);
         const diasEnMes = ultimoDia.getDate();
         const diaInicioSemana = primerDia.getDay();
-
         monthYearSpan.innerText = primerDia.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-
         let html = `<table style="width:100%; border-collapse:collapse; text-align:center;">
             <thead><tr><th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th></tr></thead><tbody>`;
         let dia = 1;
@@ -411,7 +410,6 @@ export async function renderProfessionalBoxPanel() {
         html += '</tbody></table>';
         calendarioDiv.innerHTML = html;
     }
-
     async function refreshProSlots() {
         const date = proDateInput.value;
         if (!date) return;
@@ -445,7 +443,6 @@ export async function renderProfessionalBoxPanel() {
             }
             slotsContainer.appendChild(card);
         });
-
         document.querySelectorAll('#proBoxSlotsContainer .reserve-pro').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -482,20 +479,17 @@ export async function renderProfessionalBoxPanel() {
             });
         });
     }
-
     window.cargarSlotsProfesionalFecha = async (fecha) => {
         if (proDateInput) proDateInput.value = fecha;
         await refreshProSlots();
         await renderCalendario();
     };
-
     async function cambiarMes(delta) {
         const nuevaFecha = new Date(añoActual, mesActual + delta);
         mesActual = nuevaFecha.getMonth();
         añoActual = nuevaFecha.getFullYear();
         await renderCalendario();
     }
-
     prevBtn.addEventListener('click', () => cambiarMes(-1));
     nextBtn.addEventListener('click', () => cambiarMes(1));
     refreshBtn.addEventListener('click', async () => {
@@ -503,7 +497,6 @@ export async function renderProfessionalBoxPanel() {
         await renderCalendario();
     });
     proDateInput.addEventListener('change', refreshProSlots);
-
     await renderCalendario();
     await refreshProSlots();
 }
@@ -556,4 +549,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ box.js actualizado con previsualización y validación mejorada');
+console.log('✅ box.js actualizado con limpieza de horas y previsualización mejorada');

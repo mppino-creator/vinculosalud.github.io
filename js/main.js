@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN CORREGIDA CON MÓDULO BOX INTEGRADO (CARGA DINÁMICA)
+// js/main.js - VERSIÓN CORREGIDA CON MÓDULO BOX INTEGRADO (CARGA DINÁMICA Y window.box)
 import { db } from './config/firebase.js';
 import * as state from './modules/state.js';
 window.state = state;
@@ -326,11 +326,12 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// CARGA DINÁMICA DEL MÓDULO BOX (SOLUCIONA PROBLEMAS DE CACHÉ)
+// CARGA DINÁMICA DEL MÓDULO BOX (CON EXPOSICIÓN COMPLETA)
 // ============================================
 (async function cargarBoxDinamico() {
     try {
         const box = await import('./modules/box.js');
+        // Funciones principales para el dashboard
         window.renderAdminBoxPanel = box.renderAdminBoxPanel;
         window.renderProfessionalBoxPanel = box.renderProfessionalBoxPanel;
         window.renderBoxEstadisticas = box.renderBoxEstadisticas;
@@ -338,14 +339,23 @@ setTimeout(() => {
             const month = document.getElementById('boxStatsMonth')?.value;
             if (month) box.renderBoxEstadisticas(month);
         };
-        console.log('✅ Módulo BOX cargado dinámicamente y funciones expuestas');
+        // 🔥 EXPONER TAMBIÉN window.box para acceder a funciones auxiliares
+        window.box = {
+            generateSlotsForDate: box.generateSlotsForDate,
+            saveBoxSlots: box.saveBoxSlots,
+            loadBoxSlots: box.loadBoxSlots,
+            renderAdminBoxPanel: box.renderAdminBoxPanel,
+            renderProfessionalBoxPanel: box.renderProfessionalBoxPanel,
+            renderBoxEstadisticas: box.renderBoxEstadisticas
+        };
+        console.log('✅ Módulo BOX cargado dinámicamente y expuesto en window.box');
     } catch (error) {
         console.error('❌ Error cargando el módulo BOX:', error);
     }
 })();
 
 // ============================================
-// FUNCIÓN PARA GUARDAR EN FIREBASE (DESACTIVADA PARA EVITAR ERROR DE REFERENCIA CIRCULAR)
+// FUNCIÓN PARA GUARDAR EN FIREBASE (DESACTIVADA)
 // ============================================
 export function save() {
     console.log("⚠️ save() DESACTIVADA - Error de referencia circular evitado");
@@ -404,8 +414,7 @@ window.addEventListener('load', function() {
     }, 1000);
 });
 
-// window.save = save;  // DESACTIVADO - Los datos se guardan desde cada módulo individualmente
 console.log('✅ main.js cargado (versión corregida - save() desactivada)');
-console.log('✅ Módulo BOX integrado mediante carga dinámica');
+console.log('✅ Módulo BOX integrado mediante carga dinámica (window.box disponible)');
 console.log('✅ Nodos de Firebase en minúsculas consistentes');
 console.log('✅ esEmailProfesional expuesto globalmente');

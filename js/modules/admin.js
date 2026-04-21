@@ -230,11 +230,14 @@ export function refrescarVistaPublica() {
 
 export function mostrarTabsAdmin() {
     console.log('👑 Mostrando pestañas de admin...');
+    // 🆕 AÑADIDAS las pestañas del módulo BOX
     const tabsAdmin = [
         'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
         'adminTabFondo', 'adminTabTextos', 'adminTabLogo',
         'adminTabEstadisticas', 'adminTabReinicio', 'messagesTab',
-        'adminTabConsentimientos'
+        'adminTabConsentimientos',
+        'adminTabBox',          // 👈 Nueva pestaña para gestionar el Box
+        'adminTabBoxStats'      // 👈 Nueva pestaña para estadísticas del Box
     ];
     tabsAdmin.forEach(id => {
         const tab = document.getElementById(id);
@@ -725,7 +728,7 @@ export async function mostrarTabConsentimientos() {
 function renderFilasConsentimientos(consentimientos, isAdmin = false) {
     if (!consentimientos.length) {
         const colSpan = isAdmin ? 8 : 7;
-        return `<tr><td colspan="${colSpan}" style="text-align:center;">No hay consentimientos firmados</td></tr>`;
+        return `<td><td colspan="${colSpan}" style="text-align:center;">No hay consentimientos firmados</td></tr>`;
     }
     
     return consentimientos.map(c => {
@@ -1165,4 +1168,4 @@ firebase.database().ref('staff').once('value').then(snap => {
     }
 });
 
-console.log('✅ admin.js actualizado con módulo de consentimientos y funciones de reinicio corregidas');
+console.log('✅ admin.js actualizado con módulo de consentimientos, funciones de reinicio corregidas y pestañas del Box');

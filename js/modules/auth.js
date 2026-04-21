@@ -20,7 +20,8 @@ const ADMIN_EDIT_BUTTONS = [
 const ADMIN_TABS = [
     'adminTabProfesionales', 'adminTabEspecialidades', 'adminTabPagos',
     'adminTabFondo', 'adminTabTextos', 'adminTabLogo', 'adminTabReinicio',
-    'messagesTab', 'adminTabEstadisticas', 'adminTabPersonalizacion'
+    'messagesTab', 'adminTabEstadisticas', 'adminTabPersonalizacion',
+    'adminTabBox', 'adminTabBoxStats'          // 🆕 Pestañas del módulo Box
 ];
 const COMMON_TABS = ['citas', 'solicitudes', 'pacientes', 'adminTabNotas'];
 
@@ -552,7 +553,7 @@ function mostrarDashboardInmediato(role, userData) {
     });
 
     // Pestañas específicas de psicólogo
-    const psychTabs = ['psychTab'];
+    const psychTabs = ['psychTab', 'psychTabBox'];   // 🆕 Añadida psychTabBox
     psychTabs.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.setProperty('display', role === 'psych' ? 'inline-block' : 'none', 'important');
@@ -634,7 +635,11 @@ export function switchTab(tabName) {
         'estadisticas': 'tabEstadisticas',
         'calendario': 'tabCalendario',
         'fichas': 'tabFichas',
-        'notas': 'tabNotas'
+        'notas': 'tabNotas',
+        // 🆕 Nuevas pestañas del módulo Box
+        'box': 'tabBox',
+        'boxProfesional': 'tabBoxProfesional',
+        'boxStats': 'tabBoxStats'
     };
     const contentId = tabMap[tabName] || `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
     const content = document.getElementById(contentId);
@@ -666,6 +671,18 @@ export function switchTab(tabName) {
                 }
                 else if (tabName === 'notas' && typeof window.cargarNotas === 'function') {
                     window.cargarNotas();
+                }
+                // 🆕 Renderizado de pestañas del Box
+                else if (tabName === 'box' && typeof window.renderAdminBoxPanel === 'function') {
+                    window.renderAdminBoxPanel();
+                }
+                else if (tabName === 'boxProfesional' && typeof window.renderProfessionalBoxPanel === 'function') {
+                    window.renderProfessionalBoxPanel();
+                }
+                else if (tabName === 'boxStats') {
+                    const month = document.getElementById('boxStatsMonth')?.value || new Date().toISOString().slice(0,7);
+                    if (document.getElementById('boxStatsMonth')) document.getElementById('boxStatsMonth').value = month;
+                    if (typeof window.renderBoxEstadisticas === 'function') window.renderBoxEstadisticas(month);
                 }
             } catch (error) {
                 console.error(`❌ Error cargando datos para ${tabName}:`, error);
@@ -895,4 +912,4 @@ if (typeof window !== 'undefined') {
     }, 1000);
 })();
 
-console.log('✅ auth.js refactorizado: constantes centralizadas, lógica limpia, restablecimiento de contraseña y limpieza de listeners al logout');
+console.log('✅ auth.js actualizado: constantes centralizadas, lógica limpia, restablecimiento de contraseña, limpieza de listeners al logout y soporte para el módulo Box');

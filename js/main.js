@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN CORREGIDA CON MÓDULO BOX INTEGRADO (CARGA DINÁMICA Y window.box)
+// js/main.js - VERSIÓN CORREGIDA CON MÓDULO BOX INTEGRADO (CARGA DINÁMICA CON TIMESTAMP)
 import { db } from './config/firebase.js';
 import * as state from './modules/state.js';
 window.state = state;
@@ -326,11 +326,13 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
-// CARGA DINÁMICA DEL MÓDULO BOX (CON EXPOSICIÓN COMPLETA)
+// CARGA DINÁMICA DEL MÓDULO BOX (CON TIMESTAMP PARA EVITAR CACHÉ)
 // ============================================
 (async function cargarBoxDinamico() {
     try {
-        const box = await import('./modules/box.js');
+        // Añadir timestamp para forzar recarga del módulo
+        const timestamp = Date.now();
+        const box = await import(`./modules/box.js?v=${timestamp}`);
         // Funciones principales para el dashboard
         window.renderAdminBoxPanel = box.renderAdminBoxPanel;
         window.renderProfessionalBoxPanel = box.renderProfessionalBoxPanel;
@@ -339,7 +341,7 @@ setTimeout(() => {
             const month = document.getElementById('boxStatsMonth')?.value;
             if (month) box.renderBoxEstadisticas(month);
         };
-        // 🔥 EXPONER TAMBIÉN window.box para acceder a funciones auxiliares
+        // Exponer window.box con todas las funciones auxiliares
         window.box = {
             generateSlotsForDate: box.generateSlotsForDate,
             saveBoxSlots: box.saveBoxSlots,
@@ -348,7 +350,8 @@ setTimeout(() => {
             renderProfessionalBoxPanel: box.renderProfessionalBoxPanel,
             renderBoxEstadisticas: box.renderBoxEstadisticas
         };
-        console.log('✅ Módulo BOX cargado dinámicamente y expuesto en window.box');
+        console.log('✅ Módulo BOX cargado dinámicamente (timestamp) y expuesto en window.box');
+        console.log('✅ window.box.generateSlotsForDate es:', typeof window.box.generateSlotsForDate);
     } catch (error) {
         console.error('❌ Error cargando el módulo BOX:', error);
     }
@@ -415,6 +418,6 @@ window.addEventListener('load', function() {
 });
 
 console.log('✅ main.js cargado (versión corregida - save() desactivada)');
-console.log('✅ Módulo BOX integrado mediante carga dinámica (window.box disponible)');
+console.log('✅ Módulo BOX integrado mediante carga dinámica con timestamp (window.box disponible)');
 console.log('✅ Nodos de Firebase en minúsculas consistentes');
 console.log('✅ esEmailProfesional expuesto globalmente');

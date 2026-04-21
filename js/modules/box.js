@@ -1,9 +1,9 @@
-// js/modules/box.js - Módulo de gestión de Box Compartido (con generación por rango de fechas)
+// js/modules/box.js - Módulo de gestión de Box Compartido (con duración y holgura configurables)
 import { db } from '../config/firebase.js';
 import { showToast } from './utils.js';
 
 // ============================================
-// VARIABLES GLOBALES PARA CALENDARIO PROFESIONAL
+// VARIABLES GLOBALES
 // ============================================
 let mesActual = new Date().getMonth();
 let añoActual = new Date().getFullYear();
@@ -20,18 +20,16 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
-// Generar slots para UNA fecha (atención 60 min + holgura 10 min)
-export function generateSlotsForDate(dateStr, startTime, endTime) {
+// Generar slots para una fecha con duración y holgura personalizadas
+export function generateSlotsForDate(dateStr, startTime, endTime, duracionMin, holguraMin) {
     const slots = [];
     const start = new Date(`${dateStr}T${startTime}:00`);
     const end = new Date(`${dateStr}T${endTime}:00`);
     if (end <= start) return slots;
-    const attention = 60;
-    const gap = 10;
-    const step = attention + gap;
+    const step = duracionMin + holguraMin;
     let current = new Date(start);
     while (current < end) {
-        let slotEnd = new Date(current.getTime() + attention * 60000);
+        let slotEnd = new Date(current.getTime() + duracionMin * 60000);
         if (slotEnd > end) break;
         slots.push({
             start: current.toISOString(),
@@ -58,14 +56,11 @@ export async function loadBoxSlots(dateStr) {
 }
 
 // ============================================
-// PANEL ADMIN (con rango de fechas y días de semana)
+// RENDER ADMIN (con generación por rango y parámetros)
 // ============================================
 export async function renderAdminBoxPanel() {
     const container = document.getElementById('tabBox');
-    if (!container) {
-        console.error('❌ Contenedor tabBox no encontrado');
-        return;
-    }
+    if (!container) return;
 
     const today = new Date();
     const nextWeek = new Date();
@@ -73,29 +68,20 @@ export async function renderAdminBoxPanel() {
 
     container.innerHTML = `
         <h3>📦 Gestión del Box Compartido</h3>
-        <div class="admin-box-config" style="background: #f9f9fc; padding: 20px; border-radius: 16px; margin-bottom: 25px;">
-            <h4 style="margin-top:0;">⚙️ Generar horarios por rango de fechas</h4>
+        <div class="admin-box-config">
             <div class="form-row" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
-                <div class="field" style="flex:1; min-width:150px;">
-                    <label>📅 Fecha inicio</label>
-                    <input type="date" id="rangeStartDate" value="${today.toISOString().slice(0,10)}" class="filter-input">
-                </div>
-                <div class="field" style="flex:1; min-width:150px;">
-                    <label>📅 Fecha fin</label>
-                    <input type="date" id="rangeEndDate" value="${nextWeek.toISOString().slice(0,10)}" class="filter-input">
-                </div>
-                <div class="field" style="flex:1; min-width:120px;">
-                    <label>⏰ Hora inicio</label>
-                    <input type="time" id="startTime" value="08:00" class="filter-input">
-                </div>
-                <div class="field" style="flex:1; min-width:120px;">
-                    <label>⏰ Hora fin</label>
-                    <input type="time" id="endTime" value="22:00" class="filter-input">
-                </div>
+                <div class="field"><label>📅 Fecha inicio</label><input type="date" id="rangeStartDate" value="${today.toISOString().slice(0,10)}"></div>
+                <div class="field"><label>📅 Fecha fin</label><input type="date" id="rangeEndDate" value="${nextWeek.toISOString().slice(0,10)}"></div>
+                <div class="field"><label>⏰ Hora inicio</label><input type="time" id="startTime" value="08:00"></div>
+                <div class="field"><label>⏰ Hora fin</label><input type="time" id="endTime" value="22:00"></div>
+            </div>
+            <div class="form-row" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
+                <div class="field"><label>⏱️ Duración atención (min)</label><input type="number" id="duracionAtencion" value="60" min="15" step="5"></div>
+                <div class="field"><label>⏱️ Holgura entre turnos (min)</label><input type="number" id="holguraTurnos" value="10" min="0" step="5"></div>
             </div>
             <div style="margin-bottom:20px;">
-                <label>📌 Días de la semana a incluir</label>
-                <div class="weekday-selector" id="weekdaySelector" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+                <label>Días de la semana</label>
+                <div class="weekday-selector" id="weekdaySelector">
                     <div class="weekday selected" data-day="1">Lun</div>
                     <div class="weekday selected" data-day="2">Mar</div>
                     <div class="weekday selected" data-day="3">Mié</div>
@@ -105,31 +91,24 @@ export async function renderAdminBoxPanel() {
                     <div class="weekday" data-day="0">Dom</div>
                 </div>
             </div>
-            <button id="generateRangeBtn" class="btn-staff" style="background:var(--verde-exito); width:100%;">
-                ✨ Generar slots para todo el rango (semanal/mensual)
-            </button>
-        </div>
-
-        <hr style="margin: 25px 0;">
-
-        <h4>🗓️ Slots del día (edición individual)</h4>
-        <div class="form-row" style="display:flex; gap:15px; align-items:flex-end; margin-bottom:20px;">
-            <div class="field" style="flex:2;">
-                <label>Fecha</label>
-                <input type="date" id="adminBoxDate" value="${today.toISOString().slice(0,10)}" class="filter-input">
+            <button id="generateRangeBtn" class="btn-staff" style="background:var(--verde-exito);">✨ Generar slots para todo el rango</button>
+            <hr style="margin: 25px 0;">
+            <h4>🗓️ Slots del día (selecciona una fecha)</h4>
+            <div class="form-row" style="display:flex; gap:15px; align-items:flex-end;">
+                <div class="field"><label>Fecha</label><input type="date" id="adminBoxDate" value="${today.toISOString().slice(0,10)}"></div>
+                <button id="refreshAdminSlotsBtn" class="btn-staff">Cargar</button>
             </div>
-            <button id="refreshAdminSlotsBtn" class="btn-staff">Cargar horarios</button>
+            <div id="adminBoxSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px;"></div>
         </div>
-        <div id="adminBoxSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;"></div>
     `;
 
-    // ========== SELECCIÓN DE DÍAS ==========
+    // Inicializar selectores de días
     const weekdays = document.querySelectorAll('#weekdaySelector .weekday');
     let selectedDays = ['1','2','3','4','5']; // Lunes a Viernes por defecto
     weekdays.forEach(day => {
-        const dayVal = day.getAttribute('data-day');
-        if (selectedDays.includes(dayVal)) day.classList.add('selected');
+        day.classList.toggle('selected', selectedDays.includes(day.getAttribute('data-day')));
         day.addEventListener('click', () => {
+            const dayVal = day.getAttribute('data-day');
             if (selectedDays.includes(dayVal)) {
                 selectedDays = selectedDays.filter(d => d !== dayVal);
                 day.classList.remove('selected');
@@ -140,47 +119,41 @@ export async function renderAdminBoxPanel() {
         });
     });
 
-    // ========== ELEMENTOS ==========
     const rangeStart = document.getElementById('rangeStartDate');
     const rangeEnd = document.getElementById('rangeEndDate');
     const startTime = document.getElementById('startTime');
     const endTime = document.getElementById('endTime');
+    const duracionInput = document.getElementById('duracionAtencion');
+    const holguraInput = document.getElementById('holguraTurnos');
     const generateRangeBtn = document.getElementById('generateRangeBtn');
     const adminDate = document.getElementById('adminBoxDate');
     const refreshBtn = document.getElementById('refreshAdminSlotsBtn');
     const slotsContainer = document.getElementById('adminBoxSlotsContainer');
 
-    // ========== REFRESCAR SLOTS DEL DÍA ==========
     async function refreshAdminSlots() {
         const date = adminDate.value;
-        if (!date) return;
         const slots = await loadBoxSlots(date);
         if (!slots.length) {
-            slotsContainer.innerHTML = '<div class="info-message">No hay slots generados para esta fecha. Usa "Generar slots para todo el rango" primero.</div>';
+            slotsContainer.innerHTML = '<div class="info-message">No hay slots generados para esta fecha. Usa "Generar slots para todo el rango".</div>';
             return;
         }
         slotsContainer.innerHTML = '';
         slots.forEach((slot, idx) => {
             const card = document.createElement('div');
             card.className = 'slot-card';
-            card.style.background = '#fefcf9';
-            card.style.borderRadius = '16px';
-            card.style.padding = '12px';
-            card.style.border = '1px solid #e9dfd3';
             card.innerHTML = `
-                <div class="slot-time" style="font-weight:700; font-size:1rem;">${slot.timeLabel}</div>
-                <div class="slot-status ${slot.status}" style="display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin:8px 0;">${slot.status === 'available' ? 'Disponible' : 'Reservado'}</div>
-                ${slot.professional ? `<div class="slot-professional" style="font-size:0.85rem;">👤 ${escapeHtml(slot.professional)}</div>` : ''}
-                <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-                    ${slot.status === 'booked' ? `<button class="small-btn cancel-admin" data-index="${idx}" style="background:#dc3545; color:white; border:none; padding:6px 12px; border-radius:30px; cursor:pointer;">🗑️ Cancelar</button>` : ''}
-                    <button class="small-btn reserve-admin" data-index="${idx}" style="background:#28a745; color:white; border:none; padding:6px 12px; border-radius:30px; cursor:pointer;">📝 Reservar</button>
+                <div class="slot-time">${slot.timeLabel}</div>
+                <div class="slot-status ${slot.status}">${slot.status === 'available' ? 'Disponible' : 'Reservado'}</div>
+                ${slot.professional ? `<div class="slot-professional">👤 ${escapeHtml(slot.professional)}</div>` : ''}
+                <div style="display:flex; gap:6px; margin-top:8px;">
+                    ${slot.status === 'booked' ? `<button class="small-btn cancel-admin" data-index="${idx}">🗑️ Cancelar reserva</button>` : ''}
+                    <button class="small-btn reserve-admin" data-index="${idx}">📝 Reservar (admin)</button>
                 </div>
-                ${slot.status === 'available' ? `<input type="text" id="adminBoxName_${idx}" class="reserve-input" placeholder="Nombre del profesional" style="width:100%; margin-top:8px; padding:6px; border-radius:20px; border:1px solid #ccc;">` : ''}
+                ${slot.status === 'available' ? `<input type="text" id="adminBoxName_${idx}" class="reserve-input" placeholder="Nombre del profesional" maxlength="50">` : ''}
             `;
             slotsContainer.appendChild(card);
         });
 
-        // Eventos cancelar
         document.querySelectorAll('#adminBoxSlotsContainer .cancel-admin').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -194,7 +167,6 @@ export async function renderAdminBoxPanel() {
                 }
             });
         });
-        // Eventos reservar
         document.querySelectorAll('#adminBoxSlotsContainer .reserve-admin').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -218,35 +190,55 @@ export async function renderAdminBoxPanel() {
         });
     }
 
-    // ========== GENERAR PARA RANGO ==========
     generateRangeBtn.addEventListener('click', async () => {
         const start = rangeStart.value;
         const end = rangeEnd.value;
         const startH = startTime.value;
         const endH = endTime.value;
-        if (!start || !end || !startH || !endH) {
-            showToast('Completa todas las fechas y horarios', 'error');
+        const duracion = parseInt(duracionInput.value);
+        const holgura = parseInt(holguraInput.value);
+
+        if (!start || !end) {
+            showToast('❌ Debes seleccionar fecha de inicio y fin.', 'error');
             return;
         }
+        if (!startH || !endH) {
+            showToast('❌ Debes seleccionar hora de inicio y fin.', 'error');
+            return;
+        }
+        if (isNaN(duracion) || duracion < 15) {
+            showToast('❌ La duración de atención debe ser al menos 15 minutos.', 'error');
+            return;
+        }
+        if (isNaN(holgura) || holgura < 0) {
+            showToast('❌ La holgura no puede ser negativa.', 'error');
+            return;
+        }
+
         const startDate = new Date(start);
         const endDate = new Date(end);
         if (startDate > endDate) {
-            showToast('La fecha inicio debe ser anterior a la fecha fin', 'error');
+            showToast('❌ La fecha inicio debe ser anterior a la fecha fin.', 'error');
             return;
         }
-        let totalGenerados = 0;
+        if (startH >= endH) {
+            showToast('❌ La hora de inicio debe ser anterior a la hora de fin.', 'error');
+            return;
+        }
+
+        let generated = 0;
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
             const dateStr = d.toISOString().slice(0,10);
             const dayOfWeek = d.getDay().toString();
             if (selectedDays.includes(dayOfWeek)) {
-                const newSlots = generateSlotsForDate(dateStr, startH, endH);
+                const newSlots = generateSlotsForDate(dateStr, startH, endH, duracion, holgura);
                 if (newSlots.length) {
                     await saveBoxSlots(dateStr, newSlots);
-                    totalGenerados += newSlots.length;
+                    generated += newSlots.length;
                 }
             }
         }
-        showToast(`✅ Generados ${totalGenerados} turnos en el rango de fechas`, 'success');
+        showToast(`✅ Generados ${generated} turnos en el rango de fechas.`, 'success');
         refreshAdminSlots();
         const proDate = document.getElementById('proBoxDate')?.value;
         if (proDate && proDate >= start && proDate <= end) renderProfessionalBoxPanel();
@@ -264,31 +256,23 @@ export async function renderProfessionalBoxPanel() {
     const container = document.getElementById('tabBoxProfesional');
     if (!container) return;
 
-    const today = new Date();
-    const fechaActual = today.toISOString().slice(0,10);
-
     container.innerHTML = `
         <h3>📦 Reservar Box Compartido</h3>
         <div style="margin-bottom:20px;">
-            <div style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap; margin-bottom:20px;">
-                <div class="field">
-                    <label>📅 Ver mes</label>
-                    <div style="display:flex; gap:8px; align-items:center;">
+            <div style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;">
+                <div class="field"><label>📅 Ver mes</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
                         <button id="prevMonthBtn" class="btn-staff" style="padding:6px 12px;">◀</button>
                         <span id="currentMonthYear" style="font-weight:bold; min-width:150px; text-align:center;"></span>
                         <button id="nextMonthBtn" class="btn-staff" style="padding:6px 12px;">▶</button>
                     </div>
                 </div>
-                <div class="field">
-                    <label>Ir a fecha específica</label>
-                    <input type="date" id="proBoxDate" class="filter-input" value="${fechaActual}">
-                </div>
+                <div class="field"><label>Ir a fecha específica</label><input type="date" id="proBoxDate" class="filter-input"></div>
                 <button id="refreshProBoxBtn" class="btn-staff">Ir</button>
             </div>
-            <div id="calendarioBoxContainer" style="background:white; border-radius:16px; padding:15px; margin-bottom:20px; overflow-x:auto;"></div>
-            <h4>📋 Horarios del día seleccionado</h4>
-            <div id="proBoxSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;"></div>
         </div>
+        <div id="calendarioBoxContainer" style="background:white; border-radius:16px; padding:20px; margin-bottom:20px;"></div>
+        <div id="proBoxSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px;"></div>
     `;
 
     const prevBtn = document.getElementById('prevMonthBtn');
@@ -307,30 +291,36 @@ export async function renderProfessionalBoxPanel() {
 
         monthYearSpan.innerText = primerDia.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 
-        let html = `<table style="width:100%; border-collapse:collapse; text-align:center;">
-            <thead><tr><th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th></tr></thead><tbody>`;
+        let html = `
+            <table class="calendar-table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr><th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th></tr>
+                </thead>
+                <tbody>
+        `;
         let dia = 1;
         for (let i = 0; i < 6; i++) {
             if (dia > diasEnMes) break;
             html += '<tr>';
             for (let j = 0; j < 7; j++) {
                 if (i === 0 && j < diaInicioSemana) {
-                    html += '<td style="border:1px solid #ddd; padding:8px;"> </td>';
+                    html += '<td class="calendar-cell empty"></td>';
                 } else if (dia <= diasEnMes) {
                     const fechaStr = `${añoActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
                     const slots = await loadBoxSlots(fechaStr);
                     const disponibles = slots.filter(s => s.status === 'available').length;
                     const reservados = slots.filter(s => s.status === 'booked').length;
-                    html += `<td style="border:1px solid #ddd; padding:8px; cursor:pointer; background-color:${disponibles > 0 ? '#e8f5e9' : reservados > 0 ? '#ffebee' : '#fafafa'}" onclick="document.getElementById('proBoxDate').value='${fechaStr}'; window.cargarSlotsProfesionalFecha('${fechaStr}');">
+                    html += `<td class="calendar-cell" style="border:1px solid #ddd; padding:8px; vertical-align:top; cursor:pointer;" onclick="document.getElementById('proBoxDate').value='${fechaStr}'; window.cargarSlotsProfesionalFecha('${fechaStr}');">
                         <div style="font-weight:bold;">${dia}</div>
-                        <div style="font-size:0.7rem;">
-                            ${disponibles > 0 ? `<span style="color:#2e7d32;">✅ ${disponibles}</span>` : ''}
-                            ${reservados > 0 ? `<span style="color:#c62828;">📌 ${reservados}</span>` : ''}
+                        <div style="font-size:0.7rem; margin-top:4px;">
+                            ${disponibles > 0 ? `<span style="color:#28a745;">✅ ${disponibles} disp.</span>` : ''}
+                            ${reservados > 0 ? `<span style="color:#dc3545;">📌 ${reservados} res.</span>` : ''}
+                            ${disponibles === 0 && reservados === 0 ? '<span style="color:#999;">—</span>' : ''}
                         </div>
                     </td>`;
                     dia++;
                 } else {
-                    html += '<td style="border:1px solid #ddd; padding:8px;"> </td>';
+                    html += '<td class="calendar-cell empty"></td>';
                 }
             }
             html += '</tr>';
@@ -351,29 +341,24 @@ export async function renderProfessionalBoxPanel() {
         slots.forEach((slot, idx) => {
             const card = document.createElement('div');
             card.className = 'slot-card';
-            card.style.background = '#fefcf9';
-            card.style.borderRadius = '16px';
-            card.style.padding = '12px';
-            card.style.border = '1px solid #e9dfd3';
             if (slot.status === 'available') {
                 card.innerHTML = `
-                    <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
-                    <div class="slot-status available" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#d9e8e2; color:#1e6b55; font-size:0.7rem;">Disponible</div>
-                    <input type="text" id="proBoxName_${idx}" class="reserve-input" placeholder="Tu nombre completo" style="width:100%; margin:10px 0; padding:6px; border-radius:20px; border:1px solid #ccc;">
-                    <button class="small-btn reserve-pro" data-index="${idx}" style="background:#28a745; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer;">📌 Reservar</button>
+                    <div class="slot-time">${slot.timeLabel}</div>
+                    <div class="slot-status available">Disponible</div>
+                    <input type="text" id="proBoxName_${idx}" class="reserve-input" placeholder="Tu nombre completo" maxlength="50">
+                    <button class="small-btn reserve-pro" data-index="${idx}">📌 Reservar este horario</button>
                 `;
             } else {
                 card.innerHTML = `
-                    <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
-                    <div class="slot-status booked" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#f0e0d4; color:#b1624b; font-size:0.7rem;">Reservado</div>
-                    <div class="slot-professional" style="margin:8px 0;">👤 ${escapeHtml(slot.professional)}</div>
-                    <button class="small-btn cancel-pro" data-index="${idx}" style="background:#dc3545; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer;">❌ Cancelar mi reserva</button>
+                    <div class="slot-time">${slot.timeLabel}</div>
+                    <div class="slot-status booked">Reservado por</div>
+                    <div class="slot-professional">👤 ${escapeHtml(slot.professional)}</div>
+                    <button class="small-btn cancel-pro" data-index="${idx}">❌ Cancelar mi reserva</button>
                 `;
             }
             slotsContainer.appendChild(card);
         });
 
-        // Reservar
         document.querySelectorAll('#proBoxSlotsContainer .reserve-pro').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -391,7 +376,6 @@ export async function renderProfessionalBoxPanel() {
                 } else showToast('Este horario ya no está disponible.', 'error');
             });
         });
-        // Cancelar propia
         document.querySelectorAll('#proBoxSlotsContainer .cancel-pro').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -415,7 +399,6 @@ export async function renderProfessionalBoxPanel() {
     window.cargarSlotsProfesionalFecha = async (fecha) => {
         if (proDateInput) proDateInput.value = fecha;
         await refreshProSlots();
-        await renderCalendario();
     };
 
     async function cambiarMes(delta) {
@@ -427,13 +410,13 @@ export async function renderProfessionalBoxPanel() {
 
     prevBtn.addEventListener('click', () => cambiarMes(-1));
     nextBtn.addEventListener('click', () => cambiarMes(1));
-    refreshBtn.addEventListener('click', async () => {
-        await refreshProSlots();
-        await renderCalendario();
-    });
+    refreshBtn.addEventListener('click', refreshProSlots);
     proDateInput.addEventListener('change', refreshProSlots);
 
     await renderCalendario();
+    if (!proDateInput.value) {
+        proDateInput.value = new Date().toISOString().slice(0,10);
+    }
     await refreshProSlots();
 }
 
@@ -466,7 +449,7 @@ export async function renderBoxEstadisticas(month) {
         return;
     }
     const sorted = Array.from(stats.entries()).sort((a,b) => b[1] - a[1]);
-    let html = '<table class="admin-table" style="width:100%; border-collapse:collapse;"><thead><tr><th>Profesional</th><th>Cantidad de atenciones</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>Profesional</th><th>Cantidad de atenciones</th></tr></thead><tbody>';
     sorted.forEach(([prof, count]) => html += `<tr><td>${escapeHtml(prof)}</td><td>${count}</td></tr>`);
     html += '</tbody></table>';
     container.innerHTML = html;
@@ -485,4 +468,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ box.js actualizado con generación por RANGO DE FECHAS y días de semana');
+console.log('✅ box.js actualizado con generación por rango, duración y holgura configurables');

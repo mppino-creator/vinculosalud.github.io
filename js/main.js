@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN CORREGIDA CON MÓDULO BOX INTEGRADO
+// js/main.js - VERSIÓN CORREGIDA CON MÓDULO BOX INTEGRADO (CARGA DINÁMICA)
 import { db } from './config/firebase.js';
 import * as state from './modules/state.js';
 window.state = state;
@@ -21,7 +21,6 @@ import * as publico from './modules/publico.js';
 import * as admin from './modules/admin.js';
 import * as fichasClinicas from './modules/fichasClinicas.js';
 import * as permisos from './modules/permisos.js';
-import * as box from './modules/box.js';          // 🆕 MÓDULO BOX COMPARTIDO
 import './modules/notas.js';
 
 // ============================================
@@ -191,15 +190,6 @@ window.addEditButtonsToAdmin = admin.addEditButtonsToAdmin;
 window.asegurarTablaProfesionales = admin.asegurarTablaProfesionales;
 window.mostrarTabConsentimientos = admin.mostrarTabConsentimientos;
 
-// 🆕 EXPONER FUNCIONES DEL MÓDULO BOX
-window.renderAdminBoxPanel = box.renderAdminBoxPanel;
-window.renderProfessionalBoxPanel = box.renderProfessionalBoxPanel;
-window.renderBoxEstadisticas = box.renderBoxEstadisticas;
-window.cargarEstadisticasBox = function() {
-    const month = document.getElementById('boxStatsMonth')?.value;
-    if (month) box.renderBoxEstadisticas(month);
-};
-
 window.fichasClinicas = fichasClinicas;
 window.permisos = permisos;
 window.guardarFichaIngreso = fichasClinicas.guardarFichaIngreso;
@@ -336,6 +326,25 @@ setTimeout(() => {
 }, 500);
 
 // ============================================
+// CARGA DINÁMICA DEL MÓDULO BOX (SOLUCIONA PROBLEMAS DE CACHÉ)
+// ============================================
+(async function cargarBoxDinamico() {
+    try {
+        const box = await import('./modules/box.js');
+        window.renderAdminBoxPanel = box.renderAdminBoxPanel;
+        window.renderProfessionalBoxPanel = box.renderProfessionalBoxPanel;
+        window.renderBoxEstadisticas = box.renderBoxEstadisticas;
+        window.cargarEstadisticasBox = function() {
+            const month = document.getElementById('boxStatsMonth')?.value;
+            if (month) box.renderBoxEstadisticas(month);
+        };
+        console.log('✅ Módulo BOX cargado dinámicamente y funciones expuestas');
+    } catch (error) {
+        console.error('❌ Error cargando el módulo BOX:', error);
+    }
+})();
+
+// ============================================
 // FUNCIÓN PARA GUARDAR EN FIREBASE (DESACTIVADA PARA EVITAR ERROR DE REFERENCIA CIRCULAR)
 // ============================================
 export function save() {
@@ -397,6 +406,6 @@ window.addEventListener('load', function() {
 
 // window.save = save;  // DESACTIVADO - Los datos se guardan desde cada módulo individualmente
 console.log('✅ main.js cargado (versión corregida - save() desactivada)');
-console.log('✅ Módulo BOX integrado y funciones expuestas');
+console.log('✅ Módulo BOX integrado mediante carga dinámica');
 console.log('✅ Nodos de Firebase en minúsculas consistentes');
 console.log('✅ esEmailProfesional expuesto globalmente');

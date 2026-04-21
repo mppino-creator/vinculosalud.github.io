@@ -1,16 +1,21 @@
-// js/modules/notas.js
+// js/modules/notas.js - VERSIÓN DEFINITIVA (con escucha controlada y sin recursión)
 import { db, auth } from '../config/firebase.js';
-import { ref, push, set, update, remove, get, onValue } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+import { ref, push, set, update, remove, get, onValue, off } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+import * as state from './state.js'; // 👈 Importar state correctamente
 
-console.log('📦 Cargando módulo notas.js...');
+console.log('📦 Cargando módulo notas.js (versión estable)...');
 
 let currentUser = null;
 let currentRole = null;
 let allNotas = [];
 let allPatients = [];
 
+// Referencias para limpiar listeners
+let appointmentsUnsubscribe = null;
+let patientsUnsubscribe = null;
+
 // ---------------------------------------------------------------------
-// 1. Obtener pacientes a partir de las citas del profesional
+// 1. Obtener pacientes (con escucha única + limpieza)
 // ---------------------------------------------------------------------
 function cargarPacientesParaNotas() {
     return new Promise((resolve) => {
@@ -22,26 +27,26 @@ function cargarPacientesParaNotas() {
 
         console.log(`👤 Cargando pacientes para rol: ${currentRole}, UID: ${currentUser.uid}`);
 
+        // Limpiar listeners previos para evitar duplicación
+        if (appointmentsUnsubscribe) off(appointmentsUnsubscribe);
+        if (patientsUnsubscribe) off(patientsUnsubscribe);
+
         const appointmentsRef = ref(db, 'appointments');
-        onValue(appointmentsRef, (snapshot) => {
-            // ✅ Verificar que el usuario aún existe (por si cerró sesión mientras se recibía el evento)
+        appointmentsUnsubscribe = onValue(appointmentsRef, (snapshot) => {
             if (!currentUser) {
-                console.warn('⚠️ Usuario ya no está autenticado, se cancela carga de pacientes');
+                console.warn('⚠️ Usuario ya no está autenticado');
                 resolve([]);
                 return;
             }
 
             const citas = snapshot.val() || {};
-
             let citasDelProfesional = Object.values(citas);
-            if (currentRole !== 'admin' && currentUser && currentUser.uid) {
+            if (currentRole !== 'admin' && currentUser.uid) {
                 citasDelProfesional = citasDelProfesional.filter(cita => cita.psychId === currentUser.uid);
                 console.log(`🔍 Citas filtradas (psicólogo): ${citasDelProfesional.length}`);
             } else if (currentRole === 'admin') {
                 console.log(`🔍 Citas totales (admin): ${citasDelProfesional.length}`);
             } else {
-                // Sin rol definido (vista pública) – no cargar pacientes
-                console.log('👤 Usuario sin rol, no se cargan pacientes para notas');
                 allPatients = [];
                 actualizarSelects();
                 resolve();
@@ -49,8 +54,6 @@ function cargarPacientesParaNotas() {
             }
 
             const patientIds = [...new Set(citasDelProfesional.map(cita => cita.patientId).filter(id => id))];
-            console.log(`📋 IDs de pacientes únicos:`, patientIds);
-
             if (patientIds.length === 0) {
                 allPatients = [];
                 actualizarSelects();
@@ -59,27 +62,23 @@ function cargarPacientesParaNotas() {
             }
 
             const patientsRef = ref(db, 'patients');
-            onValue(patientsRef, (snapshot) => {
-                if (!currentUser) {
-                    console.warn('⚠️ Usuario ya no está autenticado, se cancela carga de pacientes');
-                    resolve([]);
-                    return;
-                }
-                const allPatientsData = snapshot.val() || {};
-                allPatients = patientIds.map(id => ({
-                    id,
-                    ...allPatientsData[id],
-                    nombreCompleto: allPatientsData[id]?.name ||
-                                    `${allPatientsData[id]?.firstName} ${allPatientsData[id]?.lastName}` ||
-                                    'Paciente sin nombre',
-                    rut: allPatientsData[id]?.rut || ''
-                })).filter(p => p.id);
+            patientsUnsubscribe = onValue(patientsRef, (snap) => {
+                if (!currentUser) return;
+                const allPatientsData = snap.val() || {};
+                allPatients = patientIds.map(id => {
+                    const p = allPatientsData[id] || {};
+                    return {
+                        id: String(id),
+                        nombreCompleto: p.name || `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Paciente sin nombre',
+                        rut: p.rut || ''
+                    };
+                }).filter(p => p.id);
 
                 console.log(`✅ Pacientes cargados:`, allPatients.map(p => p.nombreCompleto));
                 actualizarSelects();
                 resolve();
-            }, { onlyOnce: false });
-        }, { onlyOnce: false });
+            });
+        });
     });
 }
 
@@ -95,9 +94,6 @@ function actualizarSelects() {
             option.textContent = `${patient.nombreCompleto} (${patient.rut || 'sin RUT'})`;
             selectPaciente.appendChild(option);
         });
-        console.log(`✅ Select de pacientes actualizado (${allPatients.length} pacientes)`);
-    } else {
-        console.warn('⚠️ Elemento #notaPacienteId no encontrado en el DOM');
     }
 
     if (filtroPaciente) {
@@ -112,7 +108,7 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar notas desde Firebase (carga única, con limpieza de datos)
+// 2. Cargar notas (carga única, con limpieza de datos)
 // ---------------------------------------------------------------------
 async function cargarNotas() {
     if (!currentUser) {
@@ -123,12 +119,13 @@ async function cargarNotas() {
     }
 
     try {
-        const sesionesRef = ref(db, 'sesiones');
-        const snapshot = await get(sesionesRef);
-        const data = snapshot.val() || {};
-        
-        // 🔥 Limpiar datos al cargar para evitar referencias circulares
-        allNotas = Object.entries(data).map(([id, nota]) => ({
+        const sesionesSnap = await get(ref(db, 'sesiones'));
+        const data = sesionesSnap.val() || {};
+
+        // Limpiar referencias circulares
+        const cleanData = JSON.parse(JSON.stringify(data));
+
+        allNotas = Object.entries(cleanData).map(([id, nota]) => ({
             id: String(id),
             patientId: String(nota.patientId || ''),
             date: String(nota.date || ''),
@@ -179,7 +176,7 @@ function renderNotasListado() {
         <div class="nota-card" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primario);">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
-                    <strong style="font-size: 1.1rem;">${nota.pacienteNombre}</strong>
+                    <strong style="font-size: 1.1rem;">${escapeHtml(nota.pacienteNombre)}</strong>
                     <span style="margin-left: 15px; color: #666;">📅 ${new Date(nota.date).toLocaleDateString()}</span>
                 </div>
                 <div>
@@ -191,13 +188,18 @@ function renderNotasListado() {
                     </button>
                 </div>
             </div>
-            <div style="margin-top: 12px; white-space: pre-line;">${(nota.content || '').replace(/\n/g, '<br>')}</div>
+            <div style="margin-top: 12px; white-space: pre-line;">${escapeHtml(nota.content || '').replace(/\n/g, '<br>')}</div>
         </div>
     `).join('');
 }
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+}
+
 // ---------------------------------------------------------------------
-// 3. Funciones del modal (CON LIMPIEZA DE DATOS)
+// 3. Funciones del modal
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -221,7 +223,6 @@ window.editarNota = function(notaId) {
     document.getElementById('notaModal').style.display = 'flex';
 };
 
-// 🔥 GUARDAR NOTA - Versión corregida con limpieza de datos
 window.guardarNota = async function() {
     const id = document.getElementById('notaId').value;
     const patientId = document.getElementById('notaPacienteId').value;
@@ -233,8 +234,7 @@ window.guardarNota = async function() {
     if (!content) { alert('El contenido no puede estar vacío'); return; }
     if (!state.currentUser || !state.currentUser.data?.id) { alert('No hay usuario logueado'); return; }
 
-    // 🔥 EXTRAER SOLO LOS DATOS PRIMITIVOS (sin referencias circulares)
-    const notaData = {
+    const cleanData = {
         patientId: String(patientId),
         date: String(date),
         content: String(content),
@@ -244,24 +244,16 @@ window.guardarNota = async function() {
         professionalId: String(state.currentUser.data.id)
     };
 
-    // Limpieza extrema
-    const cleanData = JSON.parse(JSON.stringify(notaData));
-
-    console.log('📝 Guardando nota (datos limpios):', cleanData);
-
-    const db = window.db;
-    const sesionesRef = ref(db, 'sesiones');
     try {
         if (id) {
             await update(ref(db, `sesiones/${id}`), cleanData);
             alert('Nota actualizada');
         } else {
-            const newRef = push(sesionesRef);
+            const newRef = push(ref(db, 'sesiones'));
             await set(newRef, cleanData);
             alert('Nota creada');
         }
         cerrarModalNota();
-        // Recargar notas
         await cargarNotas();
     } catch (error) {
         console.error('Error guardando nota:', error);
@@ -287,7 +279,7 @@ function cerrarModalNota() {
 window.cerrarModalNota = cerrarModalNota;
 
 // ---------------------------------------------------------------------
-// 4. Exportar notas a PDF
+// 4. Exportar PDF
 // ---------------------------------------------------------------------
 window.exportarNotasPDF = async function() {
     const startDate = document.getElementById('fechaInicio')?.value;
@@ -306,23 +298,21 @@ window.exportarNotasPDF = async function() {
 
     let htmlContent = `
         <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Notas de Evolución</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                h1 { text-align: center; color: #2c7da0; }
-                .nota { border: 1px solid #ccc; margin-bottom: 20px; padding: 15px; border-radius: 8px; page-break-inside: avoid; }
-                .header { font-weight: bold; margin-bottom: 10px; }
-                .contenido { white-space: pre-line; margin-top: 10px; }
-            </style>
+        <head><meta charset="UTF-8"><title>Notas de Evolución</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { text-align: center; color: #2c7da0; }
+            .nota { border: 1px solid #ccc; margin-bottom: 20px; padding: 15px; border-radius: 8px; page-break-inside: avoid; }
+            .header { font-weight: bold; margin-bottom: 10px; }
+            .contenido { white-space: pre-line; margin-top: 10px; }
+        </style>
         </head>
         <body>
             <h1>Notas de Evolución</h1>
             ${notasFiltradas.map(nota => `
                 <div class="nota">
-                    <div class="header">${nota.pacienteNombre} | ${new Date(nota.date).toLocaleDateString()}</div>
-                    <div class="contenido">${(nota.content || '').replace(/\n/g, '<br>')}</div>
+                    <div class="header">${escapeHtml(nota.pacienteNombre)} | ${new Date(nota.date).toLocaleDateString()}</div>
+                    <div class="contenido">${escapeHtml(nota.content || '').replace(/\n/g, '<br>')}</div>
                 </div>
             `).join('')}
         </body>
@@ -342,7 +332,7 @@ window.exportarNotasPDF = async function() {
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización
+// 5. Inicialización (con limpieza de listeners al logout)
 // ---------------------------------------------------------------------
 function initNotas() {
     auth.onAuthStateChanged((user) => {
@@ -351,15 +341,17 @@ function initNotas() {
             const checkState = setInterval(() => {
                 if (window.state?.currentUser) {
                     clearInterval(checkState);
-                    const userState = window.state.currentUser;
-                    currentRole = userState.role;
-                    console.log(`✅ Rol asignado desde state: ${currentRole} para usuario ${user.uid}`);
-                    cargarPacientesParaNotas().then(() => {
-                        cargarNotas();
-                    });
+                    currentRole = window.state.currentUser.role;
+                    console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
+                    cargarPacientesParaNotas().then(() => cargarNotas());
                 }
             }, 100);
         } else {
+            // Limpiar listeners al cerrar sesión
+            if (appointmentsUnsubscribe) off(appointmentsUnsubscribe);
+            if (patientsUnsubscribe) off(patientsUnsubscribe);
+            appointmentsUnsubscribe = null;
+            patientsUnsubscribe = null;
             currentUser = null;
             currentRole = null;
             allNotas = [];
@@ -373,4 +365,4 @@ function initNotas() {
 window.cargarNotas = cargarNotas;
 
 initNotas();
-console.log('✅ notas.js cargado correctamente');
+console.log('✅ notas.js cargado correctamente (versión con escucha controlada)');

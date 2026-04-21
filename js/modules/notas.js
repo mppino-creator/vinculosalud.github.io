@@ -1,85 +1,72 @@
-// js/modules/notas.js - VERSIÓN DEFINITIVA (con escucha controlada y sin recursión)
+// js/modules/notas.js - VERSIÓN CORREGIDA (sin recursión, con carga única)
 import { db, auth } from '../config/firebase.js';
-import { ref, push, set, update, remove, get, onValue, off } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
-import * as state from './state.js'; // 👈 Importar state correctamente
+import { ref, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
+import * as state from './state.js';
 
-console.log('📦 Cargando módulo notas.js (versión estable)...');
+console.log('📦 Cargando módulo notas.js (versión sin recursión)...');
 
 let currentUser = null;
 let currentRole = null;
 let allNotas = [];
 let allPatients = [];
 
-// Referencias para limpiar listeners
-let appointmentsUnsubscribe = null;
-let patientsUnsubscribe = null;
+// ---------------------------------------------------------------------
+// 1. Obtener pacientes (carga única, sin escucha continua)
+// ---------------------------------------------------------------------
+async function cargarPacientesParaNotas() {
+    if (!currentUser) {
+        console.warn('⚠️ No hay usuario logueado');
+        allPatients = [];
+        actualizarSelects();
+        return;
+    }
 
-// ---------------------------------------------------------------------
-// 1. Obtener pacientes (con escucha única + limpieza)
-// ---------------------------------------------------------------------
-function cargarPacientesParaNotas() {
-    return new Promise((resolve) => {
-        if (!currentUser) {
-            console.warn('⚠️ No hay usuario logueado');
-            resolve([]);
+    console.log(`👤 Cargando pacientes para rol: ${currentRole}, UID: ${currentUser.uid}`);
+
+    try {
+        // 1. Obtener citas (una sola vez)
+        const citasSnap = await get(ref(db, 'appointments'));
+        const citas = citasSnap.val() || {};
+
+        let citasDelProfesional = Object.values(citas);
+        if (currentRole !== 'admin' && currentUser.uid) {
+            citasDelProfesional = citasDelProfesional.filter(cita => cita.psychId === currentUser.uid);
+            console.log(`🔍 Citas filtradas (psicólogo): ${citasDelProfesional.length}`);
+        } else if (currentRole === 'admin') {
+            console.log(`🔍 Citas totales (admin): ${citasDelProfesional.length}`);
+        } else {
+            allPatients = [];
+            actualizarSelects();
             return;
         }
 
-        console.log(`👤 Cargando pacientes para rol: ${currentRole}, UID: ${currentUser.uid}`);
+        const patientIds = [...new Set(citasDelProfesional.map(cita => cita.patientId).filter(id => id))];
+        if (patientIds.length === 0) {
+            allPatients = [];
+            actualizarSelects();
+            return;
+        }
 
-        // Limpiar listeners previos para evitar duplicación
-        if (appointmentsUnsubscribe) off(appointmentsUnsubscribe);
-        if (patientsUnsubscribe) off(patientsUnsubscribe);
+        // 2. Obtener datos de pacientes (una sola vez)
+        const patientsSnap = await get(ref(db, 'patients'));
+        const allPatientsData = patientsSnap.val() || {};
 
-        const appointmentsRef = ref(db, 'appointments');
-        appointmentsUnsubscribe = onValue(appointmentsRef, (snapshot) => {
-            if (!currentUser) {
-                console.warn('⚠️ Usuario ya no está autenticado');
-                resolve([]);
-                return;
-            }
+        allPatients = patientIds.map(id => {
+            const p = allPatientsData[id] || {};
+            return {
+                id: String(id),
+                nombreCompleto: p.name || `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Paciente sin nombre',
+                rut: p.rut || ''
+            };
+        }).filter(p => p.id);
 
-            const citas = snapshot.val() || {};
-            let citasDelProfesional = Object.values(citas);
-            if (currentRole !== 'admin' && currentUser.uid) {
-                citasDelProfesional = citasDelProfesional.filter(cita => cita.psychId === currentUser.uid);
-                console.log(`🔍 Citas filtradas (psicólogo): ${citasDelProfesional.length}`);
-            } else if (currentRole === 'admin') {
-                console.log(`🔍 Citas totales (admin): ${citasDelProfesional.length}`);
-            } else {
-                allPatients = [];
-                actualizarSelects();
-                resolve();
-                return;
-            }
-
-            const patientIds = [...new Set(citasDelProfesional.map(cita => cita.patientId).filter(id => id))];
-            if (patientIds.length === 0) {
-                allPatients = [];
-                actualizarSelects();
-                resolve();
-                return;
-            }
-
-            const patientsRef = ref(db, 'patients');
-            patientsUnsubscribe = onValue(patientsRef, (snap) => {
-                if (!currentUser) return;
-                const allPatientsData = snap.val() || {};
-                allPatients = patientIds.map(id => {
-                    const p = allPatientsData[id] || {};
-                    return {
-                        id: String(id),
-                        nombreCompleto: p.name || `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Paciente sin nombre',
-                        rut: p.rut || ''
-                    };
-                }).filter(p => p.id);
-
-                console.log(`✅ Pacientes cargados:`, allPatients.map(p => p.nombreCompleto));
-                actualizarSelects();
-                resolve();
-            });
-        });
-    });
+        console.log(`✅ Pacientes cargados:`, allPatients.map(p => p.nombreCompleto));
+        actualizarSelects();
+    } catch (error) {
+        console.error('❌ Error cargando pacientes:', error);
+        allPatients = [];
+        actualizarSelects();
+    }
 }
 
 function actualizarSelects() {
@@ -144,6 +131,8 @@ async function cargarNotas() {
         console.log(`✅ Notas cargadas: ${allNotas.length} registros`);
     } catch (error) {
         console.error('Error cargando notas:', error);
+        allNotas = [];
+        renderNotasListado();
     }
 }
 
@@ -332,26 +321,32 @@ window.exportarNotasPDF = async function() {
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización (con limpieza de listeners al logout)
+// 5. Inicialización (carga única, sin setInterval)
 // ---------------------------------------------------------------------
 function initNotas() {
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
-            const checkState = setInterval(() => {
-                if (window.state?.currentUser) {
-                    clearInterval(checkState);
-                    currentRole = window.state.currentUser.role;
-                    console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
-                    cargarPacientesParaNotas().then(() => cargarNotas());
-                }
-            }, 100);
+            // Esperar a que state tenga el rol (pero sin intervalo)
+            if (window.state?.currentUser) {
+                currentRole = window.state.currentUser.role;
+                console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
+                await cargarPacientesParaNotas();
+                await cargarNotas();
+            } else {
+                // Si state no está listo, esperar un poco (solo una vez)
+                const checkState = () => {
+                    if (window.state?.currentUser) {
+                        currentRole = window.state.currentUser.role;
+                        console.log(`✅ Rol asignado (después de espera): ${currentRole} para usuario ${user.uid}`);
+                        cargarPacientesParaNotas().then(() => cargarNotas());
+                    } else {
+                        setTimeout(checkState, 100);
+                    }
+                };
+                checkState();
+            }
         } else {
-            // Limpiar listeners al cerrar sesión
-            if (appointmentsUnsubscribe) off(appointmentsUnsubscribe);
-            if (patientsUnsubscribe) off(patientsUnsubscribe);
-            appointmentsUnsubscribe = null;
-            patientsUnsubscribe = null;
             currentUser = null;
             currentRole = null;
             allNotas = [];
@@ -365,4 +360,4 @@ function initNotas() {
 window.cargarNotas = cargarNotas;
 
 initNotas();
-console.log('✅ notas.js cargado correctamente (versión con escucha controlada)');
+console.log('✅ notas.js cargado correctamente (versión sin recursión, con carga única)');

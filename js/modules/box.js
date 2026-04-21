@@ -1,4 +1,4 @@
-// js/modules/box.js - Versión definitiva con lectura directa de inputs y corrección de valores vacíos
+// js/modules/box.js - Versión definitiva con todas las funciones exportadas
 import { db } from '../config/firebase.js';
 import { showToast } from './utils.js';
 
@@ -22,12 +22,11 @@ function escapeHtml(str) {
 
 function limpiarHora(valor) {
     if (!valor) return '';
-    // Elimina sufijos como "a.m.", "p.m.", "AM", "PM"
     return valor.split(' ')[0];
 }
 
-// Generar slots para UNA fecha (solo cálculo, no guarda)
-function calcularSlotsParaFecha(dateStr, startTime, endTime, duracionMin, holguraMin) {
+// ========== FUNCIONES EXPORTADAS PARA USO EXTERNO ==========
+export function generateSlotsForDate(dateStr, startTime, endTime, duracionMin, holguraMin) {
     const slots = [];
     const start = new Date(`${dateStr}T${startTime}:00`);
     const end = new Date(`${dateStr}T${endTime}:00`);
@@ -47,21 +46,17 @@ function calcularSlotsParaFecha(dateStr, startTime, endTime, duracionMin, holgur
     return slots;
 }
 
-// Guardar slots en Firebase
 export async function saveBoxSlots(dateStr, slots) {
     await db.ref(`boxes/${dateStr}`).set(slots);
     showToast(`✅ Horarios del box guardados para ${dateStr}`, 'success');
 }
 
-// Cargar slots desde Firebase
 export async function loadBoxSlots(dateStr) {
     const snapshot = await db.ref(`boxes/${dateStr}`).once('value');
     return snapshot.val() || [];
 }
 
-// ============================================
-// PANEL ADMIN (con lectura directa de inputs)
-// ============================================
+// ========== RENDER ADMIN ==========
 export async function renderAdminBoxPanel() {
     const container = document.getElementById('tabBox');
     if (!container) {
@@ -117,9 +112,9 @@ export async function renderAdminBoxPanel() {
         <div id="adminBoxSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;"></div>
     `;
 
-    // ========== SELECCIÓN DE DÍAS ==========
+    // Selección de días
     const weekdays = document.querySelectorAll('#weekdaySelector .weekday');
-    let selectedDays = ['1','2','3','4','5']; // Lunes a Viernes por defecto
+    let selectedDays = ['1','2','3','4','5'];
     weekdays.forEach(day => {
         const dayVal = day.getAttribute('data-day');
         if (selectedDays.includes(dayVal)) day.classList.add('selected');
@@ -134,7 +129,7 @@ export async function renderAdminBoxPanel() {
         });
     });
 
-    // ========== FUNCIONES DE LECTURA DIRECTA (SIEMPRE ACTUALIZADAS) ==========
+    // Funciones de lectura directa
     function getStart() { return document.getElementById('rangeStartDate')?.value || ''; }
     function getEnd() { return document.getElementById('rangeEndDate')?.value || ''; }
     function getStartH() { return limpiarHora(document.getElementById('startTime')?.value || ''); }
@@ -142,7 +137,7 @@ export async function renderAdminBoxPanel() {
     function getDuracion() { return parseInt(document.getElementById('duracionAtencion')?.value) || 60; }
     function getHolgura() { return parseInt(document.getElementById('holguraTurnos')?.value) || 10; }
 
-    // ========== PREVISUALIZACIÓN ==========
+    // Previsualización
     async function generarPrevisualizacion() {
         console.log('🔍 Botón Previsualizar clickeado');
         const start = getStart();
@@ -170,7 +165,7 @@ export async function renderAdminBoxPanel() {
             const dateStr = d.toISOString().slice(0,10);
             const dayOfWeek = d.getDay().toString();
             if (selectedDays.includes(dayOfWeek)) {
-                const slots = calcularSlotsParaFecha(dateStr, startH, endH, duracion, holgura);
+                const slots = generateSlotsForDate(dateStr, startH, endH, duracion, holgura);
                 if (slots.length) {
                     totalTurnos += slots.length;
                     resumen += `<div><strong>${dateStr} (${d.toLocaleDateString('es-ES', { weekday: 'long' })}):</strong> ${slots.length} turnos</div>`;
@@ -190,7 +185,7 @@ export async function renderAdminBoxPanel() {
         return true;
     }
 
-    // ========== GENERAR Y GUARDAR ==========
+    // Generar y guardar
     async function generarYGuardar() {
         console.log('🚀 Botón Generar clickeado');
         try {
@@ -220,28 +215,27 @@ export async function renderAdminBoxPanel() {
                 const dateStr = d.toISOString().slice(0,10);
                 const dayOfWeek = d.getDay().toString();
                 if (selectedDays.includes(dayOfWeek)) {
-                    const newSlots = calcularSlotsParaFecha(dateStr, startH, endH, duracion, holgura).map(slot => ({
-                        ...slot,
-                        status: 'available',
-                        professional: null
-                    }));
-                    if (newSlots.length) {
-                        await saveBoxSlots(dateStr, newSlots);
-                        totalGenerados += newSlots.length;
+                    const slots = generateSlotsForDate(dateStr, startH, endH, duracion, holgura);
+                    if (slots.length) {
+                        const slotsToSave = slots.map(slot => ({
+                            ...slot,
+                            status: 'available',
+                            professional: null
+                        }));
+                        await saveBoxSlots(dateStr, slotsToSave);
+                        totalGenerados += slots.length;
                     }
                 }
             }
             showToast(`✅ Generados ${totalGenerados} turnos en el rango de fechas`, 'success');
             refreshAdminSlots();
-            const proDate = document.getElementById('proBoxDate')?.value;
-            if (proDate && proDate >= start && proDate <= end) renderProfessionalBoxPanel();
         } catch (error) {
             console.error('❌ Error en generarYGuardar:', error);
             showToast('Error inesperado: ' + error.message, 'error');
         }
     }
 
-    // ========== REFRESCAR SLOTS DEL DÍA ==========
+    // Refrescar slots del día
     async function refreshAdminSlots() {
         const dateInput = document.getElementById('adminBoxDate');
         if (!dateInput) return;
@@ -314,24 +308,16 @@ export async function renderAdminBoxPanel() {
         }
     }
 
-    // ========== ASIGNAR EVENTOS (usando IDs directamente) ==========
-    const previewBtnElem = document.getElementById('previewRangeBtn');
-    const generateBtnElem = document.getElementById('generateRangeBtn');
-    const adminDateElem = document.getElementById('adminBoxDate');
-    const refreshBtnElem = document.getElementById('refreshAdminSlotsBtn');
-
-    if (previewBtnElem) previewBtnElem.addEventListener('click', generarPrevisualizacion);
-    else console.warn('⚠️ Botón previewRangeBtn no encontrado');
-    if (generateBtnElem) generateBtnElem.addEventListener('click', generarYGuardar);
-    else console.warn('⚠️ Botón generateRangeBtn no encontrado');
-    if (adminDateElem) adminDateElem.addEventListener('change', refreshAdminSlots);
-    if (refreshBtnElem) refreshBtnElem.addEventListener('click', refreshAdminSlots);
-
+    // Asignar eventos
+    document.getElementById('previewRangeBtn')?.addEventListener('click', generarPrevisualizacion);
+    document.getElementById('generateRangeBtn')?.addEventListener('click', generarYGuardar);
+    document.getElementById('adminBoxDate')?.addEventListener('change', refreshAdminSlots);
+    document.getElementById('refreshAdminSlotsBtn')?.addEventListener('click', refreshAdminSlots);
     refreshAdminSlots();
 }
 
 // ============================================
-// PANEL PROFESIONAL (sin cambios relevantes)
+// PANEL PROFESIONAL (completo)
 // ============================================
 export async function renderProfessionalBoxPanel() {
     const container = document.getElementById('tabBoxProfesional');
@@ -377,7 +363,7 @@ export async function renderProfessionalBoxPanel() {
         const diaInicioSemana = primerDia.getDay();
         monthYearSpan.innerText = primerDia.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
         let html = `<table style="width:100%; border-collapse:collapse; text-align:center;">
-            <thead><tr><th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th></tr></thead><tbody>`;
+            <thead><tr><th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th><tr></thead><tbody>`;
         let dia = 1;
         for (let i = 0; i < 6; i++) {
             if (dia > diasEnMes) break;
@@ -439,7 +425,7 @@ export async function renderProfessionalBoxPanel() {
                 }
                 slotsContainer.appendChild(card);
             });
-            // Eventos reservar
+            // Eventos
             document.querySelectorAll('#proBoxSlotsContainer .reserve-pro').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const idx = parseInt(btn.getAttribute('data-index'));
@@ -457,7 +443,6 @@ export async function renderProfessionalBoxPanel() {
                     } else showToast('Este horario ya no está disponible.', 'error');
                 });
             });
-            // Cancelar propia
             document.querySelectorAll('#proBoxSlotsContainer .cancel-pro').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const idx = parseInt(btn.getAttribute('data-index'));
@@ -495,11 +480,10 @@ export async function renderProfessionalBoxPanel() {
         await renderCalendario();
     }
 
-    if (prevBtn) prevBtn.addEventListener('click', () => cambiarMes(-1));
-    if (nextBtn) nextBtn.addEventListener('click', () => cambiarMes(1));
-    if (refreshBtn) refreshBtn.addEventListener('click', async () => { await refreshProSlots(); await renderCalendario(); });
-    if (proDateInput) proDateInput.addEventListener('change', refreshProSlots);
-
+    prevBtn?.addEventListener('click', () => cambiarMes(-1));
+    nextBtn?.addEventListener('click', () => cambiarMes(1));
+    refreshBtn?.addEventListener('click', async () => { await refreshProSlots(); await renderCalendario(); });
+    proDateInput?.addEventListener('change', refreshProSlots);
     await renderCalendario();
     await refreshProSlots();
 }
@@ -558,4 +542,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ box.js actualizado con lectura directa de inputs y corrección de valores vacíos');
+console.log('✅ box.js actualizado con todas las funciones exportadas (generateSlotsForDate, saveBoxSlots, loadBoxSlots)');

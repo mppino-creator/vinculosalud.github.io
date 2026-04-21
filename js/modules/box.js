@@ -1,9 +1,9 @@
-// js/modules/box.js - Módulo de gestión de Box Compartido (con duración y holgura configurables)
+// js/modules/box.js - Módulo de gestión de Box Compartido (con previsualización y validación mejorada)
 import { db } from '../config/firebase.js';
 import { showToast } from './utils.js';
 
 // ============================================
-// VARIABLES GLOBALES PARA CALENDARIO PROFESIONAL
+// VARIABLES GLOBALES
 // ============================================
 let mesActual = new Date().getMonth();
 let añoActual = new Date().getFullYear();
@@ -20,8 +20,8 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
-// Generar slots para UNA fecha con duración y holgura personalizadas
-export function generateSlotsForDate(dateStr, startTime, endTime, duracionMin, holguraMin) {
+// Generar slots para UNA fecha (solo cálculo, no guarda)
+function calcularSlotsParaFecha(dateStr, startTime, endTime, duracionMin, holguraMin) {
     const slots = [];
     const start = new Date(`${dateStr}T${startTime}:00`);
     const end = new Date(`${dateStr}T${endTime}:00`);
@@ -34,9 +34,7 @@ export function generateSlotsForDate(dateStr, startTime, endTime, duracionMin, h
         slots.push({
             start: current.toISOString(),
             end: slotEnd.toISOString(),
-            timeLabel: `${formatTime(current)} - ${formatTime(slotEnd)}`,
-            status: 'available',
-            professional: null
+            timeLabel: `${formatTime(current)} - ${formatTime(slotEnd)}`
         });
         current = new Date(current.getTime() + step * 60000);
     }
@@ -56,7 +54,7 @@ export async function loadBoxSlots(dateStr) {
 }
 
 // ============================================
-// PANEL ADMIN (con rango de fechas, días de semana y configuración de tiempos)
+// PANEL ADMIN (con previsualización)
 // ============================================
 export async function renderAdminBoxPanel() {
     const container = document.getElementById('tabBox');
@@ -113,9 +111,14 @@ export async function renderAdminBoxPanel() {
                     <div class="weekday" data-day="0">Dom</div>
                 </div>
             </div>
-            <button id="generateRangeBtn" class="btn-staff" style="background:var(--verde-exito); width:100%;">
-                ✨ Generar slots para todo el rango (semanal/mensual)
-            </button>
+            <div style="display:flex; gap:15px; margin-bottom:20px;">
+                <button id="previewRangeBtn" class="btn-staff" style="background:var(--azul-medico); flex:1;">🔍 Previsualizar slots</button>
+                <button id="generateRangeBtn" class="btn-staff" style="background:var(--verde-exito); flex:1;">✨ Generar slots para todo el rango</button>
+            </div>
+            <div id="previewContainer" style="background:#eef2f0; padding:15px; border-radius:12px; display:none; margin-top:15px;">
+                <h5>📋 Vista previa de los turnos a generar:</h5>
+                <div id="previewDetails" style="max-height:300px; overflow-y:auto; font-size:0.9rem;"></div>
+            </div>
         </div>
 
         <hr style="margin: 25px 0;">
@@ -133,7 +136,7 @@ export async function renderAdminBoxPanel() {
 
     // ========== SELECCIÓN DE DÍAS ==========
     const weekdays = document.querySelectorAll('#weekdaySelector .weekday');
-    let selectedDays = ['1','2','3','4','5']; // Lunes a Viernes por defecto
+    let selectedDays = ['1','2','3','4','5'];
     weekdays.forEach(day => {
         const dayVal = day.getAttribute('data-day');
         if (selectedDays.includes(dayVal)) day.classList.add('selected');
@@ -155,10 +158,103 @@ export async function renderAdminBoxPanel() {
     const endTime = document.getElementById('endTime');
     const duracionInput = document.getElementById('duracionAtencion');
     const holguraInput = document.getElementById('holguraTurnos');
-    const generateRangeBtn = document.getElementById('generateRangeBtn');
+    const previewBtn = document.getElementById('previewRangeBtn');
+    const generateBtn = document.getElementById('generateRangeBtn');
     const adminDate = document.getElementById('adminBoxDate');
     const refreshBtn = document.getElementById('refreshAdminSlotsBtn');
     const slotsContainer = document.getElementById('adminBoxSlotsContainer');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewDetails = document.getElementById('previewDetails');
+
+    // ========== FUNCIÓN PARA GENERAR PREVISUALIZACIÓN ==========
+    async function generarPrevisualizacion() {
+        const start = rangeStart.value;
+        const end = rangeEnd.value;
+        const startH = startTime.value;
+        const endH = endTime.value;
+        const duracion = parseInt(duracionInput.value);
+        const holgura = parseInt(holguraInput.value);
+
+        // Validaciones específicas con mensajes claros
+        if (!start) { showToast('❌ Falta la fecha de inicio', 'error'); return false; }
+        if (!end) { showToast('❌ Falta la fecha de fin', 'error'); return false; }
+        if (!startH) { showToast('❌ Falta la hora de inicio', 'error'); return false; }
+        if (!endH) { showToast('❌ Falta la hora de fin', 'error'); return false; }
+        if (isNaN(duracion) || duracion < 15) { showToast('❌ La duración debe ser al menos 15 minutos', 'error'); return false; }
+        if (isNaN(holgura) || holgura < 0) { showToast('❌ La holgura no puede ser negativa', 'error'); return false; }
+
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        if (startDate > endDate) { showToast('❌ La fecha inicio debe ser anterior a la fecha fin', 'error'); return false; }
+        if (startH >= endH) { showToast('❌ La hora de inicio debe ser anterior a la hora de fin', 'error'); return false; }
+
+        let totalTurnos = 0;
+        let resumen = '';
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().slice(0,10);
+            const dayOfWeek = d.getDay().toString();
+            if (selectedDays.includes(dayOfWeek)) {
+                const slots = calcularSlotsParaFecha(dateStr, startH, endH, duracion, holgura);
+                if (slots.length) {
+                    totalTurnos += slots.length;
+                    resumen += `<div><strong>${dateStr} (${d.toLocaleDateString('es-ES', { weekday: 'long' })}):</strong> ${slots.length} turnos</div>`;
+                } else {
+                    resumen += `<div><strong>${dateStr}:</strong> ⚠️ No se generaron turnos (revisa horarios)</div>`;
+                }
+            }
+        }
+        if (totalTurnos === 0) {
+            previewDetails.innerHTML = '<div>⚠️ No se generará ningún turno. Verifica los días seleccionados y el rango horario.</div>';
+        } else {
+            previewDetails.innerHTML = `<div style="margin-bottom:10px;"><strong>Total de turnos a generar: ${totalTurnos}</strong></div>${resumen}`;
+        }
+        previewContainer.style.display = 'block';
+        return true;
+    }
+
+    // ========== GENERAR Y GUARDAR ==========
+    async function generarYGuardar() {
+        const start = rangeStart.value;
+        const end = rangeEnd.value;
+        const startH = startTime.value;
+        const endH = endTime.value;
+        const duracion = parseInt(duracionInput.value);
+        const holgura = parseInt(holguraInput.value);
+
+        // Validaciones
+        if (!start || !end || !startH || !endH) {
+            showToast('❌ Completa todas las fechas y horarios', 'error');
+            return;
+        }
+        if (isNaN(duracion) || duracion < 15) { showToast('❌ La duración debe ser al menos 15 minutos', 'error'); return; }
+        if (isNaN(holgura) || holgura < 0) { showToast('❌ La holgura no puede ser negativa', 'error'); return; }
+
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        if (startDate > endDate) { showToast('❌ La fecha inicio debe ser anterior a la fecha fin', 'error'); return; }
+        if (startH >= endH) { showToast('❌ La hora de inicio debe ser anterior a la hora de fin', 'error'); return; }
+
+        let totalGenerados = 0;
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().slice(0,10);
+            const dayOfWeek = d.getDay().toString();
+            if (selectedDays.includes(dayOfWeek)) {
+                const newSlots = calcularSlotsParaFecha(dateStr, startH, endH, duracion, holgura).map(slot => ({
+                    ...slot,
+                    status: 'available',
+                    professional: null
+                }));
+                if (newSlots.length) {
+                    await saveBoxSlots(dateStr, newSlots);
+                    totalGenerados += newSlots.length;
+                }
+            }
+        }
+        showToast(`✅ Generados ${totalGenerados} turnos en el rango de fechas`, 'success');
+        refreshAdminSlots();
+        const proDate = document.getElementById('proBoxDate')?.value;
+        if (proDate && proDate >= start && proDate <= end) renderProfessionalBoxPanel();
+    }
 
     // ========== REFRESCAR SLOTS DEL DÍA ==========
     async function refreshAdminSlots() {
@@ -190,7 +286,6 @@ export async function renderAdminBoxPanel() {
             slotsContainer.appendChild(card);
         });
 
-        // Eventos cancelar
         document.querySelectorAll('#adminBoxSlotsContainer .cancel-admin').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -204,7 +299,6 @@ export async function renderAdminBoxPanel() {
                 }
             });
         });
-        // Eventos reservar
         document.querySelectorAll('#adminBoxSlotsContainer .reserve-admin').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -228,57 +322,9 @@ export async function renderAdminBoxPanel() {
         });
     }
 
-    // ========== GENERAR PARA RANGO (CON DURACIÓN Y HOLGURA) ==========
-    generateRangeBtn.addEventListener('click', async () => {
-        const start = rangeStart.value;
-        const end = rangeEnd.value;
-        const startH = startTime.value;
-        const endH = endTime.value;
-        const duracion = parseInt(duracionInput.value);
-        const holgura = parseInt(holguraInput.value);
-
-        if (!start || !end || !startH || !endH) {
-            showToast('❌ Completa todas las fechas y horarios', 'error');
-            return;
-        }
-        if (isNaN(duracion) || duracion < 15) {
-            showToast('❌ La duración debe ser al menos 15 minutos', 'error');
-            return;
-        }
-        if (isNaN(holgura) || holgura < 0) {
-            showToast('❌ La holgura no puede ser negativa', 'error');
-            return;
-        }
-
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        if (startDate > endDate) {
-            showToast('❌ La fecha inicio debe ser anterior a la fecha fin', 'error');
-            return;
-        }
-        if (startH >= endH) {
-            showToast('❌ La hora de inicio debe ser anterior a la hora de fin', 'error');
-            return;
-        }
-
-        let totalGenerados = 0;
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().slice(0,10);
-            const dayOfWeek = d.getDay().toString();
-            if (selectedDays.includes(dayOfWeek)) {
-                const newSlots = generateSlotsForDate(dateStr, startH, endH, duracion, holgura);
-                if (newSlots.length) {
-                    await saveBoxSlots(dateStr, newSlots);
-                    totalGenerados += newSlots.length;
-                }
-            }
-        }
-        showToast(`✅ Generados ${totalGenerados} turnos en el rango de fechas`, 'success');
-        refreshAdminSlots();
-        const proDate = document.getElementById('proBoxDate')?.value;
-        if (proDate && proDate >= start && proDate <= end) renderProfessionalBoxPanel();
-    });
-
+    // ========== EVENTOS ==========
+    previewBtn.addEventListener('click', generarPrevisualizacion);
+    generateBtn.addEventListener('click', generarYGuardar);
     adminDate.addEventListener('change', refreshAdminSlots);
     refreshBtn.addEventListener('click', refreshAdminSlots);
     refreshAdminSlots();
@@ -354,7 +400,7 @@ export async function renderProfessionalBoxPanel() {
                             ${disponibles > 0 ? `<span style="color:#2e7d32;">✅ ${disponibles}</span>` : ''}
                             ${reservados > 0 ? `<span style="color:#c62828;">📌 ${reservados}</span>` : ''}
                         </div>
-                    </tr>`;
+                    </td>`;
                     dia++;
                 } else {
                     html += '<td style="border:1px solid #ddd; padding:8px;"> </td>';
@@ -400,7 +446,6 @@ export async function renderProfessionalBoxPanel() {
             slotsContainer.appendChild(card);
         });
 
-        // Reservar
         document.querySelectorAll('#proBoxSlotsContainer .reserve-pro').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -418,7 +463,6 @@ export async function renderProfessionalBoxPanel() {
                 } else showToast('Este horario ya no está disponible.', 'error');
             });
         });
-        // Cancelar propia
         document.querySelectorAll('#proBoxSlotsContainer .cancel-pro').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const idx = parseInt(btn.getAttribute('data-index'));
@@ -512,4 +556,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ box.js actualizado con generación por RANGO DE FECHAS, días de semana, DURACIÓN y HOLGURA configurables');
+console.log('✅ box.js actualizado con previsualización y validación mejorada');

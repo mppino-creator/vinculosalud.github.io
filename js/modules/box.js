@@ -1,4 +1,4 @@
-// js/modules/box.js - Módulo de gestión de Box Compartido (con limpieza de horas)
+// js/modules/box.js - Módulo completo y funcionando (con depuración)
 import { db } from '../config/firebase.js';
 import { showToast } from './utils.js';
 
@@ -54,7 +54,7 @@ export async function loadBoxSlots(dateStr) {
 }
 
 // ============================================
-// PANEL ADMIN (con previsualización y limpieza de horas)
+// PANEL ADMIN (con previsualización y eventos robustos)
 // ============================================
 export async function renderAdminBoxPanel() {
     const container = document.getElementById('tabBox');
@@ -169,11 +169,12 @@ export async function renderAdminBoxPanel() {
     // 🔧 Función auxiliar para limpiar hora (quita "a.m."/"p.m." si existen)
     function limpiarHora(valor) {
         if (!valor) return '';
-        return valor.split(' ')[0]; // elimina cualquier sufijo
+        return valor.split(' ')[0];
     }
 
     // ========== PREVISUALIZACIÓN ==========
     async function generarPrevisualizacion() {
+        console.log('🔍 Botón Previsualizar clickeado');
         const start = rangeStart.value;
         const end = rangeEnd.value;
         const startH = limpiarHora(startTimeInput.value);
@@ -219,126 +220,138 @@ export async function renderAdminBoxPanel() {
 
     // ========== GENERAR Y GUARDAR ==========
     async function generarYGuardar() {
-        const start = rangeStart.value;
-        const end = rangeEnd.value;
-        const startH = limpiarHora(startTimeInput.value);
-        const endH = limpiarHora(endTimeInput.value);
-        const duracion = parseInt(duracionInput.value);
-        const holgura = parseInt(holguraInput.value);
+        console.log('🚀 Botón Generar clickeado');
+        try {
+            const start = rangeStart.value;
+            const end = rangeEnd.value;
+            const startH = limpiarHora(startTimeInput.value);
+            const endH = limpiarHora(endTimeInput.value);
+            const duracion = parseInt(duracionInput.value);
+            const holgura = parseInt(holguraInput.value);
 
-        if (!start || !end || !startH || !endH) {
-            showToast('❌ Completa todas las fechas y horarios', 'error');
-            return;
-        }
-        if (isNaN(duracion) || duracion < 15) { showToast('❌ La duración debe ser al menos 15 minutos', 'error'); return; }
-        if (isNaN(holgura) || holgura < 0) { showToast('❌ La holgura no puede ser negativa', 'error'); return; }
+            console.log('📥 Valores capturados:', { start, end, startH, endH, duracion, holgura });
 
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        if (startDate > endDate) { showToast('❌ La fecha inicio debe ser anterior a la fecha fin', 'error'); return; }
-        if (startH >= endH) { showToast('❌ La hora de inicio debe ser anterior a la hora de fin', 'error'); return; }
+            if (!start || !end || !startH || !endH) {
+                showToast('❌ Completa todas las fechas y horarios', 'error');
+                return;
+            }
+            if (isNaN(duracion) || duracion < 15) { showToast('❌ La duración debe ser al menos 15 minutos', 'error'); return; }
+            if (isNaN(holgura) || holgura < 0) { showToast('❌ La holgura no puede ser negativa', 'error'); return; }
 
-        let totalGenerados = 0;
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().slice(0,10);
-            const dayOfWeek = d.getDay().toString();
-            if (selectedDays.includes(dayOfWeek)) {
-                const newSlots = calcularSlotsParaFecha(dateStr, startH, endH, duracion, holgura).map(slot => ({
-                    ...slot,
-                    status: 'available',
-                    professional: null
-                }));
-                if (newSlots.length) {
-                    await saveBoxSlots(dateStr, newSlots);
-                    totalGenerados += newSlots.length;
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            if (startDate > endDate) { showToast('❌ La fecha inicio debe ser anterior a la fecha fin', 'error'); return; }
+            if (startH >= endH) { showToast('❌ La hora de inicio debe ser anterior a la hora de fin', 'error'); return; }
+
+            let totalGenerados = 0;
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().slice(0,10);
+                const dayOfWeek = d.getDay().toString();
+                if (selectedDays.includes(dayOfWeek)) {
+                    const newSlots = calcularSlotsParaFecha(dateStr, startH, endH, duracion, holgura).map(slot => ({
+                        ...slot,
+                        status: 'available',
+                        professional: null
+                    }));
+                    if (newSlots.length) {
+                        await saveBoxSlots(dateStr, newSlots);
+                        totalGenerados += newSlots.length;
+                    }
                 }
             }
+            showToast(`✅ Generados ${totalGenerados} turnos en el rango de fechas`, 'success');
+            refreshAdminSlots();
+            const proDate = document.getElementById('proBoxDate')?.value;
+            if (proDate && proDate >= start && proDate <= end) renderProfessionalBoxPanel();
+        } catch (error) {
+            console.error('❌ Error en generarYGuardar:', error);
+            showToast('Error inesperado: ' + error.message, 'error');
         }
-        showToast(`✅ Generados ${totalGenerados} turnos en el rango de fechas`, 'success');
-        refreshAdminSlots();
-        const proDate = document.getElementById('proBoxDate')?.value;
-        if (proDate && proDate >= start && proDate <= end) renderProfessionalBoxPanel();
     }
 
     // ========== REFRESCAR SLOTS DEL DÍA ==========
     async function refreshAdminSlots() {
         const date = adminDate.value;
         if (!date) return;
-        const slots = await loadBoxSlots(date);
-        if (!slots.length) {
-            slotsContainer.innerHTML = '<div class="info-message">No hay slots generados para esta fecha. Usa "Generar slots para todo el rango" primero.</div>';
-            return;
-        }
-        slotsContainer.innerHTML = '';
-        slots.forEach((slot, idx) => {
-            const card = document.createElement('div');
-            card.className = 'slot-card';
-            card.style.background = '#fefcf9';
-            card.style.borderRadius = '16px';
-            card.style.padding = '12px';
-            card.style.border = '1px solid #e9dfd3';
-            card.innerHTML = `
-                <div class="slot-time" style="font-weight:700; font-size:1rem;">${slot.timeLabel}</div>
-                <div class="slot-status ${slot.status}" style="display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin:8px 0;">${slot.status === 'available' ? 'Disponible' : 'Reservado'}</div>
-                ${slot.professional ? `<div class="slot-professional" style="font-size:0.85rem;">👤 ${escapeHtml(slot.professional)}</div>` : ''}
-                <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-                    ${slot.status === 'booked' ? `<button class="small-btn cancel-admin" data-index="${idx}" style="background:#dc3545; color:white; border:none; padding:6px 12px; border-radius:30px; cursor:pointer;">🗑️ Cancelar</button>` : ''}
-                    <button class="small-btn reserve-admin" data-index="${idx}" style="background:#28a745; color:white; border:none; padding:6px 12px; border-radius:30px; cursor:pointer;">📝 Reservar</button>
-                </div>
-                ${slot.status === 'available' ? `<input type="text" id="adminBoxName_${idx}" class="reserve-input" placeholder="Nombre del profesional" style="width:100%; margin-top:8px; padding:6px; border-radius:20px; border:1px solid #ccc;">` : ''}
-            `;
-            slotsContainer.appendChild(card);
-        });
-
-        document.querySelectorAll('#adminBoxSlotsContainer .cancel-admin').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const idx = parseInt(btn.getAttribute('data-index'));
-                if (slots[idx]?.status === 'booked') {
-                    slots[idx].status = 'available';
-                    slots[idx].professional = null;
+        try {
+            const slots = await loadBoxSlots(date);
+            if (!slots.length) {
+                slotsContainer.innerHTML = '<div class="info-message">No hay slots generados para esta fecha. Usa "Generar slots para todo el rango" primero.</div>';
+                return;
+            }
+            slotsContainer.innerHTML = '';
+            slots.forEach((slot, idx) => {
+                const card = document.createElement('div');
+                card.className = 'slot-card';
+                card.style.cssText = 'background:#fefcf9; border-radius:16px; padding:12px; border:1px solid #e9dfd3;';
+                card.innerHTML = `
+                    <div class="slot-time" style="font-weight:700; font-size:1rem;">${slot.timeLabel}</div>
+                    <div class="slot-status ${slot.status}" style="display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin:8px 0;">${slot.status === 'available' ? 'Disponible' : 'Reservado'}</div>
+                    ${slot.professional ? `<div class="slot-professional" style="font-size:0.85rem;">👤 ${escapeHtml(slot.professional)}</div>` : ''}
+                    <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                        ${slot.status === 'booked' ? `<button class="small-btn cancel-admin" data-index="${idx}" style="background:#dc3545; color:white; border:none; padding:6px 12px; border-radius:30px; cursor:pointer;">🗑️ Cancelar</button>` : ''}
+                        <button class="small-btn reserve-admin" data-index="${idx}" style="background:#28a745; color:white; border:none; padding:6px 12px; border-radius:30px; cursor:pointer;">📝 Reservar</button>
+                    </div>
+                    ${slot.status === 'available' ? `<input type="text" id="adminBoxName_${idx}" class="reserve-input" placeholder="Nombre del profesional" style="width:100%; margin-top:8px; padding:6px; border-radius:20px; border:1px solid #ccc;">` : ''}
+                `;
+                slotsContainer.appendChild(card);
+            });
+            // Eventos dinámicos
+            document.querySelectorAll('#adminBoxSlotsContainer .cancel-admin').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const idx = parseInt(btn.getAttribute('data-index'));
+                    if (slots[idx]?.status === 'booked') {
+                        slots[idx].status = 'available';
+                        slots[idx].professional = null;
+                        await saveBoxSlots(date, slots);
+                        refreshAdminSlots();
+                        const proDate = document.getElementById('proBoxDate')?.value;
+                        if (proDate === date) renderProfessionalBoxPanel();
+                    }
+                });
+            });
+            document.querySelectorAll('#adminBoxSlotsContainer .reserve-admin').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const idx = parseInt(btn.getAttribute('data-index'));
+                    if (slots[idx]?.status === 'booked') {
+                        showToast('Este slot ya está reservado. Cancele primero.', 'error');
+                        return;
+                    }
+                    const nameInput = document.getElementById(`adminBoxName_${idx}`);
+                    const profName = nameInput?.value.trim();
+                    if (!profName) {
+                        showToast('Ingresa el nombre del profesional.', 'error');
+                        return;
+                    }
+                    slots[idx].status = 'booked';
+                    slots[idx].professional = profName;
                     await saveBoxSlots(date, slots);
                     refreshAdminSlots();
                     const proDate = document.getElementById('proBoxDate')?.value;
                     if (proDate === date) renderProfessionalBoxPanel();
-                }
+                });
             });
-        });
-        document.querySelectorAll('#adminBoxSlotsContainer .reserve-admin').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const idx = parseInt(btn.getAttribute('data-index'));
-                if (slots[idx]?.status === 'booked') {
-                    showToast('Este slot ya está reservado. Cancele primero.', 'error');
-                    return;
-                }
-                const nameInput = document.getElementById(`adminBoxName_${idx}`);
-                const profName = nameInput?.value.trim();
-                if (!profName) {
-                    showToast('Ingresa el nombre del profesional.', 'error');
-                    return;
-                }
-                slots[idx].status = 'booked';
-                slots[idx].professional = profName;
-                await saveBoxSlots(date, slots);
-                refreshAdminSlots();
-                const proDate = document.getElementById('proBoxDate')?.value;
-                if (proDate === date) renderProfessionalBoxPanel();
-            });
-        });
+        } catch (error) {
+            console.error('Error al refrescar slots:', error);
+            slotsContainer.innerHTML = '<div class="info-message">Error al cargar los horarios. Intenta de nuevo.</div>';
+        }
     }
 
-    // ========== EVENTOS ==========
-    previewBtn.addEventListener('click', generarPrevisualizacion);
-    generateBtn.addEventListener('click', generarYGuardar);
-    adminDate.addEventListener('change', refreshAdminSlots);
-    refreshBtn.addEventListener('click', refreshAdminSlots);
+    // ========== ASIGNAR EVENTOS (con verificación) ==========
+    if (previewBtn) previewBtn.addEventListener('click', generarPrevisualizacion);
+    else console.warn('⚠️ Botón previewRangeBtn no encontrado');
+    if (generateBtn) generateBtn.addEventListener('click', generarYGuardar);
+    else console.warn('⚠️ Botón generateRangeBtn no encontrado');
+    if (adminDate) adminDate.addEventListener('change', refreshAdminSlots);
+    if (refreshBtn) refreshBtn.addEventListener('click', refreshAdminSlots);
+
     refreshAdminSlots();
 }
 
 // ============================================
-// PANEL PROFESIONAL (sin cambios, pero se mantiene)
+// PANEL PROFESIONAL (completo)
 // ============================================
 export async function renderProfessionalBoxPanel() {
-    // ... (todo igual, no necesita cambios)
     const container = document.getElementById('tabBoxProfesional');
     if (!container) return;
     const today = new Date();
@@ -366,6 +379,7 @@ export async function renderProfessionalBoxPanel() {
             <div id="proBoxSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;"></div>
         </div>
     `;
+
     const prevBtn = document.getElementById('prevMonthBtn');
     const nextBtn = document.getElementById('nextMonthBtn');
     const monthYearSpan = document.getElementById('currentMonthYear');
@@ -373,6 +387,7 @@ export async function renderProfessionalBoxPanel() {
     const refreshBtn = document.getElementById('refreshProBoxBtn');
     const calendarioDiv = document.getElementById('calendarioBoxContainer');
     const slotsContainer = document.getElementById('proBoxSlotsContainer');
+
     async function renderCalendario() {
         const primerDia = new Date(añoActual, mesActual, 1);
         const ultimoDia = new Date(añoActual, mesActual + 1, 0);
@@ -410,93 +425,99 @@ export async function renderProfessionalBoxPanel() {
         html += '</tbody></table>';
         calendarioDiv.innerHTML = html;
     }
+
     async function refreshProSlots() {
         const date = proDateInput.value;
         if (!date) return;
-        const slots = await loadBoxSlots(date);
-        if (!slots.length) {
-            slotsContainer.innerHTML = '<div class="info-message">No hay horarios configurados para esta fecha. Contacta al administrador.</div>';
-            return;
-        }
-        slotsContainer.innerHTML = '';
-        slots.forEach((slot, idx) => {
-            const card = document.createElement('div');
-            card.className = 'slot-card';
-            card.style.background = '#fefcf9';
-            card.style.borderRadius = '16px';
-            card.style.padding = '12px';
-            card.style.border = '1px solid #e9dfd3';
-            if (slot.status === 'available') {
-                card.innerHTML = `
-                    <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
-                    <div class="slot-status available" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#d9e8e2; color:#1e6b55; font-size:0.7rem;">Disponible</div>
-                    <input type="text" id="proBoxName_${idx}" class="reserve-input" placeholder="Tu nombre completo" style="width:100%; margin:10px 0; padding:6px; border-radius:20px; border:1px solid #ccc;">
-                    <button class="small-btn reserve-pro" data-index="${idx}" style="background:#28a745; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer;">📌 Reservar</button>
-                `;
-            } else {
-                card.innerHTML = `
-                    <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
-                    <div class="slot-status booked" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#f0e0d4; color:#b1624b; font-size:0.7rem;">Reservado</div>
-                    <div class="slot-professional" style="margin:8px 0;">👤 ${escapeHtml(slot.professional)}</div>
-                    <button class="small-btn cancel-pro" data-index="${idx}" style="background:#dc3545; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer;">❌ Cancelar mi reserva</button>
-                `;
+        try {
+            const slots = await loadBoxSlots(date);
+            if (!slots.length) {
+                slotsContainer.innerHTML = '<div class="info-message">No hay horarios configurados para esta fecha. Contacta al administrador.</div>';
+                return;
             }
-            slotsContainer.appendChild(card);
-        });
-        document.querySelectorAll('#proBoxSlotsContainer .reserve-pro').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const idx = parseInt(btn.getAttribute('data-index'));
-                const nameInput = document.getElementById(`proBoxName_${idx}`);
-                const profName = nameInput?.value.trim();
-                if (!profName) { showToast('Ingresa tu nombre para reservar.', 'error'); return; }
-                if (slots[idx]?.status === 'available') {
-                    slots[idx].status = 'booked';
-                    slots[idx].professional = profName;
-                    await saveBoxSlots(date, slots);
-                    refreshProSlots();
-                    const adminDate = document.getElementById('adminBoxDate')?.value;
-                    if (adminDate === date && typeof renderAdminBoxPanel === 'function') renderAdminBoxPanel();
-                    renderCalendario();
-                } else showToast('Este horario ya no está disponible.', 'error');
+            slotsContainer.innerHTML = '';
+            slots.forEach((slot, idx) => {
+                const card = document.createElement('div');
+                card.className = 'slot-card';
+                card.style.cssText = 'background:#fefcf9; border-radius:16px; padding:12px; border:1px solid #e9dfd3;';
+                if (slot.status === 'available') {
+                    card.innerHTML = `
+                        <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
+                        <div class="slot-status available" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#d9e8e2; color:#1e6b55; font-size:0.7rem;">Disponible</div>
+                        <input type="text" id="proBoxName_${idx}" class="reserve-input" placeholder="Tu nombre completo" style="width:100%; margin:10px 0; padding:6px; border-radius:20px; border:1px solid #ccc;">
+                        <button class="small-btn reserve-pro" data-index="${idx}" style="background:#28a745; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer;">📌 Reservar</button>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
+                        <div class="slot-status booked" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#f0e0d4; color:#b1624b; font-size:0.7rem;">Reservado</div>
+                        <div class="slot-professional" style="margin:8px 0;">👤 ${escapeHtml(slot.professional)}</div>
+                        <button class="small-btn cancel-pro" data-index="${idx}" style="background:#dc3545; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer;">❌ Cancelar mi reserva</button>
+                    `;
+                }
+                slotsContainer.appendChild(card);
             });
-        });
-        document.querySelectorAll('#proBoxSlotsContainer .cancel-pro').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const idx = parseInt(btn.getAttribute('data-index'));
-                const slot = slots[idx];
-                if (slot.status !== 'booked') return;
-                const currentProfessional = slot.professional;
-                const nombreConfirm = prompt(`Esta hora está reservada por "${currentProfessional}". Ingresa tu nombre para confirmar la cancelación:`);
-                if (nombreConfirm?.trim() === currentProfessional) {
-                    slot.status = 'available';
-                    slot.professional = null;
-                    await saveBoxSlots(date, slots);
-                    refreshProSlots();
-                    const adminDate = document.getElementById('adminBoxDate')?.value;
-                    if (adminDate === date && typeof renderAdminBoxPanel === 'function') renderAdminBoxPanel();
-                    renderCalendario();
-                } else showToast('El nombre no coincide con el profesional que reservó.', 'error');
+            // Eventos reservar
+            document.querySelectorAll('#proBoxSlotsContainer .reserve-pro').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const idx = parseInt(btn.getAttribute('data-index'));
+                    const nameInput = document.getElementById(`proBoxName_${idx}`);
+                    const profName = nameInput?.value.trim();
+                    if (!profName) { showToast('Ingresa tu nombre para reservar.', 'error'); return; }
+                    if (slots[idx]?.status === 'available') {
+                        slots[idx].status = 'booked';
+                        slots[idx].professional = profName;
+                        await saveBoxSlots(date, slots);
+                        refreshProSlots();
+                        const adminDate = document.getElementById('adminBoxDate')?.value;
+                        if (adminDate === date && typeof renderAdminBoxPanel === 'function') renderAdminBoxPanel();
+                        renderCalendario();
+                    } else showToast('Este horario ya no está disponible.', 'error');
+                });
             });
-        });
+            // Cancelar propia
+            document.querySelectorAll('#proBoxSlotsContainer .cancel-pro').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const idx = parseInt(btn.getAttribute('data-index'));
+                    const slot = slots[idx];
+                    if (slot.status !== 'booked') return;
+                    const currentProfessional = slot.professional;
+                    const nombreConfirm = prompt(`Esta hora está reservada por "${currentProfessional}". Ingresa tu nombre para confirmar la cancelación:`);
+                    if (nombreConfirm?.trim() === currentProfessional) {
+                        slot.status = 'available';
+                        slot.professional = null;
+                        await saveBoxSlots(date, slots);
+                        refreshProSlots();
+                        const adminDate = document.getElementById('adminBoxDate')?.value;
+                        if (adminDate === date && typeof renderAdminBoxPanel === 'function') renderAdminBoxPanel();
+                        renderCalendario();
+                    } else showToast('El nombre no coincide con el profesional que reservó.', 'error');
+                });
+            });
+        } catch (error) {
+            console.error('Error al cargar slots profesionales:', error);
+            slotsContainer.innerHTML = '<div class="info-message">Error al cargar los horarios.</div>';
+        }
     }
+
     window.cargarSlotsProfesionalFecha = async (fecha) => {
         if (proDateInput) proDateInput.value = fecha;
         await refreshProSlots();
         await renderCalendario();
     };
+
     async function cambiarMes(delta) {
         const nuevaFecha = new Date(añoActual, mesActual + delta);
         mesActual = nuevaFecha.getMonth();
         añoActual = nuevaFecha.getFullYear();
         await renderCalendario();
     }
-    prevBtn.addEventListener('click', () => cambiarMes(-1));
-    nextBtn.addEventListener('click', () => cambiarMes(1));
-    refreshBtn.addEventListener('click', async () => {
-        await refreshProSlots();
-        await renderCalendario();
-    });
-    proDateInput.addEventListener('change', refreshProSlots);
+
+    if (prevBtn) prevBtn.addEventListener('click', () => cambiarMes(-1));
+    if (nextBtn) nextBtn.addEventListener('click', () => cambiarMes(1));
+    if (refreshBtn) refreshBtn.addEventListener('click', async () => { await refreshProSlots(); await renderCalendario(); });
+    if (proDateInput) proDateInput.addEventListener('change', refreshProSlots);
+
     await renderCalendario();
     await refreshProSlots();
 }
@@ -510,30 +531,36 @@ export async function renderBoxEstadisticas(month) {
     const startDate = new Date(parseInt(year), parseInt(monthNum)-1, 1);
     const endDate = new Date(parseInt(year), parseInt(monthNum), 0);
     const stats = new Map();
-    const snapshot = await db.ref('boxes').once('value');
-    const boxes = snapshot.val() || {};
-    for (const [dateStr, slots] of Object.entries(boxes)) {
-        const slotDate = new Date(dateStr);
-        if (slotDate >= startDate && slotDate <= endDate && Array.isArray(slots)) {
-            slots.forEach(slot => {
-                if (slot.status === 'booked' && slot.professional) {
-                    const prof = slot.professional.trim();
-                    stats.set(prof, (stats.get(prof) || 0) + 1);
-                }
-            });
+    try {
+        const snapshot = await db.ref('boxes').once('value');
+        const boxes = snapshot.val() || {};
+        for (const [dateStr, slots] of Object.entries(boxes)) {
+            const slotDate = new Date(dateStr);
+            if (slotDate >= startDate && slotDate <= endDate && Array.isArray(slots)) {
+                slots.forEach(slot => {
+                    if (slot.status === 'booked' && slot.professional) {
+                        const prof = slot.professional.trim();
+                        stats.set(prof, (stats.get(prof) || 0) + 1);
+                    }
+                });
+            }
         }
+        const container = document.getElementById('boxStatsContainer');
+        if (!container) return;
+        if (stats.size === 0) {
+            container.innerHTML = '<p>No hay atenciones registradas en este mes.</p>';
+            return;
+        }
+        const sorted = Array.from(stats.entries()).sort((a,b) => b[1] - a[1]);
+        let html = '<table class="admin-table" style="width:100%; border-collapse:collapse;"><thead><tr><th>Profesional</th><th>Cantidad de atenciones</th></tr></thead><tbody>';
+        sorted.forEach(([prof, count]) => html += `<tr><td>${escapeHtml(prof)}</td><td>${count}</td></tr>`);
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error en estadísticas del box:', error);
+        const container = document.getElementById('boxStatsContainer');
+        if (container) container.innerHTML = '<p>Error al cargar estadísticas.</p>';
     }
-    const container = document.getElementById('boxStatsContainer');
-    if (!container) return;
-    if (stats.size === 0) {
-        container.innerHTML = '<p>No hay atenciones registradas en este mes.</p>';
-        return;
-    }
-    const sorted = Array.from(stats.entries()).sort((a,b) => b[1] - a[1]);
-    let html = '<table class="admin-table" style="width:100%; border-collapse:collapse;"><thead><tr><th>Profesional</th><th>Cantidad de atenciones</th></tr></thead><tbody>';
-    sorted.forEach(([prof, count]) => html += `<tr><td>${escapeHtml(prof)}</td><td>${count}</td></tr>`);
-    html += '</tbody></table>';
-    container.innerHTML = html;
 }
 
 // ============================================
@@ -549,4 +576,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ box.js actualizado con limpieza de horas y previsualización mejorada');
+console.log('✅ box.js actualizado con depuración, eventos robustos y manejo de errores');

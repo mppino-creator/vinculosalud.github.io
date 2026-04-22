@@ -1,6 +1,7 @@
-// js/modules/box.js - Versión definitiva con IDs únicos (similar a disponibilidad)
+// js/modules/box.js - Versión definitiva con reglas de reserva profesionales
 import { db } from '../config/firebase.js';
 import { showToast } from './utils.js';
+import * as state from './state.js';
 
 // ============================================
 // VARIABLES GLOBALES
@@ -23,6 +24,14 @@ function escapeHtml(str) {
 function limpiarHora(valor) {
     if (!valor) return '';
     return valor.split(' ')[0];
+}
+
+// Comprobar si un slot ya pasó (según fecha y hora actual)
+function isSlotPassed(dateStr, timeLabel) {
+    // timeLabel tiene formato "HH:MM - HH:MM", tomamos la hora de inicio
+    const startTimeStr = timeLabel.split(' - ')[0];
+    const slotDateTime = new Date(`${dateStr}T${startTimeStr}:00`);
+    return slotDateTime < new Date();
 }
 
 // ========== FUNCIONES EXPORTADAS ==========
@@ -56,7 +65,7 @@ export async function loadBoxSlots(dateStr) {
     return snapshot.val() || [];
 }
 
-// ========== RENDER ADMIN ==========
+// ========== RENDER ADMIN (sin cambios relevantes) ==========
 export async function renderAdminBoxPanel() {
     const container = document.getElementById('tabBox');
     if (!container) {
@@ -68,7 +77,6 @@ export async function renderAdminBoxPanel() {
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
 
-    // Usar IDs únicos para evitar conflictos con disponibilidad.js
     container.innerHTML = `
         <h3>📦 Gestión del Box Compartido</h3>
         <div class="admin-box-config" style="background: #f9f9fc; padding: 20px; border-radius: 16px; margin-bottom: 25px;">
@@ -134,7 +142,7 @@ export async function renderAdminBoxPanel() {
         <div id="boxAdminSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;"></div>
     `;
 
-    // ========== SELECCIÓN DE DÍAS ==========
+    // Selección de días
     const weekdays = document.querySelectorAll('#boxWeekdaySelector .weekday');
     let selectedDays = ['1','2','3','4','5'];
     weekdays.forEach(day => {
@@ -151,7 +159,6 @@ export async function renderAdminBoxPanel() {
         });
     });
 
-    // ========== FUNCIONES DE LECTURA DIRECTA (con IDs únicos) ==========
     function getStart() { return document.getElementById('boxRangeStartDate')?.value || ''; }
     function getEnd() { return document.getElementById('boxRangeEndDate')?.value || ''; }
     function getStartH() { return limpiarHora(document.getElementById('boxStartTime')?.value || ''); }
@@ -159,7 +166,6 @@ export async function renderAdminBoxPanel() {
     function getDuracion() { return parseInt(document.getElementById('boxDuracionAtencion')?.value) || 60; }
     function getHolgura() { return parseInt(document.getElementById('boxHolguraTurnos')?.value) || 10; }
 
-    // ========== PREVISUALIZACIÓN ==========
     async function generarPrevisualizacion() {
         console.log('🔍 Botón Previsualizar clickeado');
         const start = getStart();
@@ -207,7 +213,6 @@ export async function renderAdminBoxPanel() {
         return true;
     }
 
-    // ========== GENERAR Y GUARDAR ==========
     async function generarYGuardar() {
         console.log('🚀 Botón Generar clickeado');
         try {
@@ -257,7 +262,6 @@ export async function renderAdminBoxPanel() {
         }
     }
 
-    // ========== REFRESCAR SLOTS DEL DÍA ==========
     async function refreshAdminSlots() {
         const dateInput = document.getElementById('boxAdminDate');
         if (!dateInput) return;
@@ -330,7 +334,6 @@ export async function renderAdminBoxPanel() {
         }
     }
 
-    // ========== ASIGNAR EVENTOS ==========
     document.getElementById('boxPreviewRangeBtn')?.addEventListener('click', generarPrevisualizacion);
     document.getElementById('boxGenerateRangeBtn')?.addEventListener('click', generarYGuardar);
     document.getElementById('boxAdminDate')?.addEventListener('change', refreshAdminSlots);
@@ -338,14 +341,16 @@ export async function renderAdminBoxPanel() {
     refreshAdminSlots();
 }
 
-// ============================================
-// PANEL PROFESIONAL (actualizar IDs si es necesario, pero no se usan en conflicto)
-// ============================================
+// ========== PANEL PROFESIONAL (CORREGIDO) ==========
 export async function renderProfessionalBoxPanel() {
     const container = document.getElementById('tabBoxProfesional');
     if (!container) return;
+
+    // Obtener el nombre del profesional logueado
+    const professionalName = state.currentUser?.data?.name || 'Profesional';
     const today = new Date();
     const fechaActual = today.toISOString().slice(0,10);
+
     container.innerHTML = `
         <h3>📦 Reservar Box Compartido</h3>
         <div style="margin-bottom:20px;">
@@ -410,7 +415,7 @@ export async function renderProfessionalBoxPanel() {
                     html += '<td style="border:1px solid #ddd; padding:8px;"> </td>';
                 }
             }
-            html += '</tr>';
+            html += '<tr>';
         }
         html += '</tbody></table>';
         calendarioDiv.innerHTML = html;
@@ -430,49 +435,87 @@ export async function renderProfessionalBoxPanel() {
                 const card = document.createElement('div');
                 card.className = 'slot-card';
                 card.style.cssText = 'background:#fefcf9; border-radius:16px; padding:12px; border:1px solid #e9dfd3;';
-                if (slot.status === 'available') {
+                
+                // Verificar si el slot ya pasó
+                const slotPassed = isSlotPassed(date, slot.timeLabel);
+                // Verificar si el slot está reservado por el profesional actual
+                const isOwnReservation = (slot.status === 'booked' && slot.professional === professionalName);
+                // Verificar si está reservado por otro
+                const isOtherReservation = (slot.status === 'booked' && slot.professional !== professionalName);
+                
+                if (slot.status === 'available' && !slotPassed) {
+                    // Disponible y no pasado
                     card.innerHTML = `
                         <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
                         <div class="slot-status available" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#d9e8e2; color:#1e6b55; font-size:0.7rem;">Disponible</div>
-                        <input type="text" id="proBoxName_${idx}" class="reserve-input" placeholder="Tu nombre completo" style="width:100%; margin:10px 0; padding:6px; border-radius:20px; border:1px solid #ccc;">
-                        <button class="small-btn reserve-pro" data-index="${idx}" style="background:#28a745; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer;">📌 Reservar</button>
+                        <button class="small-btn reserve-pro" data-index="${idx}" style="background:#28a745; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer; margin-top:8px;">📌 Reservar</button>
                     `;
-                } else {
+                } else if (slotPassed && slot.status === 'available') {
+                    // Pasado y no reservado: mostrar como no disponible
                     card.innerHTML = `
                         <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
-                        <div class="slot-status booked" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#f0e0d4; color:#b1624b; font-size:0.7rem;">Reservado</div>
-                        <div class="slot-professional" style="margin:8px 0;">👤 ${escapeHtml(slot.professional)}</div>
-                        <button class="small-btn cancel-pro" data-index="${idx}" style="background:#dc3545; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer;">❌ Cancelar mi reserva</button>
+                        <div class="slot-status" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#e9ecef; color:#6c757d; font-size:0.7rem;">Horario pasado</div>
+                    `;
+                } else if (isOwnReservation) {
+                    // Mi reserva: mostrar botón de cancelar
+                    card.innerHTML = `
+                        <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
+                        <div class="slot-status booked" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#f0e0d4; color:#b1624b; font-size:0.7rem;">Reservado por ti</div>
+                        <button class="small-btn cancel-pro" data-index="${idx}" style="background:#dc3545; color:white; border:none; padding:8px; border-radius:30px; width:100%; cursor:pointer; margin-top:8px;">❌ Cancelar mi reserva</button>
+                    `;
+                } else if (isOtherReservation) {
+                    // Reservado por otro profesional
+                    card.innerHTML = `
+                        <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
+                        <div class="slot-status booked" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#f0e0d4; color:#b1624b; font-size:0.7rem;">Reservado por ${escapeHtml(slot.professional)}</div>
+                    `;
+                } else {
+                    // Cualquier otro caso (no debería ocurrir)
+                    card.innerHTML = `
+                        <div class="slot-time" style="font-weight:700;">${slot.timeLabel}</div>
+                        <div class="slot-status" style="display:inline-block; padding:2px 10px; border-radius:20px; background:#e9ecef; color:#6c757d; font-size:0.7rem;">No disponible</div>
                     `;
                 }
                 slotsContainer.appendChild(card);
             });
-            // Eventos
+
+            // Evento reservar (solo para slots disponibles y no pasados)
             document.querySelectorAll('#proBoxSlotsContainer .reserve-pro').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const idx = parseInt(btn.getAttribute('data-index'));
-                    const nameInput = document.getElementById(`proBoxName_${idx}`);
-                    const profName = nameInput?.value.trim();
-                    if (!profName) { showToast('Ingresa tu nombre para reservar.', 'error'); return; }
-                    if (slots[idx]?.status === 'available') {
+                    if (isNaN(idx)) return;
+                    if (slots[idx]?.status !== 'available') {
+                        showToast('Este horario ya no está disponible.', 'error');
+                        return;
+                    }
+                    if (isSlotPassed(date, slots[idx].timeLabel)) {
+                        showToast('No puedes reservar un horario que ya pasó.', 'error');
+                        return;
+                    }
+                    // Confirmar reserva
+                    if (confirm(`¿Reservar el horario ${slots[idx].timeLabel} para ${professionalName}?`)) {
                         slots[idx].status = 'booked';
-                        slots[idx].professional = profName;
+                        slots[idx].professional = professionalName;
                         await saveBoxSlots(date, slots);
                         refreshProSlots();
                         const adminDate = document.getElementById('boxAdminDate')?.value;
                         if (adminDate === date && typeof renderAdminBoxPanel === 'function') renderAdminBoxPanel();
                         renderCalendario();
-                    } else showToast('Este horario ya no está disponible.', 'error');
+                    }
                 });
             });
+
+            // Evento cancelar (solo para mis reservas)
             document.querySelectorAll('#proBoxSlotsContainer .cancel-pro').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const idx = parseInt(btn.getAttribute('data-index'));
+                    if (isNaN(idx)) return;
                     const slot = slots[idx];
-                    if (slot.status !== 'booked') return;
-                    const currentProfessional = slot.professional;
-                    const nombreConfirm = prompt(`Esta hora está reservada por "${currentProfessional}". Ingresa tu nombre para confirmar la cancelación:`);
-                    if (nombreConfirm?.trim() === currentProfessional) {
+                    if (slot.status !== 'booked' || slot.professional !== professionalName) {
+                        showToast('No puedes cancelar esta reserva porque no es tuya.', 'error');
+                        return;
+                    }
+                    if (confirm(`¿Cancelar tu reserva del horario ${slot.timeLabel}?`)) {
                         slot.status = 'available';
                         slot.professional = null;
                         await saveBoxSlots(date, slots);
@@ -480,7 +523,7 @@ export async function renderProfessionalBoxPanel() {
                         const adminDate = document.getElementById('boxAdminDate')?.value;
                         if (adminDate === date && typeof renderAdminBoxPanel === 'function') renderAdminBoxPanel();
                         renderCalendario();
-                    } else showToast('El nombre no coincide con el profesional que reservó.', 'error');
+                    }
                 });
             });
         } catch (error) {
@@ -511,7 +554,7 @@ export async function renderProfessionalBoxPanel() {
 }
 
 // ============================================
-// ESTADÍSTICAS DEL BOX
+// ESTADÍSTICAS DEL BOX (sin cambios)
 // ============================================
 export async function renderBoxEstadisticas(month) {
     if (!month) month = new Date().toISOString().slice(0,7);
@@ -564,4 +607,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ box.js actualizado con IDs únicos (compatible con disponibilidad.js)');
+console.log('✅ box.js actualizado con reglas de reserva profesionales (nombre automático, validación de tiempo, cancelación solo propia)');

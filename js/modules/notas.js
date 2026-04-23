@@ -1,14 +1,15 @@
-// js/modules/notas.js - VERSIÓN SIN RECURSIÓN (definitiva)
+// js/modules/notas.js - VERSIÓN DEFINITIVA (SIN RECURSIÓN)
 import { db, auth } from '../config/firebase.js';
 import { ref, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 import * as state from './state.js';
 
-console.log('📦 Cargando módulo notas.js (versión sin recursión)...');
+console.log('📦 Cargando módulo notas.js (versión definitiva sin recursión)...');
 
 let currentUser = null;
 let currentRole = null;
 let allNotas = [];
 let allPatients = [];
+let datosCargados = false;
 
 // ---------------------------------------------------------------------
 // 1. Obtener pacientes (carga única, sin escucha)
@@ -58,7 +59,7 @@ async function cargarPacientesParaNotas() {
             };
         }).filter(p => p.id);
 
-        console.log(`✅ Pacientes cargados: ${allPatients.length}`);
+        console.log(`✅ Pacientes cargados:`, allPatients.map(p => p.nombreCompleto));
         actualizarSelects();
     } catch (error) {
         console.error('❌ Error cargando pacientes:', error);
@@ -93,7 +94,7 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar notas (carga única, extrayendo solo datos primitivos)
+// 2. Cargar notas (SIN JSON.parse/stringify, extracción manual)
 // ---------------------------------------------------------------------
 async function cargarNotas() {
     if (!currentUser) {
@@ -103,29 +104,29 @@ async function cargarNotas() {
         return;
     }
 
+    if (datosCargados) return;
+    datosCargados = true;
+
     try {
         const sesionesSnap = await get(ref(db, 'sesiones'));
         const data = sesionesSnap.val() || {};
 
-        // Evitamos JSON.parse/stringify. Extraemos manualmente los datos.
+        // Extraemos manualmente los datos para evitar recursión
         const nuevasNotas = [];
-        for (const id in data) {
-            if (data.hasOwnProperty(id)) {
-                const nota = data[id];
-                // Solo extraemos propiedades primitivas (nada de objetos anidados)
-                const patient = allPatients.find(p => p.id == nota.patientId);
-                nuevasNotas.push({
-                    id: String(id),
-                    patientId: String(nota.patientId || ''),
-                    date: String(nota.date || ''),
-                    content: String(nota.content || ''),
-                    createdAt: nota.createdAt || Date.now(),
-                    updatedAt: nota.updatedAt || Date.now(),
-                    createdBy: String(nota.createdBy || ''),
-                    professionalId: String(nota.professionalId || ''),
-                    pacienteNombre: patient ? patient.nombreCompleto : 'Paciente desconocido'
-                });
-            }
+        for (const [id, nota] of Object.entries(data)) {
+            if (!nota || typeof nota !== 'object') continue;
+            const patient = allPatients.find(p => p.id == nota.patientId);
+            nuevasNotas.push({
+                id: String(id),
+                patientId: String(nota.patientId || ''),
+                date: String(nota.date || ''),
+                content: String(nota.content || ''),
+                createdAt: nota.createdAt || Date.now(),
+                updatedAt: nota.updatedAt || Date.now(),
+                createdBy: String(nota.createdBy || ''),
+                professionalId: String(nota.professionalId || ''),
+                pacienteNombre: patient ? patient.nombreCompleto : 'Paciente desconocido'
+            });
         }
 
         if (currentRole === 'psych') {
@@ -140,6 +141,8 @@ async function cargarNotas() {
         console.error('Error cargando notas:', error);
         allNotas = [];
         renderNotasListado();
+    } finally {
+        datosCargados = false;
     }
 }
 
@@ -195,7 +198,7 @@ function escapeHtml(str) {
 }
 
 // ---------------------------------------------------------------------
-// 3. Funciones del modal (con datos planos)
+// 3. Funciones del modal (guardado con datos planos)
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -230,7 +233,7 @@ window.guardarNota = async function() {
     if (!content) { alert('El contenido no puede estar vacío'); return; }
     if (!state.currentUser || !state.currentUser.data?.id) { alert('No hay usuario logueado'); return; }
 
-    // Construir objeto plano (sin referencias circulares)
+    // Objeto plano (sin referencias circulares)
     const notaData = {
         patientId: String(patientId),
         date: String(date),
@@ -276,7 +279,7 @@ function cerrarModalNota() {
 window.cerrarModalNota = cerrarModalNota;
 
 // ---------------------------------------------------------------------
-// 4. Exportar PDF
+// 4. Exportar PDF (sin cambios)
 // ---------------------------------------------------------------------
 window.exportarNotasPDF = async function() {
     const startDate = document.getElementById('fechaInicio')?.value;
@@ -332,31 +335,32 @@ window.exportarNotasPDF = async function() {
 // 5. Inicialización (carga única, sin intervalos)
 // ---------------------------------------------------------------------
 function initNotas() {
-    let inicializado = false;
     auth.onAuthStateChanged(async (user) => {
-        if (user && !inicializado) {
-            inicializado = true;
+        if (user) {
             currentUser = user;
-            // Esperar a que state tenga el rol (máximo 10 intentos)
-            let intentos = 0;
-            const esperarState = () => {
-                if (window.state?.currentUser) {
-                    currentRole = window.state.currentUser.role;
-                    console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
-                    cargarPacientesParaNotas().then(() => cargarNotas());
-                } else if (intentos < 10) {
-                    intentos++;
-                    setTimeout(esperarState, 200);
-                } else {
-                    console.error('❌ No se pudo obtener el rol del usuario');
-                }
-            };
-            esperarState();
-        } else if (!user) {
+            if (window.state?.currentUser) {
+                currentRole = window.state.currentUser.role;
+                console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
+                await cargarPacientesParaNotas();
+                await cargarNotas();
+            } else {
+                const checkState = () => {
+                    if (window.state?.currentUser) {
+                        currentRole = window.state.currentUser.role;
+                        console.log(`✅ Rol asignado (después de espera): ${currentRole} para usuario ${user.uid}`);
+                        cargarPacientesParaNotas().then(() => cargarNotas());
+                    } else {
+                        setTimeout(checkState, 100);
+                    }
+                };
+                checkState();
+            }
+        } else {
             currentUser = null;
             currentRole = null;
             allNotas = [];
             allPatients = [];
+            datosCargados = false;
             const container = document.getElementById('notasListado');
             if (container) container.innerHTML = '<div style="text-align:center; padding:40px;">🔒 Inicia sesión para ver notas</div>';
         }
@@ -366,4 +370,4 @@ function initNotas() {
 window.cargarNotas = cargarNotas;
 
 initNotas();
-console.log('✅ notas.js cargado correctamente (versión sin recursión)');
+console.log('✅ notas.js cargado correctamente (versión definitiva, sin recursión, con carga única)');

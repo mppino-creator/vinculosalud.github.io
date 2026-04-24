@@ -33,8 +33,14 @@ let activeListeners = {
     informes: null
 };
 
+// Flag para evitar iniciar escuchas privadas más de una vez
+let escuchasPrivadasIniciadas = false;
+
+// Flag para evitar cargar datos privados múltiples veces
+let datosPrivadosCargados = false;
+
 // ============================================
-// REGISTRAR VISITA A PROFESIONAL (NUEVO)
+// REGISTRAR VISITA A PROFESIONAL
 // ============================================
 export async function registrarVisitaProfesional(psychId) {
     if (!psychId) return;
@@ -340,7 +346,6 @@ export function showTherapistInfo(psychId) {
 export async function openBooking(psychId) {
     console.log('📅 Abriendo booking para profesional:', psychId);
     
-    // Registrar la visita
     await registrarVisitaProfesional(psychId);
     
     const psych = state.staff.find(p => p.id == psychId);
@@ -367,7 +372,6 @@ export async function openBooking(psychId) {
     if (clientView) clientView.style.display = 'none';
     if (bookingPanel) bookingPanel.style.display = 'block';
     
-    // Resetear formulario
     const custDate = document.getElementById('custDate');
     if (custDate) custDate.value = '';
     
@@ -550,16 +554,13 @@ export async function executeBooking() {
         await firebase.database().ref(`appointments/${appointment.id}`).set(appointment);
         showToast('✅ Cita solicitada exitosamente', 'success');
         
-        // Registrar conversión
         await registrarConversion(psychId);
         
-        // Cerrar panel y volver
         const clientView = document.getElementById('clientView');
         const bookingPanel = document.getElementById('bookingPanel');
         if (clientView) clientView.style.display = 'block';
         if (bookingPanel) bookingPanel.style.display = 'none';
         
-        // Limpiar formulario
         document.getElementById('custName').value = '';
         document.getElementById('custEmail').value = '';
         document.getElementById('custRut').value = '';
@@ -575,7 +576,7 @@ export async function executeBooking() {
 }
 
 // ============================================
-// REGISTRAR CONVERSIÓN (NUEVO)
+// REGISTRAR CONVERSIÓN
 // ============================================
 async function registrarConversion(psychId) {
     if (!psychId) return;
@@ -650,7 +651,7 @@ export function filterProfessionals() {
 }
 
 // ============================================
-// RENDERIZADO DE PROFESIONALES (MEJORADO)
+// RENDERIZADO DE PROFESIONALES
 // ============================================
 export function renderProfessionals(professionals) {
     const grid = document.getElementById('equipo');
@@ -744,7 +745,7 @@ export function cargarDatosIniciales() {
     const filtros = document.querySelector('.filters');
     if (filtros) filtros.style.display = 'none';
 
-    // 🔥 1. CARGA ÚNICA DE NODOS PÚBLICOS
+    // 1. CARGA ÚNICA DE NODOS PÚBLICOS
     const promesasPublicas = [
         db.ref('staff').once('value').catch(err => { console.warn('⚠️ Error staff:', err); return null; }),
         db.ref('messages').once('value').catch(err => { console.warn('⚠️ Error messages:', err); return null; }),
@@ -914,8 +915,8 @@ export function cargarDatosIniciales() {
         console.log('✅ Datos públicos cargados correctamente');
         state.setDataLoaded(true);
         
-        // Si hay usuario logueado, cargar datos privados
-        if (state.currentUser) {
+        // Si hay usuario logueado, cargar datos privados (solo una vez)
+        if (state.currentUser && !datosPrivadosCargados) {
             cargarDatosPrivados();
         }
         
@@ -934,7 +935,7 @@ export function cargarDatosIniciales() {
         setTimeout(() => showSection('inicio'), 500);
     });
     
-    // 🔥 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES (SOLO PÚBLICOS)
+    // 2. ESCUCHA EN TIEMPO REAL PARA ACTUALIZACIONES (SOLO PÚBLICOS)
     db.ref('staff').on('value', (snapshot) => {
         try {
             const data = snapshot.val();
@@ -1010,9 +1011,14 @@ export function cargarDatosIniciales() {
 }
 
 // ============================================
-// CARGA DE DATOS PRIVADOS (SOLO SI HAY USUARIO)
+// CARGA DE DATOS PRIVADOS (SOLO UNA VEZ Y SIN ESCUCHAS EN TIEMPO REAL PARA SESIONES)
 // ============================================
 export function cargarDatosPrivados() {
+    if (datosPrivadosCargados) {
+        console.log('🔒 Datos privados ya cargados, omitiendo...');
+        return;
+    }
+    datosPrivadosCargados = true;
     console.log('🔒 Cargando datos privados (requieren autenticación)...');
     
     const promesasPrivadas = [
@@ -1063,7 +1069,7 @@ export function cargarDatosPrivados() {
             state.setFichasIngreso([]);
         }
         
-        // Procesar sesiones
+        // Procesar sesiones (solo carga única, sin listener)
         const sesionesSnapshot = resultados[4];
         if (sesionesSnapshot) {
             const sesionesData = sesionesSnapshot.val();
@@ -1083,7 +1089,7 @@ export function cargarDatosPrivados() {
         
         console.log('✅ Datos privados cargados correctamente');
         
-        // 🔥 ACTUALIZAR TABLAS SIEMPRE
+        // ACTUALIZAR TABLAS
         if (state.currentUser) {
             if (state.currentUser.role === 'admin') {
                 if (typeof renderStaffTable === 'function') renderStaffTable();
@@ -1099,7 +1105,7 @@ export function cargarDatosPrivados() {
             if (typeof window.updateStats === 'function') window.updateStats();
         }
         
-        // Iniciar escuchas en tiempo real para nodos privados
+        // Iniciar escuchas en tiempo real para nodos privados (EXCLUYENDO SESIONES)
         iniciarEscuchasPrivadas();
         
     }).catch(error => {
@@ -1108,12 +1114,17 @@ export function cargarDatosPrivados() {
 }
 
 // ============================================
-// LISTENERS PRIVADOS CON ALMACENAMIENTO DE REFERENCIAS
+// LISTENERS PRIVADOS (SIN SESIONES)
 // ============================================
 function iniciarEscuchasPrivadas() {
     if (!state.currentUser) return;
+    if (escuchasPrivadasIniciadas) {
+        console.log('🔊 Escuchas privadas ya iniciadas, omitiendo...');
+        return;
+    }
+    escuchasPrivadasIniciadas = true;
     
-    limpiarEscuchasPrivadas();
+    limpiarEscuchasPrivadas(); // Por si acaso, limpiamos antes de asignar nuevas
 
     activeListeners.patients = db.ref('patients').on('value', (snapshot) => {
         try {
@@ -1174,16 +1185,8 @@ function iniciarEscuchasPrivadas() {
         console.warn('⚠️ Error en listener fichasIngreso:', error);
     });
     
-    activeListeners.sesiones = db.ref('sesiones').on('value', (snapshot) => {
-        try {
-            const data = snapshot.val();
-            state.setSesiones(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []);
-        } catch (error) {
-            console.warn('⚠️ Error procesando listener sesiones:', error);
-        }
-    }, (error) => {
-        console.warn('⚠️ Error en listener sesiones:', error);
-    });
+    // 🔥 ELIMINADO: No creamos listener para 'sesiones' para evitar el ciclo de recursión
+    // activeListeners.sesiones = ...  (comentado o eliminado)
     
     activeListeners.informes = db.ref('informes').on('value', (snapshot) => {
         try {
@@ -1195,6 +1198,8 @@ function iniciarEscuchasPrivadas() {
     }, (error) => {
         console.warn('⚠️ Error en listener informes:', error);
     });
+    
+    console.log('✅ Escuchas privadas iniciadas (excluyendo sesiones para evitar recursión)');
 }
 
 export function limpiarEscuchasPrivadas() {
@@ -1214,6 +1219,10 @@ export function limpiarEscuchasPrivadas() {
         sesiones: null,
         informes: null
     };
+    
+    // Resetear flags para que puedan volver a iniciarse si es necesario (ej. después de logout/login)
+    escuchasPrivadasIniciadas = false;
+    datosPrivadosCargados = false;
 }
 
 // ============================================
@@ -1255,4 +1264,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js refactorizado: import estático de renderMessagesTable, mejor manejo de errores en listeners y limpieza de listeners al logout');
+console.log('✅ publico.js corregido: eliminado listener de sesiones para evitar recursión, flags para evitar cargas duplicadas');

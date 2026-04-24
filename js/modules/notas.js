@@ -1,9 +1,9 @@
-// js/modules/notas.js - VERSIÓN DEFINITIVA (SIN RECURSIÓN, CON BOTÓN ACTUALIZAR)
+// js/modules/notas.js - VERSIÓN DEFINITIVA (CON SERIALIZACIÓN Y SIN RECARGA AUTOMÁTICA)
 import { db, auth } from '../config/firebase.js';
 import { ref, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 import * as state from './state.js';
 
-console.log('📦 Cargando módulo notas.js (versión sin recursión, con actualización manual)...');
+console.log('📦 Cargando módulo notas.js (versión completa y segura)...');
 
 let currentUser = null;
 let currentRole = null;
@@ -12,10 +12,11 @@ let allPatients = [];
 let cargandoNotas = false;
 
 // ---------------------------------------------------------------------
-// 1. Obtener pacientes (carga única)
+// 1. Obtener pacientes (carga única, sin escucha)
 // ---------------------------------------------------------------------
 async function cargarPacientesParaNotas() {
     if (!currentUser) {
+        console.warn('⚠️ No hay usuario logueado');
         allPatients = [];
         actualizarSelects();
         return;
@@ -58,7 +59,7 @@ async function cargarPacientesParaNotas() {
             };
         }).filter(p => p.id);
 
-        console.log(`✅ Pacientes cargados: ${allPatients.length}`);
+        console.log(`✅ Pacientes cargados:`, allPatients.map(p => p.nombreCompleto));
         actualizarSelects();
     } catch (error) {
         console.error('❌ Error cargando pacientes:', error);
@@ -73,29 +74,31 @@ function actualizarSelects() {
 
     if (selectPaciente) {
         selectPaciente.innerHTML = '<option value="">Seleccionar paciente</option>';
-        allPatients.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = `${p.nombreCompleto} (${p.rut || 'sin RUT'})`;
-            selectPaciente.appendChild(opt);
+        allPatients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = `${patient.nombreCompleto} (${patient.rut || 'sin RUT'})`;
+            selectPaciente.appendChild(option);
         });
     }
+
     if (filtroPaciente) {
         filtroPaciente.innerHTML = '<option value="">Todos los pacientes</option>';
-        allPatients.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = p.nombreCompleto;
-            filtroPaciente.appendChild(opt);
+        allPatients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = patient.nombreCompleto;
+            filtroPaciente.appendChild(option);
         });
     }
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar notas (extracción manual, SIN JSON.parse/stringify)
+// 2. Cargar notas (extracción manual, sin recursión)
 // ---------------------------------------------------------------------
 async function cargarNotas() {
     if (!currentUser) {
+        console.warn('⚠️ No hay usuario, no se cargan notas');
         allNotas = [];
         renderNotasListado();
         return;
@@ -111,7 +114,7 @@ async function cargarNotas() {
         const sesionesSnap = await get(ref(db, 'sesiones'));
         const data = sesionesSnap.val() || {};
 
-        // Extraemos manualmente los datos para evitar recursión
+        // Extracción manual de datos (evita JSON.parse/stringify)
         const nuevasNotas = [];
         for (const [id, nota] of Object.entries(data)) {
             if (!nota || typeof nota !== 'object') continue;
@@ -129,9 +132,11 @@ async function cargarNotas() {
             });
         }
 
-        allNotas = (currentRole === 'psych')
-            ? nuevasNotas.filter(n => allPatients.some(p => p.id == n.patientId))
-            : nuevasNotas;
+        if (currentRole === 'psych') {
+            allNotas = nuevasNotas.filter(nota => allPatients.some(p => p.id == nota.patientId));
+        } else {
+            allNotas = nuevasNotas;
+        }
 
         renderNotasListado();
         console.log(`✅ Notas cargadas: ${allNotas.length} registros`);
@@ -150,26 +155,26 @@ function renderNotasListado() {
 
     const pacienteFiltro = document.getElementById('filtroNotaPaciente')?.value;
     const fechaFiltro = document.getElementById('filtroNotaFecha')?.value;
-    const busqueda = document.getElementById('filtroNotaBusqueda')?.value?.toLowerCase();
+    const busquedaFiltro = document.getElementById('filtroNotaBusqueda')?.value?.toLowerCase();
 
-    let filtradas = [...allNotas];
-    if (pacienteFiltro) filtradas = filtradas.filter(n => n.patientId === pacienteFiltro);
-    if (fechaFiltro) filtradas = filtradas.filter(n => n.date === fechaFiltro);
-    if (busqueda) {
-        filtradas = filtradas.filter(n =>
-            n.content?.toLowerCase().includes(busqueda) ||
-            n.pacienteNombre?.toLowerCase().includes(busqueda)
+    let notasFiltradas = [...allNotas];
+    if (pacienteFiltro) notasFiltradas = notasFiltradas.filter(n => n.patientId === pacienteFiltro);
+    if (fechaFiltro) notasFiltradas = notasFiltradas.filter(n => n.date === fechaFiltro);
+    if (busquedaFiltro) {
+        notasFiltradas = notasFiltradas.filter(n =>
+            n.content?.toLowerCase().includes(busquedaFiltro) ||
+            n.pacienteNombre?.toLowerCase().includes(busquedaFiltro)
         );
     }
 
-    filtradas.sort((a, b) => new Date(b.date) - new Date(a.date));
+    notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    if (filtradas.length === 0) {
+    if (notasFiltradas.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:40px;">📭 No hay notas que coincidan con los filtros.</div>';
         return;
     }
 
-    container.innerHTML = filtradas.map(nota => `
+    container.innerHTML = notasFiltradas.map(nota => `
         <div class="nota-card" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primario);">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
@@ -177,8 +182,12 @@ function renderNotasListado() {
                     <span style="margin-left: 15px; color: #666;">📅 ${new Date(nota.date).toLocaleDateString()}</span>
                 </div>
                 <div>
-                    <button class="btn-staff" style="background: var(--atencion); padding: 4px 12px; margin-right: 8px;" onclick="editarNota('${nota.id}')"><i class="fa fa-edit"></i></button>
-                    <button class="btn-staff" style="background: var(--rojo-alerta); padding: 4px 12px;" onclick="eliminarNota('${nota.id}')"><i class="fa fa-trash"></i></button>
+                    <button class="btn-staff" style="background: var(--atencion); padding: 4px 12px; margin-right: 8px;" onclick="editarNota('${nota.id}')">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button class="btn-staff" style="background: var(--rojo-alerta); padding: 4px 12px;" onclick="eliminarNota('${nota.id}')">
+                        <i class="fa fa-trash"></i>
+                    </button>
                 </div>
             </div>
             <div style="margin-top: 12px; white-space: pre-line;">${escapeHtml(nota.content || '').replace(/\n/g, '<br>')}</div>
@@ -192,7 +201,7 @@ function escapeHtml(str) {
 }
 
 // ---------------------------------------------------------------------
-// 3. Funciones del modal (sin recarga automática)
+// 3. Funciones del modal (con serialización forzada y sin recarga automática)
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -227,7 +236,8 @@ window.guardarNota = async function() {
     if (!content) { alert('El contenido no puede estar vacío'); return; }
     if (!state.currentUser || !state.currentUser.data?.id) { alert('No hay usuario logueado'); return; }
 
-    const cleanData = {
+    // Objeto plano base
+    const rawData = {
         patientId: String(patientId),
         date: String(date),
         content: String(content),
@@ -236,6 +246,18 @@ window.guardarNota = async function() {
         createdBy: String(state.currentUser.data.id),
         professionalId: String(state.currentUser.data.id)
     };
+
+    // 🔥 Limpieza extrema: serializar y deserializar para eliminar cualquier referencia circular
+    let cleanData;
+    try {
+        cleanData = JSON.parse(JSON.stringify(rawData));
+    } catch (e) {
+        console.error('Error al serializar la nota:', e);
+        alert('Error al procesar la nota. Intenta con menos caracteres o sin caracteres especiales.');
+        return;
+    }
+
+    console.log('📝 Nota a guardar (datos limpios):', cleanData);
 
     try {
         if (id) {
@@ -247,7 +269,7 @@ window.guardarNota = async function() {
             alert('Nota creada');
         }
         cerrarModalNota();
-        // 🔥 NO recargamos automáticamente – se necesita el botón "Actualizar"
+        // ❌ NO recargar automáticamente – usuario debe usar botón "Actualizar"
         console.log('✅ Nota guardada. Usa el botón "Actualizar" para ver los cambios.');
     } catch (error) {
         console.error('Error guardando nota:', error);
@@ -260,14 +282,14 @@ window.eliminarNota = async function(notaId) {
     try {
         await remove(ref(db, `sesiones/${notaId}`));
         alert('Nota eliminada');
-        // Recargar notas manualmente después de eliminar
-        await cargarNotas();
+        await cargarNotas(); // Eliminar es seguro, no genera ciclo
     } catch (error) {
         console.error('Error eliminando nota:', error);
         alert('Error al eliminar nota');
     }
 };
 
+// Botón de actualización manual
 window.recargarNotas = function() {
     cargarNotas().then(() => {
         alert('Notas recargadas correctamente');
@@ -289,18 +311,18 @@ window.exportarNotasPDF = async function() {
     const startDate = document.getElementById('fechaInicio')?.value;
     const endDate = document.getElementById('fechaFin')?.value;
 
-    let filtradas = [...allNotas];
-    if (startDate) filtradas = filtradas.filter(n => n.date >= startDate);
-    if (endDate) filtradas = filtradas.filter(n => n.date <= endDate);
+    let notasFiltradas = [...allNotas];
+    if (startDate) notasFiltradas = notasFiltradas.filter(n => n.date >= startDate);
+    if (endDate) notasFiltradas = notasFiltradas.filter(n => n.date <= endDate);
 
-    if (filtradas.length === 0) {
+    if (notasFiltradas.length === 0) {
         alert('No hay notas en el rango seleccionado.');
         return;
     }
 
-    filtradas.sort((a, b) => new Date(b.date) - new Date(a.date));
+    notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    let html = `
+    let htmlContent = `
         <html>
         <head><meta charset="UTF-8"><title>Notas de Evolución</title>
         <style>
@@ -313,20 +335,18 @@ window.exportarNotasPDF = async function() {
         </head>
         <body>
             <h1>Notas de Evolución</h1>
+            ${notasFiltradas.map(nota => `
+                <div class="nota">
+                    <div class="header">${escapeHtml(nota.pacienteNombre)} | ${new Date(nota.date).toLocaleDateString()}</div>
+                    <div class="contenido">${escapeHtml(nota.content || '').replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('')}
+        </body>
+        </html>
     `;
 
-    for (const n of filtradas) {
-        html += `
-            <div class="nota">
-                <div class="header">${escapeHtml(n.pacienteNombre)} | ${new Date(n.date).toLocaleDateString()}</div>
-                <div class="contenido">${escapeHtml(n.content || '').replace(/\n/g, '<br>')}</div>
-            </div>
-        `;
-    }
-    html += '</body></html>';
-
     const element = document.createElement('div');
-    element.innerHTML = html;
+    element.innerHTML = htmlContent;
     document.body.appendChild(element);
     try {
         await html2pdf().from(element).set({ margin: 0.5, filename: 'notas_evolucion.pdf' }).save();
@@ -338,7 +358,7 @@ window.exportarNotasPDF = async function() {
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización
+// 5. Inicialización (carga única)
 // ---------------------------------------------------------------------
 function initNotas() {
     auth.onAuthStateChanged(async (user) => {
@@ -353,7 +373,7 @@ function initNotas() {
                 const checkState = () => {
                     if (window.state?.currentUser) {
                         currentRole = window.state.currentUser.role;
-                        console.log(`✅ Rol asignado (después de espera): ${currentRole}`);
+                        console.log(`✅ Rol asignado (después de espera): ${currentRole} para usuario ${user.uid}`);
                         cargarPacientesParaNotas().then(() => cargarNotas());
                     } else {
                         setTimeout(checkState, 100);
@@ -375,4 +395,4 @@ function initNotas() {
 window.cargarNotas = cargarNotas;
 
 initNotas();
-console.log('✅ notas.js cargado correctamente (versión sin recursión)');
+console.log('✅ notas.js cargado correctamente (versión completa con serialización segura)');

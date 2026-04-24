@@ -1721,22 +1721,22 @@
         <!-- NUEVA PESTAÑA: NOTAS DE EVOLUCIÓN -->
         <!-- ============================================ -->
         <div id="tabNotas" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3>📝 Notas de Evolución</h3>
-                <button class="btn-staff" style="background: var(--verde-exito);" onclick="mostrarModalNuevaNota()">
-                    <i class="fa fa-plus"></i> Nueva Nota
-                </button>
-            </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3>📝 Notas de Evolución</h3>
+        <button class="btn-staff" style="background: var(--verde-exito);" onclick="mostrarModalNuevaNota()">
+            <i class="fa fa-plus"></i> Nueva Nota
+        </button>
+    </div>
 
-            <!-- Filtros -->
-            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                <select id="filtroNotaPaciente" class="filter-input" style="flex:2;" onchange="cargarNotas()">
-                    <option value="">Todos los pacientes</option>
-                </select>
-                <input type="date" id="filtroNotaFecha" class="filter-input" style="flex:1;" onchange="cargarNotas()">
-                <input type="text" id="filtroNotaBusqueda" class="filter-input" style="flex:2;" placeholder="Buscar en notas..." oninput="cargarNotas()">
-                <button class="btn-staff" onclick="cargarNotas()"><i class="fa fa-search"></i> Filtrar</button>
-            </div>
+    <!-- Filtros -->
+    <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+        <select id="filtroNotaPaciente" class="filter-input" style="flex:2;" onchange="cargarNotas()">
+            <option value="">Todos los pacientes</option>
+        </select>
+        <input type="date" id="filtroNotaFecha" class="filter-input" style="flex:1;" onchange="cargarNotas()">
+        <input type="text" id="filtroNotaBusqueda" class="filter-input" style="flex:2;" placeholder="Buscar en notas..." oninput="cargarNotas()">
+        <button class="btn-staff" onclick="cargarNotas()"><i class="fa fa-search"></i> Filtrar</button>
+    </div>
 
             <!-- Filtros de rango de fechas y botón de exportar PDF -->
 <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end;">

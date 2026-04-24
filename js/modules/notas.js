@@ -1,22 +1,21 @@
-// js/modules/notas.js - VERSIÓN DEFINITIVA (CON CONTROL DE RECURSIÓN)
+// js/modules/notas.js - VERSIÓN DEFINITIVA (SIN RECURSIÓN, CON BOTÓN ACTUALIZAR)
 import { db, auth } from '../config/firebase.js';
 import { ref, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 import * as state from './state.js';
 
-console.log('📦 Cargando módulo notas.js (versión con control de recursión)...');
+console.log('📦 Cargando módulo notas.js (versión sin recursión, con actualización manual)...');
 
 let currentUser = null;
 let currentRole = null;
 let allNotas = [];
 let allPatients = [];
-let cargandoNotas = false;  // 🔥 Flag para evitar ejecuciones simultáneas
+let cargandoNotas = false;
 
 // ---------------------------------------------------------------------
 // 1. Obtener pacientes (carga única)
 // ---------------------------------------------------------------------
 async function cargarPacientesParaNotas() {
     if (!currentUser) {
-        console.warn('⚠️ No hay usuario logueado');
         allPatients = [];
         actualizarSelects();
         return;
@@ -59,7 +58,7 @@ async function cargarPacientesParaNotas() {
             };
         }).filter(p => p.id);
 
-        console.log(`✅ Pacientes cargados:`, allPatients.map(p => p.nombreCompleto));
+        console.log(`✅ Pacientes cargados: ${allPatients.length}`);
         actualizarSelects();
     } catch (error) {
         console.error('❌ Error cargando pacientes:', error);
@@ -74,39 +73,36 @@ function actualizarSelects() {
 
     if (selectPaciente) {
         selectPaciente.innerHTML = '<option value="">Seleccionar paciente</option>';
-        allPatients.forEach(patient => {
-            const option = document.createElement('option');
-            option.value = patient.id;
-            option.textContent = `${patient.nombreCompleto} (${patient.rut || 'sin RUT'})`;
-            selectPaciente.appendChild(option);
+        allPatients.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `${p.nombreCompleto} (${p.rut || 'sin RUT'})`;
+            selectPaciente.appendChild(opt);
         });
     }
-
     if (filtroPaciente) {
         filtroPaciente.innerHTML = '<option value="">Todos los pacientes</option>';
-        allPatients.forEach(patient => {
-            const option = document.createElement('option');
-            option.value = patient.id;
-            option.textContent = patient.nombreCompleto;
-            filtroPaciente.appendChild(option);
+        allPatients.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.nombreCompleto;
+            filtroPaciente.appendChild(opt);
         });
     }
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar notas (con control de recursión)
+// 2. Cargar notas (extracción manual, SIN JSON.parse/stringify)
 // ---------------------------------------------------------------------
 async function cargarNotas() {
     if (!currentUser) {
-        console.warn('⚠️ No hay usuario, no se cargan notas');
         allNotas = [];
         renderNotasListado();
         return;
     }
 
-    // Evitar llamadas simultáneas (causa de recursión)
     if (cargandoNotas) {
-        console.log('⏳ Ya se están cargando las notas, se omite esta llamada');
+        console.log('⏳ Ya se están cargando las notas, omitiendo...');
         return;
     }
 
@@ -115,24 +111,28 @@ async function cargarNotas() {
         const sesionesSnap = await get(ref(db, 'sesiones'));
         const data = sesionesSnap.val() || {};
 
-        // Limpiar referencias circulares (como en tu versión original)
-        const cleanData = JSON.parse(JSON.stringify(data));
-
-        allNotas = Object.entries(cleanData).map(([id, nota]) => ({
-            id: String(id),
-            patientId: String(nota.patientId || ''),
-            date: String(nota.date || ''),
-            content: String(nota.content || ''),
-            createdAt: nota.createdAt || Date.now(),
-            updatedAt: nota.updatedAt || Date.now(),
-            createdBy: String(nota.createdBy || ''),
-            professionalId: String(nota.professionalId || ''),
-            pacienteNombre: allPatients.find(p => p.id == nota.patientId)?.nombreCompleto || 'Paciente desconocido'
-        }));
-
-        if (currentRole === 'psych') {
-            allNotas = allNotas.filter(nota => allPatients.some(p => p.id == nota.patientId));
+        // Extraemos manualmente los datos para evitar recursión
+        const nuevasNotas = [];
+        for (const [id, nota] of Object.entries(data)) {
+            if (!nota || typeof nota !== 'object') continue;
+            const patient = allPatients.find(p => p.id == nota.patientId);
+            nuevasNotas.push({
+                id: String(id),
+                patientId: String(nota.patientId || ''),
+                date: String(nota.date || ''),
+                content: String(nota.content || ''),
+                createdAt: nota.createdAt || Date.now(),
+                updatedAt: nota.updatedAt || Date.now(),
+                createdBy: String(nota.createdBy || ''),
+                professionalId: String(nota.professionalId || ''),
+                pacienteNombre: patient ? patient.nombreCompleto : 'Paciente desconocido'
+            });
         }
+
+        allNotas = (currentRole === 'psych')
+            ? nuevasNotas.filter(n => allPatients.some(p => p.id == n.patientId))
+            : nuevasNotas;
+
         renderNotasListado();
         console.log(`✅ Notas cargadas: ${allNotas.length} registros`);
     } catch (error) {
@@ -150,26 +150,26 @@ function renderNotasListado() {
 
     const pacienteFiltro = document.getElementById('filtroNotaPaciente')?.value;
     const fechaFiltro = document.getElementById('filtroNotaFecha')?.value;
-    const busquedaFiltro = document.getElementById('filtroNotaBusqueda')?.value?.toLowerCase();
+    const busqueda = document.getElementById('filtroNotaBusqueda')?.value?.toLowerCase();
 
-    let notasFiltradas = [...allNotas];
-    if (pacienteFiltro) notasFiltradas = notasFiltradas.filter(n => n.patientId === pacienteFiltro);
-    if (fechaFiltro) notasFiltradas = notasFiltradas.filter(n => n.date === fechaFiltro);
-    if (busquedaFiltro) {
-        notasFiltradas = notasFiltradas.filter(n =>
-            n.content?.toLowerCase().includes(busquedaFiltro) ||
-            n.pacienteNombre?.toLowerCase().includes(busquedaFiltro)
+    let filtradas = [...allNotas];
+    if (pacienteFiltro) filtradas = filtradas.filter(n => n.patientId === pacienteFiltro);
+    if (fechaFiltro) filtradas = filtradas.filter(n => n.date === fechaFiltro);
+    if (busqueda) {
+        filtradas = filtradas.filter(n =>
+            n.content?.toLowerCase().includes(busqueda) ||
+            n.pacienteNombre?.toLowerCase().includes(busqueda)
         );
     }
 
-    notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
+    filtradas.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    if (notasFiltradas.length === 0) {
+    if (filtradas.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:40px;">📭 No hay notas que coincidan con los filtros.</div>';
         return;
     }
 
-    container.innerHTML = notasFiltradas.map(nota => `
+    container.innerHTML = filtradas.map(nota => `
         <div class="nota-card" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primario);">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
@@ -177,12 +177,8 @@ function renderNotasListado() {
                     <span style="margin-left: 15px; color: #666;">📅 ${new Date(nota.date).toLocaleDateString()}</span>
                 </div>
                 <div>
-                    <button class="btn-staff" style="background: var(--atencion); padding: 4px 12px; margin-right: 8px;" onclick="editarNota('${nota.id}')">
-                        <i class="fa fa-edit"></i>
-                    </button>
-                    <button class="btn-staff" style="background: var(--rojo-alerta); padding: 4px 12px;" onclick="eliminarNota('${nota.id}')">
-                        <i class="fa fa-trash"></i>
-                    </button>
+                    <button class="btn-staff" style="background: var(--atencion); padding: 4px 12px; margin-right: 8px;" onclick="editarNota('${nota.id}')"><i class="fa fa-edit"></i></button>
+                    <button class="btn-staff" style="background: var(--rojo-alerta); padding: 4px 12px;" onclick="eliminarNota('${nota.id}')"><i class="fa fa-trash"></i></button>
                 </div>
             </div>
             <div style="margin-top: 12px; white-space: pre-line;">${escapeHtml(nota.content || '').replace(/\n/g, '<br>')}</div>
@@ -196,7 +192,7 @@ function escapeHtml(str) {
 }
 
 // ---------------------------------------------------------------------
-// 3. Funciones del modal (con recarga diferida para evitar recursión)
+// 3. Funciones del modal (sin recarga automática)
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -251,11 +247,8 @@ window.guardarNota = async function() {
             alert('Nota creada');
         }
         cerrarModalNota();
-
-        // 🔥 Pequeño retraso para evitar conflictos de escritura/lectura que podrían causar recursión
-        setTimeout(() => {
-            cargarNotas().catch(e => console.error('Error recargando notas:', e));
-        }, 500);
+        // 🔥 NO recargamos automáticamente – se necesita el botón "Actualizar"
+        console.log('✅ Nota guardada. Usa el botón "Actualizar" para ver los cambios.');
     } catch (error) {
         console.error('Error guardando nota:', error);
         alert('Error al guardar nota: ' + error.message);
@@ -267,11 +260,21 @@ window.eliminarNota = async function(notaId) {
     try {
         await remove(ref(db, `sesiones/${notaId}`));
         alert('Nota eliminada');
+        // Recargar notas manualmente después de eliminar
         await cargarNotas();
     } catch (error) {
         console.error('Error eliminando nota:', error);
         alert('Error al eliminar nota');
     }
+};
+
+window.recargarNotas = function() {
+    cargarNotas().then(() => {
+        alert('Notas recargadas correctamente');
+    }).catch(e => {
+        console.error('Error al recargar notas:', e);
+        alert('Error al recargar notas. Revisa la consola.');
+    });
 };
 
 function cerrarModalNota() {
@@ -286,18 +289,18 @@ window.exportarNotasPDF = async function() {
     const startDate = document.getElementById('fechaInicio')?.value;
     const endDate = document.getElementById('fechaFin')?.value;
 
-    let notasFiltradas = [...allNotas];
-    if (startDate) notasFiltradas = notasFiltradas.filter(n => n.date >= startDate);
-    if (endDate) notasFiltradas = notasFiltradas.filter(n => n.date <= endDate);
+    let filtradas = [...allNotas];
+    if (startDate) filtradas = filtradas.filter(n => n.date >= startDate);
+    if (endDate) filtradas = filtradas.filter(n => n.date <= endDate);
 
-    if (notasFiltradas.length === 0) {
+    if (filtradas.length === 0) {
         alert('No hay notas en el rango seleccionado.');
         return;
     }
 
-    notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
+    filtradas.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    let htmlContent = `
+    let html = `
         <html>
         <head><meta charset="UTF-8"><title>Notas de Evolución</title>
         <style>
@@ -310,18 +313,20 @@ window.exportarNotasPDF = async function() {
         </head>
         <body>
             <h1>Notas de Evolución</h1>
-            ${notasFiltradas.map(nota => `
-                <div class="nota">
-                    <div class="header">${escapeHtml(nota.pacienteNombre)} | ${new Date(nota.date).toLocaleDateString()}</div>
-                    <div class="contenido">${escapeHtml(nota.content || '').replace(/\n/g, '<br>')}</div>
-                </div>
-            `).join('')}
-        </body>
-        </html>
     `;
 
+    for (const n of filtradas) {
+        html += `
+            <div class="nota">
+                <div class="header">${escapeHtml(n.pacienteNombre)} | ${new Date(n.date).toLocaleDateString()}</div>
+                <div class="contenido">${escapeHtml(n.content || '').replace(/\n/g, '<br>')}</div>
+            </div>
+        `;
+    }
+    html += '</body></html>';
+
     const element = document.createElement('div');
-    element.innerHTML = htmlContent;
+    element.innerHTML = html;
     document.body.appendChild(element);
     try {
         await html2pdf().from(element).set({ margin: 0.5, filename: 'notas_evolucion.pdf' }).save();
@@ -333,24 +338,22 @@ window.exportarNotasPDF = async function() {
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización (carga única, sin setInterval)
+// 5. Inicialización
 // ---------------------------------------------------------------------
 function initNotas() {
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
-            // Esperar a que state tenga el rol (pero sin intervalo)
             if (window.state?.currentUser) {
                 currentRole = window.state.currentUser.role;
                 console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
                 await cargarPacientesParaNotas();
                 await cargarNotas();
             } else {
-                // Si state no está listo, esperar un poco (solo una vez)
                 const checkState = () => {
                     if (window.state?.currentUser) {
                         currentRole = window.state.currentUser.role;
-                        console.log(`✅ Rol asignado (después de espera): ${currentRole} para usuario ${user.uid}`);
+                        console.log(`✅ Rol asignado (después de espera): ${currentRole}`);
                         cargarPacientesParaNotas().then(() => cargarNotas());
                     } else {
                         setTimeout(checkState, 100);
@@ -372,4 +375,4 @@ function initNotas() {
 window.cargarNotas = cargarNotas;
 
 initNotas();
-console.log('✅ notas.js cargado correctamente (versión con control de recursión y recarga diferida)');
+console.log('✅ notas.js cargado correctamente (versión sin recursión)');

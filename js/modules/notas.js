@@ -1,18 +1,18 @@
-// js/modules/notas.js - VERSIÓN DEFINITIVA (SIN RECURSIÓN, CON MANEJO SEGURO DE GUARDADO)
+// js/modules/notas.js - VERSIÓN DEFINITIVA (CON CONTROL DE RECURSIÓN)
 import { db, auth } from '../config/firebase.js';
 import { ref, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
 import * as state from './state.js';
 
-console.log('📦 Cargando módulo notas.js (versión segura)...');
+console.log('📦 Cargando módulo notas.js (versión con control de recursión)...');
 
 let currentUser = null;
 let currentRole = null;
 let allNotas = [];
 let allPatients = [];
-let datosCargados = false;
+let cargandoNotas = false;  // 🔥 Flag para evitar ejecuciones simultáneas
 
 // ---------------------------------------------------------------------
-// 1. Obtener pacientes (carga única, sin escucha)
+// 1. Obtener pacientes (carga única)
 // ---------------------------------------------------------------------
 async function cargarPacientesParaNotas() {
     if (!currentUser) {
@@ -59,7 +59,7 @@ async function cargarPacientesParaNotas() {
             };
         }).filter(p => p.id);
 
-        console.log(`✅ Pacientes cargados: ${allPatients.length}`);
+        console.log(`✅ Pacientes cargados:`, allPatients.map(p => p.nombreCompleto));
         actualizarSelects();
     } catch (error) {
         console.error('❌ Error cargando pacientes:', error);
@@ -94,41 +94,45 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar notas (extracción manual, sin recursión)
+// 2. Cargar notas (con control de recursión)
 // ---------------------------------------------------------------------
 async function cargarNotas() {
     if (!currentUser) {
+        console.warn('⚠️ No hay usuario, no se cargan notas');
         allNotas = [];
         renderNotasListado();
         return;
     }
-    if (datosCargados) return;
-    datosCargados = true;
 
+    // Evitar llamadas simultáneas (causa de recursión)
+    if (cargandoNotas) {
+        console.log('⏳ Ya se están cargando las notas, se omite esta llamada');
+        return;
+    }
+
+    cargandoNotas = true;
     try {
         const sesionesSnap = await get(ref(db, 'sesiones'));
         const data = sesionesSnap.val() || {};
 
-        const nuevasNotas = [];
-        for (const [id, nota] of Object.entries(data)) {
-            if (!nota || typeof nota !== 'object') continue;
-            const patient = allPatients.find(p => p.id == nota.patientId);
-            nuevasNotas.push({
-                id: String(id),
-                patientId: String(nota.patientId || ''),
-                date: String(nota.date || ''),
-                content: String(nota.content || ''),
-                createdAt: nota.createdAt || Date.now(),
-                updatedAt: nota.updatedAt || Date.now(),
-                createdBy: String(nota.createdBy || ''),
-                professionalId: String(nota.professionalId || ''),
-                pacienteNombre: patient ? patient.nombreCompleto : 'Paciente desconocido'
-            });
-        }
+        // Limpiar referencias circulares (como en tu versión original)
+        const cleanData = JSON.parse(JSON.stringify(data));
 
-        allNotas = (currentRole === 'psych') 
-            ? nuevasNotas.filter(n => allPatients.some(p => p.id == n.patientId)) 
-            : nuevasNotas;
+        allNotas = Object.entries(cleanData).map(([id, nota]) => ({
+            id: String(id),
+            patientId: String(nota.patientId || ''),
+            date: String(nota.date || ''),
+            content: String(nota.content || ''),
+            createdAt: nota.createdAt || Date.now(),
+            updatedAt: nota.updatedAt || Date.now(),
+            createdBy: String(nota.createdBy || ''),
+            professionalId: String(nota.professionalId || ''),
+            pacienteNombre: allPatients.find(p => p.id == nota.patientId)?.nombreCompleto || 'Paciente desconocido'
+        }));
+
+        if (currentRole === 'psych') {
+            allNotas = allNotas.filter(nota => allPatients.some(p => p.id == nota.patientId));
+        }
         renderNotasListado();
         console.log(`✅ Notas cargadas: ${allNotas.length} registros`);
     } catch (error) {
@@ -136,7 +140,7 @@ async function cargarNotas() {
         allNotas = [];
         renderNotasListado();
     } finally {
-        datosCargados = false;
+        cargandoNotas = false;
     }
 }
 
@@ -146,30 +150,30 @@ function renderNotasListado() {
 
     const pacienteFiltro = document.getElementById('filtroNotaPaciente')?.value;
     const fechaFiltro = document.getElementById('filtroNotaFecha')?.value;
-    const busqueda = document.getElementById('filtroNotaBusqueda')?.value?.toLowerCase();
+    const busquedaFiltro = document.getElementById('filtroNotaBusqueda')?.value?.toLowerCase();
 
-    let filtradas = [...allNotas];
-    if (pacienteFiltro) filtradas = filtradas.filter(n => n.patientId === pacienteFiltro);
-    if (fechaFiltro) filtradas = filtradas.filter(n => n.date === fechaFiltro);
-    if (busqueda) {
-        filtradas = filtradas.filter(n =>
-            n.content?.toLowerCase().includes(busqueda) ||
-            n.pacienteNombre?.toLowerCase().includes(busqueda)
+    let notasFiltradas = [...allNotas];
+    if (pacienteFiltro) notasFiltradas = notasFiltradas.filter(n => n.patientId === pacienteFiltro);
+    if (fechaFiltro) notasFiltradas = notasFiltradas.filter(n => n.date === fechaFiltro);
+    if (busquedaFiltro) {
+        notasFiltradas = notasFiltradas.filter(n =>
+            n.content?.toLowerCase().includes(busquedaFiltro) ||
+            n.pacienteNombre?.toLowerCase().includes(busquedaFiltro)
         );
     }
 
-    filtradas.sort((a, b) => new Date(b.date) - new Date(a.date));
+    notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    if (filtradas.length === 0) {
+    if (notasFiltradas.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:40px;">📭 No hay notas que coincidan con los filtros.</div>';
         return;
     }
 
-    container.innerHTML = filtradas.map(nota => `
+    container.innerHTML = notasFiltradas.map(nota => `
         <div class="nota-card" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primario);">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
-                    <strong>${escapeHtml(nota.pacienteNombre)}</strong>
+                    <strong style="font-size: 1.1rem;">${escapeHtml(nota.pacienteNombre)}</strong>
                     <span style="margin-left: 15px; color: #666;">📅 ${new Date(nota.date).toLocaleDateString()}</span>
                 </div>
                 <div>
@@ -192,7 +196,7 @@ function escapeHtml(str) {
 }
 
 // ---------------------------------------------------------------------
-// 3. Funciones del modal (con guardado extremadamente seguro)
+// 3. Funciones del modal (con recarga diferida para evitar recursión)
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -225,10 +229,9 @@ window.guardarNota = async function() {
     if (!patientId) { alert('Selecciona un paciente'); return; }
     if (!date) { alert('Selecciona una fecha'); return; }
     if (!content) { alert('El contenido no puede estar vacío'); return; }
-    if (!state.currentUser?.data?.id) { alert('No hay usuario logueado'); return; }
+    if (!state.currentUser || !state.currentUser.data?.id) { alert('No hay usuario logueado'); return; }
 
-    // Construir objeto plano y forzar serialización para eliminar cualquier referencia circular
-    const rawData = {
+    const cleanData = {
         patientId: String(patientId),
         date: String(date),
         content: String(content),
@@ -238,36 +241,24 @@ window.guardarNota = async function() {
         professionalId: String(state.currentUser.data.id)
     };
 
-    // Limpieza extrema: serializar y deserializar
-    let notaData;
-    try {
-        notaData = JSON.parse(JSON.stringify(rawData));
-    } catch (e) {
-        console.error('Error al serializar la nota:', e);
-        alert('Error al procesar la nota. Intenta con menos caracteres o sin caracteres especiales.');
-        return;
-    }
-
-    console.log('📝 Nota a guardar (datos limpios):', notaData);
-
     try {
         if (id) {
-            await update(ref(db, `sesiones/${id}`), notaData);
+            await update(ref(db, `sesiones/${id}`), cleanData);
             alert('Nota actualizada');
         } else {
             const newRef = push(ref(db, 'sesiones'));
-            await set(newRef, notaData);
+            await set(newRef, cleanData);
             alert('Nota creada');
         }
         cerrarModalNota();
-        
-        // Recargar notas después de un pequeño retraso para evitar conflictos
+
+        // 🔥 Pequeño retraso para evitar conflictos de escritura/lectura que podrían causar recursión
         setTimeout(() => {
             cargarNotas().catch(e => console.error('Error recargando notas:', e));
-        }, 300);
+        }, 500);
     } catch (error) {
         console.error('Error guardando nota:', error);
-        alert('Error al guardar nota: ' + (error.message || 'Verifique su conexión'));
+        alert('Error al guardar nota: ' + error.message);
     }
 };
 
@@ -289,53 +280,84 @@ function cerrarModalNota() {
 window.cerrarModalNota = cerrarModalNota;
 
 // ---------------------------------------------------------------------
-// 4. Exportar PDF (simplificado)
+// 4. Exportar PDF
 // ---------------------------------------------------------------------
 window.exportarNotasPDF = async function() {
     const startDate = document.getElementById('fechaInicio')?.value;
     const endDate = document.getElementById('fechaFin')?.value;
+
     let notasFiltradas = [...allNotas];
     if (startDate) notasFiltradas = notasFiltradas.filter(n => n.date >= startDate);
     if (endDate) notasFiltradas = notasFiltradas.filter(n => n.date <= endDate);
-    if (!notasFiltradas.length) { alert('No hay notas en el rango seleccionado.'); return; }
-    notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
-    let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Notas de Evolución</title>
-        <style>body{font-family:Arial;margin:20px}h1{text-align:center;color:#2c7da0}.nota{border:1px solid #ccc;margin-bottom:20px;padding:15px;border-radius:8px;page-break-inside:avoid}.header{font-weight:bold;margin-bottom:10px}.contenido{white-space:pre-line}</style>
-        </head><body><h1>Notas de Evolución</h1>`;
-    for (const nota of notasFiltradas) {
-        html += `<div class="nota"><div class="header">${escapeHtml(nota.pacienteNombre)} | ${new Date(nota.date).toLocaleDateString()}</div>
-                 <div class="contenido">${escapeHtml(nota.content || '').replace(/\n/g, '<br>')}</div></div>`;
+
+    if (notasFiltradas.length === 0) {
+        alert('No hay notas en el rango seleccionado.');
+        return;
     }
-    html += '</body></html>';
+
+    notasFiltradas.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    let htmlContent = `
+        <html>
+        <head><meta charset="UTF-8"><title>Notas de Evolución</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { text-align: center; color: #2c7da0; }
+            .nota { border: 1px solid #ccc; margin-bottom: 20px; padding: 15px; border-radius: 8px; page-break-inside: avoid; }
+            .header { font-weight: bold; margin-bottom: 10px; }
+            .contenido { white-space: pre-line; margin-top: 10px; }
+        </style>
+        </head>
+        <body>
+            <h1>Notas de Evolución</h1>
+            ${notasFiltradas.map(nota => `
+                <div class="nota">
+                    <div class="header">${escapeHtml(nota.pacienteNombre)} | ${new Date(nota.date).toLocaleDateString()}</div>
+                    <div class="contenido">${escapeHtml(nota.content || '').replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('')}
+        </body>
+        </html>
+    `;
+
     const element = document.createElement('div');
-    element.innerHTML = html;
+    element.innerHTML = htmlContent;
     document.body.appendChild(element);
     try {
         await html2pdf().from(element).set({ margin: 0.5, filename: 'notas_evolucion.pdf' }).save();
-    } catch(e) { console.error(e); alert('Error al generar PDF'); }
+    } catch (error) {
+        console.error('Error generando PDF:', error);
+        alert('Error al generar PDF');
+    }
     document.body.removeChild(element);
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización (carga única)
+// 5. Inicialización (carga única, sin setInterval)
 // ---------------------------------------------------------------------
-let inicializado = false;
 function initNotas() {
-    if (inicializado) return;
-    inicializado = true;
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
-            const esperarState = () => {
-                if (window.state?.currentUser) {
-                    currentRole = window.state.currentUser.role;
-                    console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
-                    cargarPacientesParaNotas().then(() => cargarNotas());
-                } else {
-                    setTimeout(esperarState, 200);
-                }
-            };
-            esperarState();
+            // Esperar a que state tenga el rol (pero sin intervalo)
+            if (window.state?.currentUser) {
+                currentRole = window.state.currentUser.role;
+                console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
+                await cargarPacientesParaNotas();
+                await cargarNotas();
+            } else {
+                // Si state no está listo, esperar un poco (solo una vez)
+                const checkState = () => {
+                    if (window.state?.currentUser) {
+                        currentRole = window.state.currentUser.role;
+                        console.log(`✅ Rol asignado (después de espera): ${currentRole} para usuario ${user.uid}`);
+                        cargarPacientesParaNotas().then(() => cargarNotas());
+                    } else {
+                        setTimeout(checkState, 100);
+                    }
+                };
+                checkState();
+            }
         } else {
             currentUser = null;
             currentRole = null;
@@ -350,4 +372,4 @@ function initNotas() {
 window.cargarNotas = cargarNotas;
 
 initNotas();
-console.log('✅ notas.js cargado (versión ultra segura, sin recursión)');
+console.log('✅ notas.js cargado correctamente (versión con control de recursión y recarga diferida)');

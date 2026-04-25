@@ -1,4 +1,4 @@
-// js/modules/publico.js - VERSIÓN CORREGIDA (presencial muestra horarios)
+// js/modules/publico.js - VERSIÓN CORREGIDA (sin errores de sintaxis)
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
@@ -327,7 +327,6 @@ export function updateBookingDetails() {
         if (bookingPrice) bookingPrice.innerText = `$${(psych.pricePresencial || 0).toLocaleString()}`;
         if (bookingType) bookingType.innerText = 'Presencial';
         if (onlineAvailabilityMsg) onlineAvailabilityMsg.style.display = 'none';
-        // No mostramos el warning aquí; se manejará en updateAvailableTimes
     }
 }
 
@@ -345,7 +344,6 @@ export async function updateAvailableTimes() {
 
     console.log(`🔍 [PUBLICO] updateAvailableTimes: fecha=${date}, tipo=${appointmentType}, psicólogo=${psychId}`);
 
-    // Inicializar UI
     timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
     if (warningDiv) warningDiv.style.display = 'none';
     timeSelect.style.display = 'block';
@@ -391,7 +389,6 @@ export async function updateAvailableTimes() {
         let availableSlots = [];
 
         if (appointmentType === 'presencial') {
-            // Presencial: solo slots disponibles en el Box (status 'available')
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
                 const [slotHour, slotMin] = slotStart.split(':');
@@ -405,7 +402,6 @@ export async function updateAvailableTimes() {
             });
             console.log(`🎯 Horarios presenciales disponibles (${availableSlots.length}):`, availableSlots.map(s => s.timeLabel));
         } else {
-            // Online: cualquier slot dentro del rango, aunque esté reservado en el Box
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
                 const [slotHour, slotMin] = slotStart.split(':');

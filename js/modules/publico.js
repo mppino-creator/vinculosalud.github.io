@@ -1,4 +1,4 @@
-// js/modules/publico.js - VERSIÓN COMPLETA CON ANULACIONES PERSONALES
+// js/modules/publico.js - VERSIÓN COMPLETA CON ANULACIONES PERSONALES (FINAL)
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
@@ -20,7 +20,7 @@ import {
 import { renderStaffTable } from './profesionales.js';
 import { renderPatients } from './pacientes.js';
 import { renderPendingRequests, renderAppointments } from './citas.js';
-import { loadBoxSlots, saveBoxSlots } from './box.js';  // <-- Importar funciones del Box
+import { loadBoxSlots, saveBoxSlots } from './box.js';
 
 // ============================================
 // ALMACENAMIENTO DE LISTENERS PRIVADOS

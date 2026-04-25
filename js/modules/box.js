@@ -1,4 +1,4 @@
-// js/modules/box.js - Versión corregida (fechas locales)
+// js/modules/box.js - Versión definitiva con fechas locales y calendario correcto
 import { db } from '../config/firebase.js';
 import { showToast } from './utils.js';
 import * as state from './state.js';
@@ -26,23 +26,31 @@ function limpiarHora(valor) {
     return valor.split(' ')[0];
 }
 
-// CORREGIDO: Comparación de horario pasado usando fecha local
+// Obtener fecha local en formato YYYY-MM-DD (para inputs date)
+function getLocalDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Comparar si un slot ya pasó (usando fecha local)
 function isSlotPassed(dateStr, timeLabel) {
     const startTimeStr = timeLabel.split(' - ')[0];
     const [year, month, day] = dateStr.split('-');
     const [hour, minute] = startTimeStr.split(':');
-    const slotDateTime = new Date(year, month-1, day, hour, minute);
+    const slotDateTime = new Date(year, month - 1, day, hour, minute);
     return slotDateTime < new Date();
 }
 
-// CORREGIDO: Generar slots con fechas locales (sin UTC)
+// Generar slots con fechas locales
 export function generateSlotsForDate(dateStr, startTime, endTime, duracionMin, holguraMin) {
     const slots = [];
     const [year, month, day] = dateStr.split('-');
     const [startHour, startMin] = startTime.split(':');
     const [endHour, endMin] = endTime.split(':');
-    const start = new Date(year, month-1, day, startHour, startMin);
-    const end = new Date(year, month-1, day, endHour, endMin);
+    const start = new Date(year, month - 1, day, startHour, startMin);
+    const end = new Date(year, month - 1, day, endHour, endMin);
     if (end <= start) return slots;
     const step = duracionMin + holguraMin;
     let current = new Date(start);
@@ -70,7 +78,7 @@ export async function loadBoxSlots(dateStr) {
 }
 
 // ============================================
-// PANEL ADMINISTRADOR
+// PANEL ADMINISTRADOR (calendario correcto)
 // ============================================
 export async function renderAdminBoxPanel() {
     const container = document.getElementById('tabBox');
@@ -83,6 +91,10 @@ export async function renderAdminBoxPanel() {
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
 
+    // Fechas locales para los inputs
+    const todayLocal = getLocalDateString(today);
+    const nextWeekLocal = getLocalDateString(nextWeek);
+
     container.innerHTML = `
         <h3>📦 Gestión del Box Compartido</h3>
         
@@ -91,11 +103,11 @@ export async function renderAdminBoxPanel() {
             <div class="form-row" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
                 <div class="field" style="flex:1; min-width:150px;">
                     <label>📅 Fecha inicio</label>
-                    <input type="date" id="boxRangeStartDate" value="${today.toISOString().slice(0,10)}" class="filter-input">
+                    <input type="date" id="boxRangeStartDate" value="${todayLocal}" class="filter-input">
                 </div>
                 <div class="field" style="flex:1; min-width:150px;">
                     <label>📅 Fecha fin</label>
-                    <input type="date" id="boxRangeEndDate" value="${nextWeek.toISOString().slice(0,10)}" class="filter-input">
+                    <input type="date" id="boxRangeEndDate" value="${nextWeekLocal}" class="filter-input">
                 </div>
                 <div class="field" style="flex:1; min-width:120px;">
                     <label>⏰ Hora inicio</label>
@@ -157,7 +169,7 @@ export async function renderAdminBoxPanel() {
         <div class="form-row" style="display:flex; gap:15px; align-items:flex-end; margin-bottom:20px;">
             <div class="field" style="flex:2;">
                 <label>Fecha</label>
-                <input type="date" id="boxAdminDate" value="${today.toISOString().slice(0,10)}" class="filter-input">
+                <input type="date" id="boxAdminDate" value="${todayLocal}" class="filter-input">
             </div>
             <button id="boxRefreshAdminSlotsBtn" class="btn-staff">Cargar horarios</button>
             <button id="boxDeleteRangeBtn" class="btn-staff" style="background:#dc3545;">🗑️ Eliminar rango de fechas</button>
@@ -167,7 +179,7 @@ export async function renderAdminBoxPanel() {
 
     // Selector de días
     const weekdays = document.querySelectorAll('#boxWeekdaySelector .weekday');
-    let selectedDays = ['1','2','3','4','5']; // Lun a Vie por defecto
+    let selectedDays = ['1', '2', '3', '4', '5'];
     weekdays.forEach(day => {
         const dayVal = day.getAttribute('data-day');
         if (selectedDays.includes(dayVal)) day.classList.add('selected');
@@ -189,16 +201,19 @@ export async function renderAdminBoxPanel() {
     function getDuracion() { return parseInt(document.getElementById('boxDuracionAtencion')?.value) || 60; }
     function getHolgura() { return parseInt(document.getElementById('boxHolguraTurnos')?.value) || 10; }
 
-    // ========== CALENDARIO ADMIN ==========
+    // ========== CALENDARIO ADMIN (CON DOMINGO COMO PRIMER DÍA) ==========
     async function renderAdminCalendario() {
         const primerDia = new Date(añoActual, mesActual, 1);
         const ultimoDia = new Date(añoActual, mesActual + 1, 0);
         const diasEnMes = ultimoDia.getDate();
+        // getDay(): 0=domingo, 1=lunes, ..., 6=sábado
         const diaInicioSemana = primerDia.getDay();
+        
         document.getElementById('adminMonthYear').innerText = primerDia.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
 
         let html = `<table style="width:100%; border-collapse:collapse; text-align:center;">
             <thead><tr><th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th></tr></thead><tbody>`;
+        
         let dia = 1;
         for (let i = 0; i < 6; i++) {
             if (dia > diasEnMes) break;
@@ -207,7 +222,7 @@ export async function renderAdminBoxPanel() {
                 if (i === 0 && j < diaInicioSemana) {
                     html += '<td style="border:1px solid #ddd; padding:8px;"> </td>';
                 } else if (dia <= diasEnMes) {
-                    const fechaStr = `${añoActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+                    const fechaStr = `${añoActual}-${String(mesActual + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
                     const slots = await loadBoxSlots(fechaStr);
                     const disponibles = slots.filter(s => s.status === 'available').length;
                     const reservados = slots.filter(s => s.status === 'booked').length;
@@ -239,7 +254,7 @@ export async function renderAdminBoxPanel() {
         document.getElementById('adminCalendarioContainer').innerHTML = html;
     }
 
-    // ========== PREVISUALIZACIÓN CORREGIDA ==========
+    // ========== PREVISUALIZACIÓN ==========
     async function generarPrevisualizacion() {
         const start = getStart();
         const end = getEnd();
@@ -256,8 +271,7 @@ export async function renderAdminBoxPanel() {
         if (startDate > endDate) { showToast('❌ Fecha inicio debe ser anterior a fin', 'error'); return; }
         let totalTurnos = 0, resumen = '';
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            // CORREGIDO: fecha local en lugar de toISOString
-            const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const dateStr = getLocalDateString(d);
             const dayOfWeek = d.getDay().toString();
             if (selectedDays.includes(dayOfWeek)) {
                 const slots = generateSlotsForDate(dateStr, startH, endH, duracion, holgura);
@@ -273,7 +287,7 @@ export async function renderAdminBoxPanel() {
         document.getElementById('boxPreviewContainer').style.display = 'block';
     }
 
-    // ========== GENERAR Y GUARDAR CORREGIDO ==========
+    // ========== GENERAR Y GUARDAR ==========
     async function generarYGuardar() {
         const start = getStart();
         const end = getEnd();
@@ -286,8 +300,7 @@ export async function renderAdminBoxPanel() {
         const endDate = new Date(end);
         let totalGenerados = 0;
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            // CORREGIDO: fecha local
-            const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const dateStr = getLocalDateString(d);
             const dayOfWeek = d.getDay().toString();
             if (selectedDays.includes(dayOfWeek)) {
                 const slots = generateSlotsForDate(dateStr, startH, endH, duracion, holgura);
@@ -303,6 +316,7 @@ export async function renderAdminBoxPanel() {
         renderAdminCalendario();
     }
 
+    // ========== REFRESCAR SLOTS DEL DÍA ==========
     async function refreshAdminSlots() {
         const date = document.getElementById('boxAdminDate').value;
         if (!date) return;
@@ -330,7 +344,7 @@ export async function renderAdminBoxPanel() {
             `;
             container.appendChild(card);
         });
-        // Eventos (igual que antes)
+        // Eventos
         document.querySelectorAll('#boxAdminSlotsContainer .cancel-admin').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const idx = parseInt(btn.dataset.index);
@@ -370,6 +384,7 @@ export async function renderAdminBoxPanel() {
         });
     }
 
+    // ========== ELIMINAR RANGO DE FECHAS ==========
     async function eliminarRangoFechas() {
         const fechaInicio = prompt('Fecha de inicio (YYYY-MM-DD):');
         if (!fechaInicio) return;
@@ -381,7 +396,7 @@ export async function renderAdminBoxPanel() {
         if (!confirm(`¿Eliminar TODOS los slots entre ${fechaInicio} y ${fechaFin}?`)) return;
         let eliminados = 0;
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const dateStr = getLocalDateString(d);
             const slots = await loadBoxSlots(dateStr);
             if (slots.length) {
                 await db.ref(`boxes/${dateStr}`).remove();
@@ -393,26 +408,42 @@ export async function renderAdminBoxPanel() {
         renderAdminCalendario();
     }
 
+    // Eventos
     document.getElementById('boxPreviewRangeBtn')?.addEventListener('click', generarPrevisualizacion);
     document.getElementById('boxGenerateRangeBtn')?.addEventListener('click', generarYGuardar);
     document.getElementById('boxRefreshAdminSlotsBtn')?.addEventListener('click', refreshAdminSlots);
     document.getElementById('boxDeleteRangeBtn')?.addEventListener('click', eliminarRangoFechas);
     document.getElementById('boxAdminDate')?.addEventListener('change', refreshAdminSlots);
-    document.getElementById('adminPrevMonthBtn')?.addEventListener('click', () => { mesActual--; if (mesActual < 0) { mesActual = 11; añoActual--; } renderAdminCalendario(); });
-    document.getElementById('adminNextMonthBtn')?.addEventListener('click', () => { mesActual++; if (mesActual > 11) { mesActual = 0; añoActual++; } renderAdminCalendario(); });
+    document.getElementById('adminPrevMonthBtn')?.addEventListener('click', () => {
+        mesActual--;
+        if (mesActual < 0) {
+            mesActual = 11;
+            añoActual--;
+        }
+        renderAdminCalendario();
+    });
+    document.getElementById('adminNextMonthBtn')?.addEventListener('click', () => {
+        mesActual++;
+        if (mesActual > 11) {
+            mesActual = 0;
+            añoActual++;
+        }
+        renderAdminCalendario();
+    });
+
     refreshAdminSlots();
     renderAdminCalendario();
 }
 
 // ============================================
-// PANEL PROFESIONAL (con corrección similar)
+// PANEL PROFESIONAL (con fechas locales)
 // ============================================
 export async function renderProfessionalBoxPanel() {
     const container = document.getElementById('tabBoxProfesional');
     if (!container) return;
     const professionalName = state.currentUser?.data?.name || 'Profesional';
     const today = new Date();
-    const fechaActual = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const fechaActual = getLocalDateString(today);
 
     container.innerHTML = `
         <h3>📦 Reservar Box Compartido</h3>
@@ -458,7 +489,7 @@ export async function renderProfessionalBoxPanel() {
                 if (i === 0 && j < diaInicioSemana) {
                     html += '<td style="border:1px solid #ddd; padding:8px;"> </td>';
                 } else if (dia <= diasEnMes) {
-                    const fechaStr = `${añoPro}-${String(mesPro+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+                    const fechaStr = `${añoPro}-${String(mesPro + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
                     const slots = await loadBoxSlots(fechaStr);
                     const disponibles = slots.filter(s => s.status === 'available' && !isSlotPassed(fechaStr, s.timeLabel)).length;
                     const reservados = slots.filter(s => s.status === 'booked').length;
@@ -572,7 +603,10 @@ export async function renderProfessionalBoxPanel() {
 
     document.getElementById('proPrevMonthBtn')?.addEventListener('click', () => cambiarMesPro(-1));
     document.getElementById('proNextMonthBtn')?.addEventListener('click', () => cambiarMesPro(1));
-    document.getElementById('refreshProBoxBtn')?.addEventListener('click', async () => { await refreshProSlots(); await renderProCalendario(); });
+    document.getElementById('refreshProBoxBtn')?.addEventListener('click', async () => {
+        await refreshProSlots();
+        await renderProCalendario();
+    });
     document.getElementById('proBoxDate')?.addEventListener('change', refreshProSlots);
 
     await renderProCalendario();
@@ -583,9 +617,9 @@ export async function renderProfessionalBoxPanel() {
 // ESTADÍSTICAS DEL BOX
 // ============================================
 export async function renderBoxEstadisticas(month) {
-    if (!month) month = new Date().toISOString().slice(0,7);
+    if (!month) month = new Date().toISOString().slice(0, 7);
     const [year, monthNum] = month.split('-');
-    const startDate = new Date(parseInt(year), parseInt(monthNum)-1, 1);
+    const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
     const endDate = new Date(parseInt(year), parseInt(monthNum), 0);
     const stats = new Map();
     try {
@@ -608,7 +642,7 @@ export async function renderBoxEstadisticas(month) {
             container.innerHTML = '<p>No hay atenciones registradas en este mes.</p>';
             return;
         }
-        const sorted = Array.from(stats.entries()).sort((a,b) => b[1] - a[1]);
+        const sorted = Array.from(stats.entries()).sort((a, b) => b[1] - a[1]);
         let html = '<table class="admin-table"><thead><tr><th>Profesional</th><th>Cantidad de atenciones</th></tr></thead><tbody>';
         sorted.forEach(([prof, count]) => html += `<tr><td>${escapeHtml(prof)}</td><td>${count}</td></tr>`);
         html += '</tbody></table>';
@@ -632,4 +666,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ box.js corregido: fechas locales en generación y comparación de horarios');
+console.log('✅ box.js corregido: calendario con semanas DOMINGO a SÁBADO y fechas locales exactas');

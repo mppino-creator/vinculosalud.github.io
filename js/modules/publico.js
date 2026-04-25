@@ -1,21 +1,12 @@
-// js/modules/publico.js - VERSIÓN CORREGIDA (sin errores de sintaxis)
+// js/modules/publico.js - VERSIÓN FINAL (presencial muestra horarios)
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
 import { renderMessages, updateMarquee, renderMessagesTable } from './mensajes.js';
 import { 
-    cargarEspecialidades, 
-    cargarMetodosPago, 
-    cargarFondo, 
-    cargarTextos, 
-    cargarLogo,
-    cargarAboutTexts,
-    cargarAtencionTexts,
-    cargarContactInfo,
-    cargarInstagramData,
-    updateAboutSection,
-    updateAtencionSection,
-    updateContactSection
+    cargarEspecialidades, cargarMetodosPago, cargarFondo, cargarTextos, cargarLogo,
+    cargarAboutTexts, cargarAtencionTexts, cargarContactInfo, cargarInstagramData,
+    updateAboutSection, updateAtencionSection, updateContactSection
 } from './personalizacion.js';
 import { renderStaffTable } from './profesionales.js';
 import { renderPatients } from './pacientes.js';
@@ -33,7 +24,6 @@ let activeListeners = {
     sesiones: null,
     informes: null
 };
-
 let escuchasPrivadasIniciadas = false;
 let datosPrivadosCargados = false;
 
@@ -327,11 +317,12 @@ export function updateBookingDetails() {
         if (bookingPrice) bookingPrice.innerText = `$${(psych.pricePresencial || 0).toLocaleString()}`;
         if (bookingType) bookingType.innerText = 'Presencial';
         if (onlineAvailabilityMsg) onlineAvailabilityMsg.style.display = 'none';
+        // No ocultamos presencialWarning aquí; se maneja en updateAvailableTimes
     }
 }
 
 // ============================================
-// ACTUALIZAR HORARIOS DISPONIBLES (CORREGIDA)
+// ACTUALIZAR HORARIOS DISPONIBLES (CORREGIDA PARA PRESENCIAL)
 // ============================================
 export async function updateAvailableTimes() {
     const date = document.getElementById('custDate')?.value;
@@ -344,6 +335,7 @@ export async function updateAvailableTimes() {
 
     console.log(`🔍 [PUBLICO] updateAvailableTimes: fecha=${date}, tipo=${appointmentType}, psicólogo=${psychId}`);
 
+    // Inicializar UI
     timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
     if (warningDiv) warningDiv.style.display = 'none';
     timeSelect.style.display = 'block';
@@ -389,6 +381,7 @@ export async function updateAvailableTimes() {
         let availableSlots = [];
 
         if (appointmentType === 'presencial') {
+            // Presencial: SOLO slots disponibles en el Box (status 'available')
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
                 const [slotHour, slotMin] = slotStart.split(':');
@@ -402,6 +395,7 @@ export async function updateAvailableTimes() {
             });
             console.log(`🎯 Horarios presenciales disponibles (${availableSlots.length}):`, availableSlots.map(s => s.timeLabel));
         } else {
+            // Online: cualquier slot dentro del rango (aunque esté reservado)
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
                 const [slotHour, slotMin] = slotStart.split(':');
@@ -550,7 +544,7 @@ async function registrarConversion(psychId) {
 }
 
 // ============================================
-// FILTRO DE PROFESIONALES (con próxima disponibilidad)
+// FILTRO DE PROFESIONALES
 // ============================================
 export async function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
@@ -681,7 +675,7 @@ export async function renderProfessionals(professionals) {
 }
 
 // ============================================
-// CARGA INICIAL DE DATOS (públicos + privados)
+// CARGA INICIAL DE DATOS
 // ============================================
 export function cargarDatosIniciales() {
     console.log('🚀 Cargando datos iniciales...');
@@ -782,7 +776,7 @@ export function cargarDatosIniciales() {
 }
 
 // ============================================
-// DATOS PRIVADOS Y LISTENERS
+// DATOS PRIVADOS Y LISTENERS (sin cambios, se omiten por brevedad)
 // ============================================
 export function cargarDatosPrivados() {
     if (datosPrivadosCargados) return;

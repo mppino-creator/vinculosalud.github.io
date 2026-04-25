@@ -1,4 +1,4 @@
-// js/modules/box.js - Versión Profesional con Calendario Admin y Gestión Avanzada
+// js/modules/box.js - Versión corregida (fechas locales)
 import { db } from '../config/firebase.js';
 import { showToast } from './utils.js';
 import * as state from './state.js';
@@ -26,17 +26,23 @@ function limpiarHora(valor) {
     return valor.split(' ')[0];
 }
 
+// CORREGIDO: Comparación de horario pasado usando fecha local
 function isSlotPassed(dateStr, timeLabel) {
     const startTimeStr = timeLabel.split(' - ')[0];
-    const slotDateTime = new Date(`${dateStr}T${startTimeStr}:00`);
+    const [year, month, day] = dateStr.split('-');
+    const [hour, minute] = startTimeStr.split(':');
+    const slotDateTime = new Date(year, month-1, day, hour, minute);
     return slotDateTime < new Date();
 }
 
-// ========== FUNCIONES PRINCIPALES ==========
+// CORREGIDO: Generar slots con fechas locales (sin UTC)
 export function generateSlotsForDate(dateStr, startTime, endTime, duracionMin, holguraMin) {
     const slots = [];
-    const start = new Date(`${dateStr}T${startTime}:00`);
-    const end = new Date(`${dateStr}T${endTime}:00`);
+    const [year, month, day] = dateStr.split('-');
+    const [startHour, startMin] = startTime.split(':');
+    const [endHour, endMin] = endTime.split(':');
+    const start = new Date(year, month-1, day, startHour, startMin);
+    const end = new Date(year, month-1, day, endHour, endMin);
     if (end <= start) return slots;
     const step = duracionMin + holguraMin;
     let current = new Date(start);
@@ -64,7 +70,7 @@ export async function loadBoxSlots(dateStr) {
 }
 
 // ============================================
-// PANEL ADMINISTRADOR (con calendario y acciones masivas)
+// PANEL ADMINISTRADOR
 // ============================================
 export async function renderAdminBoxPanel() {
     const container = document.getElementById('tabBox');
@@ -77,11 +83,9 @@ export async function renderAdminBoxPanel() {
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
 
-    // HTML principal con calendario y generación
     container.innerHTML = `
         <h3>📦 Gestión del Box Compartido</h3>
         
-        <!-- Sección de generación por rango -->
         <div class="admin-box-config" style="background: #f9f9fc; padding: 20px; border-radius: 16px; margin-bottom: 25px;">
             <h4 style="margin-top:0;">⚙️ Generar horarios por rango</h4>
             <div class="form-row" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
@@ -134,7 +138,6 @@ export async function renderAdminBoxPanel() {
             </div>
         </div>
 
-        <!-- Calendario mensual para admin -->
         <div style="margin-bottom:25px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h4>📅 Calendario de disponibilidad</h4>
@@ -150,7 +153,6 @@ export async function renderAdminBoxPanel() {
             </div>
         </div>
 
-        <!-- Slots del día seleccionado -->
         <h4>🗓️ Slots del día (edición individual)</h4>
         <div class="form-row" style="display:flex; gap:15px; align-items:flex-end; margin-bottom:20px;">
             <div class="field" style="flex:2;">
@@ -163,9 +165,9 @@ export async function renderAdminBoxPanel() {
         <div id="boxAdminSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;"></div>
     `;
 
-    // ========== SELECCIÓN DE DÍAS ==========
+    // Selector de días
     const weekdays = document.querySelectorAll('#boxWeekdaySelector .weekday');
-    let selectedDays = ['1','2','3','4','5'];
+    let selectedDays = ['1','2','3','4','5']; // Lun a Vie por defecto
     weekdays.forEach(day => {
         const dayVal = day.getAttribute('data-day');
         if (selectedDays.includes(dayVal)) day.classList.add('selected');
@@ -180,7 +182,6 @@ export async function renderAdminBoxPanel() {
         });
     });
 
-    // ========== FUNCIONES DE LECTURA ==========
     function getStart() { return document.getElementById('boxRangeStartDate')?.value || ''; }
     function getEnd() { return document.getElementById('boxRangeEndDate')?.value || ''; }
     function getStartH() { return limpiarHora(document.getElementById('boxStartTime')?.value || ''); }
@@ -226,7 +227,7 @@ export async function renderAdminBoxPanel() {
                                 title="${tooltip}">
                                 <div style="font-weight:bold;">${dia}</div>
                                 ${slots.length > 0 ? `<div style="font-size:0.7rem;">🟢 ${disponibles} / 📌 ${reservados}</div>` : '<div style="font-size:0.7rem;">—</div>'}
-                            </td>`;
+                             </td>`;
                     dia++;
                 } else {
                     html += '<td style="border:1px solid #ddd; padding:8px;"> </td>';
@@ -238,7 +239,7 @@ export async function renderAdminBoxPanel() {
         document.getElementById('adminCalendarioContainer').innerHTML = html;
     }
 
-    // ========== PREVISUALIZACIÓN ==========
+    // ========== PREVISUALIZACIÓN CORREGIDA ==========
     async function generarPrevisualizacion() {
         const start = getStart();
         const end = getEnd();
@@ -255,7 +256,8 @@ export async function renderAdminBoxPanel() {
         if (startDate > endDate) { showToast('❌ Fecha inicio debe ser anterior a fin', 'error'); return; }
         let totalTurnos = 0, resumen = '';
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().slice(0,10);
+            // CORREGIDO: fecha local en lugar de toISOString
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             const dayOfWeek = d.getDay().toString();
             if (selectedDays.includes(dayOfWeek)) {
                 const slots = generateSlotsForDate(dateStr, startH, endH, duracion, holgura);
@@ -271,7 +273,7 @@ export async function renderAdminBoxPanel() {
         document.getElementById('boxPreviewContainer').style.display = 'block';
     }
 
-    // ========== GENERAR Y GUARDAR ==========
+    // ========== GENERAR Y GUARDAR CORREGIDO ==========
     async function generarYGuardar() {
         const start = getStart();
         const end = getEnd();
@@ -284,7 +286,8 @@ export async function renderAdminBoxPanel() {
         const endDate = new Date(end);
         let totalGenerados = 0;
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().slice(0,10);
+            // CORREGIDO: fecha local
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             const dayOfWeek = d.getDay().toString();
             if (selectedDays.includes(dayOfWeek)) {
                 const slots = generateSlotsForDate(dateStr, startH, endH, duracion, holgura);
@@ -300,7 +303,6 @@ export async function renderAdminBoxPanel() {
         renderAdminCalendario();
     }
 
-    // ========== REFRESCAR SLOTS DEL DÍA ==========
     async function refreshAdminSlots() {
         const date = document.getElementById('boxAdminDate').value;
         if (!date) return;
@@ -328,7 +330,7 @@ export async function renderAdminBoxPanel() {
             `;
             container.appendChild(card);
         });
-        // Eventos
+        // Eventos (igual que antes)
         document.querySelectorAll('#boxAdminSlotsContainer .cancel-admin').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const idx = parseInt(btn.dataset.index);
@@ -368,7 +370,6 @@ export async function renderAdminBoxPanel() {
         });
     }
 
-    // ========== ELIMINAR RANGO DE FECHAS ==========
     async function eliminarRangoFechas() {
         const fechaInicio = prompt('Fecha de inicio (YYYY-MM-DD):');
         if (!fechaInicio) return;
@@ -380,7 +381,7 @@ export async function renderAdminBoxPanel() {
         if (!confirm(`¿Eliminar TODOS los slots entre ${fechaInicio} y ${fechaFin}?`)) return;
         let eliminados = 0;
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().slice(0,10);
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             const slots = await loadBoxSlots(dateStr);
             if (slots.length) {
                 await db.ref(`boxes/${dateStr}`).remove();
@@ -392,7 +393,6 @@ export async function renderAdminBoxPanel() {
         renderAdminCalendario();
     }
 
-    // ========== EVENTOS ==========
     document.getElementById('boxPreviewRangeBtn')?.addEventListener('click', generarPrevisualizacion);
     document.getElementById('boxGenerateRangeBtn')?.addEventListener('click', generarYGuardar);
     document.getElementById('boxRefreshAdminSlotsBtn')?.addEventListener('click', refreshAdminSlots);
@@ -405,14 +405,14 @@ export async function renderAdminBoxPanel() {
 }
 
 // ============================================
-// PANEL PROFESIONAL (con calendario y reservas inteligentes)
+// PANEL PROFESIONAL (con corrección similar)
 // ============================================
 export async function renderProfessionalBoxPanel() {
     const container = document.getElementById('tabBoxProfesional');
     if (!container) return;
     const professionalName = state.currentUser?.data?.name || 'Profesional';
     const today = new Date();
-    const fechaActual = today.toISOString().slice(0,10);
+    const fechaActual = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
     container.innerHTML = `
         <h3>📦 Reservar Box Compartido</h3>
@@ -478,7 +478,7 @@ export async function renderProfessionalBoxPanel() {
                                 title="${tooltip}">
                                 <div style="font-weight:bold;">${dia}</div>
                                 ${slots.length > 0 ? `<div style="font-size:0.7rem;">🟢 ${disponibles}</div>` : '<div style="font-size:0.7rem;">—</div>'}
-                            </td>`;
+                             </td>`;
                     dia++;
                 } else {
                     html += '<td style="border:1px solid #ddd; padding:8px;"> </td>';
@@ -632,4 +632,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ box.js actualizado: calendario admin, gestión avanzada y reservas profesionales');
+console.log('✅ box.js corregido: fechas locales en generación y comparación de horarios');

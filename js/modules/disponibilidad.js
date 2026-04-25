@@ -1,8 +1,22 @@
-// js/modules/disponibilidad.js - GESTIÓN PERSONAL DEL PROFESIONAL (con Box)
+// js/modules/disponibilidad.js - GESTIÓN PERSONAL DEL PROFESIONAL (con Box, fechas locales corregidas)
 import * as state from './state.js';
 import { showToast } from './utils.js';
 import { db } from '../config/firebase.js';
 import { loadBoxSlots, saveBoxSlots } from './box.js';
+
+// Convierte una fecha Date a string YYYY-MM-DD en hora local
+function toLocalDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Obtiene el nombre del día de la semana en español (Lun, Mar, Mié, Jue, Vie, Sáb, Dom) a partir del día numérico (0=domingo)
+function getDayName(dayNum) {
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    return days[dayNum];
+}
 
 // ============================================
 // RENDERIZADO PRINCIPAL DE LA PESTAÑA "GESTIONAR MI DISPONIBILIDAD"
@@ -33,11 +47,11 @@ export async function renderMiDisponibilidad() {
             <div class="form-row" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px;">
                 <div class="field" style="flex:1;">
                     <label>📅 Fecha inicio</label>
-                    <input type="date" id="miRangoStartDate" class="filter-input" value="${new Date().toISOString().slice(0,10)}">
+                    <input type="date" id="miRangoStartDate" class="filter-input" value="${toLocalDateString(new Date())}">
                 </div>
                 <div class="field" style="flex:1;">
                     <label>📅 Fecha fin</label>
-                    <input type="date" id="miRangoEndDate" class="filter-input" value="${new Date(new Date().setMonth(new Date().getMonth()+2)).toISOString().slice(0,10)}">
+                    <input type="date" id="miRangoEndDate" class="filter-input" value="${toLocalDateString(new Date(new Date().setMonth(new Date().getMonth()+2)))}">
                 </div>
             </div>
             <div class="form-row" style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px;">
@@ -76,7 +90,7 @@ export async function renderMiDisponibilidad() {
         <!-- Vista previa de los slots resultantes (para la fecha actual) -->
         <h4>🔍 Vista previa de tu disponibilidad (basada en Box + tu configuración)</h4>
         <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <input type="date" id="previewDate" class="filter-input" value="${new Date().toISOString().slice(0,10)}">
+            <input type="date" id="previewDate" class="filter-input" value="${toLocalDateString(new Date())}">
             <button id="refreshPreviewBtn" class="btn-staff">Actualizar vista</button>
         </div>
         <div id="previewSlotsContainer" class="slots-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;"></div>
@@ -110,7 +124,7 @@ export async function renderMiDisponibilidad() {
         });
     });
 
-    // Función para aplicar la configuración (guardar startTime/endTime y actualizar unavailableSlots)
+    // Función para aplicar la configuración (guardar startTime/endTime y actualizar unavailableSlots) - USANDO FECHAS LOCALES
     async function aplicarConfiguracion() {
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
@@ -132,7 +146,6 @@ export async function renderMiDisponibilidad() {
         await db.ref(`staff/${professional.id}`).update({ startTime: startH, endTime: endH });
         professional.startTime = startH;
         professional.endTime = endH;
-        // Actualizar en state.staff
         const staffIndex = state.staff.findIndex(s => s.id == professional.id);
         if (staffIndex !== -1) {
             state.staff[staffIndex].startTime = startH;
@@ -142,26 +155,25 @@ export async function renderMiDisponibilidad() {
         // 2. Obtener disponibilidad actual (unavailableSlots)
         let unavailable = professional.unavailableSlots || {};
 
-        // 3. Para cada fecha en el rango, si el día está seleccionado, aplicar bloqueo de rango (si se especificó)
+        // 3. Para cada fecha en el rango (usando fechas locales)
         const start = new Date(startDate);
         const end = new Date(endDate);
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            const dateStr = d.toISOString().slice(0,10);
-            const dayName = d.toLocaleDateString('es-ES', { weekday: 'short' }).charAt(0).toUpperCase() + d.toLocaleDateString('es-ES', { weekday: 'short' }).slice(1);
-            // Mapeo de nombre de día (Lun, Mar, ...) a la lista selectedDays
-            const dayMap = { 'lun.':'Lun', 'mar.':'Mar', 'mié.':'Mié', 'jue.':'Jue', 'vie.':'Vie', 'sáb.':'Sáb', 'dom.':'Dom' };
-            const dayKey = dayMap[dayName.toLowerCase()] || dayName;
-            if (!selectedDays.includes(dayKey)) {
+            const dateStr = toLocalDateString(d);
+            const dayOfWeek = d.getDay(); // 0=domingo, 1=lunes, ...
+            const dayName = getDayName(dayOfWeek); // 'Dom', 'Lun', ...
+
+            if (!selectedDays.includes(dayName)) {
                 // Si el día no está seleccionado, marcar como ALL_DAY anulado
                 unavailable[dateStr] = ['ALL_DAY'];
             } else {
-                // Si el día está seleccionado, aplicar bloqueo de rango si se especificó
+                // Día seleccionado: aplicar bloqueo de rango si se especificó
                 let anulaciones = unavailable[dateStr] || [];
                 if (anulaciones.includes('ALL_DAY')) {
-                    anulaciones = []; // si estaba anulado el día, lo quitamos porque ahora sí atiende
+                    anulaciones = []; // quitamos anulación total si existía
                 }
                 if (blockStartH && blockEndH) {
-                    // Obtener todos los slots del Box para esa fecha y filtrar los que caen en el rango bloqueado
+                    // Obtener todos los slots del Box para esa fecha
                     const boxSlots = await loadBoxSlots(dateStr);
                     const slotsEnRango = boxSlots.filter(slot => {
                         const slotStart = slot.timeLabel.split(' - ')[0];
@@ -172,7 +184,6 @@ export async function renderMiDisponibilidad() {
                         if (!anulaciones.includes(slot)) anulaciones.push(slot);
                     }
                 }
-                // Eliminar anulaciones que ya no corresponden (si se quitó el bloqueo, habría que limpiar, pero por simplicidad se mantiene)
                 if (anulaciones.length === 0) delete unavailable[dateStr];
                 else unavailable[dateStr] = anulaciones;
             }
@@ -188,7 +199,7 @@ export async function renderMiDisponibilidad() {
         cargarVistaPrevia();
     }
 
-    // Limpiar toda la disponibilidad personal (unavailableSlots y reset startTime/endTime)
+    // Limpiar toda la disponibilidad personal
     async function limpiarDisponibilidad() {
         if (!confirm('¿Eliminar toda tu configuración de disponibilidad personal? Volverás a atender en todo el rango horario por defecto (00:00-23:59).')) return;
         await db.ref(`staff/${professional.id}`).update({
@@ -231,6 +242,11 @@ export async function renderMiDisponibilidad() {
         }
 
         const boxSlots = await loadBoxSlots(date);
+        if (boxSlots.length === 0) {
+            containerPrev.innerHTML = '<div class="info-message">No hay horarios disponibles en el Box para esta fecha.</div>';
+            return;
+        }
+
         let misSlots = boxSlots.filter(slot => {
             const slotStart = slot.timeLabel.split(' - ')[0];
             return slotStart >= startH && slotStart < endH && !anulacionesHoy.includes(slot.timeLabel);
@@ -261,7 +277,7 @@ export async function renderMiDisponibilidad() {
 }
 
 // ============================================
-// FUNCIONES LEGACY PARA COMPATIBILIDAD (ya no se usan, pero se mantienen)
+// FUNCIONES LEGACY PARA COMPATIBILIDAD
 // ============================================
 export function showAvailabilityModal() {
     showToast('Usa la sección "Gestionar Mi Disponibilidad" para configurar tus horarios.', 'info');
@@ -281,4 +297,4 @@ if (typeof window !== 'undefined') {
     window.renderMiDisponibilidad = renderMiDisponibilidad;
     window.loadTimeSlots = loadTimeSlots;
 }
-console.log('✅ disponibilidad.js actualizado: interfaz completa de gestión personal sobre Box');
+console.log('✅ disponibilidad.js actualizado: fechas 100% locales y corrección de anulación de días');

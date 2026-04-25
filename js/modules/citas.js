@@ -1,4 +1,4 @@
-// js/modules/citas.js - Integración completa con Box compartido (corregido: presencial muestra horarios)
+// js/modules/citas.js - Integración completa con Box compartido (presencial muestra botones AM/PM)
 import * as state from './state.js';
 import { 
     showToast, validarRut, formatDate, formatRut, normalizarRut, 
@@ -337,7 +337,7 @@ export function updateBookingDetails() {
 }
 
 // ============================================
-// ACTUALIZAR HORARIOS DISPONIBLES (CORREGIDA: presencial muestra horarios)
+// ACTUALIZAR HORARIOS DISPONIBLES (CORREGIDA: presencial muestra los mismos botones que online)
 // ============================================
 export async function updateAvailableTimes() {
     const date = document.getElementById('custDate').value;
@@ -392,7 +392,6 @@ export async function updateAvailableTimes() {
     const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
     
     let availableSlots = [];
-    
     if (type === 'presencial') {
         availableSlots = boxSlots.filter(slot => {
             const slotStart = slot.timeLabel.split(' - ')[0];
@@ -448,40 +447,36 @@ export async function updateAvailableTimes() {
         return;
     }
     
-    // Hay horarios disponibles
-    if (type === 'presencial') {
-        if (presencialWarning) presencialWarning.style.display = 'none';
-        if (bookBtn) bookBtn.disabled = false;
-        if (timeSelect) {
-            timeSelect.style.display = 'block';
-            timeSelect.innerHTML = '<option value="">Selecciona un horario</option>' +
-                availableSlots.map(slot => `<option value="${slot.timeLabel}">${slot.timeLabel}</option>`).join('');
-        }
-    } else {
-        if (bookBtn) bookBtn.disabled = false;
-        const amTimes = availableSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'AM');
-        const pmTimes = availableSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'PM');
-        if (amTimes.length > 0 && amSlotsContainer) {
-            amSlotsContainer.innerHTML = amTimes.map(slot => `
-                <div class="time-slot-btn" onclick="selectTimeSlot('${slot.timeLabel}')" data-time="${slot.timeLabel}">${slot.timeLabel}</div>
-            `).join('');
-            if (amContainer) amContainer.style.display = 'block';
-        }
-        if (pmTimes.length > 0 && pmSlotsContainer) {
-            pmSlotsContainer.innerHTML = pmTimes.map(slot => `
-                <div class="time-slot-btn" onclick="selectTimeSlot('${slot.timeLabel}')" data-time="${slot.timeLabel}">${slot.timeLabel}</div>
-            `).join('');
-            if (pmContainer) pmContainer.style.display = 'block';
-        }
-        if (onlineMsg) {
-            onlineMsg.style.display = 'block';
-            onlineMsg.innerHTML = '<i class="fa fa-check-circle"></i> Horarios disponibles';
-        }
-        if (timeSelect) {
-            timeSelect.innerHTML = '<option value="">Selecciona un horario</option>' +
-                availableSlots.map(slot => `<option value="${slot.timeLabel}">${slot.timeLabel}</option>`).join('');
-            timeSelect.style.display = 'block';
-        }
+    // Hay horarios: mostrarlos en botones AM/PM para ambos tipos
+    if (type === 'presencial' && presencialWarning) presencialWarning.style.display = 'none';
+    if (bookBtn) bookBtn.disabled = false;
+    
+    const amTimes = availableSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'AM');
+    const pmTimes = availableSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'PM');
+    
+    if (amTimes.length > 0 && amSlotsContainer) {
+        amSlotsContainer.innerHTML = amTimes.map(slot => `
+            <div class="time-slot-btn" onclick="selectTimeSlot('${slot.timeLabel}')" data-time="${slot.timeLabel}">${slot.timeLabel}</div>
+        `).join('');
+        if (amContainer) amContainer.style.display = 'block';
+    }
+    if (pmTimes.length > 0 && pmSlotsContainer) {
+        pmSlotsContainer.innerHTML = pmTimes.map(slot => `
+            <div class="time-slot-btn" onclick="selectTimeSlot('${slot.timeLabel}')" data-time="${slot.timeLabel}">${slot.timeLabel}</div>
+        `).join('');
+        if (pmContainer) pmContainer.style.display = 'block';
+    }
+    
+    // También llenar el select por si acaso (pero se oculta visualmente)
+    if (timeSelect) {
+        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>' +
+            availableSlots.map(slot => `<option value="${slot.timeLabel}">${slot.timeLabel}</option>`).join('');
+        timeSelect.style.display = 'none'; // Ocultamos el select porque usamos botones
+    }
+    
+    if (type === 'online' && onlineMsg) {
+        onlineMsg.style.display = 'block';
+        onlineMsg.innerHTML = '<i class="fa fa-check-circle"></i> Horarios disponibles';
     }
     
     // Sincronizar hora seleccionada si existe
@@ -497,7 +492,7 @@ export async function updateAvailableTimes() {
 }
 
 // ============================================
-// RESTO DE FUNCIONES (sin cambios, pero incluidas por completitud)
+// RESTO DE FUNCIONES (sin cambios)
 // ============================================
 
 export async function searchPatientByRutBooking() {
@@ -1450,7 +1445,7 @@ export async function rejectRequest(requestId) {
 }
 
 // ============================================
-// FUNCIONES PARA PACIENTES (CANCELAR CITAS) - CORREGIDAS
+// FUNCIONES PARA PACIENTES (CANCELAR CITAS)
 // ============================================
 
 export async function showPatientAppointmentsByRut() {
@@ -1501,7 +1496,7 @@ export async function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                              </table>
+                               </tr>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => {
@@ -1666,4 +1661,4 @@ document.addEventListener('datosPrivadosCargados', () => {
     }
 });
 
-console.log('✅ citas.js actualizado: presencial muestra horarios del Box');
+console.log('✅ citas.js actualizado: presencial muestra los mismos botones que online');

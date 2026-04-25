@@ -1,4 +1,4 @@
-// js/modules/publico.js - VERSIÓN COMPLETA CON ANULACIONES PERSONALES Y CONTROL DE WARNING
+// js/modules/publico.js - VERSIÓN COMPLETA CORREGIDA (CON LOGS Y MEJORA)
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
@@ -73,31 +73,6 @@ function getLocalDateString(date) {
 }
 
 // ============================================
-// FUNCIÓN: Calcular cupos disponibles HOY (basada en Box + anulaciones)
-// ============================================
-async function getAvailableSlotsCountForToday(psych) {
-    const today = getLocalDateString(new Date());
-    const now = new Date();
-    const boxSlots = await loadBoxSlots(today);
-    const profStart = psych.startTime || '00:00';
-    const profEnd = psych.endTime || '23:59';
-    const unavailableSlots = psych.unavailableSlots || {};
-    const anulacionesHoy = unavailableSlots[today] || [];
-    if (anulacionesHoy.includes('ALL_DAY')) return 0;
-    const advanceMinutes = psych.advanceNotice ?? 60;
-    const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
-    const available = boxSlots.filter(slot => {
-        const slotStart = slot.timeLabel.split(' - ')[0];
-        const slotDateTime = new Date(`${today}T${slotStart}:00`);
-        return slot.status === 'available' &&
-               slotStart >= profStart && slotStart < profEnd &&
-               slotDateTime > cutoffTime &&
-               !anulacionesHoy.includes(slot.timeLabel);
-    });
-    return available.length;
-}
-
-// ============================================
 // FUNCIÓN: Próxima fecha con disponibilidad
 // ============================================
 async function getNextAvailableDate(psych, maxDays = 30) {
@@ -125,6 +100,31 @@ async function getNextAvailableDate(psych, maxDays = 30) {
         if (disponible) return dateStr;
     }
     return null;
+}
+
+// ============================================
+// FUNCIÓN: Calcular cupos disponibles HOY (basada en Box + anulaciones)
+// ============================================
+async function getAvailableSlotsCountForToday(psych) {
+    const today = getLocalDateString(new Date());
+    const now = new Date();
+    const boxSlots = await loadBoxSlots(today);
+    const profStart = psych.startTime || '00:00';
+    const profEnd = psych.endTime || '23:59';
+    const unavailableSlots = psych.unavailableSlots || {};
+    const anulacionesHoy = unavailableSlots[today] || [];
+    if (anulacionesHoy.includes('ALL_DAY')) return 0;
+    const advanceMinutes = psych.advanceNotice ?? 60;
+    const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+    const available = boxSlots.filter(slot => {
+        const slotStart = slot.timeLabel.split(' - ')[0];
+        const slotDateTime = new Date(`${today}T${slotStart}:00`);
+        return slot.status === 'available' &&
+               slotStart >= profStart && slotStart < profEnd &&
+               slotDateTime > cutoffTime &&
+               !anulacionesHoy.includes(slot.timeLabel);
+    });
+    return available.length;
 }
 
 // ============================================
@@ -326,69 +326,106 @@ export function updateBookingDetails() {
     } else {
         if (bookingPrice) bookingPrice.innerText = `$${(psych.pricePresencial || 0).toLocaleString()}`;
         if (bookingType) bookingType.innerText = 'Presencial';
-        if (presencialWarning) presencialWarning.style.display = 'block';
+        // El warning se manejará en updateAvailableTimes, no lo mostramos siempre
+        // if (presencialWarning) presencialWarning.style.display = 'block';
         if (onlineAvailabilityMsg) onlineAvailabilityMsg.style.display = 'none';
     }
 }
 
 // ============================================
-// ACTUALIZAR HORARIOS DISPONIBLES (basado en BOX + anulaciones personales)
+// ACTUALIZAR HORARIOS DISPONIBLES (CORREGIDA)
 // ============================================
 export async function updateAvailableTimes() {
     const date = document.getElementById('custDate')?.value;
     const appointmentType = document.getElementById('appointmentType')?.value;
     const timeSelect = document.getElementById('custTime');
     const psychId = state.currentPsychId;
-    if (!date || !psychId || !timeSelect) return;
-    timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
-    
     const warningDiv = document.getElementById('presencialWarning');
+
+    if (!date || !psychId || !timeSelect) return;
+    
+    console.log(`🔍 updateAvailableTimes: fecha=${date}, tipo=${appointmentType}, psicólogo=${psychId}`);
+    timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
     
     try {
         const psych = state.staff.find(p => p.id == psychId);
         if (!psych) throw new Error('Profesional no encontrado');
+        
         const profStart = psych.startTime || '00:00';
         const profEnd = psych.endTime || '23:59';
         const unavailableSlots = psych.unavailableSlots || {};
         const anulacionesHoy = unavailableSlots[date] || [];
+        
+        console.log(`📅 Rango profesional: ${profStart} - ${profEnd}, anulaciones:`, anulacionesHoy);
+        
         if (anulacionesHoy.includes('ALL_DAY')) {
             timeSelect.innerHTML = '<option value="">Día anulado por el profesional</option>';
-            if (warningDiv) warningDiv.style.display = 'none';
+            if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'block';
             return;
         }
+        
         let boxSlots = [];
-        try { boxSlots = await loadBoxSlots(date); } catch(err) { console.warn(err); }
+        try {
+            boxSlots = await loadBoxSlots(date);
+            console.log(`📦 Slots del Box para ${date}:`, boxSlots.length);
+        } catch (err) {
+            console.warn('No se pudieron cargar slots del box:', err);
+        }
+        
         if (boxSlots.length === 0) {
             timeSelect.innerHTML = '<option value="">No hay horarios configurados para esta fecha</option>';
-            if (warningDiv) warningDiv.style.display = 'block';
+            if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'block';
             return;
         }
-        const existingAppointments = state.appointments.filter(a => a.psychId == psychId && a.date === date).map(a => a.time);
+        
+        // Obtener citas existentes del profesional en esa fecha
+        const existingAppointments = state.appointments.filter(a => 
+            a.psychId == psychId && a.date === date
+        ).map(a => a.time);
+        
         const now = new Date();
+        // Crear fecha local para la comparación (sin UTC)
+        const [year, month, day] = date.split('-');
+        const cutoffDateTime = new Date(year, month-1, day, now.getHours(), now.getMinutes());
         const advanceMinutes = psych.advanceNotice ?? 60;
-        const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+        cutoffDateTime.setMinutes(cutoffDateTime.getMinutes() + advanceMinutes);
+        
         let availableSlots = [];
+        
         if (appointmentType === 'presencial') {
+            // Presencial: solo slots disponibles en el Box (status 'available') que cumplan condiciones
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
-                const slotDateTime = new Date(`${date}T${slotStart}:00`);
-                return slot.status === 'available' &&
-                       slotStart >= profStart && slotStart < profEnd &&
-                       slotDateTime > cutoffTime &&
-                       !existingAppointments.includes(slot.timeLabel) &&
-                       !anulacionesHoy.includes(slot.timeLabel);
+                const [slotHour, slotMin] = slotStart.split(':');
+                const slotDateTime = new Date(year, month-1, day, parseInt(slotHour), parseInt(slotMin));
+                const dentroRango = slotStart >= profStart && slotStart < profEnd;
+                const noOcupado = !existingAppointments.includes(slot.timeLabel);
+                const noAnulado = !anulacionesHoy.includes(slot.timeLabel);
+                const futuro = slotDateTime > cutoffDateTime;
+                const disponible = slot.status === 'available';
+                
+                if (dentroRango && noOcupado && noAnulado && futuro && disponible) {
+                    console.log(`✅ Slot viable: ${slot.timeLabel} (status ${slot.status})`);
+                    return true;
+                }
+                return false;
             });
         } else {
+            // Online: cualquier slot dentro del rango horario, sin importar status booked
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
-                const slotDateTime = new Date(`${date}T${slotStart}:00`);
+                const [slotHour, slotMin] = slotStart.split(':');
+                const slotDateTime = new Date(year, month-1, day, parseInt(slotHour), parseInt(slotMin));
                 return slotStart >= profStart && slotStart < profEnd &&
-                       slotDateTime > cutoffTime &&
+                       slotDateTime > cutoffDateTime &&
                        !existingAppointments.includes(slot.timeLabel) &&
                        !anulacionesHoy.includes(slot.timeLabel);
             });
         }
+        
         availableSlots.sort((a,b) => a.timeLabel.localeCompare(b.timeLabel));
+        console.log(`🎯 Horarios disponibles (${availableSlots.length}):`, availableSlots.map(s => s.timeLabel));
+        
         if (availableSlots.length === 0) {
             timeSelect.innerHTML = '<option value="">No hay horarios disponibles para esta fecha</option>';
             if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'block';
@@ -398,7 +435,7 @@ export async function updateAvailableTimes() {
             if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'none';
         }
     } catch (error) {
-        console.error(error);
+        console.error('Error cargando horarios desde Box:', error);
         timeSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
         if (warningDiv) warningDiv.style.display = 'block';
     }
@@ -801,7 +838,6 @@ function iniciarEscuchasPrivadas() {
     activeListeners.appointments = db.ref('appointments').on('value', (snapshot) => { try { const data = snapshot.val(); if (data) { const newApps = Object.keys(data).map(key => ({ id: key, ...data[key] })); state.setAppointments(newApps); if (state.currentUser) { if (typeof window.updateStats === 'function') window.updateStats(); renderPendingRequests(); renderAppointments(); if (typeof window.renderAppointmentsTable === 'function') window.renderAppointmentsTable(); } } else state.setAppointments([]); } catch(e) { console.warn(e); } }, (error) => console.warn(error));
     activeListeners.pendingRequests = db.ref('pendingRequests').on('value', (snapshot) => { try { const data = snapshot.val(); state.setPendingRequests(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []); if (state.currentUser) renderPendingRequests(); } catch(e) { console.warn(e); } }, (error) => console.warn(error));
     activeListeners.fichasIngreso = db.ref('fichasIngreso').on('value', (snapshot) => { try { const data = snapshot.val(); state.setFichasIngreso(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []); } catch(e) { console.warn(e); } }, (error) => console.warn(error));
-    // No listener para sesiones
     activeListeners.informes = db.ref('informes').on('value', (snapshot) => { try { const data = snapshot.val(); state.setInformes(data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : []); } catch(e) { console.warn(e); } }, (error) => console.warn(error));
 }
 

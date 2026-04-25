@@ -1,4 +1,4 @@
-// js/modules/publico.js
+// js/modules/publico.js - VERSIÓN COMPLETA CON ANULACIONES PERSONALES
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
@@ -79,7 +79,7 @@ function getLocalDateString(date) {
 }
 
 // ============================================
-// FUNCIÓN: Calcular cupos disponibles HOY (con antelación) - basada en Box
+// FUNCIÓN: Calcular cupos disponibles HOY (con antelación) - basada en Box + anulaciones personales
 // ============================================
 async function getAvailableSlotsCountForToday(psych) {
     const today = getLocalDateString(new Date());
@@ -88,16 +88,21 @@ async function getAvailableSlotsCountForToday(psych) {
     const boxSlots = await loadBoxSlots(today);
     const profStart = psych.startTime || '00:00';
     const profEnd = psych.endTime || '23:59';
+    const unavailableSlots = psych.unavailableSlots || {};
+    const anulacionesHoy = unavailableSlots[today] || [];
     
-    // Para contar disponibilidad "hoy" se consideran slots disponibles (no reservados) dentro del rango
+    if (anulacionesHoy.includes('ALL_DAY')) return 0;
+    
+    const advanceMinutes = psych.advanceNotice ?? 60;
+    const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+    
     const available = boxSlots.filter(slot => {
         const slotStart = slot.timeLabel.split(' - ')[0];
         const slotDateTime = new Date(`${today}T${slotStart}:00`);
-        const advanceMinutes = psych.advanceNotice ?? 60;
-        const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
         return slot.status === 'available' &&
                slotStart >= profStart && slotStart < profEnd &&
-               slotDateTime > cutoffTime;
+               slotDateTime > cutoffTime &&
+               !anulacionesHoy.includes(slot.timeLabel);
     });
     
     return available.length;
@@ -413,7 +418,7 @@ export function updateBookingDetails() {
 }
 
 // ============================================
-// ACTUALIZAR HORARIOS DISPONIBLES (basado en BOX)
+// ACTUALIZAR HORARIOS DISPONIBLES (basado en BOX + anulaciones personales)
 // ============================================
 export async function updateAvailableTimes() {
     const date = document.getElementById('custDate')?.value;
@@ -431,6 +436,13 @@ export async function updateAvailableTimes() {
         
         const profStart = psych.startTime || '00:00';
         const profEnd = psych.endTime || '23:59';
+        const unavailableSlots = psych.unavailableSlots || {};
+        const anulacionesHoy = unavailableSlots[date] || [];
+        
+        if (anulacionesHoy.includes('ALL_DAY')) {
+            timeSelect.innerHTML = '<option value="">Día anulado por el profesional</option>';
+            return;
+        }
         
         // Obtener slots del Box para la fecha seleccionada
         let boxSlots = [];
@@ -459,24 +471,26 @@ export async function updateAvailableTimes() {
         let availableSlots = [];
         
         if (appointmentType === 'presencial') {
-            // Presencial: solo slots disponibles en el Box (no reservados por NADIE)
+            // Presencial: solo slots disponibles en el Box (no reservados por NADIE) + no anulados personalmente
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
                 const slotDateTime = new Date(`${date}T${slotStart}:00`);
                 return slot.status === 'available' &&
                        slotStart >= profStart && slotStart < profEnd &&
                        slotDateTime > cutoffTime &&
-                       !existingAppointments.includes(slot.timeLabel);
+                       !existingAppointments.includes(slot.timeLabel) &&
+                       !anulacionesHoy.includes(slot.timeLabel);
             });
         } else {
-            // Online: cualquier slot dentro del rango horario (aunque esté reservado en el Box),
-            // pero aún así debe respetar que el profesional no tenga ya una cita en ese mismo horario
+            // Online: cualquier slot dentro del rango horario, aunque esté reservado en el Box,
+            // pero respetando anulaciones personales y citas existentes
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
                 const slotDateTime = new Date(`${date}T${slotStart}:00`);
                 return slotStart >= profStart && slotStart < profEnd &&
                        slotDateTime > cutoffTime &&
-                       !existingAppointments.includes(slot.timeLabel);
+                       !existingAppointments.includes(slot.timeLabel) &&
+                       !anulacionesHoy.includes(slot.timeLabel);
             });
         }
         
@@ -645,7 +659,7 @@ async function registrarConversion(psychId) {
 }
 
 // ============================================
-// FILTRO DE PROFESIONALES (adaptado para usar disponibilidad del Box)
+// FILTRO DE PROFESIONALES (adaptado para usar disponibilidad del Box + anulaciones personales)
 // ============================================
 export async function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
@@ -657,7 +671,7 @@ export async function filterProfessionals() {
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
     const availabilityFilter = document.getElementById('availabilityFilter')?.value || '';
 
-    // Función auxiliar para determinar si un profesional tiene disponibilidad hoy (basada en Box)
+    // Función auxiliar para determinar si un profesional tiene disponibilidad hoy (basada en Box + anulaciones)
     const hasAvailabilityToday = async (psych) => {
         const today = getLocalDateString(new Date());
         const boxSlots = await loadBoxSlots(today);
@@ -666,12 +680,18 @@ export async function filterProfessionals() {
         const now = new Date();
         const advanceMinutes = psych.advanceNotice ?? 60;
         const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+        const unavailableSlots = psych.unavailableSlots || {};
+        const anulacionesHoy = unavailableSlots[today] || [];
+        
+        if (anulacionesHoy.includes('ALL_DAY')) return false;
+        
         return boxSlots.some(slot => {
             const slotStart = slot.timeLabel.split(' - ')[0];
             const slotDateTime = new Date(`${today}T${slotStart}:00`);
             return slot.status === 'available' &&
                    slotStart >= profStart && slotStart < profEnd &&
-                   slotDateTime > cutoffTime;
+                   slotDateTime > cutoffTime &&
+                   !anulacionesHoy.includes(slot.timeLabel);
         });
     };
     
@@ -682,10 +702,16 @@ export async function filterProfessionals() {
         const boxSlots = await loadBoxSlots(tomorrow);
         const profStart = psych.startTime || '00:00';
         const profEnd = psych.endTime || '23:59';
+        const unavailableSlots = psych.unavailableSlots || {};
+        const anulacionesManana = unavailableSlots[tomorrow] || [];
+        
+        if (anulacionesManana.includes('ALL_DAY')) return false;
+        
         return boxSlots.some(slot => {
             const slotStart = slot.timeLabel.split(' - ')[0];
             return slot.status === 'available' &&
-                   slotStart >= profStart && slotStart < profEnd;
+                   slotStart >= profStart && slotStart < profEnd &&
+                   !anulacionesManana.includes(slot.timeLabel);
         });
     };
 
@@ -722,7 +748,7 @@ export async function filterProfessionals() {
 }
 
 // ============================================
-// RENDERIZADO DE PROFESIONALES (con disponibilidad basada en Box)
+// RENDERIZADO DE PROFESIONALES (con disponibilidad basada en Box + anulaciones)
 // ============================================
 export async function renderProfessionals(professionals) {
     const grid = document.getElementById('equipo');
@@ -741,7 +767,7 @@ export async function renderProfessionals(professionals) {
         return;
     }
 
-    // Para cada profesional, calcular disponibilidad hoy desde el Box
+    // Para cada profesional, calcular disponibilidad hoy desde el Box considerando anulaciones
     const today = getLocalDateString(new Date());
     const professionalsWithAvailability = await Promise.all(professionals.map(async (p) => {
         const boxSlots = await loadBoxSlots(today);
@@ -750,12 +776,20 @@ export async function renderProfessionals(professionals) {
         const now = new Date();
         const advanceMinutes = p.advanceNotice ?? 60;
         const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+        const unavailableSlots = p.unavailableSlots || {};
+        const anulacionesHoy = unavailableSlots[today] || [];
+        
+        if (anulacionesHoy.includes('ALL_DAY')) {
+            return { ...p, disponiblesHoy: 0 };
+        }
+        
         const disponiblesHoy = boxSlots.filter(slot => {
             const slotStart = slot.timeLabel.split(' - ')[0];
             const slotDateTime = new Date(`${today}T${slotStart}:00`);
             return slot.status === 'available' &&
                    slotStart >= profStart && slotStart < profEnd &&
-                   slotDateTime > cutoffTime;
+                   slotDateTime > cutoffTime &&
+                   !anulacionesHoy.includes(slot.timeLabel);
         }).length;
         return { ...p, disponiblesHoy };
     }));
@@ -877,6 +911,9 @@ export function cargarDatosIniciales() {
                     sessionDuration: item.sessionDuration || 45,
                     breakBetween: item.breakBetween || 10,
                     availability: item.availability || {},
+                    startTime: item.startTime || '00:00',     // <-- NUEVO
+                    endTime: item.endTime || '23:59',         // <-- NUEVO
+                    unavailableSlots: item.unavailableSlots || {}, // <-- NUEVO
                     paymentLinks: {
                         online: item.paymentLinks?.online || '',
                         presencial: item.paymentLinks?.presencial || '',
@@ -922,6 +959,9 @@ export function cargarDatosIniciales() {
                 sessionDuration: 45,
                 breakBetween: 10,
                 availability: {},
+                startTime: '00:00',
+                endTime: '23:59',
+                unavailableSlots: {},
                 paymentLinks: { online: '', presencial: '', qrOnline: '', qrPresencial: '' }
             });
             console.log('👤 Administrador oculto agregado');
@@ -1353,4 +1393,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js corregido: integración completa con Box, eliminado listener de sesiones, flags para evitar duplicados');
+console.log('✅ publico.js corregido: integración completa con Box, anulaciones personales, eliminado listener de sesiones, flags para evitar duplicados');

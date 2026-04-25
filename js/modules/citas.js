@@ -1492,7 +1492,7 @@ export async function showPatientAppointmentsByRut() {
                         <thead>
                             <tr style="background:#f0f0f0;">
                                 <th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Estado</th><th>Acción</th>
-                              </tr>
+                              </table>
                         </thead>
                         <tbody>
                             ${citasPaciente.map(cita => {

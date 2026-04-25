@@ -343,40 +343,95 @@ export async function updateAvailableTimes() {
     const warningDiv = document.getElementById('presencialWarning');
 
     if (!date || !psychId || !timeSelect) return;
-    
-    console.log(`🔍 updateAvailableTimes: fecha=${date}, tipo=${appointmentType}, psicólogo=${psychId}`);
+
+    console.log(`🔍 [PUBLICO] updateAvailableTimes: fecha=${date}, tipo=${appointmentType}, psicólogo=${psychId}`);
+
     timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
-    
+    if (warningDiv) warningDiv.style.display = 'none';
+    timeSelect.style.display = 'block';
+
     try {
         const psych = state.staff.find(p => p.id == psychId);
         if (!psych) throw new Error('Profesional no encontrado');
-        
+
         const profStart = psych.startTime || '00:00';
         const profEnd = psych.endTime || '23:59';
         const unavailableSlots = psych.unavailableSlots || {};
         const anulacionesHoy = unavailableSlots[date] || [];
-        
+
         console.log(`📅 Rango profesional: ${profStart} - ${profEnd}, anulaciones:`, anulacionesHoy);
-        
+
         if (anulacionesHoy.includes('ALL_DAY')) {
             timeSelect.innerHTML = '<option value="">Día anulado por el profesional</option>';
             if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'block';
             return;
         }
-        
+
         let boxSlots = [];
         try {
             boxSlots = await loadBoxSlots(date);
-            console.log(`📦 Slots del Box para ${date}:`, boxSlots.length);
+            console.log(`📦 Slots del Box para ${date}: ${boxSlots.length}`);
         } catch (err) {
-            console.warn('No se pudieron cargar slots del box:', err);
+            console.warn('Error cargando slots del box:', err);
         }
-        
+
         if (boxSlots.length === 0) {
             timeSelect.innerHTML = '<option value="">No hay horarios configurados para esta fecha</option>';
             if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'block';
             return;
         }
+
+        const existingAppointments = state.appointments.filter(a => a.psychId == psychId && a.date === date).map(a => a.time);
+        const now = new Date();
+        const [year, month, day] = date.split('-');
+        const cutoffDateTime = new Date(year, month-1, day, now.getHours(), now.getMinutes());
+        const advanceMinutes = psych.advanceNotice ?? 60;
+        cutoffDateTime.setMinutes(cutoffDateTime.getMinutes() + advanceMinutes);
+
+        let availableSlots = [];
+
+        if (appointmentType === 'presencial') {
+            availableSlots = boxSlots.filter(slot => {
+                const slotStart = slot.timeLabel.split(' - ')[0];
+                const [slotHour, slotMin] = slotStart.split(':');
+                const slotDateTime = new Date(year, month-1, day, parseInt(slotHour), parseInt(slotMin));
+                const dentroRango = slotStart >= profStart && slotStart < profEnd;
+                const noOcupado = !existingAppointments.includes(slot.timeLabel);
+                const noAnulado = !anulacionesHoy.includes(slot.timeLabel);
+                const futuro = slotDateTime > cutoffDateTime;
+                const disponible = slot.status === 'available'; // solo disponibles en el Box
+                return dentroRango && noOcupado && noAnulado && futuro && disponible;
+            });
+            console.log(`🎯 Horarios presenciales disponibles (${availableSlots.length}):`, availableSlots.map(s => s.timeLabel));
+        } else {
+            availableSlots = boxSlots.filter(slot => {
+                const slotStart = slot.timeLabel.split(' - ')[0];
+                const [slotHour, slotMin] = slotStart.split(':');
+                const slotDateTime = new Date(year, month-1, day, parseInt(slotHour), parseInt(slotMin));
+                return slotStart >= profStart && slotStart < profEnd &&
+                       slotDateTime > cutoffDateTime &&
+                       !existingAppointments.includes(slot.timeLabel) &&
+                       !anulacionesHoy.includes(slot.timeLabel);
+            });
+            console.log(`🎯 Horarios online disponibles (${availableSlots.length}):`, availableSlots.map(s => s.timeLabel));
+        }
+
+        if (availableSlots.length === 0) {
+            timeSelect.innerHTML = '<option value="">No hay horarios disponibles para esta fecha</option>';
+            if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'block';
+            return;
+        }
+
+        timeSelect.innerHTML = '<option value="">Selecciona un horario</option>' +
+            availableSlots.map(slot => `<option value="${slot.timeLabel}">${slot.timeLabel}</option>`).join('');
+        if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'none';
+
+    } catch (error) {
+        console.error('Error cargando horarios desde Box:', error);
+        timeSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
+        if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'block';
+    }
+}
         
         // Obtener citas existentes del profesional en esa fecha
         const existingAppointments = state.appointments.filter(a => 

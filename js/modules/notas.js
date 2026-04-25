@@ -1,9 +1,8 @@
-// js/modules/notas.js - VERSIÓN CORREGIDA (CON SANITIZACIÓN TOTAL)
+// js/modules/notas.js - VERSIÓN CORREGIDA (SIN MODIFICAR EL ESTADO GLOBAL Y CON CLONACIÓN SEGURA)
 import { db, auth } from '../config/firebase.js';
 import { ref, push, set, update, remove, get } from 'https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js';
-import * as state from './state.js';
 
-console.log('📦 Cargando módulo notas.js (versión con sanitización profunda)...');
+console.log('📦 Cargando notas.js (versión estable sin estado global)...');
 
 let currentUser = null;
 let currentRole = null;
@@ -11,19 +10,29 @@ let allNotas = [];
 let allPatients = [];
 let cargandoNotas = false;
 
-// Helper para eliminar referencias circulares y sanitizar objetos
+// ---------------------------------------------------------------------
+// Clonación segura (evita errores de stack circular)
+// ---------------------------------------------------------------------
 function safeClone(obj, fallback = null) {
     if (obj === null || typeof obj !== 'object') return obj;
     try {
+        // Usar structuredClone si está disponible (moderno)
+        if (window.structuredClone) {
+            return structuredClone(obj);
+        }
+        // Fallback a JSON, pero con try-catch
         return JSON.parse(JSON.stringify(obj));
-    } catch(e) {
+    } catch (e) {
         console.warn('Error sanitizando objeto, usando fallback:', e.message);
-        return fallback;
+        if (fallback !== null) return fallback;
+        // Si no hay fallback, devolver una copia superficial segura
+        if (Array.isArray(obj)) return [];
+        return {};
     }
 }
 
 // ---------------------------------------------------------------------
-// 1. Obtener pacientes (carga única, sin escucha, con sanitización)
+// 1. Obtener pacientes (solo local, sin tocar state)
 // ---------------------------------------------------------------------
 async function cargarPacientesParaNotas() {
     if (!currentUser) {
@@ -36,9 +45,9 @@ async function cargarPacientesParaNotas() {
     console.log(`👤 Cargando pacientes para rol: ${currentRole}, UID: ${currentUser.uid}`);
 
     try {
+        // Leer citas
         const citasSnap = await get(ref(db, 'appointments'));
         const citasRaw = citasSnap.val() || {};
-        // Sanitizar citas
         const citas = safeClone(citasRaw, {});
 
         let citasDelProfesional = Object.values(citas);
@@ -73,11 +82,7 @@ async function cargarPacientesParaNotas() {
             };
         }).filter(p => p.id);
 
-        // Actualizar state.patients con datos sanitizados (evita recursión)
-        const pacientesSanitizados = allPatients.map(p => ({ id: p.id, name: p.nombreCompleto, rut: p.rut }));
-        state.setPatients(pacientesSanitizados);
-
-        console.log(`✅ Pacientes cargados y sanitizados:`, allPatients.map(p => p.nombreCompleto));
+        console.log(`✅ Pacientes cargados (local):`, allPatients.map(p => p.nombreCompleto));
         actualizarSelects();
     } catch (error) {
         console.error('❌ Error cargando pacientes:', error);
@@ -112,7 +117,7 @@ function actualizarSelects() {
 }
 
 // ---------------------------------------------------------------------
-// 2. Cargar notas (extracción manual, sin recursión, con sanitización)
+// 2. Cargar notas (solo local, sin tocar state)
 // ---------------------------------------------------------------------
 async function cargarNotas() {
     if (!currentUser) {
@@ -131,7 +136,6 @@ async function cargarNotas() {
     try {
         const sesionesSnap = await get(ref(db, 'sesiones'));
         const dataRaw = sesionesSnap.val() || {};
-        // Sanitizar datos de sesiones
         const data = safeClone(dataRaw, {});
 
         const nuevasNotas = [];
@@ -156,19 +160,6 @@ async function cargarNotas() {
         } else {
             allNotas = nuevasNotas;
         }
-
-        // Actualizar state.sesiones con notas sanitizadas
-        const sesionesSanitizadas = allNotas.map(n => ({
-            id: n.id,
-            patientId: n.patientId,
-            date: n.date,
-            content: n.content,
-            createdAt: n.createdAt,
-            updatedAt: n.updatedAt,
-            createdBy: n.createdBy,
-            professionalId: n.professionalId
-        }));
-        state.setSesiones(sesionesSanitizadas);
 
         renderNotasListado();
         console.log(`✅ Notas cargadas: ${allNotas.length} registros`);
@@ -233,7 +224,7 @@ function escapeHtml(str) {
 }
 
 // ---------------------------------------------------------------------
-// 3. Funciones del modal (con serialización forzada y sin recarga automática)
+// 3. Guardar / Editar / Eliminar (con datos planos)
 // ---------------------------------------------------------------------
 window.mostrarModalNuevaNota = function() {
     document.getElementById('notaModalTitulo').innerText = 'Nueva Nota de Evolución';
@@ -266,29 +257,17 @@ window.guardarNota = async function() {
     if (!patientId) { alert('Selecciona un paciente'); return; }
     if (!date) { alert('Selecciona una fecha'); return; }
     if (!content) { alert('El contenido no puede estar vacío'); return; }
-    if (!state.currentUser || !state.currentUser.data?.id) { alert('No hay usuario logueado'); return; }
+    if (!currentUser || !currentUser.uid) { alert('No hay usuario logueado'); return; }
 
-    const rawData = {
+    const cleanData = {
         patientId: String(patientId),
         date: String(date),
         content: String(content),
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        createdBy: String(state.currentUser.data.id),
-        professionalId: String(state.currentUser.data.id)
+        createdBy: String(currentUser.uid),
+        professionalId: String(currentUser.uid)
     };
-
-    // 🔥 Limpieza extrema: serializar y deserializar para eliminar referencias circulares
-    let cleanData;
-    try {
-        cleanData = JSON.parse(JSON.stringify(rawData));
-    } catch (e) {
-        console.error('Error al serializar la nota:', e);
-        alert('Error al procesar la nota. Intenta con menos caracteres o sin caracteres especiales.');
-        return;
-    }
-
-    console.log('📝 Nota a guardar (datos limpios):', cleanData);
 
     try {
         if (id) {
@@ -300,8 +279,8 @@ window.guardarNota = async function() {
             alert('Nota creada');
         }
         cerrarModalNota();
-        // ❌ NO recargar automáticamente – usuario debe usar botón "Actualizar"
-        console.log('✅ Nota guardada. Usa el botón "Actualizar" para ver los cambios.');
+        // El usuario debe hacer clic en "Actualizar" manualmente
+        console.log('✅ Nota guardada. Presiona el botón "Actualizar" para ver los cambios.');
     } catch (error) {
         console.error('Error guardando nota:', error);
         alert('Error al guardar nota: ' + error.message);
@@ -313,14 +292,13 @@ window.eliminarNota = async function(notaId) {
     try {
         await remove(ref(db, `sesiones/${notaId}`));
         alert('Nota eliminada');
-        await cargarNotas(); // Eliminar es seguro, no genera ciclo
+        await cargarNotas(); // Eliminación segura, recarga local
     } catch (error) {
         console.error('Error eliminando nota:', error);
         alert('Error al eliminar nota');
     }
 };
 
-// Botón de actualización manual
 window.recargarNotas = function() {
     cargarNotas().then(() => {
         alert('Notas recargadas correctamente');
@@ -389,23 +367,28 @@ window.exportarNotasPDF = async function() {
 };
 
 // ---------------------------------------------------------------------
-// 5. Inicialización (carga única con sanitización)
+// 5. Inicialización (sin depender de state global)
 // ---------------------------------------------------------------------
 function initNotas() {
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
-            // Esperar a que state.currentUser esté disponible (viene de main.js/publico.js)
-            const esperarState = () => {
-                if (window.state?.currentUser) {
-                    currentRole = window.state.currentUser.role;
-                    console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
-                    cargarPacientesParaNotas().then(() => cargarNotas());
-                } else {
-                    setTimeout(esperarState, 100);
-                }
-            };
-            esperarState();
+            // Intentar obtener el rol desde localStorage o desde la base de datos
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                try {
+                    const parsed = JSON.parse(storedUser);
+                    currentRole = parsed.role || (parsed.data && parsed.data.role) || null;
+                } catch(e) {}
+            }
+            if (!currentRole) {
+                // Fallback: si es admin o psicólogo por email
+                const isAdmin = user.email && (user.email.includes('admin') || user.email === 'admin@vinculosalud.cl');
+                currentRole = isAdmin ? 'admin' : 'psych';
+            }
+            console.log(`✅ Rol asignado: ${currentRole} para usuario ${user.uid}`);
+            await cargarPacientesParaNotas();
+            await cargarNotas();
         } else {
             currentUser = null;
             currentRole = null;
@@ -420,4 +403,4 @@ function initNotas() {
 window.cargarNotas = cargarNotas;
 
 initNotas();
-console.log('✅ notas.js cargado correctamente (versión con sanitización total)');
+console.log('✅ notas.js cargado (sin modificar state global y con clonación segura)');

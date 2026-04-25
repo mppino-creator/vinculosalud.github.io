@@ -1,4 +1,4 @@
-// js/modules/citas.js - Integración completa con Box compartido (corregido para cancelación de pacientes)
+// js/modules/citas.js - Integración completa con Box compartido (corregido: presencial muestra horarios)
 import * as state from './state.js';
 import { 
     showToast, validarRut, formatDate, formatRut, normalizarRut, 
@@ -336,6 +336,9 @@ export function updateBookingDetails() {
     updateAvailableTimes();
 }
 
+// ============================================
+// ACTUALIZAR HORARIOS DISPONIBLES (CORREGIDA: presencial muestra horarios)
+// ============================================
 export async function updateAvailableTimes() {
     const date = document.getElementById('custDate').value;
     const type = document.getElementById('appointmentType').value;
@@ -357,6 +360,18 @@ export async function updateAvailableTimes() {
     const psych = state.selectedPsych;
     const profStart = psych.startTime || '00:00';
     const profEnd = psych.endTime || '23:59';
+    const unavailableSlots = psych.unavailableSlots || {};
+    const anulacionesHoy = unavailableSlots[date] || [];
+    
+    // Si el día está anulado completamente
+    if (anulacionesHoy.includes('ALL_DAY')) {
+        if (presencialWarning) {
+            presencialWarning.style.display = 'block';
+            presencialWarning.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Día anulado por el profesional';
+        }
+        if (bookBtn) bookBtn.disabled = true;
+        return;
+    }
     
     let boxSlots = [];
     try {
@@ -371,21 +386,40 @@ export async function updateAvailableTimes() {
         return;
     }
     
+    const existingAppointments = state.appointments.filter(a => a.psychId == psych.id && a.date === date).map(a => a.time);
+    const now = new Date();
+    const advanceMinutes = psych.advanceNotice ?? 60;
+    const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+    
+    let availableSlots = [];
+    
     if (type === 'presencial') {
-        const availableSlots = boxSlots.filter(slot => {
+        availableSlots = boxSlots.filter(slot => {
             const slotStart = slot.timeLabel.split(' - ')[0];
             const slotDateTime = new Date(`${date}T${slotStart}:00`);
-            const now = new Date();
-            const advanceMinutes = psych.advanceNotice ?? 60;
-            const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
             return slot.status === 'available' &&
                    slotStart >= profStart && slotStart < profEnd &&
-                   slotDateTime > cutoffTime;
+                   slotDateTime > cutoffTime &&
+                   !existingAppointments.includes(slot.timeLabel) &&
+                   !anulacionesHoy.includes(slot.timeLabel);
         });
-        const hasAvailability = availableSlots.length > 0;
-        if (presencialWarning) {
-            presencialWarning.style.display = 'block';
-            if (!hasAvailability) {
+    } else {
+        availableSlots = boxSlots.filter(slot => {
+            const slotStart = slot.timeLabel.split(' - ')[0];
+            const slotDateTime = new Date(`${date}T${slotStart}:00`);
+            return slotStart >= profStart && slotStart < profEnd &&
+                   slotDateTime > cutoffTime &&
+                   !existingAppointments.includes(slot.timeLabel) &&
+                   !anulacionesHoy.includes(slot.timeLabel);
+        });
+    }
+    
+    availableSlots.sort((a,b) => a.timeLabel.localeCompare(b.timeLabel));
+    
+    if (availableSlots.length === 0) {
+        if (type === 'presencial') {
+            if (presencialWarning) {
+                presencialWarning.style.display = 'block';
                 presencialWarning.innerHTML = `
                     <i class="fa fa-exclamation-triangle" style="color: #ff6b6b;"></i>
                     <strong>No hay disponibilidad para esta fecha.</strong> 
@@ -401,85 +435,59 @@ export async function updateAvailableTimes() {
                 `;
                 presencialWarning.style.backgroundColor = '#ffe6e6';
                 presencialWarning.style.borderLeft = '4px solid #ff6b6b';
-                if (bookBtn) bookBtn.disabled = true;
-            } else {
-                presencialWarning.innerHTML = `
-                    <i class="fa fa-info-circle" style="color: var(--azul-medico);"></i> 
-                    <strong>Solicitud Presencial:</strong> El profesional confirmará la hora y coordinará la dirección.
-                    <div style="margin-top:15px;">
-                        <label>Preferencia de horario (opcional):</label>
-                        <div style="display:flex; gap:15px;">
-                            <label><input type="radio" name="presencialTimePref" value="AM" onchange="selectTimePref('AM')"> Mañana</label>
-                            <label><input type="radio" name="presencialTimePref" value="PM" onchange="selectTimePref('PM')"> Tarde</label>
-                            <label><input type="radio" name="presencialTimePref" value="" checked> Sin preferencia</label>
-                        </div>
-                    </div>
-                    <p style="margin-top:15px; background:#fff3cd; padding:10px; border-radius:8px;">
-                        <i class="fa fa-map-marker-alt"></i> La dirección exacta se coordinará directamente con el psicólogo.
-                    </p>
-                `;
-                presencialWarning.style.backgroundColor = '#e8f4fd';
-                if (bookBtn) bookBtn.disabled = false;
             }
+            if (bookBtn) bookBtn.disabled = true;
+        } else {
+            if (noSlotsMessage) {
+                noSlotsMessage.style.display = 'block';
+                noSlotsMessage.innerHTML = 'No hay horarios disponibles';
+            }
+            if (onlineMsg) onlineMsg.style.display = 'none';
+            if (bookBtn) bookBtn.disabled = true;
         }
-        if (onlineMsg) onlineMsg.style.display = 'none';
         return;
     }
     
-    // Online
-    if (presencialWarning) presencialWarning.style.display = 'none';
-    const now = new Date();
-    const advanceMinutes = psych.advanceNotice ?? 60;
-    const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
-    const onlineSlots = boxSlots.filter(slot => {
-        const slotStart = slot.timeLabel.split(' - ')[0];
-        const slotDateTime = new Date(`${date}T${slotStart}:00`);
-        const notOccupied = !isTimeSlotOccupied(psych.id, date, slot.timeLabel);
-        return slotStart >= profStart && slotStart < profEnd &&
-               slotDateTime > cutoffTime &&
-               notOccupied;
-    });
-    
-    if (onlineSlots.length === 0) {
-        if (noSlotsMessage) {
-            noSlotsMessage.style.display = 'block';
-            noSlotsMessage.innerHTML = 'No hay horarios disponibles';
+    // Hay horarios disponibles
+    if (type === 'presencial') {
+        if (presencialWarning) presencialWarning.style.display = 'none';
+        if (bookBtn) bookBtn.disabled = false;
+        if (timeSelect) {
+            timeSelect.style.display = 'block';
+            timeSelect.innerHTML = '<option value="">Selecciona un horario</option>' +
+                availableSlots.map(slot => `<option value="${slot.timeLabel}">${slot.timeLabel}</option>`).join('');
         }
-        if (onlineMsg) onlineMsg.style.display = 'none';
-        if (bookBtn) bookBtn.disabled = true;
-        return;
     } else {
         if (bookBtn) bookBtn.disabled = false;
+        const amTimes = availableSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'AM');
+        const pmTimes = availableSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'PM');
+        if (amTimes.length > 0 && amSlotsContainer) {
+            amSlotsContainer.innerHTML = amTimes.map(slot => `
+                <div class="time-slot-btn" onclick="selectTimeSlot('${slot.timeLabel}')" data-time="${slot.timeLabel}">${slot.timeLabel}</div>
+            `).join('');
+            if (amContainer) amContainer.style.display = 'block';
+        }
+        if (pmTimes.length > 0 && pmSlotsContainer) {
+            pmSlotsContainer.innerHTML = pmTimes.map(slot => `
+                <div class="time-slot-btn" onclick="selectTimeSlot('${slot.timeLabel}')" data-time="${slot.timeLabel}">${slot.timeLabel}</div>
+            `).join('');
+            if (pmContainer) pmContainer.style.display = 'block';
+        }
+        if (onlineMsg) {
+            onlineMsg.style.display = 'block';
+            onlineMsg.innerHTML = '<i class="fa fa-check-circle"></i> Horarios disponibles';
+        }
+        if (timeSelect) {
+            timeSelect.innerHTML = '<option value="">Selecciona un horario</option>' +
+                availableSlots.map(slot => `<option value="${slot.timeLabel}">${slot.timeLabel}</option>`).join('');
+            timeSelect.style.display = 'block';
+        }
     }
-    const amTimes = onlineSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'AM');
-    const pmTimes = onlineSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'PM');
-    if (amTimes.length > 0 && amSlotsContainer) {
-        amSlotsContainer.innerHTML = amTimes.map(slot => `
-            <div class="time-slot-btn" 
-                 onclick="selectTimeSlot('${slot.timeLabel}')"
-                 data-time="${slot.timeLabel}">
-                ${slot.timeLabel}
-            </div>
-        `).join('');
-        amContainer.style.display = 'block';
-    }
-    if (pmTimes.length > 0 && pmSlotsContainer) {
-        pmSlotsContainer.innerHTML = pmTimes.map(slot => `
-            <div class="time-slot-btn" 
-                 onclick="selectTimeSlot('${slot.timeLabel}')"
-                 data-time="${slot.timeLabel}">
-                ${slot.timeLabel}
-            </div>
-        `).join('');
-        pmContainer.style.display = 'block';
-    }
-    if (onlineMsg) {
-        onlineMsg.style.display = 'block';
-        onlineMsg.innerHTML = '<i class="fa fa-check-circle"></i> Horarios disponibles';
-    }
+    
+    // Sincronizar hora seleccionada si existe
     const currentSelectedTime = timeSelect ? timeSelect.value : '';
     if (!currentSelectedTime && window.horaSeleccionada) {
-        const horaValida = onlineSlots.some(slot => slot.timeLabel === window.horaSeleccionada);
+        const horaValida = availableSlots.some(slot => slot.timeLabel === window.horaSeleccionada);
         if (horaValida) {
             if (timeSelect) timeSelect.value = window.horaSeleccionada;
             const btn = document.querySelector(`.time-slot-btn[data-time="${window.horaSeleccionada}"]`);
@@ -487,6 +495,10 @@ export async function updateAvailableTimes() {
         }
     }
 }
+
+// ============================================
+// RESTO DE FUNCIONES (sin cambios, pero incluidas por completitud)
+// ============================================
 
 export async function searchPatientByRutBooking() {
     const rutInput = document.getElementById('custRut').value;
@@ -877,8 +889,7 @@ export function renderAppointments() {
         appointmentsToShow = state.appointments.filter(a => a.psychId == state.currentUser.data.id);
     }
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td>' +
-                       '</tr>';
+        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td></tr>';
         return;
     }
     const sortedApps = [...appointmentsToShow].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -925,8 +936,7 @@ export function renderPendingRequests() {
         requestsToShow = state.pendingRequests.filter(r => r.psychId == state.currentUser.data.id);
     }
     if (requestsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td>' +
-                       '</tr>';
+        tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
         return;
     }
     tb.innerHTML = requestsToShow.reverse().map(r => {
@@ -1440,7 +1450,7 @@ export async function rejectRequest(requestId) {
 }
 
 // ============================================
-// FUNCIONES PARA PACIENTES (CANCELAR CITAS)
+// FUNCIONES PARA PACIENTES (CANCELAR CITAS) - CORREGIDAS
 // ============================================
 
 export async function showPatientAppointmentsByRut() {
@@ -1466,7 +1476,6 @@ export async function showPatientAppointmentsByRut() {
         return;
     }
 
-    // Función auxiliar para extraer hora de inicio de un string de tiempo (puede ser "08:00" o "08:00 - 09:00")
     const getStartTime = (timeStr) => {
         if (!timeStr) return '00:00';
         return timeStr.split(' - ')[0];
@@ -1551,11 +1560,9 @@ export async function cancelAppointmentByPatient(appointmentId, patientRut) {
     }
     if (!confirm('¿Cancelar esta cita? Esta acción no se puede deshacer.')) return;
 
-    // Si es presencial y ya está confirmada (en appointments), liberar slot del Box
     if (!isPending && appointment.type === 'presencial' && appointment.date && appointment.time) {
         try {
             const boxSlots = await loadBoxSlots(appointment.date);
-            // Extraer la hora de inicio (el slot se guarda con formato "HH:MM - HH:MM")
             const slotIndex = boxSlots.findIndex(slot => slot.timeLabel === appointment.time);
             if (slotIndex !== -1 && boxSlots[slotIndex].status === 'booked') {
                 boxSlots[slotIndex].status = 'available';
@@ -1659,4 +1666,4 @@ document.addEventListener('datosPrivadosCargados', () => {
     }
 });
 
-console.log('✅ citas.js actualizado: integración completa con Box compartido, reserva y liberación de slots presenciales, y cancelación por pacientes corregida');
+console.log('✅ citas.js actualizado: presencial muestra horarios del Box');

@@ -1,4 +1,4 @@
-// js/modules/publico.js - VERSIÓN COMPLETA CORREGIDA (CON LOGS Y MEJORA)
+// js/modules/publico.js - VERSIÓN CORREGIDA (presencial muestra horarios)
 import { db } from '../config/firebase.js';
 import * as state from './state.js';
 import { showToast, getPublicStaff } from './utils.js';
@@ -326,9 +326,8 @@ export function updateBookingDetails() {
     } else {
         if (bookingPrice) bookingPrice.innerText = `$${(psych.pricePresencial || 0).toLocaleString()}`;
         if (bookingType) bookingType.innerText = 'Presencial';
-        // El warning se manejará en updateAvailableTimes, no lo mostramos siempre
-        // if (presencialWarning) presencialWarning.style.display = 'block';
         if (onlineAvailabilityMsg) onlineAvailabilityMsg.style.display = 'none';
+        // No mostramos el warning aquí; se manejará en updateAvailableTimes
     }
 }
 
@@ -346,6 +345,7 @@ export async function updateAvailableTimes() {
 
     console.log(`🔍 [PUBLICO] updateAvailableTimes: fecha=${date}, tipo=${appointmentType}, psicólogo=${psychId}`);
 
+    // Inicializar UI
     timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
     if (warningDiv) warningDiv.style.display = 'none';
     timeSelect.style.display = 'block';
@@ -391,6 +391,7 @@ export async function updateAvailableTimes() {
         let availableSlots = [];
 
         if (appointmentType === 'presencial') {
+            // Presencial: solo slots disponibles en el Box (status 'available')
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
                 const [slotHour, slotMin] = slotStart.split(':');
@@ -399,11 +400,12 @@ export async function updateAvailableTimes() {
                 const noOcupado = !existingAppointments.includes(slot.timeLabel);
                 const noAnulado = !anulacionesHoy.includes(slot.timeLabel);
                 const futuro = slotDateTime > cutoffDateTime;
-                const disponible = slot.status === 'available'; // solo disponibles en el Box
+                const disponible = slot.status === 'available';
                 return dentroRango && noOcupado && noAnulado && futuro && disponible;
             });
             console.log(`🎯 Horarios presenciales disponibles (${availableSlots.length}):`, availableSlots.map(s => s.timeLabel));
         } else {
+            // Online: cualquier slot dentro del rango, aunque esté reservado en el Box
             availableSlots = boxSlots.filter(slot => {
                 const slotStart = slot.timeLabel.split(' - ')[0];
                 const [slotHour, slotMin] = slotStart.split(':');
@@ -430,69 +432,6 @@ export async function updateAvailableTimes() {
         console.error('Error cargando horarios desde Box:', error);
         timeSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
         if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'block';
-    }
-}
-        
-        // Obtener citas existentes del profesional en esa fecha
-        const existingAppointments = state.appointments.filter(a => 
-            a.psychId == psychId && a.date === date
-        ).map(a => a.time);
-        
-        const now = new Date();
-        // Crear fecha local para la comparación (sin UTC)
-        const [year, month, day] = date.split('-');
-        const cutoffDateTime = new Date(year, month-1, day, now.getHours(), now.getMinutes());
-        const advanceMinutes = psych.advanceNotice ?? 60;
-        cutoffDateTime.setMinutes(cutoffDateTime.getMinutes() + advanceMinutes);
-        
-        let availableSlots = [];
-        
-        if (appointmentType === 'presencial') {
-            // Presencial: solo slots disponibles en el Box (status 'available') que cumplan condiciones
-            availableSlots = boxSlots.filter(slot => {
-                const slotStart = slot.timeLabel.split(' - ')[0];
-                const [slotHour, slotMin] = slotStart.split(':');
-                const slotDateTime = new Date(year, month-1, day, parseInt(slotHour), parseInt(slotMin));
-                const dentroRango = slotStart >= profStart && slotStart < profEnd;
-                const noOcupado = !existingAppointments.includes(slot.timeLabel);
-                const noAnulado = !anulacionesHoy.includes(slot.timeLabel);
-                const futuro = slotDateTime > cutoffDateTime;
-                const disponible = slot.status === 'available';
-                
-                if (dentroRango && noOcupado && noAnulado && futuro && disponible) {
-                    console.log(`✅ Slot viable: ${slot.timeLabel} (status ${slot.status})`);
-                    return true;
-                }
-                return false;
-            });
-        } else {
-            // Online: cualquier slot dentro del rango horario, sin importar status booked
-            availableSlots = boxSlots.filter(slot => {
-                const slotStart = slot.timeLabel.split(' - ')[0];
-                const [slotHour, slotMin] = slotStart.split(':');
-                const slotDateTime = new Date(year, month-1, day, parseInt(slotHour), parseInt(slotMin));
-                return slotStart >= profStart && slotStart < profEnd &&
-                       slotDateTime > cutoffDateTime &&
-                       !existingAppointments.includes(slot.timeLabel) &&
-                       !anulacionesHoy.includes(slot.timeLabel);
-            });
-        }
-        
-        availableSlots.sort((a,b) => a.timeLabel.localeCompare(b.timeLabel));
-        console.log(`🎯 Horarios disponibles (${availableSlots.length}):`, availableSlots.map(s => s.timeLabel));
-        
-        if (availableSlots.length === 0) {
-            timeSelect.innerHTML = '<option value="">No hay horarios disponibles para esta fecha</option>';
-            if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'block';
-        } else {
-            timeSelect.innerHTML = '<option value="">Selecciona un horario</option>' +
-                availableSlots.map(slot => `<option value="${slot.timeLabel}">${slot.timeLabel}</option>`).join('');
-            if (warningDiv && appointmentType === 'presencial') warningDiv.style.display = 'none';
-        }
-    } catch (error) {
-        console.error('Error cargando horarios desde Box:', error);
-        timeSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
-        if (warningDiv) warningDiv.style.display = 'block';
     }
 }
 
@@ -926,4 +865,4 @@ if (typeof window !== 'undefined') {
     window.openBooking = openBooking;
     window.registrarVisitaProfesional = registrarVisitaProfesional;
 }
-console.log('✅ publico.js corregido: integración completa con Box, anulaciones personales, control de warning y próxima disponibilidad');
+console.log('✅ publico.js corregido: presencial muestra horarios del Box');

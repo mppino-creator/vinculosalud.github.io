@@ -1,22 +1,21 @@
-// js/modules/citas.js - Integración completa con Box compartido
+// js/modules/citas.js - Integración completa con Box compartido (corregido para cancelación de pacientes)
 import * as state from './state.js';
 import { 
     showToast, validarRut, formatDate, formatRut, normalizarRut, 
     normalizarFecha, getTimePeriod, calcularEdad 
 } from './utils.js';
-import { loadBoxSlots, saveBoxSlots } from './box.js';  // <--- Importar funciones del Box
+import { loadBoxSlots, saveBoxSlots } from './box.js';
 
 // ============================================
 // VARIABLES GLOBALES DEL MÓDULO
 // ============================================
 window.horaSeleccionada = null;
-let currentRequestId = null;          // ID de la solicitud presencial a confirmar
+let currentRequestId = null;
 
 // ============================================
 // FUNCIONES AUXILIARES INTERNAS
 // ============================================
 
-// Obtener fecha local en formato YYYY-MM-DD
 function getLocalDateString(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -24,16 +23,12 @@ function getLocalDateString(date) {
     return `${year}-${month}-${day}`;
 }
 
-// Verificar si un horario está ocupado (citas confirmadas/pendientes o solicitudes)
-// Si se proporciona excludeRequestId, se ignora esa solicitud (útil al editar)
 function isTimeSlotOccupied(psychId, date, timeLabel, excludeRequestId = null) {
     if (!timeLabel) return false;
-    // Verificar citas confirmadas o pendientes
     const occupiedAppointments = state.appointments.some(a => 
         a.psychId == psychId && a.date === date && a.time === timeLabel &&
         (a.status === 'confirmada' || a.status === 'pendiente')
     );
-    // Verificar solicitudes pendientes, excluyendo la actual si se proporciona su ID
     const occupiedRequests = state.pendingRequests.some(r => 
         r.psychId == psychId && r.date === date && r.time === timeLabel && 
         r.time !== 'Pendiente' && r.id !== excludeRequestId
@@ -41,7 +36,6 @@ function isTimeSlotOccupied(psychId, date, timeLabel, excludeRequestId = null) {
     return occupiedAppointments || occupiedRequests;
 }
 
-// Obtener slots disponibles (basado en BOX, filtrando por rango horario del profesional)
 async function getAvailableSlotsFromBox(psych, date, excludeRequestId = null) {
     if (!psych) return [];
     const profStart = psych.startTime || '00:00';
@@ -53,8 +47,6 @@ async function getAvailableSlotsFromBox(psych, date, excludeRequestId = null) {
         console.warn('Error cargando slots del Box:', err);
         return [];
     }
-    // Filtrar slots disponibles (status 'available') y dentro del rango del profesional
-    // También excluir los que ya están ocupados por citas o solicitudes
     const now = new Date();
     return boxSlots.filter(slot => {
         const slotStart = slot.timeLabel.split(' - ')[0];
@@ -67,8 +59,6 @@ async function getAvailableSlotsFromBox(psych, date, excludeRequestId = null) {
     });
 }
 
-// Obtener slots disponibles (misma lógica para preservar compatibilidad)
-// Se usa en la parte pública y en el panel profesional
 async function getAvailableSlots(psych, date, excludeRequestId = null) {
     return await getAvailableSlotsFromBox(psych, date, excludeRequestId);
 }
@@ -346,7 +336,6 @@ export function updateBookingDetails() {
     updateAvailableTimes();
 }
 
-// Versión para el panel del paciente (público) - usa loadBoxSlots
 export async function updateAvailableTimes() {
     const date = document.getElementById('custDate').value;
     const type = document.getElementById('appointmentType').value;
@@ -369,7 +358,6 @@ export async function updateAvailableTimes() {
     const profStart = psych.startTime || '00:00';
     const profEnd = psych.endTime || '23:59';
     
-    // Cargar slots del Box
     let boxSlots = [];
     try {
         boxSlots = await loadBoxSlots(date);
@@ -384,7 +372,6 @@ export async function updateAvailableTimes() {
     }
     
     if (type === 'presencial') {
-        // Mostrar solo slots disponibles y dentro del rango horario
         const availableSlots = boxSlots.filter(slot => {
             const slotStart = slot.timeLabel.split(' - ')[0];
             const slotDateTime = new Date(`${date}T${slotStart}:00`);
@@ -439,7 +426,7 @@ export async function updateAvailableTimes() {
         return;
     }
     
-    // Online: cualquier slot dentro del rango (aunque esté reservado en el Box, no importa)
+    // Online
     if (presencialWarning) presencialWarning.style.display = 'none';
     const now = new Date();
     const advanceMinutes = psych.advanceNotice ?? 60;
@@ -464,7 +451,6 @@ export async function updateAvailableTimes() {
     } else {
         if (bookBtn) bookBtn.disabled = false;
     }
-    // Dividir AM/PM (según hora)
     const amTimes = onlineSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'AM');
     const pmTimes = onlineSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'PM');
     if (amTimes.length > 0 && amSlotsContainer) {
@@ -663,7 +649,6 @@ export async function executeBooking() {
         return;
     }
     if (type === 'presencial') {
-        // Verificar si hay algún slot disponible en el Box dentro del rango del profesional
         const psych = state.selectedPsych;
         const profStart = psych.startTime || '00:00';
         const profEnd = psych.endTime || '23:59';
@@ -798,7 +783,6 @@ export async function executeBooking() {
             showToast('✅ Solicitud creada', 'success');
             updateAvailableTimes();
         } else {
-            // Para solicitud presencial NO se marca el slot en el Box todavía (solo cuando se confirma hora)
             state.pendingRequests.push(appointment);
             await db.ref(`pendingRequests/${appointmentId}`).set(appointment);
             console.log('✅ Solicitud presencial guardada en Firebase');
@@ -893,7 +877,8 @@ export function renderAppointments() {
         appointmentsToShow = state.appointments.filter(a => a.psychId == state.currentUser.data.id);
     }
     if (appointmentsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td></tr>';
+        tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No hay citas</td>' +
+                       '</tr>';
         return;
     }
     const sortedApps = [...appointmentsToShow].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -940,13 +925,14 @@ export function renderPendingRequests() {
         requestsToShow = state.pendingRequests.filter(r => r.psychId == state.currentUser.data.id);
     }
     if (requestsToShow.length === 0) {
-        tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td></tr>';
+        tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No hay solicitudes</td>' +
+                       '</tr>';
         return;
     }
     tb.innerHTML = requestsToShow.reverse().map(r => {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         return `
-            <td>
+            <tr>
                 <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
                 <td>
                     <strong>${r.patient}</strong><br>
@@ -1104,7 +1090,6 @@ export async function confirmPresencialTime() {
         showToast('Profesional no encontrado', 'error');
         return;
     }
-    // Verificar disponibilidad en el Box, excluyendo la solicitud actual
     const availableSlots = await getAvailableSlots(psych, date, currentRequestId);
     const isAvailable = availableSlots.some(slot => slot.timeLabel === timeLabel);
     if (!isAvailable) {
@@ -1116,7 +1101,6 @@ export async function confirmPresencialTime() {
         showToast('No se puede agendar en fecha/hora pasada', 'error');
         return;
     }
-    // --- Reservar el slot en el Box (marcar como booked) ---
     let boxUpdated = false;
     try {
         const boxSlots = await loadBoxSlots(date);
@@ -1136,7 +1120,6 @@ export async function confirmPresencialTime() {
         showToast('Error al reservar el horario', 'error');
         return;
     }
-    // Crear la cita confirmada
     const appointmentId = Date.now().toString();
     const appointment = {
         id: appointmentId,
@@ -1178,7 +1161,6 @@ export async function confirmPresencialTime() {
         import('./auth.js').then(auth => auth.switchTab('citas'));
     } catch (error) {
         console.error('Error confirmando cita:', error);
-        // Si falla, revertir el slot del Box
         if (boxUpdated) {
             try {
                 const boxSlots = await loadBoxSlots(date);
@@ -1300,7 +1282,6 @@ export async function executeTherapistBooking() {
         showToast('Selecciona fecha y horario', 'error');
         return;
     }
-    // Verificar disponibilidad excluyendo la solicitud actual (si se está confirmando)
     const excludeId = currentRequestId || null;
     if (isTimeSlotOccupied(psych.id, date, timeLabel, excludeId)) {
         showToast('⚠️ La hora seleccionada ya está ocupada. Elige otra.', 'error');
@@ -1333,7 +1314,6 @@ export async function executeTherapistBooking() {
         emailEnviado: false,
         prevision: state.selectedPatientForTherapist.prevision || ''
     };
-    // Si es presencial, marcar el slot en el Box
     let boxUpdated = false;
     if (type === 'presencial') {
         try {
@@ -1388,7 +1368,6 @@ export async function executeTherapistBooking() {
         import('./auth.js').then(auth => auth.switchTab('citas'));
     } catch (error) {
         console.error('Error creando cita:', error);
-        // Si falló y habíamos marcado el Box, revertir
         if (boxUpdated && type === 'presencial') {
             try {
                 const boxSlots = await loadBoxSlots(date);
@@ -1419,7 +1398,6 @@ export async function cancelAppointment(id) {
         showToast('No tienes permiso para cancelar esta cita', 'error');
         return;
     }
-    // Si es presencial, liberar el slot en el Box
     if (appointment.type === 'presencial' && appointment.date && appointment.time) {
         try {
             const boxSlots = await loadBoxSlots(appointment.date);
@@ -1432,7 +1410,6 @@ export async function cancelAppointment(id) {
             }
         } catch (err) {
             console.error('Error al liberar slot del Box:', err);
-            // Continuamos de todas formas
         }
     }
     state.setAppointments(state.appointments.filter(a => a.id != id));
@@ -1454,9 +1431,6 @@ export async function rejectRequest(requestId) {
         showToast('No tienes permiso para rechazar esta solicitud', 'error');
         return;
     }
-    // Si la solicitud ya tenía una hora preferida (no 'Pendiente'), podría haber reservado el slot?
-    // En nuestro flujo, las solicitudes presenciales no reservan el slot hasta la confirmación.
-    // Por lo tanto, no necesitamos liberar nada.
     state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
     await window.db.ref(`pendingRequests/${requestId}`).remove();
     showToast('Solicitud rechazada', 'success');
@@ -1464,6 +1438,10 @@ export async function rejectRequest(requestId) {
     if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
     if (typeof updateTherapistAvailableSlots === 'function') updateTherapistAvailableSlots();
 }
+
+// ============================================
+// FUNCIONES PARA PACIENTES (CANCELAR CITAS)
+// ============================================
 
 export async function showPatientAppointmentsByRut() {
     const rutInput = prompt(
@@ -1487,13 +1465,22 @@ export async function showPatientAppointmentsByRut() {
         showToast('❌ No encontramos citas asociadas a ese RUT. Verifica que esté bien escrito.', 'error');
         return;
     }
+
+    // Función auxiliar para extraer hora de inicio de un string de tiempo (puede ser "08:00" o "08:00 - 09:00")
+    const getStartTime = (timeStr) => {
+        if (!timeStr) return '00:00';
+        return timeStr.split(' - ')[0];
+    };
+
     const citasPaciente = [...state.appointments, ...state.pendingRequests]
         .filter(c => c.patientId == patient.id)
-        .sort((a, b) => new Date(b.date + 'T' + (b.time || '00:00')) - new Date(a.date + 'T' + (a.time || '00:00')));
+        .sort((a, b) => new Date(b.date + 'T' + getStartTime(b.time)) - new Date(a.date + 'T' + getStartTime(a.time)));
+
     if (citasPaciente.length === 0) {
         showToast('📭 No tienes citas registradas actualmente.', 'info');
         return;
     }
+
     const modalContent = `
         <div id="modalCitasPaciente" class="modal" style="display:flex;">
             <div class="modal-content" style="max-width: 800px;">
@@ -1508,27 +1495,34 @@ export async function showPatientAppointmentsByRut() {
                               </tr>
                         </thead>
                         <tbody>
-                            ${citasPaciente.map(cita => `
-                                <tr>
-                                    <td>${cita.date || '—'}</td>
-                                    <td>${cita.time || 'A coordinar'}</td>
-                                    <td>${cita.psych || '—'}</td>
-                                    <td>${cita.type === 'online' ? 'Online' : 'Presencial'}</td>
-                                    <td>
-                                        ${cita.status === 'confirmada' ? 'Confirmada' : 
-                                          cita.status === 'pendiente' ? 'Pendiente' : 
-                                          cita.status === 'cancelada' ? 'Cancelada' : '—'}
-                                    </td>
-                                    <td>
-                                        ${cita.status !== 'cancelada' && new Date(cita.date + 'T' + (cita.time || '00:00')) > new Date() ? `
-                                            <button onclick="cancelAppointmentByPatient('${cita.id}', '${patient.rut}')" 
-                                                style="background:var(--rojo-alerta); color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">
-                                                Cancelar
-                                            </button>
-                                        ` : '—'}
-                                    </td>
-                                </tr>
-                            `).join('')}
+                            ${citasPaciente.map(cita => {
+                                const startTime = getStartTime(cita.time);
+                                const citaDateTime = new Date(cita.date + 'T' + startTime);
+                                const esFutura = citaDateTime > new Date();
+                                const noCancelada = cita.status !== 'cancelada';
+                                const mostrarBoton = noCancelada && esFutura;
+                                return `
+                                    <tr>
+                                        <td>${cita.date || '—'}</td>
+                                        <td>${cita.time || 'A coordinar'}</td>
+                                        <td>${cita.psych || '—'}</td>
+                                        <td>${cita.type === 'online' ? 'Online' : 'Presencial'}</td>
+                                        <td>
+                                            ${cita.status === 'confirmada' ? 'Confirmada' : 
+                                              cita.status === 'pendiente' ? 'Pendiente' : 
+                                              cita.status === 'cancelada' ? 'Cancelada' : '—'}
+                                        </td>
+                                        <td>
+                                            ${mostrarBoton ? `
+                                                <button onclick="cancelAppointmentByPatient('${cita.id}', '${patient.rut}')" 
+                                                    style="background:var(--rojo-alerta); color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">
+                                                    Cancelar
+                                                </button>
+                                            ` : '—'}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -1556,20 +1550,24 @@ export async function cancelAppointmentByPatient(appointmentId, patientRut) {
         return;
     }
     if (!confirm('¿Cancelar esta cita? Esta acción no se puede deshacer.')) return;
-    // Si es presencial y ya estaba confirmada (en appointments), liberar slot del Box
+
+    // Si es presencial y ya está confirmada (en appointments), liberar slot del Box
     if (!isPending && appointment.type === 'presencial' && appointment.date && appointment.time) {
         try {
             const boxSlots = await loadBoxSlots(appointment.date);
+            // Extraer la hora de inicio (el slot se guarda con formato "HH:MM - HH:MM")
             const slotIndex = boxSlots.findIndex(slot => slot.timeLabel === appointment.time);
             if (slotIndex !== -1 && boxSlots[slotIndex].status === 'booked') {
                 boxSlots[slotIndex].status = 'available';
                 boxSlots[slotIndex].professional = null;
                 await saveBoxSlots(appointment.date, boxSlots);
+                console.log(`📦 Slot del Box liberado por paciente: ${appointment.date} ${appointment.time}`);
             }
         } catch (err) {
             console.error('Error liberando slot:', err);
         }
     }
+
     if (isPending) {
         state.setPendingRequests(state.pendingRequests.filter(r => r.id != appointmentId));
         await window.db.ref(`pendingRequests/${appointmentId}`).remove();
@@ -1661,4 +1659,4 @@ document.addEventListener('datosPrivadosCargados', () => {
     }
 });
 
-console.log('✅ citas.js actualizado: integración completa con Box compartido, reserva y liberación de slots presenciales');
+console.log('✅ citas.js actualizado: integración completa con Box compartido, reserva y liberación de slots presenciales, y cancelación por pacientes corregida');

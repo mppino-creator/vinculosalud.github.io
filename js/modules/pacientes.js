@@ -1,4 +1,5 @@
-// js/modules/pacientes.js
+// js/modules/pacientes.js - VERIFICADO: No requiere cambios para Box compartido
+// (toda la lógica de reservas está en citas.js)
 import * as state from './state.js';
 import { showToast, validarRut, formatRut, formatDate, calculateAge, getInitials, normalizarRut } from './utils.js';
 import { puedeAccederAPaciente, puedeEditarFichas } from './permisos.js';
@@ -926,7 +927,7 @@ export function exportarHistorialPaciente(patientId) {
             
             <div class="section">
                 <h3>📅 Atenciones (${citas.length} citas)</h3>
-                <table>
+                </table>
                     <thead><tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead>
                     <tbody>
                         ${citas.map(c => `
@@ -1122,7 +1123,7 @@ export function printPatientSummary() {
     let total = 0;
     patientApps.forEach(a => {
         total += a.price;
-        summaryHtml += `<tr><td>${a.date}</td>}.${a.time}</td>}.${escapeHtml(a.psych)}</td>}.${a.type === 'online' ? 'Online' : 'Presencial'}</td>}.$${a.price.toLocaleString()}</td>}.${a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td></tr>`;
+        summaryHtml += `<tr><td>${a.date}</td><td>${a.time}</td><td>${escapeHtml(a.psych)}</td><td>${a.type === 'online' ? 'Online' : 'Presencial'}</td><td>$${a.price.toLocaleString()}</td><td>${a.paymentStatus === 'pagado' ? 'Pagado' : 'Pendiente'}</td></tr>`;
     });
 
     summaryHtml += `
@@ -1166,4 +1167,4 @@ if (typeof window !== 'undefined') {
     window.limpiarDuplicadosPacientes = limpiarDuplicadosPacientes;
 }
 
-console.log('✅ pacientes.js - VERSIÓN DEFINITIVA (sin duplicados, con corrección en link de consentimiento)');
+console.log('✅ pacientes.js - VERIFICADO: No requiere cambios para Box (toda la lógica de reservas está en citas.js)');

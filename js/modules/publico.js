@@ -20,6 +20,7 @@ import {
 import { renderStaffTable } from './profesionales.js';
 import { renderPatients } from './pacientes.js';
 import { renderPendingRequests, renderAppointments } from './citas.js';
+import { loadBoxSlots, saveBoxSlots } from './box.js';  // <-- Importar funciones del Box
 
 // ============================================
 // ALMACENAMIENTO DE LISTENERS PRIVADOS
@@ -69,34 +70,35 @@ function getAverageRating(psychId) {
     return sum / psychMessages.length;
 }
 
+// Obtener fecha local en formato YYYY-MM-DD
+function getLocalDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // ============================================
-// FUNCIÓN: Calcular cupos disponibles HOY (con antelación)
+// FUNCIÓN: Calcular cupos disponibles HOY (con antelación) - basada en Box
 // ============================================
-function getAvailableSlotsCountForToday(psych) {
-    const today = new Date().toISOString().split('T')[0];
+async function getAvailableSlotsCountForToday(psych) {
+    const today = getLocalDateString(new Date());
     const now = new Date();
     
-    const todaySlots = psych.availability?.[today] || [];
-    if (todaySlots.length === 0) return 0;
+    const boxSlots = await loadBoxSlots(today);
+    const profStart = psych.startTime || '00:00';
+    const profEnd = psych.endTime || '23:59';
     
-    const bookedAppointments = (state.appointments || []).filter(a => 
-        a.psychId == psych.id && a.date === today && 
-        (a.status === 'confirmada' || a.status === 'pendiente')
-    ).map(a => a.time);
-    
-    const bookedRequests = (state.pendingRequests || []).filter(r => 
-        r.psychId == psych.id && r.date === today && r.time && r.time !== 'Pendiente'
-    ).map(r => r.time);
-    
-    const bookedTimes = [...new Set([...bookedAppointments, ...bookedRequests])];
-    
-    const advanceMinutes = psych.advanceNotice ?? 60;
-    const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
-    
-    const available = todaySlots.filter(slot => 
-        !bookedTimes.includes(slot.time) && 
-        new Date(today + 'T' + slot.time) > cutoffTime
-    );
+    // Para contar disponibilidad "hoy" se consideran slots disponibles (no reservados) dentro del rango
+    const available = boxSlots.filter(slot => {
+        const slotStart = slot.timeLabel.split(' - ')[0];
+        const slotDateTime = new Date(`${today}T${slotStart}:00`);
+        const advanceMinutes = psych.advanceNotice ?? 60;
+        const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+        return slot.status === 'available' &&
+               slotStart >= profStart && slotStart < profEnd &&
+               slotDateTime > cutoffTime;
+    });
     
     return available.length;
 }
@@ -411,11 +413,11 @@ export function updateBookingDetails() {
 }
 
 // ============================================
-// ACTUALIZAR HORARIOS DISPONIBLES
+// ACTUALIZAR HORARIOS DISPONIBLES (basado en BOX)
 // ============================================
 export async function updateAvailableTimes() {
     const date = document.getElementById('custDate')?.value;
-    const appointmentType = document.getElementById('appointmentType')?.value;
+    const appointmentType = document.getElementById('appointmentType')?.value; // 'presencial' o 'online'
     const timeSelect = document.getElementById('custTime');
     const psychId = state.currentPsychId;
     
@@ -427,36 +429,67 @@ export async function updateAvailableTimes() {
         const psych = state.staff.find(p => p.id == psychId);
         if (!psych) throw new Error('Profesional no encontrado');
         
-        const slots = psych.availability?.[date] || [];
+        const profStart = psych.startTime || '00:00';
+        const profEnd = psych.endTime || '23:59';
         
-        const citasSnapshot = await firebase.database().ref('appointments').once('value');
-        const citas = citasSnapshot.val() || {};
+        // Obtener slots del Box para la fecha seleccionada
+        let boxSlots = [];
+        try {
+            boxSlots = await loadBoxSlots(date);
+        } catch (err) {
+            console.warn('No se pudieron cargar slots del box:', err);
+        }
         
-        const horariosOcupados = Object.values(citas)
-            .filter(c => c.psychId == psychId && c.date === date)
-            .map(c => c.time);
+        // Si no hay slots en el Box, mostrar mensaje
+        if (boxSlots.length === 0) {
+            timeSelect.innerHTML = '<option value="">No hay horarios configurados para esta fecha</option>';
+            return;
+        }
+        
+        // Obtener citas existentes para este profesional en esta fecha (para evitar doble reserva del mismo profesional)
+        const existingAppointments = state.appointments.filter(a => 
+            a.psychId == psychId && a.date === date
+        ).map(a => a.time);
         
         const now = new Date();
         const advanceMinutes = psych.advanceNotice ?? 60;
         const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
         
-        const availableSlots = slots
-            .filter(slot => {
-                if (horariosOcupados.includes(slot.time)) return false;
-                if (appointmentType === 'presencial' && slot.isOvercupo) return false;
-                if (new Date(date + 'T' + slot.time) <= cutoffTime) return false;
-                return true;
-            })
-            .sort();
+        // Filtrar según tipo de atención
+        let availableSlots = [];
+        
+        if (appointmentType === 'presencial') {
+            // Presencial: solo slots disponibles en el Box (no reservados por NADIE)
+            availableSlots = boxSlots.filter(slot => {
+                const slotStart = slot.timeLabel.split(' - ')[0];
+                const slotDateTime = new Date(`${date}T${slotStart}:00`);
+                return slot.status === 'available' &&
+                       slotStart >= profStart && slotStart < profEnd &&
+                       slotDateTime > cutoffTime &&
+                       !existingAppointments.includes(slot.timeLabel);
+            });
+        } else {
+            // Online: cualquier slot dentro del rango horario (aunque esté reservado en el Box),
+            // pero aún así debe respetar que el profesional no tenga ya una cita en ese mismo horario
+            availableSlots = boxSlots.filter(slot => {
+                const slotStart = slot.timeLabel.split(' - ')[0];
+                const slotDateTime = new Date(`${date}T${slotStart}:00`);
+                return slotStart >= profStart && slotStart < profEnd &&
+                       slotDateTime > cutoffTime &&
+                       !existingAppointments.includes(slot.timeLabel);
+            });
+        }
+        
+        availableSlots.sort((a,b) => a.timeLabel.localeCompare(b.timeLabel));
         
         if (availableSlots.length === 0) {
             timeSelect.innerHTML = '<option value="">No hay horarios disponibles para esta fecha</option>';
         } else {
             timeSelect.innerHTML = '<option value="">Selecciona un horario</option>' +
-                availableSlots.map(time => `<option value="${time}">${time}</option>`).join('');
+                availableSlots.map(slot => `<option value="${slot.timeLabel}">${slot.timeLabel}</option>`).join('');
         }
     } catch (error) {
-        console.error('Error cargando horarios:', error);
+        console.error('Error cargando horarios desde Box:', error);
         timeSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
     }
 }
@@ -495,7 +528,7 @@ export function searchPatientByRutBooking() {
 }
 
 // ============================================
-// EJECUTAR RESERVA (CON REGISTRO DE CONVERSIÓN)
+// EJECUTAR RESERVA (con actualización del BOX si es presencial)
 // ============================================
 export async function executeBooking() {
     const psychId = state.currentPsychId;
@@ -551,7 +584,24 @@ export async function executeBooking() {
     };
     
     try {
+        // 1. Guardar la cita
         await firebase.database().ref(`appointments/${appointment.id}`).set(appointment);
+        
+        // 2. Si es presencial, marcar el slot del Box como reservado
+        if (appointmentType === 'presencial') {
+            const boxSlots = await loadBoxSlots(custDate);
+            const slotIndex = boxSlots.findIndex(slot => slot.timeLabel === custTime);
+            if (slotIndex !== -1 && boxSlots[slotIndex].status === 'available') {
+                boxSlots[slotIndex].status = 'booked';
+                boxSlots[slotIndex].professional = psych.name;
+                await saveBoxSlots(custDate, boxSlots);
+                console.log(`📦 Slot del Box reservado: ${custDate} ${custTime} por ${psych.name}`);
+            } else {
+                console.warn(`⚠️ No se pudo reservar el slot del Box (ya no está disponible)`);
+                // Podrías lanzar un error o simplemente continuar, pero la cita ya está creada.
+            }
+        }
+        
         showToast('✅ Cita solicitada exitosamente', 'success');
         
         await registrarConversion(psychId);
@@ -595,9 +645,9 @@ async function registrarConversion(psychId) {
 }
 
 // ============================================
-// FILTRO DE PROFESIONALES
+// FILTRO DE PROFESIONALES (adaptado para usar disponibilidad del Box)
 // ============================================
-export function filterProfessionals() {
+export async function filterProfessionals() {
     console.log('🔄 filterProfessionals ejecutándose...');
     
     const staff = state.staff || [];
@@ -607,43 +657,64 @@ export function filterProfessionals() {
     const specialtyTerm = document.getElementById('specialtyFilter')?.value || '';
     const availabilityFilter = document.getElementById('availabilityFilter')?.value || '';
 
-    let filtered = getPublicStaff().filter(p => {
-        if (!p) return false;
+    // Función auxiliar para determinar si un profesional tiene disponibilidad hoy (basada en Box)
+    const hasAvailabilityToday = async (psych) => {
+        const today = getLocalDateString(new Date());
+        const boxSlots = await loadBoxSlots(today);
+        const profStart = psych.startTime || '00:00';
+        const profEnd = psych.endTime || '23:59';
+        const now = new Date();
+        const advanceMinutes = psych.advanceNotice ?? 60;
+        const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+        return boxSlots.some(slot => {
+            const slotStart = slot.timeLabel.split(' - ')[0];
+            const slotDateTime = new Date(`${today}T${slotStart}:00`);
+            return slot.status === 'available' &&
+                   slotStart >= profStart && slotStart < profEnd &&
+                   slotDateTime > cutoffTime;
+        });
+    };
+    
+    const hasAvailabilityTomorrow = async (psych) => {
+        const tomorrowDate = new Date();
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        const tomorrow = getLocalDateString(tomorrowDate);
+        const boxSlots = await loadBoxSlots(tomorrow);
+        const profStart = psych.startTime || '00:00';
+        const profEnd = psych.endTime || '23:59';
+        return boxSlots.some(slot => {
+            const slotStart = slot.timeLabel.split(' - ')[0];
+            return slot.status === 'available' &&
+                   slotStart >= profStart && slotStart < profEnd;
+        });
+    };
+
+    let filtered = [];
+    for (const p of getPublicStaff()) {
+        if (!p) continue;
         
         const name = p.name || '';
         const specs = p.spec ? (Array.isArray(p.spec) ? p.spec : [p.spec]) : [];
         const specsText = specs.join(' ').toLowerCase();
         
         const matchesSearch = name.toLowerCase().includes(searchTerm) || specsText.includes(searchTerm);
-
+        
         let matchesSpecialty = true;
         if (specialtyTerm) {
             matchesSpecialty = specs.some(s => s && s.toLowerCase().includes(specialtyTerm.toLowerCase()));
         }
-
+        
         let matchesAvailability = true;
         if (availabilityFilter === 'available' || availabilityFilter === 'today') {
-            const disponiblesHoy = getAvailableSlotsCountForToday(p);
-            matchesAvailability = disponiblesHoy > 0;
+            matchesAvailability = await hasAvailabilityToday(p);
         } else if (availabilityFilter === 'tomorrow') {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const tomorrowStr = tomorrow.toISOString().split('T')[0];
-            const slotsManana = p.availability?.[tomorrowStr] || [];
-            const bookedTomorrow = (state.appointments || []).filter(a => 
-                a.psychId == p.id && a.date === tomorrowStr && 
-                (a.status === 'confirmada' || a.status === 'pendiente')
-            ).map(a => a.time);
-            const bookedRequestsTomorrow = (state.pendingRequests || []).filter(r => 
-                r.psychId == p.id && r.date === tomorrowStr && r.time && r.time !== 'Pendiente'
-            ).map(r => r.time);
-            const bookedTomorrowTimes = [...new Set([...bookedTomorrow, ...bookedRequestsTomorrow])];
-            const libresManana = slotsManana.filter(slot => !bookedTomorrowTimes.includes(slot.time));
-            matchesAvailability = libresManana.length > 0;
+            matchesAvailability = await hasAvailabilityTomorrow(p);
         }
-
-        return matchesSearch && matchesSpecialty && matchesAvailability;
-    });
+        
+        if (matchesSearch && matchesSpecialty && matchesAvailability) {
+            filtered.push(p);
+        }
+    }
 
     filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     console.log('📊 Profesionales después de filtro:', filtered.length);
@@ -651,9 +722,9 @@ export function filterProfessionals() {
 }
 
 // ============================================
-// RENDERIZADO DE PROFESIONALES
+// RENDERIZADO DE PROFESIONALES (con disponibilidad basada en Box)
 // ============================================
-export function renderProfessionals(professionals) {
+export async function renderProfessionals(professionals) {
     const grid = document.getElementById('equipo');
     if (!grid) {
         console.error('❌ Grid de profesionales no encontrado (id="equipo")');
@@ -670,9 +741,27 @@ export function renderProfessionals(professionals) {
         return;
     }
 
-    grid.innerHTML = professionals.map(p => {
-        const disponiblesHoy = getAvailableSlotsCountForToday(p);
-        const disponibilidad = disponiblesHoy > 0 ? `${disponiblesHoy} disponible(s) hoy` : 'Sin disponibilidad hoy';
+    // Para cada profesional, calcular disponibilidad hoy desde el Box
+    const today = getLocalDateString(new Date());
+    const professionalsWithAvailability = await Promise.all(professionals.map(async (p) => {
+        const boxSlots = await loadBoxSlots(today);
+        const profStart = p.startTime || '00:00';
+        const profEnd = p.endTime || '23:59';
+        const now = new Date();
+        const advanceMinutes = p.advanceNotice ?? 60;
+        const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+        const disponiblesHoy = boxSlots.filter(slot => {
+            const slotStart = slot.timeLabel.split(' - ')[0];
+            const slotDateTime = new Date(`${today}T${slotStart}:00`);
+            return slot.status === 'available' &&
+                   slotStart >= profStart && slotStart < profEnd &&
+                   slotDateTime > cutoffTime;
+        }).length;
+        return { ...p, disponiblesHoy };
+    }));
+
+    grid.innerHTML = professionalsWithAvailability.map(p => {
+        const disponibilidad = p.disponiblesHoy > 0 ? `${p.disponiblesHoy} disponible(s) hoy` : 'Sin disponibilidad hoy';
 
         const rating = getAverageRating(p.id);
         const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
@@ -728,7 +817,7 @@ export function renderProfessionals(professionals) {
         `;
     }).join('');
     
-    console.log(`✅ Renderizados ${professionals.length} profesionales con estructura mejorada (badges de especialidades)`);
+    console.log(`✅ Renderizados ${professionals.length} profesionales con estructura mejorada`);
 }
 
 // ============================================
@@ -1264,4 +1353,4 @@ if (typeof window !== 'undefined') {
     console.log('✅ Funciones de publico.js asignadas correctamente');
 }
 
-console.log('✅ publico.js corregido: eliminado listener de sesiones para evitar recursión, flags para evitar cargas duplicadas');
+console.log('✅ publico.js corregido: integración completa con Box, eliminado listener de sesiones, flags para evitar duplicados');

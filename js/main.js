@@ -1,4 +1,4 @@
-// js/main.js - VERSIÓN CORREGIDA CON MÓDULO BOX INTEGRADO (CARGA DINÁMICA CON TIMESTAMP)
+// js/main.js - VERSIÓN CORREGIDA CON INTEGRACIÓN COMPLETA DE BOX Y CITAS
 import { db } from './config/firebase.js';
 import * as state from './modules/state.js';
 window.state = state;
@@ -47,7 +47,7 @@ function safeClean(obj, fallback = null) {
 }
 
 // ============================================
-// EXPONER FUNCIONES GLOBALES
+// EXPONER FUNCIONES GLOBALES (INCLUYENDO LAS DE CITAS ACTUALIZADAS CON BOX)
 // ============================================
 window.formatRut = utils.formatRut;
 window.validarRut = utils.validarRut;
@@ -94,19 +94,19 @@ window.showNewSesionModal = pacientes.showNewSesionModal;
 window.exportarHistorialPaciente = pacientes.exportarHistorialPaciente;
 window.cambiarPestana = pacientes.cambiarPestana;
 window.copiarLinkConsentimiento = pacientes.copiarLinkConsentimiento;
+window.verFichaCompleta = pacientes.mostrarDetallePaciente;
 
+// Funciones de citas.js (actualizadas con Box)
 window.openBooking = citas.openBooking;
 window.executeBooking = citas.executeBooking;
 window.showTherapistBookingModal = citas.showTherapistBookingModal;
 window.searchPatientByRutTherapist = citas.searchPatientByRutTherapist;
 window.executeTherapistBooking = citas.executeTherapistBooking;
 window.showConfirmRequestModal = citas.showConfirmRequestModal;
+window.confirmPresencialTime = citas.confirmPresencialTime;   // <--- AÑADIDO
 window.rejectRequest = citas.rejectRequest;
-window.editAppointment = citas.editAppointment;
 window.cancelAppointment = citas.cancelAppointment;
-window.markAsPaid = citas.markAsPaid;
 window.confirmPayment = citas.confirmPayment;
-window.rejectPayment = citas.rejectPayment;
 window.updateAvailableTimes = citas.updateAvailableTimes;
 window.updateBookingDetails = citas.updateBookingDetails;
 window.searchPatientByRutBooking = citas.searchPatientByRutBooking;
@@ -116,7 +116,10 @@ window.renderPendingRequests = citas.renderPendingRequests;
 window.renderAppointments = citas.renderAppointments;
 window.selectTimeSlot = citas.selectTimeSlot;
 window.selectTimePref = citas.selectTimePref;
+window.updateTherapistBookingDetails = citas.updateTherapistBookingDetails;   // <--- AÑADIDO
+window.updateTherapistAvailableSlots = citas.updateTherapistAvailableSlots;   // <--- AÑADIDO
 
+// Funciones de disponibilidad.js (ya adaptadas a Box - informativas)
 window.showAvailabilityModal = disponibilidad.showAvailabilityModal;
 window.closeAvailabilityModal = disponibilidad.closeAvailabilityModal;
 window.generateTimeSlots = disponibilidad.generateTimeSlots;
@@ -128,53 +131,46 @@ window.saveAvailability = disponibilidad.saveAvailability;
 window.loadTimeSlots = disponibilidad.loadTimeSlots;
 window.addOvercupo = disponibilidad.addOvercupo;
 
+// Personalización
 window.showLogoModal = personalizacion.showLogoModal;
 window.closeLogoModal = personalizacion.closeLogoModal;
 window.saveLogo = personalizacion.saveLogo;
 window.removeLogo = personalizacion.removeLogo;
 window.previewLogo = personalizacion.previewLogo;
-
 window.showTextsModal = personalizacion.showTextsModal;
 window.closeTextsModal = personalizacion.closeTextsModal;
 window.saveHeroTexts = personalizacion.saveHeroTexts;
-
 window.showBackgroundImageModal = personalizacion.showBackgroundImageModal;
 window.closeBackgroundImageModal = personalizacion.closeBackgroundImageModal;
 window.saveBackgroundImage = personalizacion.saveBackgroundImage;
 window.removeBackgroundImage = personalizacion.removeBackgroundImage;
 window.updateBackgroundOpacity = personalizacion.updateBackgroundOpacity;
 window.previewBackgroundImage = personalizacion.previewBackgroundImage;
-
 window.showPaymentMethodsModal = personalizacion.showPaymentMethodsModal;
 window.closePaymentMethodsModal = personalizacion.closePaymentMethodsModal;
 window.saveGlobalPaymentMethods = personalizacion.saveGlobalPaymentMethods;
 window.updatePaymentMethodsInfo = personalizacion.updatePaymentMethodsInfo;
-
 window.showSpecialtiesModal = personalizacion.showSpecialtiesModal;
 window.closeSpecialtiesModal = personalizacion.closeSpecialtiesModal;
 window.addSpecialty = personalizacion.addSpecialty;
 window.deleteSpecialty = personalizacion.deleteSpecialty;
 window.editSpecialty = personalizacion.editSpecialty;
 window.renderSpecialtiesTable = personalizacion.renderSpecialtiesTable;
-
 window.loadMyConfig = personalizacion.loadMyConfig;
 window.saveMyConfig = personalizacion.saveMyConfig;
-
 window.showAboutModal = personalizacion.showAboutModal;
 window.uploadAboutImage = personalizacion.uploadAboutImage;
 window.saveAboutTexts = personalizacion.saveAboutTexts;
-
 window.showAtencionModal = personalizacion.showAtencionModal;
 window.saveAtencionTexts = personalizacion.saveAtencionTexts;
-
 window.showContactModal = personalizacion.showContactModal;
 window.saveContactInfo = personalizacion.saveContactInfo;
-
 window.showInstagramModal = personalizacion.showInstagramModal;
 window.uploadInstagramImage = personalizacion.uploadInstagramImage;
 window.saveInstagramData = personalizacion.saveInstagramData;
 window.cargarInstagramData = personalizacion.cargarInstagramData;
 
+// Admin
 window.actualizarContadoresReinicio = admin.actualizarContadoresReinicio;
 window.eliminarTodosLosPacientes = admin.eliminarTodosLosPacientes;
 window.eliminarPacientesPrueba = admin.eliminarPacientesPrueba;
@@ -190,14 +186,15 @@ window.addEditButtonsToAdmin = admin.addEditButtonsToAdmin;
 window.asegurarTablaProfesionales = admin.asegurarTablaProfesionales;
 window.mostrarTabConsentimientos = admin.mostrarTabConsentimientos;
 
+// Fichas clínicas
 window.fichasClinicas = fichasClinicas;
 window.permisos = permisos;
 window.guardarFichaIngreso = fichasClinicas.guardarFichaIngreso;
 window.guardarNotaSesion = fichasClinicas.guardarNotaSesion;
 window.obtenerSesionesDePaciente = fichasClinicas.obtenerSesionesDePaciente;
 window.obtenerFichasIngresoDePaciente = fichasClinicas.obtenerFichasIngresoDePaciente;
-window.verFichaCompleta = pacientes.mostrarDetallePaciente;
 
+// Público
 window.showSection = publico.showSection;
 window.abrirAgenda = publico.abrirAgenda;
 window.enviarContacto = publico.enviarContacto;
@@ -206,12 +203,16 @@ window.copiarAlPortapapeles = publico.copiarAlPortapapeles;
 window.showTherapistInfo = publico.showTherapistInfo;
 window.filterProfessionals = publico.filterProfessionals;
 
+// Calendario (si se usa)
 window.verDetalleCita = calendario.verDetalleCita;
 window.verDetalleSolicitud = calendario.verDetalleSolicitud;
 window.confirmarSolicitud = calendario.confirmarSolicitud;
 
+// Utilidades de state
 window.getCurrentPsychFullData = state.getCurrentPsychFullData;
 window.updatePsychData = state.updatePsychData;
+
+// Función miPerfil
 window.miPerfil = function() {
     if (!state.currentUser) {
         console.log('❌ No hay usuario logueado');
@@ -227,6 +228,7 @@ window.miPerfil = function() {
     }
 };
 
+// Función verTextos
 window.verTextos = function() {
     console.log('📝 Textos editables:');
     console.log('- Misión:', state.missionText);
@@ -278,6 +280,8 @@ console.log('✅ renderPatients asignada:', typeof window.renderPatients);
 console.log('✅ selectTimeSlot asignada:', typeof window.selectTimeSlot);
 console.log('✅ openMyProfileModal asignada:', typeof window.openMyProfileModal);
 console.log('✅ esEmailProfesional disponible:', typeof window.esEmailProfesional);
+console.log('✅ confirmPresencialTime asignada:', typeof window.confirmPresencialTime);
+console.log('✅ updateTherapistBookingDetails asignada:', typeof window.updateTherapistBookingDetails);
 
 // ============================================
 // RESPALDO DE EMERGENCIA
@@ -323,6 +327,13 @@ setTimeout(() => {
         window.verDetalleSolicitud = calendario.verDetalleSolicitud;
         window.confirmarSolicitud = calendario.confirmarSolicitud;
     }
+    if (typeof window.confirmPresencialTime !== 'function' && typeof citas?.confirmPresencialTime === 'function') {
+        window.confirmPresencialTime = citas.confirmPresencialTime;
+    }
+    if (typeof window.updateTherapistBookingDetails !== 'function' && typeof citas?.updateTherapistBookingDetails === 'function') {
+        window.updateTherapistBookingDetails = citas.updateTherapistBookingDetails;
+        window.updateTherapistAvailableSlots = citas.updateTherapistAvailableSlots;
+    }
 }, 500);
 
 // ============================================
@@ -330,10 +341,9 @@ setTimeout(() => {
 // ============================================
 (async function cargarBoxDinamico() {
     try {
-        // Añadir timestamp para forzar recarga del módulo
         const timestamp = Date.now();
         const box = await import(`./modules/box.js?v=${timestamp}`);
-        // Funciones principales para el dashboard
+        // Funciones principales para el dashboard y públicas
         window.renderAdminBoxPanel = box.renderAdminBoxPanel;
         window.renderProfessionalBoxPanel = box.renderProfessionalBoxPanel;
         window.renderBoxEstadisticas = box.renderBoxEstadisticas;
@@ -341,7 +351,11 @@ setTimeout(() => {
             const month = document.getElementById('boxStatsMonth')?.value;
             if (month) box.renderBoxEstadisticas(month);
         };
-        // Exponer window.box con todas las funciones auxiliares
+        // Exponer funciones auxiliares del Box globalmente
+        window.generateSlotsForDate = box.generateSlotsForDate;
+        window.saveBoxSlots = box.saveBoxSlots;
+        window.loadBoxSlots = box.loadBoxSlots;
+        // Objeto window.box por compatibilidad
         window.box = {
             generateSlotsForDate: box.generateSlotsForDate,
             saveBoxSlots: box.saveBoxSlots,
@@ -371,6 +385,8 @@ export function save() {
 // ============================================
 if (typeof publico.cargarDatosIniciales === 'function') {
     publico.cargarDatosIniciales();
+} else {
+    console.error('❌ publico.cargarDatosIniciales no está disponible');
 }
 
 // ============================================
@@ -417,7 +433,8 @@ window.addEventListener('load', function() {
     }, 1000);
 });
 
-console.log('✅ main.js cargado (versión corregida - save() desactivada)');
+console.log('✅ main.js cargado (versión corregida con integración completa de Box y citas)');
 console.log('✅ Módulo BOX integrado mediante carga dinámica con timestamp (window.box disponible)');
+console.log('✅ Funciones de confirmación de solicitudes presenciales (confirmPresencialTime) expuestas');
 console.log('✅ Nodos de Firebase en minúsculas consistentes');
 console.log('✅ esEmailProfesional expuesto globalmente');

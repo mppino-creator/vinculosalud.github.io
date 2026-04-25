@@ -1,9 +1,10 @@
-// js/modules/citas.js
+// js/modules/citas.js - Integración completa con Box compartido
 import * as state from './state.js';
 import { 
     showToast, validarRut, formatDate, formatRut, normalizarRut, 
     normalizarFecha, getTimePeriod, calcularEdad 
 } from './utils.js';
+import { loadBoxSlots, saveBoxSlots } from './box.js';  // <--- Importar funciones del Box
 
 // ============================================
 // VARIABLES GLOBALES DEL MÓDULO
@@ -15,29 +16,61 @@ let currentRequestId = null;          // ID de la solicitud presencial a confirm
 // FUNCIONES AUXILIARES INTERNAS
 // ============================================
 
-function isTimeSlotOccupied(psychId, date, time, excludeRequestId = null) {
-    if (!time) return false;
+// Obtener fecha local en formato YYYY-MM-DD
+function getLocalDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Verificar si un horario está ocupado (citas confirmadas/pendientes o solicitudes)
+// Si se proporciona excludeRequestId, se ignora esa solicitud (útil al editar)
+function isTimeSlotOccupied(psychId, date, timeLabel, excludeRequestId = null) {
+    if (!timeLabel) return false;
     // Verificar citas confirmadas o pendientes
     const occupiedAppointments = state.appointments.some(a => 
-        a.psychId == psychId && a.date === date && a.time === time &&
+        a.psychId == psychId && a.date === date && a.time === timeLabel &&
         (a.status === 'confirmada' || a.status === 'pendiente')
     );
     // Verificar solicitudes pendientes, excluyendo la actual si se proporciona su ID
     const occupiedRequests = state.pendingRequests.some(r => 
-        r.psychId == psychId && r.date === date && r.time === time && 
+        r.psychId == psychId && r.date === date && r.time === timeLabel && 
         r.time !== 'Pendiente' && r.id !== excludeRequestId
     );
     return occupiedAppointments || occupiedRequests;
 }
 
-function getAvailableSlots(psych, date, excludeRequestId = null) {
-    const availableSlots = psych.availability?.[date] || [];
-    if (!availableSlots.length) return [];
+// Obtener slots disponibles (basado en BOX, filtrando por rango horario del profesional)
+async function getAvailableSlotsFromBox(psych, date, excludeRequestId = null) {
+    if (!psych) return [];
+    const profStart = psych.startTime || '00:00';
+    const profEnd = psych.endTime || '23:59';
+    let boxSlots = [];
+    try {
+        boxSlots = await loadBoxSlots(date);
+    } catch (err) {
+        console.warn('Error cargando slots del Box:', err);
+        return [];
+    }
+    // Filtrar slots disponibles (status 'available') y dentro del rango del profesional
+    // También excluir los que ya están ocupados por citas o solicitudes
     const now = new Date();
-    return availableSlots
-        .filter(slot => !isTimeSlotOccupied(psych.id, date, slot.time, excludeRequestId))
-        .filter(slot => new Date(date + 'T' + slot.time) > now)
-        .sort((a, b) => a.time.localeCompare(b.time));
+    return boxSlots.filter(slot => {
+        const slotStart = slot.timeLabel.split(' - ')[0];
+        const slotDateTime = new Date(`${date}T${slotStart}:00`);
+        const notOccupied = !isTimeSlotOccupied(psych.id, date, slot.timeLabel, excludeRequestId);
+        return slot.status === 'available' &&
+               slotStart >= profStart && slotStart < profEnd &&
+               slotDateTime > now &&
+               notOccupied;
+    });
+}
+
+// Obtener slots disponibles (misma lógica para preservar compatibilidad)
+// Se usa en la parte pública y en el panel profesional
+async function getAvailableSlots(psych, date, excludeRequestId = null) {
+    return await getAvailableSlotsFromBox(psych, date, excludeRequestId);
 }
 
 function configurarTutorSegunEdad(edad) {
@@ -128,7 +161,7 @@ function mostrarResumenYAcciones(datos) {
         modal.remove();
         document.getElementById('bookingPanel').style.display = 'block';
         const custDate = document.getElementById('custDate');
-        if (custDate) custDate.value = new Date().toISOString().split('T')[0];
+        if (custDate) custDate.value = getLocalDateString(new Date());
         if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
     };
     btnVolver.onclick = () => {
@@ -173,7 +206,7 @@ export function openBooking(id) {
         return;
     }
     state.setSelectedPsych(psych);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString(new Date());
     document.getElementById('clientView').style.display = 'none';
     document.getElementById('bookingPanel').style.display = 'block';
     document.getElementById('psychName').innerText = psych.name;
@@ -313,7 +346,8 @@ export function updateBookingDetails() {
     updateAvailableTimes();
 }
 
-export function updateAvailableTimes() {
+// Versión para el panel del paciente (público) - usa loadBoxSlots
+export async function updateAvailableTimes() {
     const date = document.getElementById('custDate').value;
     const type = document.getElementById('appointmentType').value;
     const amContainer = document.getElementById('amSlots');
@@ -330,8 +364,37 @@ export function updateAvailableTimes() {
     if (pmContainer) pmContainer.style.display = 'none';
     if (timeSelect) timeSelect.style.display = 'none';
     if (noSlotsMessage) noSlotsMessage.style.display = 'none';
+    
+    const psych = state.selectedPsych;
+    const profStart = psych.startTime || '00:00';
+    const profEnd = psych.endTime || '23:59';
+    
+    // Cargar slots del Box
+    let boxSlots = [];
+    try {
+        boxSlots = await loadBoxSlots(date);
+    } catch (err) {
+        console.warn('Error cargando Box:', err);
+        if (noSlotsMessage) {
+            noSlotsMessage.style.display = 'block';
+            noSlotsMessage.innerHTML = 'Error al cargar disponibilidad';
+        }
+        if (bookBtn) bookBtn.disabled = true;
+        return;
+    }
+    
     if (type === 'presencial') {
-        const availableSlots = state.selectedPsych.availability?.[date] || [];
+        // Mostrar solo slots disponibles y dentro del rango horario
+        const availableSlots = boxSlots.filter(slot => {
+            const slotStart = slot.timeLabel.split(' - ')[0];
+            const slotDateTime = new Date(`${date}T${slotStart}:00`);
+            const now = new Date();
+            const advanceMinutes = psych.advanceNotice ?? 60;
+            const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+            return slot.status === 'available' &&
+                   slotStart >= profStart && slotStart < profEnd &&
+                   slotDateTime > cutoffTime;
+        });
         const hasAvailability = availableSlots.length > 0;
         if (presencialWarning) {
             presencialWarning.style.display = 'block';
@@ -375,9 +438,22 @@ export function updateAvailableTimes() {
         if (onlineMsg) onlineMsg.style.display = 'none';
         return;
     }
+    
+    // Online: cualquier slot dentro del rango (aunque esté reservado en el Box, no importa)
     if (presencialWarning) presencialWarning.style.display = 'none';
-    const availableSlots = getAvailableSlots(state.selectedPsych, date);
-    if (availableSlots.length === 0) {
+    const now = new Date();
+    const advanceMinutes = psych.advanceNotice ?? 60;
+    const cutoffTime = new Date(now.getTime() + advanceMinutes * 60 * 1000);
+    const onlineSlots = boxSlots.filter(slot => {
+        const slotStart = slot.timeLabel.split(' - ')[0];
+        const slotDateTime = new Date(`${date}T${slotStart}:00`);
+        const notOccupied = !isTimeSlotOccupied(psych.id, date, slot.timeLabel);
+        return slotStart >= profStart && slotStart < profEnd &&
+               slotDateTime > cutoffTime &&
+               notOccupied;
+    });
+    
+    if (onlineSlots.length === 0) {
         if (noSlotsMessage) {
             noSlotsMessage.style.display = 'block';
             noSlotsMessage.innerHTML = 'No hay horarios disponibles';
@@ -388,24 +464,25 @@ export function updateAvailableTimes() {
     } else {
         if (bookBtn) bookBtn.disabled = false;
     }
-    const amTimes = availableSlots.filter(slot => getTimePeriod(slot.time) === 'AM');
-    const pmTimes = availableSlots.filter(slot => getTimePeriod(slot.time) === 'PM');
+    // Dividir AM/PM (según hora)
+    const amTimes = onlineSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'AM');
+    const pmTimes = onlineSlots.filter(slot => getTimePeriod(slot.timeLabel.split(' - ')[0]) === 'PM');
     if (amTimes.length > 0 && amSlotsContainer) {
         amSlotsContainer.innerHTML = amTimes.map(slot => `
-            <div class="time-slot-btn ${slot.isOvercupo ? 'overcupo' : ''}" 
-                 onclick="selectTimeSlot('${slot.time}')"
-                 data-time="${slot.time}">
-                ${slot.time}
+            <div class="time-slot-btn" 
+                 onclick="selectTimeSlot('${slot.timeLabel}')"
+                 data-time="${slot.timeLabel}">
+                ${slot.timeLabel}
             </div>
         `).join('');
         amContainer.style.display = 'block';
     }
     if (pmTimes.length > 0 && pmSlotsContainer) {
         pmSlotsContainer.innerHTML = pmTimes.map(slot => `
-            <div class="time-slot-btn ${slot.isOvercupo ? 'overcupo' : ''}" 
-                 onclick="selectTimeSlot('${slot.time}')"
-                 data-time="${slot.time}">
-                ${slot.time}
+            <div class="time-slot-btn" 
+                 onclick="selectTimeSlot('${slot.timeLabel}')"
+                 data-time="${slot.timeLabel}">
+                ${slot.timeLabel}
             </div>
         `).join('');
         pmContainer.style.display = 'block';
@@ -416,7 +493,7 @@ export function updateAvailableTimes() {
     }
     const currentSelectedTime = timeSelect ? timeSelect.value : '';
     if (!currentSelectedTime && window.horaSeleccionada) {
-        const horaValida = availableSlots.some(slot => slot.time === window.horaSeleccionada);
+        const horaValida = onlineSlots.some(slot => slot.timeLabel === window.horaSeleccionada);
         if (horaValida) {
             if (timeSelect) timeSelect.value = window.horaSeleccionada;
             const btn = document.querySelector(`.time-slot-btn[data-time="${window.horaSeleccionada}"]`);
@@ -444,7 +521,6 @@ export async function searchPatientByRutBooking() {
     }
     if (patient) {
         console.log('✅ Paciente encontrado:', patient);
-        // Mostrar RUT formateado
         document.getElementById('custRut').value = formatRut(patient.rut) || '';
         document.getElementById('custName').value = patient.name || '';
         document.getElementById('custEmail').value = patient.email || '';
@@ -566,35 +642,43 @@ export async function executeBooking() {
             return;
         }
     }
-    let time = '';
-    if (window.horaSeleccionada) time = window.horaSeleccionada;
-    if (!time) {
+    let timeLabel = '';
+    if (window.horaSeleccionada) timeLabel = window.horaSeleccionada;
+    if (!timeLabel) {
         const timeSelect = document.getElementById('custTime');
-        time = timeSelect ? timeSelect.value : '';
+        timeLabel = timeSelect ? timeSelect.value : '';
     }
-    if (!time) {
+    if (!timeLabel) {
         const selectedBtn = document.querySelector('.time-slot-btn.selected');
         if (selectedBtn && selectedBtn.dataset.time) {
-            time = selectedBtn.dataset.time;
+            timeLabel = selectedBtn.dataset.time;
             const timeSelect = document.getElementById('custTime');
-            if (timeSelect) timeSelect.value = time;
-            window.horaSeleccionada = time;
+            if (timeSelect) timeSelect.value = timeLabel;
+            window.horaSeleccionada = timeLabel;
         }
     }
-    if (type === 'online' && !time) {
+    if (type === 'online' && !timeLabel) {
         showToast('Selecciona un horario', 'error');
         bookingEnProceso = false;
         return;
     }
     if (type === 'presencial') {
-        const availableSlots = state.selectedPsych.availability?.[date] || [];
-        if (availableSlots.length === 0) {
+        // Verificar si hay algún slot disponible en el Box dentro del rango del profesional
+        const psych = state.selectedPsych;
+        const profStart = psych.startTime || '00:00';
+        const profEnd = psych.endTime || '23:59';
+        const boxSlots = await loadBoxSlots(date);
+        const hasAvailability = boxSlots.some(slot => {
+            const slotStart = slot.timeLabel.split(' - ')[0];
+            return slot.status === 'available' && slotStart >= profStart && slotStart < profEnd;
+        });
+        if (!hasAvailability) {
             showToast('⚠️ No hay disponibilidad para esta fecha. El profesional no tiene horarios configurados.', 'error');
             bookingEnProceso = false;
             return;
         }
     }
-    let horaFinal = time || 'Pendiente';
+    let horaFinal = timeLabel || 'Pendiente';
     let preferenciaAMPM = null;
     if (type === 'presencial') {
         const prefRadios = document.getElementsByName('presencialTimePref');
@@ -605,8 +689,8 @@ export async function executeBooking() {
             }
         }
     }
-    if (type === 'online' && time) {
-        if (isTimeSlotOccupied(state.selectedPsych.id, date, time)) {
+    if (type === 'online' && timeLabel) {
+        if (isTimeSlotOccupied(state.selectedPsych.id, date, timeLabel)) {
             showToast('⚠️ Este horario ya está ocupado. Por favor selecciona otro.', 'error');
             bookingEnProceso = false;
             return;
@@ -701,7 +785,7 @@ export async function executeBooking() {
             emailRechazoEnviado: false,
             emailConfirmacionEnviado: false,
             emailCancelacionEnviado: false,
-            preferredTime: time || null,
+            preferredTime: timeLabel || null,
             preferredAMPM: preferenciaAMPM,
             patientBirthdate: birthdate || null,
             patientTutor: patient.tutor || null,
@@ -714,11 +798,12 @@ export async function executeBooking() {
             showToast('✅ Solicitud creada', 'success');
             updateAvailableTimes();
         } else {
+            // Para solicitud presencial NO se marca el slot en el Box todavía (solo cuando se confirma hora)
             state.pendingRequests.push(appointment);
             await db.ref(`pendingRequests/${appointmentId}`).set(appointment);
             console.log('✅ Solicitud presencial guardada en Firebase');
             let mensaje = '✅ Solicitud enviada';
-            if (time) mensaje += ` (Preferencia: ${time})`;
+            if (timeLabel) mensaje += ` (Preferencia: ${timeLabel})`;
             if (preferenciaAMPM) mensaje += ` ${preferenciaAMPM}`;
             showToast(mensaje, 'success');
             if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
@@ -861,7 +946,7 @@ export function renderPendingRequests() {
     tb.innerHTML = requestsToShow.reverse().map(r => {
         const tieneFicha = state.fichasIngreso.some(f => f.patientId == r.patientId);
         return `
-            <tr>
+            <td>
                 <td>${r.createdAt ? formatDate(r.createdAt) : '—'}</td>
                 <td>
                     <strong>${r.patient}</strong><br>
@@ -935,7 +1020,7 @@ export async function confirmPayment(appointmentId) {
 }
 
 // ============================================
-// FUNCIONES PARA CONFIRMAR SOLICITUDES PRESENCIALES (CORREGIDAS)
+// FUNCIONES PARA CONFIRMAR SOLICITUDES PRESENCIALES (CON BOX)
 // ============================================
 
 export function showConfirmRequestModal(requestId) {
@@ -944,7 +1029,6 @@ export function showConfirmRequestModal(requestId) {
         showToast('Solicitud no encontrada', 'error');
         return;
     }
-    // Buscar el paciente
     let patient = state.patients.find(p => p.id == request.patientId);
     if (!patient) {
         window.db.ref(`patients/${request.patientId}`).once('value').then(snap => {
@@ -1004,8 +1088,8 @@ export async function confirmPresencialTime() {
         return;
     }
     const date = document.getElementById('therapistDate')?.value;
-    const time = document.getElementById('therapistTime')?.value;
-    if (!date || !time) {
+    const timeLabel = document.getElementById('therapistTime')?.value;
+    if (!date || !timeLabel) {
         showToast('Selecciona fecha y hora', 'error');
         return;
     }
@@ -1015,23 +1099,44 @@ export async function confirmPresencialTime() {
         showToast('No tienes permiso', 'error');
         return;
     }
-    // Obtener horarios disponibles excluyendo la solicitud actual
     const psych = state.staff.find(s => s.id == request.psychId);
     if (!psych) {
         showToast('Profesional no encontrado', 'error');
         return;
     }
-    const availableSlots = getAvailableSlots(psych, date, currentRequestId);
-    const isAvailable = availableSlots.some(slot => slot.time === time);
+    // Verificar disponibilidad en el Box, excluyendo la solicitud actual
+    const availableSlots = await getAvailableSlots(psych, date, currentRequestId);
+    const isAvailable = availableSlots.some(slot => slot.timeLabel === timeLabel);
     if (!isAvailable) {
         showToast('⚠️ La hora seleccionada no está disponible o ya está ocupada', 'error');
         updateTherapistAvailableSlots();
         return;
     }
-    if (new Date(date + 'T' + time) < new Date()) {
+    if (new Date(date + 'T' + timeLabel) < new Date()) {
         showToast('No se puede agendar en fecha/hora pasada', 'error');
         return;
     }
+    // --- Reservar el slot en el Box (marcar como booked) ---
+    let boxUpdated = false;
+    try {
+        const boxSlots = await loadBoxSlots(date);
+        const slotIndex = boxSlots.findIndex(slot => slot.timeLabel === timeLabel);
+        if (slotIndex !== -1 && boxSlots[slotIndex].status === 'available') {
+            boxSlots[slotIndex].status = 'booked';
+            boxSlots[slotIndex].professional = psych.name;
+            await saveBoxSlots(date, boxSlots);
+            boxUpdated = true;
+            console.log(`📦 Slot del Box reservado: ${date} ${timeLabel} por ${psych.name}`);
+        } else {
+            showToast('⚠️ El slot ya no está disponible', 'error');
+            return;
+        }
+    } catch (err) {
+        console.error('Error al marcar slot del Box:', err);
+        showToast('Error al reservar el horario', 'error');
+        return;
+    }
+    // Crear la cita confirmada
     const appointmentId = Date.now().toString();
     const appointment = {
         id: appointmentId,
@@ -1043,7 +1148,7 @@ export async function confirmPresencialTime() {
         psych: request.psych,
         psychId: request.psychId,
         date: date,
-        time: time,
+        time: timeLabel,
         type: 'presencial',
         price: request.price || 30000,
         paymentMethod: request.paymentMethod,
@@ -1073,6 +1178,20 @@ export async function confirmPresencialTime() {
         import('./auth.js').then(auth => auth.switchTab('citas'));
     } catch (error) {
         console.error('Error confirmando cita:', error);
+        // Si falla, revertir el slot del Box
+        if (boxUpdated) {
+            try {
+                const boxSlots = await loadBoxSlots(date);
+                const slotIndex = boxSlots.findIndex(slot => slot.timeLabel === timeLabel);
+                if (slotIndex !== -1 && boxSlots[slotIndex].status === 'booked') {
+                    boxSlots[slotIndex].status = 'available';
+                    boxSlots[slotIndex].professional = null;
+                    await saveBoxSlots(date, boxSlots);
+                }
+            } catch (rollbackErr) {
+                console.error('Error al revertir slot del Box:', rollbackErr);
+            }
+        }
         showToast('Error: ' + error.message, 'error');
     }
 }
@@ -1097,7 +1216,7 @@ export function showTherapistBookingModal() {
     document.getElementById('therapistTimeDisplay').innerText = '—';
     document.getElementById('therapistTypeDisplay').innerText = 'Online';
     document.getElementById('therapistPrice').innerText = '$0';
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString(new Date());
     document.getElementById('therapistDate').min = today;
     import('./auth.js').then(auth => auth.switchTab('agendar'));
 }
@@ -1144,21 +1263,19 @@ export function updateTherapistBookingDetails() {
     updateTherapistAvailableSlots();
 }
 
-export function updateTherapistAvailableSlots() {
+export async function updateTherapistAvailableSlots() {
     const date = document.getElementById('therapistDate')?.value;
     const timeSelect = document.getElementById('therapistTime');
     if (!date || !timeSelect) return;
     const psych = state.selectedPsychForBooking || state.currentUser?.data;
     if (!psych) return;
-    // Excluir la solicitud actual (si existe) de la verificación de disponibilidad
     const excludeId = currentRequestId || null;
-    const availableSlots = getAvailableSlots(psych, date, excludeId);
+    const availableSlots = await getAvailableSlots(psych, date, excludeId);
     timeSelect.innerHTML = '<option value="">Selecciona horario</option>';
     availableSlots.forEach(slot => {
         const option = document.createElement('option');
-        option.value = slot.time;
-        option.textContent = slot.time + (slot.isOvercupo ? ' (⚠️ Sobrecupo)' : '');
-        if (slot.isOvercupo) option.style.color = 'var(--atencion)';
+        option.value = slot.timeLabel;
+        option.textContent = slot.timeLabel;
         timeSelect.appendChild(option);
     });
 }
@@ -1175,17 +1292,17 @@ export async function executeTherapistBooking() {
         return;
     }
     const date = document.getElementById('therapistDate')?.value;
-    const time = document.getElementById('therapistTime')?.value;
+    const timeLabel = document.getElementById('therapistTime')?.value;
     const type = document.getElementById('therapistAppointmentType')?.value;
     const paymentMethod = document.getElementById('therapistPaymentMethod')?.value;
     const msg = document.getElementById('therapistMsg')?.value;
-    if (!date || !time) {
+    if (!date || !timeLabel) {
         showToast('Selecciona fecha y horario', 'error');
         return;
     }
     // Verificar disponibilidad excluyendo la solicitud actual (si se está confirmando)
     const excludeId = currentRequestId || null;
-    if (isTimeSlotOccupied(psych.id, date, time, excludeId)) {
+    if (isTimeSlotOccupied(psych.id, date, timeLabel, excludeId)) {
         showToast('⚠️ La hora seleccionada ya está ocupada. Elige otra.', 'error');
         return;
     }
@@ -1202,7 +1319,7 @@ export async function executeTherapistBooking() {
         psych: psych.name,
         psychId: psych.id,
         date,
-        time,
+        time: timeLabel,
         type,
         boxId: null,
         boxName: null,
@@ -1216,36 +1333,77 @@ export async function executeTherapistBooking() {
         emailEnviado: false,
         prevision: state.selectedPatientForTherapist.prevision || ''
     };
-    state.appointments.push(appointment);
-    await window.db.ref(`appointments/${appointmentId}`).set(appointment);
-    let deleted = false;
-    if (window.currentRequestId) {
-        const req = state.pendingRequests.find(r => r.id == window.currentRequestId);
-        if (req) {
-            state.setPendingRequests(state.pendingRequests.filter(r => r.id != window.currentRequestId));
-            await window.db.ref(`pendingRequests/${window.currentRequestId}`).remove();
-            deleted = true;
+    // Si es presencial, marcar el slot en el Box
+    let boxUpdated = false;
+    if (type === 'presencial') {
+        try {
+            const boxSlots = await loadBoxSlots(date);
+            const slotIndex = boxSlots.findIndex(slot => slot.timeLabel === timeLabel);
+            if (slotIndex !== -1 && boxSlots[slotIndex].status === 'available') {
+                boxSlots[slotIndex].status = 'booked';
+                boxSlots[slotIndex].professional = psych.name;
+                await saveBoxSlots(date, boxSlots);
+                boxUpdated = true;
+            } else {
+                showToast('⚠️ El horario ya no está disponible', 'error');
+                return;
+            }
+        } catch (err) {
+            console.error('Error al reservar slot en Box:', err);
+            showToast('Error al reservar el horario', 'error');
+            return;
         }
     }
-    if (!deleted && type === 'presencial') {
-        const pending = state.pendingRequests.find(r =>
-            r.patientId == state.selectedPatientForTherapist.id &&
-            r.date === date &&
-            r.type === 'presencial'
-        );
-        if (pending) {
-            state.setPendingRequests(state.pendingRequests.filter(r => r.id != pending.id));
-            await window.db.ref(`pendingRequests/${pending.id}`).remove();
+    try {
+        const db = window.db;
+        await db.ref(`appointments/${appointmentId}`).set(appointment);
+        state.appointments.push(appointment);
+        let deleted = false;
+        if (window.currentRequestId) {
+            const req = state.pendingRequests.find(r => r.id == window.currentRequestId);
+            if (req) {
+                state.setPendingRequests(state.pendingRequests.filter(r => r.id != window.currentRequestId));
+                await db.ref(`pendingRequests/${window.currentRequestId}`).remove();
+                deleted = true;
+            }
         }
+        if (!deleted && type === 'presencial') {
+            const pending = state.pendingRequests.find(r =>
+                r.patientId == state.selectedPatientForTherapist.id &&
+                r.date === date &&
+                r.type === 'presencial'
+            );
+            if (pending) {
+                state.setPendingRequests(state.pendingRequests.filter(r => r.id != pending.id));
+                await db.ref(`pendingRequests/${pending.id}`).remove();
+            }
+        }
+        showToast(`✅ Cita creada con valor $${price.toLocaleString()}`, 'success');
+        renderAppointments();
+        renderPendingRequests();
+        renderAppointmentsTable();
+        if (typeof window.renderCalendar === 'function') window.renderCalendar();
+        updateTherapistAvailableSlots();
+        state.setSelectedPsychForBooking(null);
+        import('./auth.js').then(auth => auth.switchTab('citas'));
+    } catch (error) {
+        console.error('Error creando cita:', error);
+        // Si falló y habíamos marcado el Box, revertir
+        if (boxUpdated && type === 'presencial') {
+            try {
+                const boxSlots = await loadBoxSlots(date);
+                const slotIndex = boxSlots.findIndex(slot => slot.timeLabel === timeLabel);
+                if (slotIndex !== -1 && boxSlots[slotIndex].status === 'booked') {
+                    boxSlots[slotIndex].status = 'available';
+                    boxSlots[slotIndex].professional = null;
+                    await saveBoxSlots(date, boxSlots);
+                }
+            } catch (rollErr) {
+                console.error('Error al revertir slot:', rollErr);
+            }
+        }
+        showToast('Error al crear la cita', 'error');
     }
-    showToast(`✅ Cita creada con valor $${price.toLocaleString()}`, 'success');
-    renderAppointments();
-    renderPendingRequests();
-    renderAppointmentsTable();
-    if (typeof window.renderCalendar === 'function') window.renderCalendar();
-    updateTherapistAvailableSlots();
-    state.setSelectedPsychForBooking(null);
-    import('./auth.js').then(auth => auth.switchTab('citas'));
 }
 
 export async function cancelAppointment(id) {
@@ -1261,12 +1419,29 @@ export async function cancelAppointment(id) {
         showToast('No tienes permiso para cancelar esta cita', 'error');
         return;
     }
+    // Si es presencial, liberar el slot en el Box
+    if (appointment.type === 'presencial' && appointment.date && appointment.time) {
+        try {
+            const boxSlots = await loadBoxSlots(appointment.date);
+            const slotIndex = boxSlots.findIndex(slot => slot.timeLabel === appointment.time);
+            if (slotIndex !== -1 && boxSlots[slotIndex].status === 'booked') {
+                boxSlots[slotIndex].status = 'available';
+                boxSlots[slotIndex].professional = null;
+                await saveBoxSlots(appointment.date, boxSlots);
+                console.log(`📦 Slot del Box liberado: ${appointment.date} ${appointment.time}`);
+            }
+        } catch (err) {
+            console.error('Error al liberar slot del Box:', err);
+            // Continuamos de todas formas
+        }
+    }
     state.setAppointments(state.appointments.filter(a => a.id != id));
     await window.db.ref(`appointments/${id}`).remove();
     showToast('Cita cancelada', 'success');
     renderAppointments();
     renderAppointmentsTable();
     if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
+    if (typeof updateTherapistAvailableSlots === 'function') updateTherapistAvailableSlots();
 }
 
 export async function rejectRequest(requestId) {
@@ -1279,14 +1454,15 @@ export async function rejectRequest(requestId) {
         showToast('No tienes permiso para rechazar esta solicitud', 'error');
         return;
     }
+    // Si la solicitud ya tenía una hora preferida (no 'Pendiente'), podría haber reservado el slot?
+    // En nuestro flujo, las solicitudes presenciales no reservan el slot hasta la confirmación.
+    // Por lo tanto, no necesitamos liberar nada.
     state.setPendingRequests(state.pendingRequests.filter(r => r.id != requestId));
     await window.db.ref(`pendingRequests/${requestId}`).remove();
     showToast('Solicitud rechazada', 'success');
     renderPendingRequests();
-    if (request.time && request.time !== 'Pendiente') {
-        if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
-        if (typeof updateTherapistAvailableSlots === 'function') updateTherapistAvailableSlots();
-    }
+    if (typeof updateAvailableTimes === 'function') updateAvailableTimes();
+    if (typeof updateTherapistAvailableSlots === 'function') updateTherapistAvailableSlots();
 }
 
 export async function showPatientAppointmentsByRut() {
@@ -1380,6 +1556,20 @@ export async function cancelAppointmentByPatient(appointmentId, patientRut) {
         return;
     }
     if (!confirm('¿Cancelar esta cita? Esta acción no se puede deshacer.')) return;
+    // Si es presencial y ya estaba confirmada (en appointments), liberar slot del Box
+    if (!isPending && appointment.type === 'presencial' && appointment.date && appointment.time) {
+        try {
+            const boxSlots = await loadBoxSlots(appointment.date);
+            const slotIndex = boxSlots.findIndex(slot => slot.timeLabel === appointment.time);
+            if (slotIndex !== -1 && boxSlots[slotIndex].status === 'booked') {
+                boxSlots[slotIndex].status = 'available';
+                boxSlots[slotIndex].professional = null;
+                await saveBoxSlots(appointment.date, boxSlots);
+            }
+        } catch (err) {
+            console.error('Error liberando slot:', err);
+        }
+    }
     if (isPending) {
         state.setPendingRequests(state.pendingRequests.filter(r => r.id != appointmentId));
         await window.db.ref(`pendingRequests/${appointmentId}`).remove();
@@ -1471,4 +1661,4 @@ document.addEventListener('datosPrivadosCargados', () => {
     }
 });
 
-console.log('✅ citas.js actualizado: confirmación de solicitudes presenciales corregida, búsqueda en Firebase, guardado con window.db y formato de RUT unificado');
+console.log('✅ citas.js actualizado: integración completa con Box compartido, reserva y liberación de slots presenciales');

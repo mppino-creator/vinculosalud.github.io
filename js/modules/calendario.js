@@ -1,14 +1,23 @@
-// js/modules/calendario.js
+// js/modules/calendario.js - VERSIÓN BOX COMPARTIDO
 import * as state from './state.js';
 import { showToast } from './utils.js';
+import { loadBoxSlots } from './box.js';
 
 let mesActual = new Date().getMonth();
 let añoActual = new Date().getFullYear();
 
+// Obtener fecha local en formato YYYY-MM-DD
+function getLocalDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // ============================================
-// RENDERIZADO PRINCIPAL DEL CALENDARIO
+// RENDERIZADO PRINCIPAL DEL CALENDARIO (CON BOX)
 // ============================================
-export function renderCalendar() {
+export async function renderCalendar() {
     const container = document.getElementById('calendarContainer');
     if (!container) return;
 
@@ -26,11 +35,9 @@ export function renderCalendar() {
         solicitudes = state.pendingRequests.filter(r => r.psychId == user.data.id);
     }
 
-    // Obtener disponibilidad del profesional (si es psicólogo)
-    let disponibilidad = {};
-    if (user.role === 'psych' && user.data.availability) {
-        disponibilidad = user.data.availability;
-    }
+    // Obtener rango horario del profesional (si es psicólogo)
+    const profStart = (user.role === 'psych' && user.data.startTime) ? user.data.startTime : '00:00';
+    const profEnd = (user.role === 'psych' && user.data.endTime) ? user.data.endTime : '23:59';
 
     // Crear estructura del mes
     const primerDia = new Date(añoActual, mesActual, 1);
@@ -38,7 +45,7 @@ export function renderCalendar() {
     const diasEnMes = ultimoDia.getDate();
     const diaInicioSemana = primerDia.getDay();
 
-    // Construir tabla
+    // Construir tabla (cabecera)
     let html = `
         <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
             <h4>${primerDia.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h4>
@@ -47,17 +54,16 @@ export function renderCalendar() {
                 <button class="btn-staff" onclick="window.calendario.cambiarMes(1)">Mes siguiente ▶</button>
             </div>
         </div>
-        <!-- Leyenda de colores -->
         <div style="margin-bottom:15px; display:flex; gap:15px; flex-wrap:wrap; font-size:0.8rem;">
-            <span><span style="display:inline-block; width:12px; height:12px; background:#28a745; border-radius:2px;"></span> Disponible</span>
+            <span><span style="display:inline-block; width:12px; height:12px; background:#28a745; border-radius:2px;"></span> Disponible (Box)</span>
+            <span><span style="display:inline-block; width:12px; height:12px; background:#fd7e14; border-radius:2px;"></span> Reservado por ti</span>
             <span><span style="display:inline-block; width:12px; height:12px; background:#dc3545; border-radius:2px;"></span> Cita confirmada</span>
             <span><span style="display:inline-block; width:12px; height:12px; background:#ffc107; border-radius:2px;"></span> Solicitud pendiente</span>
-            <span><span style="display:inline-block; width:12px; height:12px; background:#6c757d; border-radius:2px;"></span> Anulado</span>
-            <span><span style="display:inline-block; width:12px; height:12px; background:#e9ecef; border-radius:2px;"></span> Sin disponibilidad</span>
+            <span><span style="display:inline-block; width:12px; height:12px; background:#6c757d; border-radius:2px;"></span> Reservado por otro profesional</span>
         </div>
         <table class="calendar-table" style="width:100%; border-collapse:collapse;">
             <thead>
-                 <tr>
+                <tr>
                     <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
                 </tr>
             </thead>
@@ -74,12 +80,32 @@ export function renderCalendar() {
             } else if (dia <= diasEnMes) {
                 const fechaStr = `${añoActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
 
-                // Obtener eventos del día
+                // Obtener eventos del día (citas, solicitudes, slots del Box)
                 const citasDia = citas.filter(c => c.date === fechaStr);
                 const solicitudesDia = solicitudes.filter(s => s.date === fechaStr && s.time !== 'Pendiente');
-                const slotsDelDia = disponibilidad[fechaStr] || [];
 
-                // Crear lista de eventos (citas, solicitudes, slots disponibles sin evento)
+                // Cargar slots del Box para esta fecha
+                let boxSlots = [];
+                try {
+                    boxSlots = await loadBoxSlots(fechaStr);
+                } catch (err) {
+                    console.warn(`Error cargando slots del Box para ${fechaStr}:`, err);
+                }
+
+                // Filtrar slots según rol y rango horario
+                let slotsMostrar = [];
+                if (user.role === 'admin') {
+                    // Admin ve todos los slots del Box
+                    slotsMostrar = boxSlots;
+                } else if (user.role === 'psych') {
+                    // Psicólogo: solo slots dentro de su rango horario
+                    slotsMostrar = boxSlots.filter(slot => {
+                        const slotStart = slot.timeLabel.split(' - ')[0];
+                        return slotStart >= profStart && slotStart < profEnd;
+                    });
+                }
+
+                // Crear lista de eventos (citas, solicitudes, slots)
                 const eventos = [];
 
                 // Agregar citas
@@ -98,7 +124,7 @@ export function renderCalendar() {
                     });
                 });
 
-                // Agregar solicitudes
+                // Agregar solicitudes pendientes
                 solicitudesDia.forEach(sol => {
                     const profesional = state.staff.find(p => p.id == sol.psychId);
                     const paciente = state.patients.find(p => p.id == sol.patientId);
@@ -114,29 +140,43 @@ export function renderCalendar() {
                     });
                 });
 
-                // Agregar slots disponibles (solo si no hay evento en esa hora)
-                slotsDelDia.forEach(slot => {
-                    if (slot.blocked) {
-                        eventos.push({
-                            tipo: 'bloqueado',
-                            hora: slot.time,
-                            titulo: `${slot.time} (anulado)`,
-                            descripcion: 'Anulado por el profesional',
-                            color: '#6c757d',
-                            onClick: user.role === 'psych' ? () => anularHora(fechaStr, slot.time, true) : null
-                        });
-                    } else {
-                        const yaHayEvento = eventos.some(e => e.hora === slot.time);
-                        if (!yaHayEvento) {
-                            eventos.push({
-                                tipo: 'disponible',
-                                hora: slot.time,
-                                titulo: `${slot.time} (disponible)`,
-                                descripcion: 'Horario disponible',
-                                color: '#28a745',
-                                onClick: user.role === 'psych' ? () => anularHora(fechaStr, slot.time, false) : null
-                            });
+                // Agregar slots del Box
+                slotsMostrar.forEach(slot => {
+                    // Evitar duplicar si ya hay un evento en la misma hora (cita o solicitud)
+                    if (eventos.some(e => e.hora === slot.timeLabel)) return;
+
+                    let titulo = `${slot.timeLabel}`;
+                    let color = '';
+                    let descripcion = '';
+                    let onClick = null;
+
+                    if (slot.status === 'available') {
+                        titulo += ' (disponible)';
+                        color = '#28a745';
+                        descripcion = 'Horario disponible en el Box';
+                        // Opcional: permitir reserva rápida (podría redirigir a la pestaña de Box)
+                        // onClick = () => showToast('Para reservar, usa la pestaña "Mi Box"', 'info');
+                    } else if (slot.status === 'booked') {
+                        if (user.role === 'psych' && slot.professional === user.data.name) {
+                            titulo += ' (reservado por ti)';
+                            color = '#fd7e14'; // naranja
+                            descripcion = `Reservado por ti el ${slot.timeLabel}`;
+                        } else {
+                            titulo += ' (ocupado)';
+                            color = '#6c757d'; // gris
+                            descripcion = `Reservado por ${slot.professional || 'otro profesional'}`;
                         }
+                    }
+
+                    if (color) {
+                        eventos.push({
+                            tipo: slot.status,
+                            hora: slot.timeLabel,
+                            titulo,
+                            descripcion,
+                            color,
+                            onClick
+                        });
                     }
                 });
 
@@ -153,7 +193,7 @@ export function renderCalendar() {
                 } else {
                     eventos.forEach(ev => {
                         const cursor = ev.onClick ? 'pointer' : 'default';
-                        html += `<div class="calendar-event" style="background:${ev.color}; margin:2px 0; padding:2px 4px; border-radius:4px; color:white; cursor:${cursor};" title="${ev.descripcion}" onclick="${ev.onClick ? `(${ev.onClick.toString()})()` : ''}">${ev.titulo}</div>`;
+                        html += `<div class="calendar-event" style="background:${ev.color}; margin:2px 0; padding:2px 4px; border-radius:4px; color:white; cursor:${cursor};" title="${ev.descripcion}" ${ev.onClick ? `onclick="(${ev.onClick.toString()})()"` : ''}>${ev.titulo}</div>`;
                     });
                 }
 
@@ -168,7 +208,7 @@ export function renderCalendar() {
 
     html += `
             </tbody>
-         </table>
+        </table>
     `;
 
     container.innerHTML = html;
@@ -236,68 +276,6 @@ export function confirmarSolicitud(solicitudId) {
 }
 
 // ============================================
-// FUNCIÓN PARA ANULAR/DESANULAR UNA HORA
-// ============================================
-export async function anularHora(fechaStr, hora, esOcupada = false) {
-    const user = state.currentUser;
-    if (!user || user.role !== 'psych') {
-        showToast('Solo el profesional puede anular horas', 'error');
-        return;
-    }
-
-    const accion = esOcupada ? 'desanular' : 'anular';
-    if (!confirm(`¿${accion === 'anular' ? 'Anular' : 'Desanular'} la hora ${hora} del día ${fechaStr}?`)) return;
-
-    // Asegurar estructura de disponibilidad
-    if (!user.data.availability) user.data.availability = {};
-    if (!user.data.availability[fechaStr]) user.data.availability[fechaStr] = [];
-
-    let slots = user.data.availability[fechaStr];
-    const slotIndex = slots.findIndex(s => s.time === hora);
-    let slot = slotIndex !== -1 ? slots[slotIndex] : null;
-
-    if (accion === 'anular') {
-        // Si la hora está ocupada por una cita, no se puede anular (ya está ocupada)
-        const ocupado = state.appointments.some(a => a.psychId == user.data.id && a.date === fechaStr && a.time === hora);
-        if (ocupado) {
-            showToast('No puedes anular una hora que ya tiene una cita confirmada', 'error');
-            return;
-        }
-
-        if (slot) {
-            slot.blocked = true;
-        } else {
-            slots.push({ time: hora, isOvercupo: false, blocked: true });
-        }
-    } else {
-        // Desanular: eliminar el flag blocked
-        if (slot) {
-            delete slot.blocked;
-            // Opcional: eliminar el slot si no tiene ningún flag
-            if (!slot.isOvercupo && !slot.blocked) {
-                // Podríamos dejarlo, pero si quieres limpiar descomenta:
-                // slots.splice(slotIndex, 1);
-            }
-        } else {
-            showToast('No se encontró el horario para desanular', 'error');
-            return;
-        }
-    }
-
-    // Guardar cambios
-    await firebase.database().ref(`staff/${user.data.id}/availability`).set(user.data.availability);
-
-    // Actualizar estado local y staff
-    const staffIndex = state.staff.findIndex(s => s.id == user.data.id);
-    if (staffIndex !== -1) state.staff[staffIndex].availability = user.data.availability;
-
-    // Refrescar calendario
-    renderCalendar();
-
-    showToast(`✅ Hora ${accion === 'anular' ? 'anulada' : 'desanulada'} correctamente`, 'success');
-}
-
-// ============================================
 // CAMBIAR MES
 // ============================================
 export function cambiarMes(delta) {
@@ -311,15 +289,12 @@ export function cambiarMes(delta) {
 // EXPONER FUNCIONES AL OBJETO WINDOW
 // ============================================
 if (typeof window !== 'undefined') {
-    // Exponer funciones directamente en window para que los onclick las encuentren
     window.verDetalleCita = verDetalleCita;
     window.verDetalleSolicitud = verDetalleSolicitud;
     window.confirmarSolicitud = confirmarSolicitud;
 
-    // También exponer el objeto calendario para navegación
     window.calendario = {
         cambiarMes: cambiarMes,
-        anularHora: anularHora,
         verDetalleCita: verDetalleCita,
         verDetalleSolicitud: verDetalleSolicitud,
         confirmarSolicitud: confirmarSolicitud
@@ -332,4 +307,4 @@ if (typeof window !== 'undefined') {
     };
 }
 
-console.log('✅ calendario.js actualizado: muestra todas las citas y solicitudes individualmente');
+console.log('✅ calendario.js actualizado: integración completa con Box compartido');

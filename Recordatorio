@@ -1,4 +1,4 @@
-Aquí tienes el **Resumen Ejecutivo Técnico** actualizado a la **versión 7.0**, completamente revisado para que **cualquier desarrollador o stakeholder** entienda rápidamente qué se ha implementado, qué problemas se resolvieron y en qué archivos. Incluye un formato claro, secciones destacadas y una tabla de correcciones específicas.
+Aquí tienes el **Resumen Ejecutivo Técnico** actualizado a la **versión 7.0**, incluyendo todas las correcciones finales realizadas en los módulos `citas.js`, `publico.js`, `disponibilidad.js` y `box.js`. He añadido una sección específica sobre la corrección de la reserva presencial (que ahora muestra los mismos horarios en botones AM/PM que la online) y he detallado los archivos modificados. Puedes copiarlo y pegarlo directamente.
 
 ---
 
@@ -75,7 +75,7 @@ export function setCurrentUser(user) { ... }
 - Cada slot tiene: `timeLabel`, `status` ('available'/'booked'), `professional` (nombre).
 - **Funciones principales:** `loadBoxSlots()`, `saveBoxSlots()`, `renderAdminBoxPanel()`, `renderProfessionalBoxPanel()`.
 
-### **3. Flujo de reserva pública (publico.js)**
+### **3. Flujo de reserva pública (publico.js y citas.js)**
 - **Presencial:** solo muestra slots con `status === 'available'` dentro del rango horario del profesional.
 - **Online:** muestra todos los slots dentro del rango (aunque estén `booked` en el Box).
 - Al reservar presencial, se marca el slot como `booked` con el nombre del profesional.
@@ -111,11 +111,12 @@ A continuación se detallan los **errores resueltos** y **los archivos modificad
 |----------|-------|----------|----------------------|
 | **Maximum call stack size exceeded** | Referencias circulares en datos de Firebase (pacientes, citas, etc.). | Uso de `JSON.parse(JSON.stringify(...))` al cargar cualquier dato desde Firebase. Además, en `notas.js` se sanitizan los datos antes de asignarlos al estado global. | `publico.js`, `notas.js`, `citas.js` |
 | **listen() called twice** | Escuchas privadas (`on('value')`) iniciadas múltiples veces por carga duplicada de datos privados. | Se agregaron flags `datosPrivadosCargados` y `escuchasPrivadasIniciadas`, y se convirtió `cargarDatosPrivados` en función singleton (devuelve promesa en curso). | `publico.js` |
-| **PERMISSION_DENIED al guardar disponibilidad** | Se intentaba guardar todo el nodo `/staff` en lugar de solo `staff/${uid}`. | Se cambió a `db.ref('staff/${currentUserId}').update(...)`. | `disponibilidad.js` (antiguo), `publico.js` (no aplica directamente) |
+| **PERMISSION_DENIED al guardar disponibilidad** | Se intentaba guardar todo el nodo `/staff` en lugar de solo `staff/${uid}`. | Se cambió a `db.ref('staff/${currentUserId}').update(...)`. | `disponibilidad.js` |
 | **Anulación de días incorrecta (lunes como domingo)** | Uso de `toISOString()` y `getUTCDay()` que causaban desfase horario. | Se creó función `getLocalDateString()` y se calcula el día de la semana usando `toLocaleDateString` con zona horaria explícita. | `disponibilidad.js` |
-| **Vista pública presencial no mostraba horarios** | La función `updateAvailableTimes` en `publico.js` tenía un bloque que solo mostraba el `presencialWarning`. | Se reescribió `updateAvailableTimes` para que, si hay slots `available` y dentro del rango, los muestre en el `select` y oculte el warning. | `publico.js` |
+| **Vista pública presencial no mostraba horarios** | La función `updateAvailableTimes` en `publico.js` tenía un bloque que solo mostraba el `presencialWarning`. | Se reescribió `updateAvailableTimes` en `publico.js` para que, si hay slots `available`, los muestre en el `select` y oculte el warning. | `publico.js` |
+| **Panel de reserva presencial (citas.js) no mostraba botones** | La función `updateAvailableTimes` en `citas.js` solo mostraba el mensaje de solicitud y retornaba, sin generar los botones AM/PM. | Se modificó `citas.js` para que, tanto online como presencial, generen los mismos contenedores de botones (`amSlotsContainer`, `pmSlotsContainer`) con los horarios del Box filtrados. El `presencialWarning` solo aparece si no hay disponibilidad. | `citas.js` |
 | **Pacientes no podían cancelar citas** | En `showPatientAppointmentsByRut`, la comparación de fecha/hora fallaba porque `cita.time` podía tener formato `"08:00 - 09:00"`. | Se creó helper `getStartTime()` para extraer la hora de inicio antes del guión, y se usa para determinar si la cita es futura. | `citas.js` |
-| **Error de asignación directa a `state.staff`** | En algunos lugares se hacía `state.staff = [...]` en lugar de usar `state.setStaff([...])`. | Se reemplazaron todas las asignaciones directas por `state.setStaff()`. | `disponibilidad.js`, `publico.js` (carga inicial) |
+| **Error de asignación directa a `state.staff`** | En algunos lugares se hacía `state.staff = [...]` en lugar de usar `state.setStaff([...])`. | Se reemplazaron todas las asignaciones directas por `state.setStaff()`. | `disponibilidad.js`, `publico.js` |
 | **Calendario profesional mostraba slots anulados como "disponibles"** | No se filtraba `unavailableSlots` al cargar los slots del Box. | Se añadió filtro por `unavailableSlots` en `calendario.js`. | `calendario.js` |
 
 ---
@@ -150,7 +151,14 @@ A continuación se detallan los **errores resueltos** y **los archivos modificad
   },
   "appointments": { ... },
   "patients": { ... },
-  "sesiones": { ... }
+  "sesiones": { ... },
+  "textosEditables": {
+    "contactInfo": {
+      "address": "Ohiggins 812, Depto 301 box 1",
+      "phone": "+56932093724",
+      "email": "vinculosalud@hotmail.com"
+    }
+  }
 }
 ```
 
@@ -175,6 +183,7 @@ A continuación se detallan los **errores resueltos** y **los archivos modificad
 | **Sanitización completa de datos** | Se eliminan referencias circulares al cargar cualquier nodo de Firebase, evitando recursión. |
 | **Carga única de datos privados** | Se evita duplicación de escuchas y llamadas redundantes a Firebase. |
 | **Vista pública presencial con horarios reales** | El paciente ahora ve los slots libres del Box (no solo un mensaje de solicitud). |
+| **Botones de horarios para presencial** | La reserva presencial muestra los mismos botones AM/PM que la online, con la misma experiencia de usuario. |
 | **Próxima disponibilidad en tarjetas** | Si hoy no hay horarios, se muestra la próxima fecha con disponibilidad. |
 
 ---
@@ -203,7 +212,7 @@ A continuación se detallan los **errores resueltos** y **los archivos modificad
 console.log('🎉 SISTEMA VÍNCULO SALUD v7.0');
 console.log('✅ Box compartido (slots unificados)');
 console.log('✅ Reserva presencial bloquea slot; cancelación libera');
-console.log('✅ Vista pública presencial con horarios reales');
+console.log('✅ Vista pública presencial con horarios reales y botones AM/PM');
 console.log('✅ Correcciones de recursión, permisos y anulación de días');
 console.log('✅ state.setStaff() en lugar de asignación directa');
 console.log('✅ Sanitización de datos con JSON.parse/stringify');
@@ -211,4 +220,3 @@ console.log('🚀 LISTO PARA PRODUCCIÓN');
 ```
 
 ---
-

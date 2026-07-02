@@ -1,209 +1,130 @@
-// ============================================================
-// main.js - VERSIÓN SIMPLIFICADA PARA DIRECTORIO DE PSICÓLOGOS
-// Solo carga profesionales desde Firebase y muestra contactos.
-// Sin reservas, sin administración, sin paneles.
-// ============================================================
-
-// Importar configuración de Firebase (debe existir en js/config/firebase.js)
-import { db } from './config/firebase.js';
-
-// ============================================================
-// 1. FUNCIONES DE UTILIDAD
-// ============================================================
-function showToast(mensaje, tipo = 'info') {
-    // No se usa en esta versión, pero se deja por compatibilidad
-    console.log(`[${tipo}] ${mensaje}`);
-}
-
-function formatRut(input) {
-    // No se usa, pero se deja por si acaso
-    let valor = input.value.replace(/\./g, '').replace(/\-/g, '');
-    if (valor.length <= 1) return;
-    let cuerpo = valor.slice(0, -1);
-    let dv = valor.slice(-1);
-    cuerpo = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    input.value = cuerpo + "-" + dv;
-}
-
-// ============================================================
-// 2. CARGAR PROFESIONALES DESDE FIREBASE
-// ============================================================
-let todosLosProfesionales = [];
-
-function cargarProfesionales() {
-    const ref = db.ref('staff');
-    ref.on('value', (snapshot) => {
-        const data = snapshot.val();
-        const grid = document.getElementById('psychGrid');
-        if (!data) {
-            grid.innerHTML = `<div style="text-align:center; padding:40px; color:#94a3b8; grid-column:1/-1;">
-                No hay profesionales registrados aún.
-            </div>`;
-            return;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#7B8471" />
+    <title>Vínculo Salud · En mantención</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        todosLosProfesionales = Object.keys(data).map(key => ({
-            id: key,
-            ...data[key]
-        }));
-        poblarFiltroEspecialidades(todosLosProfesionales);
-        renderizarProfesionales(todosLosProfesionales);
-    }, (error) => {
-        console.error('Error al cargar staff:', error);
-        document.getElementById('psychGrid').innerHTML = `
-            <div style="text-align:center; padding:40px; color:#e74c3c; grid-column:1/-1;">
-                <i class="fa fa-exclamation-circle"></i> Error al cargar los profesionales. 
-                Verifica tu conexión o configuración de Firebase.
-            </div>`;
-    });
-}
-
-// ============================================================
-// 3. RENDERIZAR TARJETAS DE PROFESIONALES
-// ============================================================
-function renderizarProfesionales(lista) {
-    const grid = document.getElementById('psychGrid');
-    if (!lista || lista.length === 0) {
-        grid.innerHTML = `<div style="text-align:center; padding:40px; color:#94a3b8; grid-column:1/-1;">
-            No hay profesionales que coincidan con tu búsqueda.
-        </div>`;
-        return;
-    }
-
-    let html = '';
-    lista.forEach(psych => {
-        const nombre = psych.name || 'Sin nombre';
-        const foto = psych.photo || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop';
-        const especialidades = Array.isArray(psych.specialties) ? psych.specialties.join(', ') : '';
-        const bio = psych.bio || '';
-        const whatsapp = psych.whatsapp || psych.phone || '';
-        const instagram = psych.instagram || '';
-        const telefono = psych.phone || '';
-        const direccion = psych.address || '';
-
-        let waNumero = whatsapp.replace(/[^0-9+]/g, '');
-        if (waNumero && !waNumero.startsWith('+')) waNumero = '+' + waNumero;
-
-        html += `
-            <div class="psych-card">
-                <img class="card-img" src="${foto}" alt="${nombre}" loading="lazy" 
-                     onerror="this.src='https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop'">
-                <div class="card-body">
-                    <h3>${nombre}</h3>
-                    <div class="specs">${especialidades || 'Sin especialidades'}</div>
-                    ${bio ? `<div class="bio">${bio}</div>` : ''}
-                    <div class="psych-contact">
-                        ${instagram ? `<a href="${instagram.startsWith('http') ? instagram : 'https://instagram.com/' + instagram.replace('@','')}" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>` : ''}
-                        ${waNumero ? `<a href="https://wa.me/${waNumero}" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>` : ''}
-                        ${telefono ? `<span><i class="fa fa-phone"></i> ${telefono}</span>` : ''}
-                        ${direccion ? `<span><i class="fa fa-map-marker-alt"></i> ${direccion}</span>` : ''}
-                    </div>
-                    ${waNumero ? `
-                        <a href="https://wa.me/${waNumero}" target="_blank" class="btn-contactar">
-                            <i class="fab fa-whatsapp"></i> Contactar
-                        </a>
-                    ` : (telefono ? `
-                        <a href="tel:${telefono}" class="btn-contactar" style="background: #5b8db8;">
-                            <i class="fa fa-phone"></i> Llamar
-                        </a>
-                    ` : '')}
-                </div>
-            </div>
-        `;
-    });
-    grid.innerHTML = html;
-}
-
-// ============================================================
-// 4. FILTRO DE ESPECIALIDADES
-// ============================================================
-function poblarFiltroEspecialidades(profesionales) {
-    const select = document.getElementById('specialtyFilter');
-    if (!select) return;
-    const especialidades = new Set();
-    profesionales.forEach(p => {
-        if (Array.isArray(p.specialties)) {
-            p.specialties.forEach(s => especialidades.add(s));
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
-    });
-    let options = '<option value="">🏷️ Todas las especialidades</option>';
-    especialidades.forEach(esp => {
-        options += `<option value="${esp}">${esp}</option>`;
-    });
-    select.innerHTML = options;
-}
-
-// ============================================================
-// 5. FILTRAR PROFESIONALES (desde la interfaz)
-// ============================================================
-function filtrarProfesionales() {
-    const search = document.getElementById('searchFilter')?.value?.toLowerCase() || '';
-    const specialty = document.getElementById('specialtyFilter')?.value || '';
-
-    let filtrados = todosLosProfesionales.filter(p => {
-        const nombre = (p.name || '').toLowerCase();
-        const bio = (p.bio || '').toLowerCase();
-        const specs = Array.isArray(p.specialties) ? p.specialties.join(' ').toLowerCase() : '';
-        const matchSearch = nombre.includes(search) || bio.includes(search) || specs.includes(search);
-        const matchSpec = specialty === '' || (Array.isArray(p.specialties) && p.specialties.includes(specialty));
-        return matchSearch && matchSpec;
-    });
-    renderizarProfesionales(filtrados);
-}
-
-// ============================================================
-// 6. NAVEGACIÓN SIMPLE
-// ============================================================
-function mostrarSeccion(id) {
-    const secciones = ['inicio', 'about', 'equipo', 'contacto'];
-    secciones.forEach(sec => {
-        const el = document.getElementById(sec);
-        if (el) {
-            el.style.display = (sec === id) ? 'block' : 'none';
+        .card {
+            background: white;
+            max-width: 650px;
+            width: 100%;
+            padding: 50px 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            text-align: center;
         }
-    });
-    const filters = document.getElementById('filtersContainer');
-    if (filters) {
-        filters.style.display = (id === 'equipo') ? 'flex' : 'none';
-    }
-    if (id === 'inicio') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-        const target = document.getElementById(id);
-        if (target) target.scrollIntoView({ behavior: 'smooth' });
-    }
-    document.querySelectorAll('.nav-links a').forEach(link => {
-        const href = link.getAttribute('href');
-        if (href === `#${id}`) {
-            link.style.fontWeight = '700';
-        } else {
-            link.style.fontWeight = '500';
+        .icon {
+            font-size: 4rem;
+            color: #f1c40f;
+            margin-bottom: 20px;
         }
-    });
-}
+        h1 {
+            font-size: 2.2rem;
+            color: #1e293b;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        .sub {
+            font-size: 1.1rem;
+            color: #475569;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .contacto {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 30px 0 20px;
+            font-size: 1.05rem;
+            color: #334155;
+        }
+        .contacto i {
+            color: var(--primario, #7B8471);
+            width: 28px;
+            text-align: center;
+        }
+        .contacto a {
+            color: #1e293b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .contacto a:hover {
+            color: #E88D5B;
+        }
+        .whatsapp-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #25D366;
+            color: white;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            text-decoration: none;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        .whatsapp-btn:hover {
+            background: #1ebe5d;
+        }
+        .footer {
+            margin-top: 35px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            border-top: 1px solid #e9edf2;
+            padding-top: 25px;
+        }
+        .footer i {
+            color: #E88D5B;
+        }
+    </style>
+</head>
+<body>
 
-// ============================================================
-// 7. EXPONER FUNCIONES GLOBALES
-// ============================================================
-window.showToast = showToast;
-window.formatRut = formatRut;
-window.mostrarSeccion = mostrarSeccion;
-window.filtrarProfesionales = filtrarProfesionales;
-window.cargarProfesionales = cargarProfesionales;
+<div class="card">
+    <div class="icon">
+        <i class="fa fa-tools"></i>
+    </div>
+    <h1>🔧 En mantención</h1>
+    <p class="sub">
+        Estamos realizando mejoras en nuestro sitio web.<br />
+        Por favor, contáctanos directamente para agendar tu hora.
+    </p>
 
-// ============================================================
-// 8. INICIALIZAR AL CARGAR LA PÁGINA
-// ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-    if (db && db.ref) {
-        cargarProfesionales();
-    } else {
-        console.error('❌ Firebase no está inicializado correctamente.');
-        document.getElementById('psychGrid').innerHTML = `
-            <div style="text-align:center; padding:40px; color:#e74c3c; grid-column:1/-1;">
-                <i class="fa fa-exclamation-triangle"></i> Error de configuración de Firebase.
-                Verifica que tu archivo config/firebase.js esté correcto.
-            </div>`;
-    }
-});
+    <div class="contacto">
+        <div><i class="fa fa-phone"></i> +56 9 3209 3724</div>
+        <div><i class="fa fa-envelope"></i> <a href="mailto:vinculosalud@hotmail.com">vinculosalud@hotmail.com</a></div>
+        <div><i class="fa fa-map-marker-alt"></i> Av. Principal 123, Santiago</div>
+    </div>
 
-console.log('✅ main.js simplificado cargado (directorio de psicólogos)');
+    <a href="https://wa.me/56932093724" target="_blank" class="whatsapp-btn">
+        <i class="fab fa-whatsapp"></i> Escríbenos por WhatsApp
+    </a>
+
+    <div class="footer">
+        <i class="fa fa-heart" style="color: #E88D5B;"></i> Vínculo Salud · Centro de Bienestar
+    </div>
+</div>
+
+</body>
+</html>

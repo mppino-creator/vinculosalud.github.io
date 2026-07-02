@@ -2,11 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#7B8471" />
-    <title>Vínculo Salud · En mantención</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+    <title>Vínculo Salud · Centro de Bienestar</title>
+
+    <!-- Fuentes -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     <style>
         * {
             margin: 0;
@@ -14,117 +19,162 @@
             box-sizing: border-box;
         }
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'DM Sans', 'Open Sans', sans-serif;
             background: #f8fafc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .card {
-            background: white;
-            max-width: 650px;
-            width: 100%;
-            padding: 50px 40px;
-            border-radius: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        .icon {
-            font-size: 4rem;
-            color: #f1c40f;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-size: 2.2rem;
             color: #1e293b;
-            margin-bottom: 12px;
-            font-weight: 700;
-        }
-        .sub {
-            font-size: 1.1rem;
-            color: #475569;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        .contacto {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin: 30px 0 20px;
-            font-size: 1.05rem;
-            color: #334155;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e9edf2 100%);
         }
-        .contacto i {
-            color: var(--primario, #7B8471);
-            width: 28px;
+        .container {
+            max-width: 700px;
             text-align: center;
         }
-        .contacto a {
+        .logo {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #5f6856;
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+        }
+        .logo i {
+            color: #7B8471;
+            margin-right: 8px;
+        }
+        .banner {
+            background: #fef9e7;
+            border-left: 8px solid #f1c40f;
+            border-radius: 20px;
+            padding: 40px 30px;
+            margin: 30px 0;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+        }
+        .banner i {
+            font-size: 3.5rem;
+            color: #f1c40f;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .banner h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+        .banner p {
+            font-size: 1.15rem;
+            color: #475569;
+            line-height: 1.7;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .banner .destacado {
+            background: #f1c40f;
+            color: #1e293b;
+            font-weight: 700;
+            padding: 6px 18px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 15px;
+            font-size: 0.95rem;
+        }
+        .contacto {
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+        }
+        .contacto-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            background: white;
+            padding: 12px 25px;
+            border-radius: 60px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .contacto-item i {
+            color: #7B8471;
+            font-size: 1.3rem;
+        }
+        .contacto-item a {
             color: #1e293b;
             text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
+            transition: 0.2s;
         }
-        .contacto a:hover {
-            color: #E88D5B;
+        .contacto-item a:hover {
+            color: #5f6856;
         }
-        .whatsapp-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: #25D366;
-            color: white;
-            padding: 14px 32px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1.05rem;
-            text-decoration: none;
-            transition: background 0.2s;
-            margin-top: 10px;
-        }
-        .whatsapp-btn:hover {
-            background: #1ebe5d;
-        }
-        .footer {
-            margin-top: 35px;
-            font-size: 0.85rem;
+        .footer-text {
+            margin-top: 50px;
             color: #94a3b8;
-            border-top: 1px solid #e9edf2;
+            font-size: 0.9rem;
+            border-top: 1px solid #e2e8f0;
             padding-top: 25px;
+            width: 100%;
+            max-width: 700px;
         }
-        .footer i {
-            color: #E88D5B;
+        @media (max-width: 600px) {
+            .logo { font-size: 2rem; }
+            .banner h1 { font-size: 1.7rem; }
+            .banner p { font-size: 1rem; }
+            .contacto-item { width: 100%; justify-content: center; }
         }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="icon">
-        <i class="fa fa-tools"></i>
-    </div>
-    <h1>🔧 En mantención</h1>
-    <p class="sub">
-        Estamos realizando mejoras en nuestro sitio web.<br />
-        Por favor, contáctanos directamente para agendar tu hora.
-    </p>
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo">
+            <i class="fa fa-heart"></i> Vínculo Salud
+        </div>
 
-    <div class="contacto">
-        <div><i class="fa fa-phone"></i> +56 9 3209 3724</div>
-        <div><i class="fa fa-envelope"></i> <a href="mailto:vinculosalud@hotmail.com">vinculosalud@hotmail.com</a></div>
-        <div><i class="fa fa-map-marker-alt"></i> Av. Principal 123, Santiago</div>
-    </div>
+        <!-- Banner principal -->
+        <div class="banner">
+            <i class="fa fa-tools"></i>
+            <h1>🔧 Sitio en mantención</h1>
+            <p>
+                Por el momento, el sistema de reservas online está desactivado.<br />
+                <strong>Por favor, comunícate directamente con los profesionales</strong> para agendar tus consultas.
+            </p>
+            <span class="destacado">
+                <i class="fa fa-whatsapp"></i> Contacto directo
+            </span>
+        </div>
 
-    <a href="https://wa.me/56932093724" target="_blank" class="whatsapp-btn">
-        <i class="fab fa-whatsapp"></i> Escríbenos por WhatsApp
-    </a>
+        <!-- Contacto general -->
+        <div class="contacto">
+            <div class="contacto-item">
+                <i class="fa fa-phone"></i>
+                <a href="tel:+56932093724">+56 9 3209 3724</a>
+            </div>
+            <div class="contacto-item">
+                <i class="fa fa-envelope"></i>
+                <a href="mailto:vinculosalud@hotmail.com">vinculosalud@hotmail.com</a>
+            </div>
+            <div class="contacto-item">
+                <i class="fab fa-whatsapp"></i>
+                <a href="https://wa.me/56932093724" target="_blank">WhatsApp</a>
+            </div>
+        </div>
 
-    <div class="footer">
-        <i class="fa fa-heart" style="color: #E88D5B;"></i> Vínculo Salud · Centro de Bienestar
+        <!-- Mensaje adicional -->
+        <div style="margin-top: 20px; color: #64748b; font-size: 0.95rem; background: white; padding: 15px 25px; border-radius: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+            <i class="fa fa-info-circle"></i> También puedes contactar a cada psicólogo a través de sus redes sociales o teléfono personal.
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-text">
+            © 2026 Vínculo Salud · Centro de Bienestar
+        </div>
     </div>
-</div>
 
 </body>
 </html>
